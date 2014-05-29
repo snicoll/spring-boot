@@ -58,6 +58,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
 /**
+ * Tests for {@link HornetQAutoConfiguration}.
+ * 
  * @author Stephane Nicoll
  */
 public class HornetQAutoConfigurationTests {
