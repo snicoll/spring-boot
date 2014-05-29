@@ -16,6 +16,7 @@
 
 package org.springframework.boot.autoconfigure.jms;
 
+import java.io.File;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -32,6 +33,7 @@ import org.hornetq.core.remoting.impl.invm.InVMAcceptorFactory;
 import org.hornetq.core.remoting.impl.invm.InVMConnectorFactory;
 import org.hornetq.core.remoting.impl.netty.NettyConnectorFactory;
 import org.hornetq.core.remoting.impl.netty.TransportConstants;
+import org.hornetq.core.server.JournalType;
 import org.hornetq.jms.client.HornetQConnectionFactory;
 import org.hornetq.jms.server.config.JMSConfiguration;
 import org.hornetq.jms.server.config.JMSQueueConfiguration;
@@ -45,9 +47,11 @@ import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.jms.HornetQProperties.Embedded;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.util.ClassUtils;
 
 /**
  * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
@@ -65,50 +69,64 @@ import org.springframework.context.annotation.Configuration;
 @EnableConfigurationProperties(HornetQProperties.class)
 public class HornetQAutoConfiguration {
 
-	@Configuration
-	@ConditionalOnClass({ NettyConnectorFactory.class, HornetQJMSClient.class })
-	@ConditionalOnExpression("'${spring.hornetq.mode:netty}' == 'netty'")
-	static class NettyConnection {
+	private static final String EMBEDDED_JMS_CLASS = "org.hornetq.jms.server.embedded.EmbeddedJMS";
 
-		@Autowired
-		private HornetQProperties properties;
+	@Autowired
+	private HornetQProperties properties;
 
-		@Bean
-		@ConditionalOnMissingBean
-		public ConnectionFactory jmsConnectionFactory() {
-			Map<String, Object> connectionParams = new HashMap<String, Object>();
-			connectionParams.put(TransportConstants.HOST_PROP_NAME,
-					this.properties.getHost());
-			connectionParams.put(TransportConstants.PORT_PROP_NAME,
-					this.properties.getPort());
+	@Bean
+	@ConditionalOnMissingBean
+	public ConnectionFactory jmsConnectionFactory() {
+		HornetQMode mode = this.properties.getMode();
+		if (mode == null) {
+			mode = deduceMode();
+		}
+		if (this.properties.getMode() == HornetQMode.embedded) {
+			return createEmbeddedConnectionFactory();
+		}
+		return createNettyConnectionFactory();
+	}
+
+	private HornetQMode deduceMode() {
+		if (this.properties.getEmbedded().isEnabled()
+				&& ClassUtils.isPresent(EMBEDDED_JMS_CLASS, null)) {
+			return HornetQMode.embedded;
+		}
+		return HornetQMode.netty;
+	}
+
+	private ConnectionFactory createEmbeddedConnectionFactory() {
+		try {
 			TransportConfiguration transportConfiguration = new TransportConfiguration(
-					NettyConnectorFactory.class.getName(), connectionParams);
-			return HornetQJMSClient.createConnectionFactoryWithoutHA(JMSFactoryType.CF,
-					transportConfiguration);
+					InVMConnectorFactory.class.getName());
+			ServerLocator serviceLocator = HornetQClient
+					.createServerLocatorWithoutHA(transportConfiguration);
+			return new HornetQConnectionFactory(serviceLocator);
 		}
-
+		catch (NoClassDefFoundError ex) {
+			throw new IllegalStateException("Unable to create emedded "
+					+ "HornetQ connection, ensure that the hornet-jms-server.jar "
+					+ "is the classpath", ex);
+		}
 	}
 
-	@Configuration
-	@ConditionalOnClass({ InVMConnectorFactory.class, EmbeddedJMS.class })
-	@ConditionalOnExpression("'${spring.hornetq.mode:netty}' == 'embedded'")
-	static class EmbeddedConnection {
-
-		@Bean
-		@ConditionalOnMissingBean
-		public ConnectionFactory jmsConnectionFactory() {
-			ServerLocator serverLocator = HornetQClient
-					.createServerLocatorWithoutHA(new TransportConfiguration(
-							InVMConnectorFactory.class.getName()));
-			return new HornetQConnectionFactory(serverLocator);
-		}
-
+	private ConnectionFactory createNettyConnectionFactory() {
+		Map<String, Object> params = new HashMap<String, Object>();
+		params.put(TransportConstants.HOST_PROP_NAME, this.properties.getHost());
+		params.put(TransportConstants.PORT_PROP_NAME, this.properties.getPort());
+		TransportConfiguration transportConfiguration = new TransportConfiguration(
+				NettyConnectorFactory.class.getName(), params);
+		return HornetQJMSClient.createConnectionFactoryWithoutHA(JMSFactoryType.CF,
+				transportConfiguration);
 	}
 
+	/**
+	 * Configuration used to create the embedded hornet server.
+	 */
 	@Configuration
-	@ConditionalOnClass({ InVMConnectorFactory.class, EmbeddedJMS.class })
+	@ConditionalOnClass(name = EMBEDDED_JMS_CLASS)
 	@ConditionalOnExpression("${spring.hornetq.embedded.enabled:true}")
-	static class EmbeddedServer {
+	static class EmbeddedServerConfiguration {
 
 		@Autowired
 		private HornetQProperties properties;
@@ -138,7 +156,7 @@ public class HornetQAutoConfiguration {
 
 			configuration.setSecurityEnabled(false);
 
-			this.properties.getEmbedded().configure(configuration);
+			configure(this.properties.getEmbedded(), configuration);
 
 			configuration.getAcceptorConfigurations().add(
 					new TransportConfiguration(InVMAcceptorFactory.class.getName()));
@@ -146,6 +164,32 @@ public class HornetQAutoConfiguration {
 			// https://issues.jboss.org/browse/HORNETQ-1143
 			configuration.setClusterPassword("SpringBootRules");
 			return configuration;
+		}
+
+		private void configure(Embedded embedded, ConfigurationImpl configuration) {
+			// NOTE: Relies on the optional hornetq-jms-server.jar so cannot be moved to
+			// the HornetQProperties
+			configuration.setPersistenceEnabled(embedded.isPersistent());
+
+			// https://issues.jboss.org/browse/HORNETQ-1302
+			String rootDataDir = (embedded.getDataDirectory() != null ? embedded
+					.getDataDirectory() : createDataDir());
+			configuration.setJournalDirectory(rootDataDir + "/journal");
+
+			if (embedded.isPersistent()) {
+				// Force fallback to NIO
+				configuration.setJournalType(JournalType.NIO);
+
+				// Those directories should be configured separately.
+				configuration.setLargeMessagesDirectory(rootDataDir + "/largemessages");
+				configuration.setBindingsDirectory(rootDataDir + "/bindings");
+				configuration.setPagingDirectory(rootDataDir + "/paging");
+			}
+		}
+
+		private String createDataDir() {
+			String tmpDir = System.getProperty("java.io.tmpdir");
+			return new File(tmpDir, "hornetq-data").getAbsolutePath();
 		}
 
 		@Bean
