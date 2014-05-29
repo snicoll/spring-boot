@@ -19,6 +19,7 @@ package org.springframework.boot.autoconfigure.jms;
 import java.io.File;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.jms.ConnectionFactory;
@@ -51,6 +52,7 @@ import org.springframework.boot.autoconfigure.jms.HornetQProperties.Embedded;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.util.ClassUtils;
 
 /**
@@ -132,97 +134,105 @@ public class HornetQAutoConfiguration {
 		private HornetQProperties properties;
 
 		@Autowired(required = false)
-		private Collection<JMSQueueConfiguration> queuesConfiguration;
+		private List<HornetQConfigurationCustomizer> configurationCustomizers;
 
 		@Autowired(required = false)
-		private Collection<TopicConfiguration> topicsConfiguration;
+		private List<JMSQueueConfiguration> queuesConfiguration;
 
-		@Bean(initMethod = "start", destroyMethod = "stop")
-		@ConditionalOnMissingBean
-		public EmbeddedJMS hornetQServer(
-				org.hornetq.core.config.Configuration hornetQConfiguration,
-				JMSConfiguration hornetQJmsConfiguration) {
-			EmbeddedJMS server = new EmbeddedJMS();
-			server.setConfiguration(hornetQConfiguration);
-			server.setJmsConfiguration(hornetQJmsConfiguration);
-			server.setRegistry(new NoOpBindingRegistry());
-			return server;
-		}
+		@Autowired(required = false)
+		private List<TopicConfiguration> topicsConfiguration;
 
 		@Bean
 		@ConditionalOnMissingBean
 		public org.hornetq.core.config.Configuration hornetQConfiguration() {
+			Embedded properties = this.properties.getEmbedded();
+
 			ConfigurationImpl configuration = new ConfigurationImpl();
-
 			configuration.setSecurityEnabled(false);
+			configuration.setPersistenceEnabled(properties.isPersistent());
 
-			configure(this.properties.getEmbedded(), configuration);
+			String dataDir = getDataDir();
 
-			configuration.getAcceptorConfigurations().add(
-					new TransportConfiguration(InVMAcceptorFactory.class.getName()));
+			// HORNETQ-1302
+			configuration.setJournalDirectory(dataDir + "/journal");
 
-			// https://issues.jboss.org/browse/HORNETQ-1143
+			if (properties.isPersistent()) {
+				configuration.setJournalType(JournalType.NIO);
+				configuration.setLargeMessagesDirectory(dataDir + "/largemessages");
+				configuration.setBindingsDirectory(dataDir + "/bindings");
+				configuration.setPagingDirectory(dataDir + "/paging");
+			}
+
+			TransportConfiguration transportConfiguration = new TransportConfiguration(
+					InVMAcceptorFactory.class.getName());
+			configuration.getAcceptorConfigurations().add(transportConfiguration);
+
+			// HORNETQ-1143
 			configuration.setClusterPassword("SpringBootRules");
 			return configuration;
 		}
 
-		private void configure(Embedded embedded, ConfigurationImpl configuration) {
-			// NOTE: Relies on the optional hornetq-jms-server.jar so cannot be moved to
-			// the HornetQProperties
-			configuration.setPersistenceEnabled(embedded.isPersistent());
-
-			// https://issues.jboss.org/browse/HORNETQ-1302
-			String rootDataDir = (embedded.getDataDirectory() != null ? embedded
-					.getDataDirectory() : createDataDir());
-			configuration.setJournalDirectory(rootDataDir + "/journal");
-
-			if (embedded.isPersistent()) {
-				// Force fallback to NIO
-				configuration.setJournalType(JournalType.NIO);
-
-				// Those directories should be configured separately.
-				configuration.setLargeMessagesDirectory(rootDataDir + "/largemessages");
-				configuration.setBindingsDirectory(rootDataDir + "/bindings");
-				configuration.setPagingDirectory(rootDataDir + "/paging");
+		private String getDataDir() {
+			if (this.properties.getEmbedded().getDataDirectory() != null) {
+				return this.properties.getEmbedded().getDataDirectory();
 			}
-		}
-
-		private String createDataDir() {
 			String tmpDir = System.getProperty("java.io.tmpdir");
 			return new File(tmpDir, "hornetq-data").getAbsolutePath();
+		}
+
+		@Bean(initMethod = "start", destroyMethod = "stop")
+		@ConditionalOnMissingBean
+		public EmbeddedJMS hornetQServer(
+				org.hornetq.core.config.Configuration configuration,
+				JMSConfiguration jmsConfiguration) {
+			EmbeddedJMS server = new EmbeddedJMS();
+			applyCustomizers(configuration);
+			server.setConfiguration(configuration);
+			server.setJmsConfiguration(jmsConfiguration);
+			server.setRegistry(new HornetQNoOpBindingRegistry());
+			return server;
+		}
+
+		private void applyCustomizers(org.hornetq.core.config.Configuration configuration) {
+			if (this.configurationCustomizers != null) {
+				AnnotationAwareOrderComparator.sort(this.configurationCustomizers);
+				for (HornetQConfigurationCustomizer customizer : this.configurationCustomizers) {
+					customizer.customize(configuration);
+				}
+			}
 		}
 
 		@Bean
 		@ConditionalOnMissingBean
 		public JMSConfiguration hornetQJmsConfiguration() {
-			JMSConfiguration jmsConfig = new JMSConfigurationImpl();
-
-			if (this.queuesConfiguration != null) {
-				jmsConfig.getQueueConfigurations().addAll(this.queuesConfiguration);
-			}
-			if (this.topicsConfiguration != null) {
-				jmsConfig.getTopicConfigurations().addAll(this.topicsConfiguration);
-			}
-
-			for (String queue : this.properties.getEmbedded().getQueues()) {
-				JMSQueueConfiguration queueConfig = createSimpleQueueConfiguration(queue);
-				jmsConfig.getQueueConfigurations().add(queueConfig);
-			}
-			for (String topic : this.properties.getEmbedded().getTopics()) {
-				TopicConfiguration topicConfig = createSimpleTopicConfiguration(topic);
-				jmsConfig.getTopicConfigurations().add(topicConfig);
-			}
-
-			return jmsConfig;
+			JMSConfiguration configuration = new JMSConfigurationImpl();
+			addAll(configuration.getQueueConfigurations(), this.queuesConfiguration);
+			addAll(configuration.getTopicConfigurations(), this.topicsConfiguration);
+			addQueues(configuration, this.properties.getEmbedded().getQueues());
+			addTopis(configuration, this.properties.getEmbedded().getTopics());
+			return configuration;
 		}
 
-		private JMSQueueConfiguration createSimpleQueueConfiguration(String name) {
-			return new JMSQueueConfigurationImpl(name, null, this.properties
-					.getEmbedded().isPersistent(), "/queue/" + name);
+		private <T> void addAll(List<T> list, Collection<? extends T> items) {
+			if (items != null) {
+				list.addAll(items);
+			}
 		}
 
-		private TopicConfiguration createSimpleTopicConfiguration(String name) {
-			return new TopicConfigurationImpl(name, "/topic/" + name);
+		private void addQueues(JMSConfiguration configuration, String[] queues) {
+			boolean persistent = this.properties.getEmbedded().isPersistent();
+			for (String queue : queues) {
+				configuration.getQueueConfigurations().add(
+						new JMSQueueConfigurationImpl(queue, null, persistent, "/queue/"
+								+ queue));
+			}
+		}
+
+		private void addTopis(JMSConfiguration configuration, String[] topics) {
+			for (String topic : topics) {
+				configuration.getTopicConfigurations().add(
+						new TopicConfigurationImpl(topic, "/topic/" + topic));
+			}
 		}
 
 	}
