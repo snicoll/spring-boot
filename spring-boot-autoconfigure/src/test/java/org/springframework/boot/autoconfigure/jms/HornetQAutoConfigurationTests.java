@@ -37,6 +37,7 @@ import org.hornetq.jms.server.config.TopicConfiguration;
 import org.hornetq.jms.server.config.impl.JMSConfigurationImpl;
 import org.hornetq.jms.server.config.impl.JMSQueueConfigurationImpl;
 import org.hornetq.jms.server.config.impl.TopicConfigurationImpl;
+import org.hornetq.jms.server.embedded.EmbeddedJMS;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
@@ -114,7 +115,7 @@ public class HornetQAutoConfigurationTests {
 				.getBean(HornetQProperties.class);
 		assertEquals(HornetQMode.embedded, hornetQProperties.getMode());
 
-		assertEquals(1, this.context.getBeansOfType(SpringEmbeddedHornetQ.class).size());
+		assertEquals(1, this.context.getBeansOfType(EmbeddedJMS.class).size());
 		org.hornetq.core.config.Configuration configuration = this.context
 				.getBean(org.hornetq.core.config.Configuration.class);
 		assertFalse("Persistence disabled by default",

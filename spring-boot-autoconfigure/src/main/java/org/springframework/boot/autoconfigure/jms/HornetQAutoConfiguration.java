@@ -120,13 +120,14 @@ public class HornetQAutoConfiguration {
 
 			@Bean(initMethod = "start", destroyMethod = "stop")
 			@ConditionalOnMissingBean(EmbeddedJMS.class)
-			public SpringEmbeddedHornetQ hornetQServer(
+			public EmbeddedJMS hornetQServer(
 					org.hornetq.core.config.Configuration hornetQConfiguration,
 					JMSConfiguration hornetQJmsConfiguration) {
-				SpringEmbeddedHornetQ bootstrap = new SpringEmbeddedHornetQ();
-				bootstrap.setConfiguration(hornetQConfiguration);
-				bootstrap.setJmsConfiguration(hornetQJmsConfiguration);
-				return bootstrap;
+				EmbeddedJMS server = new EmbeddedJMS();
+				server.setConfiguration(hornetQConfiguration);
+				server.setJmsConfiguration(hornetQJmsConfiguration);
+				server.setRegistry(new NoOpBindingRegistry());
+				return server;
 			}
 
 			@Bean
