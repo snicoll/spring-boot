@@ -16,8 +16,6 @@
 
 package org.springframework.boot.autoconfigure.jms;
 
-import static org.junit.Assert.*;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.UUID;
@@ -43,7 +41,6 @@ import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.EnvironmentTestUtils;
 import org.springframework.context.ApplicationContext;
@@ -55,6 +52,10 @@ import org.springframework.jms.core.MessageCreator;
 import org.springframework.jms.core.SessionCallback;
 import org.springframework.jms.support.destination.DestinationResolver;
 import org.springframework.jms.support.destination.DynamicDestinationResolver;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author Stephane Nicoll
@@ -68,8 +69,8 @@ public class HornetQAutoConfigurationTests {
 
 	@After
 	public void tearDown() {
-		if (context != null) {
-			context.close();
+		if (this.context != null) {
+			this.context.close();
 		}
 	}
 
@@ -78,7 +79,8 @@ public class HornetQAutoConfigurationTests {
 		this.context = createContext(EmptyConfiguration.class);
 		this.context.refresh();
 
-		HornetQProperties hornetQProperties = context.getBean(HornetQProperties.class);
+		HornetQProperties hornetQProperties = this.context
+				.getBean(HornetQProperties.class);
 		assertEquals(HornetQMode.netty, hornetQProperties.getMode());
 
 		JmsTemplate jmsTemplate = this.context.getBean(JmsTemplate.class);
@@ -103,18 +105,18 @@ public class HornetQAutoConfigurationTests {
 	@Test
 	public void embeddedConnectionFactory() {
 		this.context = createContext(EmptyConfiguration.class);
-		EnvironmentTestUtils.addEnvironment(this.context,
-				"spring.hornetq.mode:embedded");
+		EnvironmentTestUtils.addEnvironment(this.context, "spring.hornetq.mode:embedded");
 		this.context.refresh();
 
-		HornetQProperties hornetQProperties = context.getBean(HornetQProperties.class);
+		HornetQProperties hornetQProperties = this.context
+				.getBean(HornetQProperties.class);
 		assertEquals(HornetQMode.embedded, hornetQProperties.getMode());
 
-
-		assertEquals(1, context.getBeansOfType(SpringEmbeddedHornetQ.class).size());
-		org.hornetq.core.config.Configuration configuration =
-				context.getBean(org.hornetq.core.config.Configuration.class);
-		assertFalse("Persistence disabled by default", configuration.isPersistenceEnabled());
+		assertEquals(1, this.context.getBeansOfType(SpringEmbeddedHornetQ.class).size());
+		org.hornetq.core.config.Configuration configuration = this.context
+				.getBean(org.hornetq.core.config.Configuration.class);
+		assertFalse("Persistence disabled by default",
+				configuration.isPersistenceEnabled());
 		assertFalse("Security disabled by default", configuration.isSecurityEnabled());
 
 		HornetQConnectionFactory connectionFactory = this.context
@@ -125,8 +127,7 @@ public class HornetQAutoConfigurationTests {
 	@Test
 	public void embeddedServerWithDestinations() {
 		this.context = createContext(EmptyConfiguration.class);
-		EnvironmentTestUtils.addEnvironment(this.context,
-				"spring.hornetq.mode:embedded",
+		EnvironmentTestUtils.addEnvironment(this.context, "spring.hornetq.mode:embedded",
 				"spring.hornetq.embedded.queues=Queue1,Queue2",
 				"spring.hornetq.embedded.topics=Topic1");
 		this.context.refresh();
@@ -143,8 +144,7 @@ public class HornetQAutoConfigurationTests {
 	@Test
 	public void embeddedServerWithDestinationConfig() {
 		this.context = createContext(DestinationConfiguration.class);
-		EnvironmentTestUtils.addEnvironment(this.context,
-				"spring.hornetq.mode:embedded");
+		EnvironmentTestUtils.addEnvironment(this.context, "spring.hornetq.mode:embedded");
 		this.context.refresh();
 
 		DestinationChecker checker = new DestinationChecker(this.context);
@@ -155,9 +155,9 @@ public class HornetQAutoConfigurationTests {
 	@Test
 	public void embeddedServiceWithCustomJmsConfiguration() {
 		this.context = createContext(CustomJmsConfiguration.class);
-		EnvironmentTestUtils.addEnvironment(this.context,
-				"spring.hornetq.mode:embedded",
-				"spring.hornetq.embedded.queues=Queue1,Queue2"); // Ignored with custom config
+		EnvironmentTestUtils.addEnvironment(this.context, "spring.hornetq.mode:embedded",
+				"spring.hornetq.embedded.queues=Queue1,Queue2"); // Ignored with custom
+																	// config
 		this.context.refresh();
 		DestinationChecker checker = new DestinationChecker(this.context);
 		checker.checkQueue("custom", true); // See CustomJmsConfiguration
@@ -169,22 +169,20 @@ public class HornetQAutoConfigurationTests {
 	@Test
 	public void embeddedServiceWithCustomHornetQConfiguration() {
 		this.context = createContext(CustomHornetQConfiguration.class);
-		EnvironmentTestUtils.addEnvironment(this.context,
-				"spring.hornetq.mode:embedded");
+		EnvironmentTestUtils.addEnvironment(this.context, "spring.hornetq.mode:embedded");
 		this.context.refresh();
-		org.hornetq.core.config.Configuration configuration =
-				context.getBean(org.hornetq.core.config.Configuration.class);
+		org.hornetq.core.config.Configuration configuration = this.context
+				.getBean(org.hornetq.core.config.Configuration.class);
 		assertEquals("customFooBar", configuration.getName());
 	}
 
 	@Test
 	public void embeddedWithPersistentMode() throws IOException, JMSException {
-		File dataFolder = folder.newFolder();
+		File dataFolder = this.folder.newFolder();
 
 		// Start the server and post a message to some queue
 		this.context = createContext(EmptyConfiguration.class);
-		EnvironmentTestUtils.addEnvironment(this.context,
-				"spring.hornetq.mode:embedded",
+		EnvironmentTestUtils.addEnvironment(this.context, "spring.hornetq.mode:embedded",
 				"spring.hornetq.embedded.queues=TestQueue",
 				"spring.hornetq.embedded.persistent:true",
 				"spring.hornetq.embedded.dataDirectory:" + dataFolder.getAbsolutePath());
@@ -202,8 +200,7 @@ public class HornetQAutoConfigurationTests {
 
 		// Start the server again and check if our message is still here
 		this.context = createContext(EmptyConfiguration.class);
-		EnvironmentTestUtils.addEnvironment(this.context,
-				"spring.hornetq.mode:embedded",
+		EnvironmentTestUtils.addEnvironment(this.context, "spring.hornetq.mode:embedded",
 				"spring.hornetq.embedded.queues=TestQueue",
 				"spring.hornetq.embedded.persistent:true",
 				"spring.hornetq.embedded.dataDirectory:" + dataFolder.getAbsolutePath());
@@ -213,32 +210,35 @@ public class HornetQAutoConfigurationTests {
 		jmsTemplate2.setReceiveTimeout(1000L);
 		Message message = jmsTemplate2.receive("TestQueue");
 		assertNotNull("No message on persistent queue", message);
-		assertEquals("Invalid message received on queue", msgId, ((TextMessage) message).getText());
+		assertEquals("Invalid message received on queue", msgId,
+				((TextMessage) message).getText());
 	}
 
-
-	private TransportConfiguration assertInVmConnectionFactory(HornetQConnectionFactory connectionFactory) {
+	private TransportConfiguration assertInVmConnectionFactory(
+			HornetQConnectionFactory connectionFactory) {
 		TransportConfiguration transportConfig = getSingleTransportConfiguration(connectionFactory);
-		assertEquals(InVMConnectorFactory.class.getName(), transportConfig.getFactoryClassName());
+		assertEquals(InVMConnectorFactory.class.getName(),
+				transportConfig.getFactoryClassName());
 		return transportConfig;
 	}
 
-	private TransportConfiguration assertNettyConnectionFactory(HornetQConnectionFactory connectionFactory,
-			String host, int port) {
+	private TransportConfiguration assertNettyConnectionFactory(
+			HornetQConnectionFactory connectionFactory, String host, int port) {
 		TransportConfiguration transportConfig = getSingleTransportConfiguration(connectionFactory);
-		assertEquals(NettyConnectorFactory.class.getName(), transportConfig.getFactoryClassName());
+		assertEquals(NettyConnectorFactory.class.getName(),
+				transportConfig.getFactoryClassName());
 		assertEquals(host, transportConfig.getParams().get("host"));
 		assertEquals(port, transportConfig.getParams().get("port"));
 		return transportConfig;
 	}
 
-	private TransportConfiguration getSingleTransportConfiguration(HornetQConnectionFactory connectionFactory) {
-		TransportConfiguration[] transportConfigurations =
-				connectionFactory.getServerLocator().getStaticTransportConfigurations();
+	private TransportConfiguration getSingleTransportConfiguration(
+			HornetQConnectionFactory connectionFactory) {
+		TransportConfiguration[] transportConfigurations = connectionFactory
+				.getServerLocator().getStaticTransportConfigurations();
 		assertEquals(1, transportConfigurations.length);
 		return transportConfigurations[0];
 	}
-
 
 	private AnnotationConfigApplicationContext createContext(
 			Class<?>... additionalClasses) {
@@ -268,12 +268,14 @@ public class HornetQAutoConfigurationTests {
 			checkDestination(name, true, shouldExist);
 		}
 
-		public void checkDestination(final String name, final boolean pubSub, final boolean shouldExist) {
-			jmsTemplate.execute(new SessionCallback<Void>() {
+		public void checkDestination(final String name, final boolean pubSub,
+				final boolean shouldExist) {
+			this.jmsTemplate.execute(new SessionCallback<Void>() {
 				@Override
 				public Void doInJms(Session session) throws JMSException {
 					try {
-						Destination destination = destinationResolver.resolveDestinationName(session, name, pubSub);
+						Destination destination = DestinationChecker.this.destinationResolver
+								.resolveDestinationName(session, name, pubSub);
 						if (!shouldExist) {
 							throw new IllegalStateException("Destination '" + name
 									+ "' was not expected but got " + destination);
@@ -300,7 +302,8 @@ public class HornetQAutoConfigurationTests {
 
 		@Bean
 		JMSQueueConfiguration sampleQueueConfiguration() {
-			return new JMSQueueConfigurationImpl("sampleQueue", "foo=bar", false, "/queue/1");
+			return new JMSQueueConfigurationImpl("sampleQueue", "foo=bar", false,
+					"/queue/1");
 		}
 
 		@Bean
@@ -315,7 +318,8 @@ public class HornetQAutoConfigurationTests {
 		@Bean
 		public JMSConfiguration myJmsConfiguration() {
 			JMSConfiguration config = new JMSConfigurationImpl();
-			config.getQueueConfigurations().add(new JMSQueueConfigurationImpl("custom", null, false));
+			config.getQueueConfigurations().add(
+					new JMSQueueConfigurationImpl("custom", null, false));
 			return config;
 		}
 	}
@@ -329,7 +333,7 @@ public class HornetQAutoConfigurationTests {
 		@Bean
 		public org.hornetq.core.config.Configuration myHornetQConfiguration() {
 			ConfigurationImpl config = new ConfigurationImpl();
-			properties.getEmbedded().configure(config);
+			this.properties.getEmbedded().configure(config);
 
 			// This is the real customization
 			config.setClusterPassword("Foobar");

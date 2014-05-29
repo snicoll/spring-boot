@@ -20,14 +20,13 @@ import java.io.File;
 
 import org.hornetq.core.config.Configuration;
 import org.hornetq.core.server.JournalType;
-
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * Configuration properties for HornetQ
- *
+ * 
  * @author Stephane Nicoll
- * @since 1.1
+ * @since 1.1.0
  */
 @ConfigurationProperties(prefix = "spring.hornetq")
 public class HornetQProperties {
@@ -41,7 +40,7 @@ public class HornetQProperties {
 	private final Embedded embedded = new Embedded();
 
 	public HornetQMode getMode() {
-		return mode;
+		return this.mode;
 	}
 
 	public void setMode(HornetQMode mode) {
@@ -49,7 +48,7 @@ public class HornetQProperties {
 	}
 
 	public String getHost() {
-		return host;
+		return this.host;
 	}
 
 	public void setHost(String host) {
@@ -57,7 +56,7 @@ public class HornetQProperties {
 	}
 
 	public int getPort() {
-		return port;
+		return this.port;
 	}
 
 	public void setPort(int port) {
@@ -65,7 +64,7 @@ public class HornetQProperties {
 	}
 
 	public Embedded getEmbedded() {
-		return embedded;
+		return this.embedded;
 	}
 
 	public static class Embedded {
@@ -79,14 +78,15 @@ public class HornetQProperties {
 		private String[] topics = new String[0];
 
 		/**
-		 * Applies the configuration defined in this instance to
-		 * the specified HornetQ {@link org.hornetq.core.config.Configuration}
+		 * Applies the configuration defined in this instance to the specified HornetQ
+		 * {@link org.hornetq.core.config.Configuration}
 		 */
 		public void configure(Configuration configuration) {
-			configuration.setPersistenceEnabled(persistent);
+			configuration.setPersistenceEnabled(this.persistent);
 
 			// https://issues.jboss.org/browse/HORNETQ-1302
-			String rootDataDir = (this.dataDirectory != null ? this.dataDirectory : createDataDir());
+			String rootDataDir = (this.dataDirectory != null ? this.dataDirectory
+					: createDataDir());
 			configuration.setJournalDirectory(rootDataDir + "/journal");
 
 			if (this.persistent) {
@@ -101,7 +101,7 @@ public class HornetQProperties {
 		}
 
 		public boolean isPersistent() {
-			return persistent;
+			return this.persistent;
 		}
 
 		public void setPersistent(boolean persistent) {
@@ -109,7 +109,7 @@ public class HornetQProperties {
 		}
 
 		public String getDataDirectory() {
-			return dataDirectory;
+			return this.dataDirectory;
 		}
 
 		public void setDataDirectory(String dataDirectory) {
@@ -117,7 +117,7 @@ public class HornetQProperties {
 		}
 
 		public String[] getQueues() {
-			return queues;
+			return this.queues;
 		}
 
 		public void setQueues(String[] queues) {
@@ -125,7 +125,7 @@ public class HornetQProperties {
 		}
 
 		public String[] getTopics() {
-			return topics;
+			return this.topics;
 		}
 
 		public void setTopics(String[] topics) {

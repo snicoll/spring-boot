@@ -40,7 +40,6 @@ import org.hornetq.jms.server.config.impl.JMSConfigurationImpl;
 import org.hornetq.jms.server.config.impl.JMSQueueConfigurationImpl;
 import org.hornetq.jms.server.config.impl.TopicConfigurationImpl;
 import org.hornetq.jms.server.embedded.EmbeddedJMS;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -51,13 +50,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration Auto-configuration}
- * to integrate with an HornetQ broker. Connect by default to a broker available on the
- * local machine with the default settings. If the necessary classes are present, the broker
- * can also be embedded in the application itself.
- *
+ * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
+ * Auto-configuration} to integrate with an HornetQ broker. Connect by default to a broker
+ * available on the local machine with the default settings. If the necessary classes are
+ * present, the broker can also be embedded in the application itself.
+ * 
  * @author Stephane Nicoll
- * @since 1.1
+ * @since 1.1.0
  */
 @Configuration
 @AutoConfigureBefore(JmsTemplateAutoConfiguration.class)
@@ -66,7 +65,7 @@ import org.springframework.context.annotation.Configuration;
 public class HornetQAutoConfiguration {
 
 	@Configuration
-	@ConditionalOnClass({NettyConnectorFactory.class, HornetQJMSClient.class})
+	@ConditionalOnClass({ NettyConnectorFactory.class, HornetQJMSClient.class })
 	@ConditionalOnExpression("'${spring.hornetq.mode:netty}' == 'netty'")
 	protected static class NettyConnection {
 
@@ -80,18 +79,21 @@ public class HornetQAutoConfiguration {
 			@Bean
 			public ConnectionFactory jmsConnectionFactory() {
 				Map<String, Object> connectionParams = new HashMap<String, Object>();
-				connectionParams.put(TransportConstants.HOST_PROP_NAME, properties.getHost());
-				connectionParams.put(TransportConstants.PORT_PROP_NAME, properties.getPort());
-				TransportConfiguration transportConfiguration =
-						new TransportConfiguration(NettyConnectorFactory.class.getName(), connectionParams);
-				return HornetQJMSClient.createConnectionFactoryWithoutHA(JMSFactoryType.CF, transportConfiguration);
+				connectionParams.put(TransportConstants.HOST_PROP_NAME,
+						this.properties.getHost());
+				connectionParams.put(TransportConstants.PORT_PROP_NAME,
+						this.properties.getPort());
+				TransportConfiguration transportConfiguration = new TransportConfiguration(
+						NettyConnectorFactory.class.getName(), connectionParams);
+				return HornetQJMSClient.createConnectionFactoryWithoutHA(
+						JMSFactoryType.CF, transportConfiguration);
 			}
 
 		}
 	}
 
 	@Configuration
-	@ConditionalOnClass({InVMConnectorFactory.class, EmbeddedJMS.class})
+	@ConditionalOnClass({ InVMConnectorFactory.class, EmbeddedJMS.class })
 	@ConditionalOnExpression("'${spring.hornetq.mode:netty}' == 'embedded'")
 	protected static class EmbeddedConnection {
 
@@ -110,14 +112,16 @@ public class HornetQAutoConfiguration {
 
 			@Bean
 			public ConnectionFactory jmsConnectionFactory() {
-				ServerLocator serverLocator = HornetQClient.createServerLocatorWithoutHA(
-						new TransportConfiguration(InVMConnectorFactory.class.getName()));
+				ServerLocator serverLocator = HornetQClient
+						.createServerLocatorWithoutHA(new TransportConfiguration(
+								InVMConnectorFactory.class.getName()));
 				return new HornetQConnectionFactory(serverLocator);
 			}
 
 			@Bean(initMethod = "start", destroyMethod = "stop")
 			@ConditionalOnMissingBean(EmbeddedJMS.class)
-			public SpringEmbeddedHornetQ hornetQServer(org.hornetq.core.config.Configuration hornetQConfiguration,
+			public SpringEmbeddedHornetQ hornetQServer(
+					org.hornetq.core.config.Configuration hornetQConfiguration,
 					JMSConfiguration hornetQJmsConfiguration) {
 				SpringEmbeddedHornetQ bootstrap = new SpringEmbeddedHornetQ();
 				bootstrap.setConfiguration(hornetQConfiguration);
@@ -132,7 +136,7 @@ public class HornetQAutoConfiguration {
 
 				configuration.setSecurityEnabled(false);
 
-				properties.getEmbedded().configure(configuration);
+				this.properties.getEmbedded().configure(configuration);
 
 				configuration.getAcceptorConfigurations().add(
 						new TransportConfiguration(InVMAcceptorFactory.class.getName()));
@@ -148,17 +152,17 @@ public class HornetQAutoConfiguration {
 				JMSConfiguration jmsConfig = new JMSConfigurationImpl();
 
 				if (this.queuesConfiguration != null) {
-					jmsConfig.getQueueConfigurations().addAll(queuesConfiguration);
+					jmsConfig.getQueueConfigurations().addAll(this.queuesConfiguration);
 				}
 				if (this.topicsConfiguration != null) {
 					jmsConfig.getTopicConfigurations().addAll(this.topicsConfiguration);
 				}
 
-				for (String queue : properties.getEmbedded().getQueues()) {
+				for (String queue : this.properties.getEmbedded().getQueues()) {
 					JMSQueueConfiguration queueConfig = createSimpleQueueConfiguration(queue);
 					jmsConfig.getQueueConfigurations().add(queueConfig);
 				}
-				for (String topic : properties.getEmbedded().getTopics()) {
+				for (String topic : this.properties.getEmbedded().getTopics()) {
 					TopicConfiguration topicConfig = createSimpleTopicConfiguration(topic);
 					jmsConfig.getTopicConfigurations().add(topicConfig);
 				}
@@ -166,10 +170,9 @@ public class HornetQAutoConfiguration {
 				return jmsConfig;
 			}
 
-
 			private JMSQueueConfiguration createSimpleQueueConfiguration(String name) {
-				return new JMSQueueConfigurationImpl(name, null,
-						this.properties.getEmbedded().isPersistent(), "/queue/" + name);
+				return new JMSQueueConfigurationImpl(name, null, this.properties
+						.getEmbedded().isPersistent(), "/queue/" + name);
 			}
 
 			private TopicConfiguration createSimpleTopicConfiguration(String name) {

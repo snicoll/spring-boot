@@ -16,8 +16,6 @@
 
 package org.springframework.boot.autoconfigure.jms;
 
-import static org.junit.Assert.*;
-
 import java.io.File;
 
 import org.hornetq.core.config.Configuration;
@@ -25,8 +23,10 @@ import org.hornetq.core.config.impl.ConfigurationImpl;
 import org.hornetq.core.server.JournalType;
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 /**
- *
  * @author Stephane Nicoll
  */
 public class HornetQPropertiesTests {
@@ -40,8 +40,8 @@ public class HornetQPropertiesTests {
 		properties.getEmbedded().configure(configuration);
 
 		String expectedRoot = HornetQProperties.Embedded.createDataDir();
-		assertEquals("Wrong journal dir", new File(expectedRoot, "journal"),
-				new File(configuration.getJournalDirectory()));
+		assertEquals("Wrong journal dir", new File(expectedRoot, "journal"), new File(
+				configuration.getJournalDirectory()));
 	}
 
 	@Test

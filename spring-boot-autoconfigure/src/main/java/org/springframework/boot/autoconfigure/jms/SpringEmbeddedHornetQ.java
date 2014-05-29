@@ -17,17 +17,16 @@
 package org.springframework.boot.autoconfigure.jms;
 
 import org.hornetq.jms.server.embedded.EmbeddedJMS;
-
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
 
 /**
- * An embedded HornetQ broker that uses a {@link NoOpBindingRegistry}
- * to avoid dependency on other registries such as JNDI.
- *
+ * An embedded HornetQ broker that uses a {@link NoOpBindingRegistry} to avoid dependency
+ * on other registries such as JNDI.
+ * 
  * @author Stephane Nicoll
- * @since 1.1
+ * @since 1.1.0
  */
 public class SpringEmbeddedHornetQ extends EmbeddedJMS implements BeanFactoryAware {
 

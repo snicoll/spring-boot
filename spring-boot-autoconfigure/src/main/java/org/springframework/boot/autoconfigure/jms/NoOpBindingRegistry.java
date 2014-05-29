@@ -20,12 +20,13 @@ import org.hornetq.spi.core.naming.BindingRegistry;
 
 /**
  * A no-op implementation of the {@link org.hornetq.spi.core.naming.BindingRegistry}.
- *
+ * 
  * @author Stephane Nicoll
- * @since 1.1
+ * @since 1.1.0
  */
 class NoOpBindingRegistry implements BindingRegistry {
 
+	@Override
 	public Object lookup(String name) {
 		// This callback is used to check if an entry is present in the context before
 		// creating a queue on the fly. This is actually never used to try to fetch a
@@ -33,6 +34,7 @@ class NoOpBindingRegistry implements BindingRegistry {
 		return null;
 	}
 
+	@Override
 	public boolean bind(String name, Object obj) {
 		// This callback is used bind a Destination created on the fly by the embedded
 		// broker using the JNDI name that was specified in the configuration. This does
@@ -42,9 +44,11 @@ class NoOpBindingRegistry implements BindingRegistry {
 		return false;
 	}
 
+	@Override
 	public void unbind(String name) {
 	}
 
+	@Override
 	public void close() {
 	}
 

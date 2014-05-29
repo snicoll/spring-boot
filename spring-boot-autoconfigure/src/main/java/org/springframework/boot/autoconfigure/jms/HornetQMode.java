@@ -18,9 +18,9 @@ package org.springframework.boot.autoconfigure.jms;
 
 /**
  * Define the mode in which HornetQ can operate.
- *
+ * 
  * @author Stephane Nicoll
- * @since 1.1
+ * @since 1.1.0
  */
 public enum HornetQMode {
 
