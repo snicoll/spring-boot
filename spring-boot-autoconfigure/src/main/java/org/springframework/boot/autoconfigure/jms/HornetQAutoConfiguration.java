@@ -113,7 +113,7 @@ public class HornetQAutoConfiguration {
 		}
 
 		@Bean(initMethod = "start", destroyMethod = "stop")
-		@ConditionalOnMissingBean(EmbeddedJMS.class)
+		@ConditionalOnMissingBean
 		public EmbeddedJMS hornetQServer(
 				org.hornetq.core.config.Configuration hornetQConfiguration,
 				JMSConfiguration hornetQJmsConfiguration) {
@@ -125,7 +125,7 @@ public class HornetQAutoConfiguration {
 		}
 
 		@Bean
-		@ConditionalOnMissingBean(org.hornetq.core.config.Configuration.class)
+		@ConditionalOnMissingBean
 		public org.hornetq.core.config.Configuration hornetQConfiguration() {
 			ConfigurationImpl configuration = new ConfigurationImpl();
 
@@ -142,7 +142,7 @@ public class HornetQAutoConfiguration {
 		}
 
 		@Bean
-		@ConditionalOnMissingBean(JMSConfiguration.class)
+		@ConditionalOnMissingBean
 		public JMSConfiguration hornetQJmsConfiguration() {
 			JMSConfiguration jmsConfig = new JMSConfigurationImpl();
 
