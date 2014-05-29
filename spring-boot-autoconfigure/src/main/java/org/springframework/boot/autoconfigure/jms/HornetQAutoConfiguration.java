@@ -60,7 +60,7 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 @AutoConfigureBefore(JmsTemplateAutoConfiguration.class)
-@ConditionalOnClass(ConnectionFactory.class)
+@ConditionalOnClass({ ConnectionFactory.class, HornetQJMSClient.class })
 @ConditionalOnMissingBean(ConnectionFactory.class)
 @EnableConfigurationProperties(HornetQProperties.class)
 public class HornetQAutoConfiguration {
@@ -74,6 +74,7 @@ public class HornetQAutoConfiguration {
 		private HornetQProperties properties;
 
 		@Bean
+		@ConditionalOnMissingBean
 		public ConnectionFactory jmsConnectionFactory() {
 			Map<String, Object> connectionParams = new HashMap<String, Object>();
 			connectionParams.put(TransportConstants.HOST_PROP_NAME,
@@ -103,6 +104,7 @@ public class HornetQAutoConfiguration {
 		private Collection<TopicConfiguration> topicsConfiguration;
 
 		@Bean
+		@ConditionalOnMissingBean
 		public ConnectionFactory jmsConnectionFactory() {
 			ServerLocator serverLocator = HornetQClient
 					.createServerLocatorWithoutHA(new TransportConfiguration(
