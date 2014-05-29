@@ -67,7 +67,12 @@ public class HornetQProperties {
 		return this.embedded;
 	}
 
+	/**
+	 * Configuration for an embedded HornetQ server.
+	 */
 	public static class Embedded {
+
+		private boolean enabled;
 
 		private boolean persistent;
 
@@ -98,6 +103,14 @@ public class HornetQProperties {
 				configuration.setBindingsDirectory(rootDataDir + "/bindings");
 				configuration.setPagingDirectory(rootDataDir + "/paging");
 			}
+		}
+
+		public boolean isEnabled() {
+			return this.enabled;
+		}
+
+		public void setEnabled(boolean enabled) {
+			this.enabled = enabled;
 		}
 
 		public boolean isPersistent() {

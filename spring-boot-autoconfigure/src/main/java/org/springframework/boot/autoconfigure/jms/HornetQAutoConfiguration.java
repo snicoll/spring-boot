@@ -94,15 +94,6 @@ public class HornetQAutoConfiguration {
 	@ConditionalOnExpression("'${spring.hornetq.mode:netty}' == 'embedded'")
 	static class EmbeddedConnection {
 
-		@Autowired
-		private HornetQProperties properties;
-
-		@Autowired(required = false)
-		private Collection<JMSQueueConfiguration> queuesConfiguration;
-
-		@Autowired(required = false)
-		private Collection<TopicConfiguration> topicsConfiguration;
-
 		@Bean
 		@ConditionalOnMissingBean
 		public ConnectionFactory jmsConnectionFactory() {
@@ -111,6 +102,22 @@ public class HornetQAutoConfiguration {
 							InVMConnectorFactory.class.getName()));
 			return new HornetQConnectionFactory(serverLocator);
 		}
+
+	}
+
+	@Configuration
+	@ConditionalOnClass({ InVMConnectorFactory.class, EmbeddedJMS.class })
+	@ConditionalOnExpression("${spring.hornetq.embedded.enabled:true}")
+	static class EmbeddedServer {
+
+		@Autowired
+		private HornetQProperties properties;
+
+		@Autowired(required = false)
+		private Collection<JMSQueueConfiguration> queuesConfiguration;
+
+		@Autowired(required = false)
+		private Collection<TopicConfiguration> topicsConfiguration;
 
 		@Bean(initMethod = "start", destroyMethod = "stop")
 		@ConditionalOnMissingBean
@@ -175,4 +182,5 @@ public class HornetQAutoConfiguration {
 		}
 
 	}
+
 }
