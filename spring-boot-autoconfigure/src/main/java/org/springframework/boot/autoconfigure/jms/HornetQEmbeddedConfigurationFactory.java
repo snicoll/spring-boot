@@ -18,6 +18,8 @@ package org.springframework.boot.autoconfigure.jms;
 
 import java.io.File;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.hornetq.api.core.TransportConfiguration;
 import org.hornetq.core.config.Configuration;
 import org.hornetq.core.config.impl.ConfigurationImpl;
@@ -33,6 +35,8 @@ import org.springframework.boot.autoconfigure.jms.HornetQProperties.Embedded;
  * @since 1.1.0
  */
 class HornetQEmbeddedConfigurationFactory {
+
+	private Log logger = LogFactory.getLog(HornetQAutoConfiguration.class);
 
 	private Embedded properties;
 
@@ -62,7 +66,12 @@ class HornetQEmbeddedConfigurationFactory {
 		configuration.getAcceptorConfigurations().add(transportConfiguration);
 
 		// HORNETQ-1143
-		configuration.setClusterPassword("SpringBootRules");
+		if (this.properties.isDefaultClusterPassword()) {
+			this.logger.info("\n\nUsing default HornetQ cluster password: "
+					+ this.properties.getClusterPassword() + "\n\n");
+		}
+
+		configuration.setClusterPassword(this.properties.getClusterPassword());
 		return configuration;
 	}
 

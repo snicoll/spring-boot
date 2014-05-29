@@ -16,6 +16,8 @@
 
 package org.springframework.boot.autoconfigure.jms;
 
+import java.util.UUID;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -78,6 +80,10 @@ public class HornetQProperties {
 
 		private String[] topics = new String[0];
 
+		private String clusterPassword = UUID.randomUUID().toString();
+
+		private boolean defaultClusterPassword = true;
+
 		public boolean isEnabled() {
 			return this.enabled;
 		}
@@ -116,6 +122,19 @@ public class HornetQProperties {
 
 		public void setTopics(String[] topics) {
 			this.topics = topics;
+		}
+
+		public String getClusterPassword() {
+			return this.clusterPassword;
+		}
+
+		public void setClusterPassword(String clusterPassword) {
+			this.clusterPassword = clusterPassword;
+			this.defaultClusterPassword = false;
+		}
+
+		public boolean isDefaultClusterPassword() {
+			return this.defaultClusterPassword;
 		}
 
 	}
