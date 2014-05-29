@@ -62,6 +62,7 @@ import org.springframework.context.annotation.Configuration;
 @AutoConfigureBefore(JmsTemplateAutoConfiguration.class)
 @ConditionalOnClass(ConnectionFactory.class)
 @ConditionalOnMissingBean(ConnectionFactory.class)
+@EnableConfigurationProperties(HornetQProperties.class)
 public class HornetQAutoConfiguration {
 
 	@Configuration
@@ -70,7 +71,6 @@ public class HornetQAutoConfiguration {
 	protected static class NettyConnection {
 
 		@Configuration
-		@EnableConfigurationProperties(HornetQProperties.class)
 		static class HornetQNettyConfiguration {
 
 			@Autowired
@@ -98,7 +98,6 @@ public class HornetQAutoConfiguration {
 	protected static class EmbeddedConnection {
 
 		@Configuration
-		@EnableConfigurationProperties(HornetQProperties.class)
 		static class HornetQEmbeddedConfiguration {
 
 			@Autowired
