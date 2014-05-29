@@ -16,7 +16,6 @@
 
 package org.springframework.boot.autoconfigure.jms;
 
-import java.io.File;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -29,12 +28,9 @@ import org.hornetq.api.core.client.HornetQClient;
 import org.hornetq.api.core.client.ServerLocator;
 import org.hornetq.api.jms.HornetQJMSClient;
 import org.hornetq.api.jms.JMSFactoryType;
-import org.hornetq.core.config.impl.ConfigurationImpl;
-import org.hornetq.core.remoting.impl.invm.InVMAcceptorFactory;
 import org.hornetq.core.remoting.impl.invm.InVMConnectorFactory;
 import org.hornetq.core.remoting.impl.netty.NettyConnectorFactory;
 import org.hornetq.core.remoting.impl.netty.TransportConstants;
-import org.hornetq.core.server.JournalType;
 import org.hornetq.jms.client.HornetQConnectionFactory;
 import org.hornetq.jms.server.config.JMSConfiguration;
 import org.hornetq.jms.server.config.JMSQueueConfiguration;
@@ -48,7 +44,6 @@ import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.jms.HornetQProperties.Embedded;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -145,39 +140,8 @@ public class HornetQAutoConfiguration {
 		@Bean
 		@ConditionalOnMissingBean
 		public org.hornetq.core.config.Configuration hornetQConfiguration() {
-			Embedded properties = this.properties.getEmbedded();
-
-			ConfigurationImpl configuration = new ConfigurationImpl();
-			configuration.setSecurityEnabled(false);
-			configuration.setPersistenceEnabled(properties.isPersistent());
-
-			String dataDir = getDataDir();
-
-			// HORNETQ-1302
-			configuration.setJournalDirectory(dataDir + "/journal");
-
-			if (properties.isPersistent()) {
-				configuration.setJournalType(JournalType.NIO);
-				configuration.setLargeMessagesDirectory(dataDir + "/largemessages");
-				configuration.setBindingsDirectory(dataDir + "/bindings");
-				configuration.setPagingDirectory(dataDir + "/paging");
-			}
-
-			TransportConfiguration transportConfiguration = new TransportConfiguration(
-					InVMAcceptorFactory.class.getName());
-			configuration.getAcceptorConfigurations().add(transportConfiguration);
-
-			// HORNETQ-1143
-			configuration.setClusterPassword("SpringBootRules");
-			return configuration;
-		}
-
-		private String getDataDir() {
-			if (this.properties.getEmbedded().getDataDirectory() != null) {
-				return this.properties.getEmbedded().getDataDirectory();
-			}
-			String tmpDir = System.getProperty("java.io.tmpdir");
-			return new File(tmpDir, "hornetq-data").getAbsolutePath();
+			return new HornetQEmbeddedConfigurationFactory(this.properties)
+					.createConfiguration();
 		}
 
 		@Bean(initMethod = "start", destroyMethod = "stop")

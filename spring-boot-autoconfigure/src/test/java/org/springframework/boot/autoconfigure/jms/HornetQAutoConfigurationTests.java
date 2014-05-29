@@ -192,33 +192,6 @@ public class HornetQAutoConfigurationTests {
 				((TextMessage) message).getText());
 	}
 
-	// FIXME
-
-	// @Test
-	// public void defaultDataDir() {
-	// HornetQProperties properties = new HornetQProperties();
-	// properties.getEmbedded().setPersistent(true);
-	//
-	// Configuration configuration = new ConfigurationImpl();
-	// properties.getEmbedded().configure(configuration);
-	//
-	// String expectedRoot = HornetQProperties.Embedded.createDataDir();
-	// assertEquals("Wrong journal dir", new File(expectedRoot, "journal"), new File(
-	// configuration.getJournalDirectory()));
-	// }
-	//
-	// @Test
-	// public void persistenceSetup() {
-	// HornetQProperties properties = new HornetQProperties();
-	// properties.getEmbedded().setPersistent(true);
-	//
-	// Configuration configuration = new ConfigurationImpl();
-	// properties.getEmbedded().configure(configuration);
-	//
-	// assertTrue(configuration.isPersistenceEnabled());
-	// assertEquals(JournalType.NIO, configuration.getJournalType());
-	// }
-
 	private TransportConfiguration assertInVmConnectionFactory(
 			HornetQConnectionFactory connectionFactory) {
 		TransportConfiguration transportConfig = getSingleTransportConfiguration(connectionFactory);
