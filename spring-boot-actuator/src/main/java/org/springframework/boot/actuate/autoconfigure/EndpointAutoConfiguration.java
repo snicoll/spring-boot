@@ -183,6 +183,7 @@ public class EndpointAutoConfiguration {
 	protected static class CorePublicMetrics {
 
 		@Bean
+		@ConditionalOnMissingBean(SystemPublicMetrics.class)
 		SystemPublicMetrics systemPublicMetrics() {
 			return new SystemPublicMetrics();
 		}

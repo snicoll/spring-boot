@@ -613,15 +613,20 @@ Metrics for all HTTP requests are automatically recorded, so if you hit the
 		"threads": 15,
 		"threads.daemon": 11,
 		"threads.peak": 15,
-		"uptime": 494836
+		"uptime": 494836,
+		"instance.uptime": 489782,
+		"datasource.primary.active": 5,
+		"datasource.primary.usage": 0.25
 	}
 ----
 
-Here we can see basic `memory`, `heap`, `class loading`, `processor` and `thread pool`
-information provided by `SystemPublicMetrics` along with some HTTP metrics. In this
-instance the `root` (``/'') and `/metrics` URLs have returned `HTTP 200` responses `20`
-and `3` times respectively. It also appears that the `root` URL returned `HTTP 401`
-(unauthorized) `4` times.
+Here we can see basic `memory`, `heap`, `class loading`, `processor`, `thread pool`
+and `uptime` information provided by `SystemPublicMetrics`. The usage and number
+of open connections of each managed data source is also provided by `DataSourcePublicMetrics`.
+
+There are some HTTP metrics as well. In this instance the `root` (``/'') and `/metrics` URLs
+have returned `HTTP 200` responses `20` and `3` times respectively. It also appears that the
+`root` URL returned `HTTP 401` (unauthorized) `4` times.
 
 The `gauge` shows the last response time for a request. So the last request to `root` took
 `2ms` to respond and the last to `/metrics` took `3ms`.
@@ -676,6 +681,8 @@ simply register additional `PublicMetrics` implementation bean(s). By default, a
 beans are gathered by the endpoint. You can easily change that by defining your own
 `MetricsEndpoint`.
 
+To override the behaviour of an existing `PublicMetrics` such as `SystemPublicMetrics` or
+`DataSourcePublicMetrics` create your own version of that bean.
 
 [[production-ready-metric-repositories]]
 === Metric repositories
