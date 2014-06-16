@@ -42,6 +42,8 @@ public class DataSourceProperties implements BeanClassLoaderAware, InitializingB
 
 	private String password;
 
+	private String jndi;
+
 	private ClassLoader classLoader;
 
 	private boolean initialize = true;
@@ -146,6 +148,14 @@ public class DataSourceProperties implements BeanClassLoaderAware, InitializingB
 
 	public void setPassword(String password) {
 		this.password = password;
+	}
+
+	public String getJndi() {
+		return jndi;
+	}
+
+	public void setJndi(String jndi) {
+		this.jndi = jndi;
 	}
 
 	public boolean isInitialize() {

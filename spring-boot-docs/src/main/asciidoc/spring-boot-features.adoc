@@ -1220,14 +1220,16 @@ auto-configured. In this example it's pulled in transitively via
 [[boot-features-connect-to-production-database]]
 ==== Connection to a production database
 Production database connections can also be auto-configured using a pooling
-`DataSource`.  Here's the algorithm for choosing a specific implementation.
+`DataSource` or using JNDI entry.  Here's the algorithm for choosing how it
+is auto-configured
 
+* If a JNDI name is set, we locate the data source with that jndi name
 * We prefer the Tomcat pooling `DataSource` for its performance and concurrency, so if
   that is available we always choose it.
 * If commons-dbcp is available we will use that, but we don't recommend it in production.
 
 If you use the `spring-boot-starter-jdbc` or `spring-boot-starter-data-jpa`
-``starter POMs'' you will automcatically get a dependency to `tomcat-jdbc`.
+``starter POMs'' you will automatically get a dependency to `tomcat-jdbc`.
 
 NOTE: Additional connection pools can always be configured manually. If you define your
 own `DataSource` bean, auto-configuration will not occur.
@@ -1243,6 +1245,14 @@ in `application.properties`:
 	spring.datasource.password=dbpass
 	spring.datasource.driverClassName=com.mysql.jdbc.Driver
 ----
+
+To configure the data source using jndi, simply set the `spring.datasource.jndi` property
+with the proper JNDI name.
+
+NOTE: If a `JndiTemplate` bean is present in the application, we use it for the lookup. If
+none is defined, we assume that the default settings are fine to locate the data source. It
+is also possible to define a bean with type `JndiDataSourceLookup` to completely override how
+the data source is retrieved using its jndi name.
 
 See {sc-spring-boot-autoconfigure}/jdbc/DataSourceProperties.{sc-ext}[`DataSourceProperties`]
 for more of the supported options.
