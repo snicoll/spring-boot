@@ -1,0 +1,19 @@
+{
+    "groups": {
+        "spring.view": {
+            "type": "org.springframework.boot.autoconfigure.web.JspTemplateAvailabilityProvider",
+            "items": {
+                "prefix": {
+                    "groupType": 0,
+                    "type": "java.lang.String",
+                    "description": "Spring MVC view prefix"
+                },
+                "suffix": {
+                    "groupType": 0,
+                    "type": "java.lang.String",
+                    "description": "Spring MVC view suffix"
+                }
+            }
+        }
+    }
+}

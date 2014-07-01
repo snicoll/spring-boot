@@ -94,7 +94,7 @@ public class CommonsDataSourceConfigurationTests {
 		@Bean
 		@ConfigurationProperties(prefix = DataSourceProperties.PREFIX)
 		public DataSource dataSource() {
-			return DataSourceBuilder.create().type(BasicDataSource.class).build();
+			return new DataSourceConfigMetadata().dbcpDataSource();
 		}
 
 	}

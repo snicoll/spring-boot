@@ -187,6 +187,7 @@
 						<configuration>
 							<scripts>
 								<script>file:///${project.basedir}/src/main/groovy/generateAutoConfigurationClassTables.groovy</script>
+								<script>file:///${project.basedir}/src/main/groovy/generateConfigurationItemsTable.groovy</script>
 							</scripts>
 						</configuration>
 						<dependencies>
@@ -194,6 +195,16 @@
 								<groupId>org.codehaus.groovy</groupId>
 								<artifactId>groovy-all</artifactId>
 								<version>${groovy.version}</version>
+							</dependency>
+							<dependency>
+								<groupId>org.springframework.boot</groupId>
+								<artifactId>spring-boot-config-processor</artifactId>
+								<version>${spring-boot.version}</version>
+							</dependency>
+							<dependency>
+								<groupId>org.json</groupId>
+								<artifactId>json</artifactId>
+								<version>${json.version}</version>
 							</dependency>
 						</dependencies>
 					</plugin>

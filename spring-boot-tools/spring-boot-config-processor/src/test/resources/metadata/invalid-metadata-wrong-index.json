@@ -1,0 +1,13 @@
+{
+    "groups": {
+        "foo": {
+            "type": "org.springframework.boot.FooProperties",
+            "items": {
+                "id": {
+                    "groupType": 5,
+                    "type": "java.lang.String"
+                }
+            }
+        }
+    }
+}

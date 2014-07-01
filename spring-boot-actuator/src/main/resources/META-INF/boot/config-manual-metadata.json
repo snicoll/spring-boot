@@ -1,0 +1,14 @@
+{
+    "groups": {
+        "spring.git": {
+            "type": "org.springframework.boot.actuate.autoconfigure.EndpointAutoConfiguration$InfoPropertiesConfiguration",
+            "items": {
+                "properties": {
+                    "groupType": 0,
+                    "type": "java.lang.String",
+                    "description": "resource ref to generated git info properties file"
+                }
+            }
+        }
+    }
+}

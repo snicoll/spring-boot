@@ -381,6 +381,12 @@
 			<artifactId>aspectjweaver</artifactId>
 			<optional>true</optional>
 		</dependency>
+		<!-- config metadata -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-config-processor</artifactId>
+			<optional>true</optional>
+		</dependency>
 		<!-- Test -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

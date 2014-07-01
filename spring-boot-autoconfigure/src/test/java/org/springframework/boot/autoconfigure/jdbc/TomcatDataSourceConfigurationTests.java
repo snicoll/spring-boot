@@ -137,8 +137,7 @@ public class TomcatDataSourceConfigurationTests {
 		@Bean
 		@ConfigurationProperties(prefix = DataSourceProperties.PREFIX)
 		public DataSource dataSource() {
-			return DataSourceBuilder.create()
-					.type(org.apache.tomcat.jdbc.pool.DataSource.class).build();
+			return new DataSourceConfigMetadata().tomcatDataSource();
 		}
 
 	}

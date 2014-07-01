@@ -88,6 +88,7 @@
 		<jersey.version>2.7</jersey.version>
 		<joda-time.version>2.4</joda-time.version>
 		<jolokia.version>1.2.2</jolokia.version>
+		<json.version>20140107</json.version>
 		<json-path.version>0.9.1</json-path.version>
 		<jstl.version>1.2</jstl.version>
 		<junit.version>4.11</junit.version>
@@ -155,6 +156,11 @@
 			<dependency>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-autoconfigure</artifactId>
+				<version>1.2.0.BUILD-SNAPSHOT</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-config-processor</artifactId>
 				<version>1.2.0.BUILD-SNAPSHOT</version>
 			</dependency>
 			<dependency>
@@ -962,6 +968,11 @@
 				<groupId>org.jdom</groupId>
 				<artifactId>jdom2</artifactId>
 				<version>${jdom2.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.json</groupId>
+				<artifactId>json</artifactId>
+				<version>${json.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.liquibase</groupId>

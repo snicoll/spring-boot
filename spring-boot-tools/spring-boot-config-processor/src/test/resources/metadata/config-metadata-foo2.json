@@ -1,0 +1,25 @@
+{"groups": {
+    "foo": {
+        "types": [
+            "org.springframework.boot.Foo2Properties"
+        ],
+        "groups": {
+            "nested": {
+                "items": {
+                    "value2": {
+                        "type": "java.lang.String"
+                    }
+                }
+            }
+        },
+        "items": {
+            "sensitive": {
+                "groupType": 0
+            },
+            "enabled2": {
+                "groupTypes": [0],
+                "type": "java.lang.Boolean"
+            }
+        }
+    }
+}}

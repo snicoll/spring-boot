@@ -1,0 +1,33 @@
+{
+    "groups": {
+        "bar": {
+            "type": "org.springframework.boot.BarProperties",
+            "groups": {
+                "nested": {
+                    "items": {
+                        "value": {
+                            "type": "java.lang.String"
+                        }
+                    }
+                }
+            },
+            "items": {
+                "id": {
+                    "groupType": 0,
+                    "type": "java.lang.String"
+                },
+                "sensitive": {
+                    "groupType": 0,
+                    "type": "java.lang.Boolean"
+                },
+                "enabled": {
+                    "groupType": 0,
+                    "type": "java.lang.Boolean"
+                }
+            }
+        }
+    },
+    "items": {
+        "rootBar": {}
+    }
+}

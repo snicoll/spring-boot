@@ -1,0 +1,88 @@
+{
+    "groups": {
+        "logging": {
+            "type": "org.springframework.boot.logging.LoggingApplicationListener",
+            "items": {
+                "config": {
+                    "groupType": 0,
+                    "type": "java.lang.String",
+                    "description": "location of logging configuration file"
+                },
+                "file": {
+                    "groupType": 0,
+                    "type": "java.lang.String",
+                    "description": "name of log file"
+                },
+                "path": {
+                    "groupType": 0,
+                    "type": "java.lang.String",
+                    "description": "location of log file"
+                }
+            }
+        },
+        "spring": {
+            "type": "org.springframework.boot.context.FileEncodingApplicationListener",
+            "items": {
+                "mandatoryFileEncoding": {
+                    "groupType": 0,
+                    "type": "java.lang.String",
+                    "description": "the character encoding the application must use"
+                }
+            },
+            "groups": {
+                "application": {
+                    "type": "org.springframework.boot.context.ContextIdApplicationContextInitializer",
+                    "items": {
+                        "name": {
+                            "groupType": 0,
+                            "type": "java.lang.String",
+                            "description": "name of the application"
+                        },
+                        "index": {
+                            "groupType": 0,
+                            "type": "java.lang.Integer",
+                            "description": "index (or port) of the application"
+                        }
+                    }
+                },
+                "config": {
+                    "type": "org.springframework.boot.context.config.ConfigFileApplicationListener",
+                    "items": {
+                        "name": {
+                            "groupType": 0,
+                            "type": "java.lang.String",
+                            "description": "config file name (default to 'application')"
+                        },
+                        "location": {
+                            "groupType": 0,
+                            "type": "java.lang.String",
+                            "description": "location of config files"
+                        }
+                    }
+                },
+                "main": {
+                    "type": "org.springframework.boot.SpringApplication",
+                    "items": {
+                        "showBanner": {
+                            "groupType": 0,
+                            "type": "java.lang.Boolean",
+                            "description": "display the Spring banner when the application runs"
+                        },
+                        "sources": {
+                            "groupType": 0,
+                            "type": "java.util.Set<java.lang.Object>",
+                            "description": "sources (class name, package name or XML resource location) used to create the ApplicationContext."
+                        },
+                        "webEnvironment": {
+                            "groupType": 0,
+                            "type": "java.lang.Boolean",
+                            "description": "run the application in a web environment (auto-detected by default)"
+
+                        }
+                    }
+                }
+            }
+        }
+
+    }
+}

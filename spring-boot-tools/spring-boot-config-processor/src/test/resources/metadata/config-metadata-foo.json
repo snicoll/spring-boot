@@ -1,0 +1,31 @@
+{
+    "groups": {
+        "foo": {
+            "type": "org.springframework.boot.FooProperties",
+            "groups": {
+                "nested": {
+                    "items": {
+                        "value": {
+                            "type": "java.lang.String"
+                        }
+                    }
+                }
+            },
+            "items": {
+                "id": {
+                    "groupType": 0,
+                    "type": "java.lang.String"
+                },
+                "sensitive": {
+                    "groupType": 0,
+                    "type": "java.lang.Boolean",
+                    "description": "A sensitive flag"
+                },
+                "enabled": {}
+            }
+        }
+    },
+    "items": {
+        "rootFoo": {}
+    }
+}
