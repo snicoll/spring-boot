@@ -42,6 +42,8 @@ Spring Boot Maven Plugin
 
   * {{{./examples/run-debug.html}Debug the application}}
 
+  * {{{./examples/run-profiles.html}Specify active profiles}}
+
   []
 
 

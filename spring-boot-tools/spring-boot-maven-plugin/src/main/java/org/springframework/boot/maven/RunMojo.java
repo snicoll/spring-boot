@@ -56,6 +56,8 @@ public class RunMojo extends AbstractDependencyFilterMojo {
 
 	private static final String SPRING_LOADED_AGENT_CLASSNAME = "org.springsource.loaded.agent.SpringLoadedAgent";
 
+	private static final String ACTIVE_PROFILES_PROPERTY = "spring.profiles.active";
+
 	/**
 	 * The Maven project.
 	 * @since 1.0
@@ -103,6 +105,15 @@ public class RunMojo extends AbstractDependencyFilterMojo {
 	 */
 	@Parameter(property = "run.arguments")
 	private String[] arguments;
+
+	/**
+	 * The spring profiles to activate. Convenience shortcut of specifying the
+	 * 'spring.profiles.active' jvm argument. On command line use commas to
+	 * separate multiple profiles.
+	 * @since 1.2
+	 */
+	@Parameter(property = "run.profiles")
+	private String[] profiles;
 
 	/**
 	 * The name of the main class. If not specified the first compiled class found that
@@ -160,6 +171,7 @@ public class RunMojo extends AbstractDependencyFilterMojo {
 	private void run(String startClassName) throws MojoExecutionException {
 		List<String> args = new ArrayList<String>();
 		addAgents(args);
+		addProfiles(args);
 		addJvmArgs(args);
 		addClasspath(args);
 		args.add(startClassName);
@@ -186,7 +198,24 @@ public class RunMojo extends AbstractDependencyFilterMojo {
 		}
 	}
 
+	private void addProfiles(List<String> args) {
+		if (this.profiles.length > 0) {
+			StringBuilder sb = new StringBuilder("-D");
+			sb.append(ACTIVE_PROFILES_PROPERTY).append("=");
+			for (int i = 0; i < this.profiles.length; i++) {
+				sb.append(this.profiles[i]);
+				if (i < this.profiles.length - 1) {
+					sb.append(",");
+				}
+			}
+			args.add(sb.toString());
+			logArguments("Active profile(s): ", this.profiles);
+
+		}
+	}
+
 	private void addJvmArgs(List<String> args) {
+
 		RunArguments jvmArguments = new RunArguments(this.jvmArguments);
 		Collections.addAll(args, jvmArguments.asArray());
 		logArguments("JVM argument(s): ", jvmArguments.asArray());
