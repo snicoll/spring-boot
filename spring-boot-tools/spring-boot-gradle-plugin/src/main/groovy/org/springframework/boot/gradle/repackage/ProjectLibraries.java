@@ -122,7 +122,7 @@ class ProjectLibraries implements Libraries {
 			if (dependency instanceof FileCollectionDependency) {
 				FileCollectionDependency fileDependency = (FileCollectionDependency) dependency;
 				for (File file : fileDependency.resolve()) {
-					libraries.add(new Library(file, scope));
+					libraries.add(new Library(file, scope, fileDependency.getGroup(), false));
 				}
 			}
 			else if (dependency instanceof ProjectDependency) {
@@ -173,13 +173,25 @@ class ProjectLibraries implements Libraries {
 		}
 
 		@Override
+		public String getGroupId() {
+			return getId().getGroup();
+		}
+
+		public String getArtifactId() {
+			return getId().getName();
+		}
+
+		@Override
 		public boolean isUnpackRequired() {
 			if (ProjectLibraries.this.extension.getRequiresUnpack() != null) {
-				ModuleVersionIdentifier id = this.artifact.getModuleVersion().getId();
 				return ProjectLibraries.this.extension.getRequiresUnpack().contains(
-						id.getGroup() + ":" + id.getName());
+						getGroupId() + ":" + getArtifactId());
 			}
 			return false;
+		}
+
+		protected ModuleVersionIdentifier getId() {
+			return this.artifact.getModuleVersion().getId();
 		}
 
 	}

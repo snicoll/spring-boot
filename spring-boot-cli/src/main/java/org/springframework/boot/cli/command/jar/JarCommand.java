@@ -242,16 +242,17 @@ public class JarCommand extends OptionParsingCommand {
 		}
 
 		private void addDependencies(JarWriter writer, List<URL> urls)
-				throws IOException, URISyntaxException, FileNotFoundException {
+				throws IOException, URISyntaxException {
 			for (URL url : urls) {
 				addDependency(writer, new File(url.toURI()));
 			}
 		}
 
 		private void addDependency(JarWriter writer, File dependency)
-				throws FileNotFoundException, IOException {
+				throws IOException {
 			if (dependency.isFile()) {
-				writer.writeNestedLibrary("lib/", new Library(dependency,
+				String pathName = "lib/" + dependency.getName();
+				writer.writeNestedLibrary(pathName, new Library(dependency,
 						LibraryScope.COMPILE));
 			}
 		}

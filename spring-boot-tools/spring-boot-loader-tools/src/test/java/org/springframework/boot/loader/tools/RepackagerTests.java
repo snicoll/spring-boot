@@ -287,7 +287,7 @@ public class RepackagerTests {
 			public void doWithLibraries(LibraryCallback callback) throws IOException {
 				callback.library(new Library(libJarFile, LibraryScope.COMPILE));
 				callback.library(new Library(libJarFileToUnpack, LibraryScope.COMPILE,
-						true));
+						"someGroup", true));
 				callback.library(new Library(libNonJarFile, LibraryScope.COMPILE));
 			}
 		});
@@ -297,6 +297,25 @@ public class RepackagerTests {
 		JarEntry entry = getEntry(file, "lib/" + libJarFileToUnpack.getName());
 		assertThat(entry.getComment(), startsWith("UNPACK:"));
 		assertThat(entry.getComment().length(), equalTo(47));
+	}
+
+	@Test
+	public void librariesConflict() throws Exception {
+		TestJarFile libJar = new TestJarFile(this.temporaryFolder);
+		libJar.addClass("a/b/C.class", ClassWithoutMainMethod.class);
+		final File libJarFile = libJar.getFile();
+		this.testJarFile.addClass("a/b/C.class", ClassWithMainMethod.class);
+		File file = this.testJarFile.getFile();
+		Repackager repackager = new Repackager(file);
+		repackager.repackage(new Libraries() {
+			@Override
+			public void doWithLibraries(LibraryCallback callback) throws IOException {
+				callback.library(new Library(libJarFile, LibraryScope.COMPILE, "foo", false));
+				callback.library(new Library(libJarFile, LibraryScope.COMPILE, "bar", false));
+			}
+		});
+		assertThat(hasEntry(file, "lib/" + libJarFile.getName()), equalTo(true));
+		assertThat(hasEntry(file, "lib/bar-" + libJarFile.getName()), equalTo(true));
 	}
 
 	@Test

@@ -121,14 +121,14 @@ public class JarWriter {
 
 	/**
 	 * Write a nested library.
-	 * @param destination the destination of the library
+	 * @param pathName the path name of the library
 	 * @param library the library
 	 * @throws IOException if the write fails
 	 */
-	public void writeNestedLibrary(String destination, Library library)
+	public void writeNestedLibrary(String pathName, Library library)
 			throws IOException {
 		File file = library.getFile();
-		JarEntry entry = new JarEntry(destination + file.getName());
+		JarEntry entry = new JarEntry(pathName);
 		if (library.isUnpackRequired()) {
 			entry.setComment("UNPACK:" + FileUtils.sha1Hash(file));
 		}

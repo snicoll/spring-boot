@@ -20,6 +20,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 
@@ -152,6 +154,7 @@ public class Repackager {
 	private void repackage(JarFile sourceJar, File destination, Libraries libraries)
 			throws IOException {
 		final JarWriter writer = new JarWriter(destination);
+		final Set<String> libraryPathNames = new HashSet<String>();
 		try {
 			writer.writeManifest(buildManifest(sourceJar));
 			writer.writeEntries(sourceJar);
@@ -164,7 +167,12 @@ public class Repackager {
 						String destination = Repackager.this.layout
 								.getLibraryDestination(file.getName(), library.getScope());
 						if (destination != null) {
-							writer.writeNestedLibrary(destination, library);
+							String candidate = destination + file.getName();
+							if (libraryPathNames.contains(candidate)) {
+								candidate = destination + generateFullLibraryName(library);
+							}
+							libraryPathNames.add(candidate);
+							writer.writeNestedLibrary(candidate, library);
 						}
 					}
 				}
@@ -182,6 +190,20 @@ public class Repackager {
 				// Ignore
 			}
 		}
+	}
+
+	/**
+	 * Generate a unique library name in case of conflict using
+	 * the groupId.
+	 * @param library the library
+	 * @return a library name with its associated groupId
+	 */
+	private String generateFullLibraryName(Library library) {
+		if (library.getGroupId() == null) {
+			throw new IllegalStateException("could not generate full library name for "
+					+ library + " groupId must be set");
+		}
+		return library.getGroupId() + "-" + library.getFile().getName();
 	}
 
 	private boolean isZip(File file) {

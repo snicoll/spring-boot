@@ -61,7 +61,7 @@ public class ArtifactsLibraries implements Libraries {
 		for (Artifact artifact : this.artifacts) {
 			LibraryScope scope = SCOPES.get(artifact.getScope());
 			if (scope != null && artifact.getFile() != null) {
-				callback.library(new Library(artifact.getFile(), scope,
+				callback.library(new Library(artifact.getFile(), scope, artifact.getGroupId(),
 						isUnpackRequired(artifact)));
 			}
 		}

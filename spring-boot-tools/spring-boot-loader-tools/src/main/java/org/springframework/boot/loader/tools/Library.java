@@ -31,6 +31,8 @@ public class Library {
 
 	private final LibraryScope scope;
 
+	private final String group;
+
 	private final boolean unpackRequired;
 
 	/**
@@ -39,18 +41,20 @@ public class Library {
 	 * @param scope the scope of the library
 	 */
 	public Library(File file, LibraryScope scope) {
-		this(file, scope, false);
+		this(file, scope, null, false);
 	}
 
 	/**
 	 * Create a new {@link Library}.
 	 * @param file the source file
 	 * @param scope the scope of the library
+	 * @param group the group of the library
 	 * @param unpackRequired if the library needs to be unpacked before it can be used
 	 */
-	public Library(File file, LibraryScope scope, boolean unpackRequired) {
+	public Library(File file, LibraryScope scope, String group, boolean unpackRequired) {
 		this.file = file;
 		this.scope = scope;
+		this.group = group;
 		this.unpackRequired = unpackRequired;
 	}
 
@@ -59,6 +63,13 @@ public class Library {
 	 */
 	public File getFile() {
 		return this.file;
+	}
+
+	/**
+	 * @return the group of the library
+	 */
+	public String getGroupId() {
+		return group;
 	}
 
 	/**
