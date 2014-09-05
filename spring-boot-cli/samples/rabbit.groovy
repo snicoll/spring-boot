@@ -4,7 +4,7 @@ import java.util.concurrent.CountDownLatch
 
 @Log
 @Configuration
-@EnableRabbitMessaging
+@EnableRabbit
 class RabbitExample implements CommandLineRunner {
 
 	private CountDownLatch latch = new CountDownLatch(1)
@@ -12,11 +12,21 @@ class RabbitExample implements CommandLineRunner {
 	@Autowired
 	RabbitTemplate rabbitTemplate
 
-	private String queueName = "spring-boot"
+	void run(String... args) {
+		log.info "Sending RabbitMQ message..."
+		rabbitTemplate.convertAndSend("spring-boot", "Greetings from Spring Boot via RabbitMQ")
+		latch.await()
+	}
+
+	@RabbitListener(queues = 'spring-boot')
+	def receive(String message) {
+		log.info "Received ${message}"
+		latch.countDown()
+	}
 
 	@Bean
 	Queue queue() {
-		new Queue(queueName, false)
+		new Queue("spring-boot", false)
 	}
 
 	@Bean
@@ -36,28 +46,4 @@ class RabbitExample implements CommandLineRunner {
 				.with("spring-boot")
 	}
 
-	@Bean
-	SimpleMessageListenerContainer container(CachingConnectionFactory connectionFactory) {
-		return new SimpleMessageListenerContainer(
-		connectionFactory: connectionFactory,
-		queueNames: [queueName],
-		messageListener: new MessageListenerAdapter(new Receiver(latch:latch), "receive")
-		)
-	}
-
-	void run(String... args) {
-		log.info "Sending RabbitMQ message..."
-		rabbitTemplate.convertAndSend(queueName, "Greetings from Spring Boot via RabbitMQ")
-		latch.await()
-	}
-}
-
-@Log
-class Receiver {
-	CountDownLatch latch
-
-	def receive(String message) {
-		log.info "Received ${message}"
-		latch.countDown()
-	}
 }
