@@ -17,7 +17,6 @@
 package org.springframework.boot.actuate.endpoint;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -84,10 +83,6 @@ public class ConfigurationPropertiesReportEndpoint extends
 	public void setConfigurationBeanFactoryMetaData(
 			ConfigurationBeanFactoryMetaData beanFactoryMetaData) {
 		this.beanFactoryMetaData = beanFactoryMetaData;
-	}
-
-	public List<String> getKeysToSanitize() {
-		return Arrays.asList(keysToSanitize);
 	}
 
 	public void setKeysToSanitize(String... keysToSanitize) {

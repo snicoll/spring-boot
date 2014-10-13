@@ -31,17 +31,17 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  */
 class DataSourceConfigMetadata {
 
-	@ConfigurationProperties(DataSourceAutoConfiguration.CONFIGURATION_PREFIX)
+	@ConfigurationProperties(DataSourceProperties.PREFIX)
 	public DataSource tomcatDataSource() {
 		return (DataSource) DataSourceBuilder.create().type(DataSource.class).build();
 	}
 
-	@ConfigurationProperties(DataSourceAutoConfiguration.CONFIGURATION_PREFIX)
+	@ConfigurationProperties(DataSourceProperties.PREFIX)
 	public HikariDataSource hikariDataSource() {
 		return (HikariDataSource) DataSourceBuilder.create().type(HikariDataSource.class).build();
 	}
 
-	@ConfigurationProperties(DataSourceAutoConfiguration.CONFIGURATION_PREFIX)
+	@ConfigurationProperties(DataSourceProperties.PREFIX)
 	public BasicDataSource dbcpDataSource() {
 		return (BasicDataSource)DataSourceBuilder.create().type(BasicDataSource.class).build();
 	}
