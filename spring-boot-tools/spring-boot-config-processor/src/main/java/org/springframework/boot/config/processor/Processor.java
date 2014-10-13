@@ -53,7 +53,7 @@ import org.springframework.boot.config.processor.util.ModelUtils;
  */
 class Processor {
 
-	static final String JSON_METADATA_LOCATION = "META-INF/boot/config-metadata.json";
+	static final String JSON_METADATA_LOCATION = "META-INF/spring-harvested-config.metadata";
 
 	private final ProcessingEnvironment env;
 

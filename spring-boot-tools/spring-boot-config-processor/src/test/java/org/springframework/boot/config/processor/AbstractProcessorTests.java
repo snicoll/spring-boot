@@ -93,7 +93,7 @@ public abstract class AbstractProcessorTests {
 	 * @param baseDir the base directory to use to locate the file
 	 */
 	protected File getConfigMetadataFile(File baseDir) {
-		return new File(baseDir, "META-INF/boot/config-metadata.json");
+		return new File(baseDir, "META-INF/spring-harvested-config.metadata");
 	}
 
 	private File createTempDir() {

@@ -44,13 +44,13 @@ public class ConfigMetadataRepositoryJsonLoader {
 	 * The default classpath location for config metadata.
 	 */
 	public static final String DEFAULT_LOCATION_PATTERN =
-			"classpath*:META-INF/boot/config-metadata.json";
+			"classpath*:META-INF/spring-harvested-config.metadata";
 
 	/**
 	 * The default classpath location for manual config metadata.
 	 */
 	public static final String DEFAULT_MANUAL_LOCATION_PATTERN =
-			"classpath*:META-INF/boot/config-manual-metadata.json";
+			"classpath*:META-INF/spring-config.metadata";
 
 	private ConfigMetadataRepositoryJsonMapper mapper = new ConfigMetadataRepositoryJsonMapper();
 
