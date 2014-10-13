@@ -16,9 +16,7 @@
 
 package org.springframework.boot.config.processor.util;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.lang.model.element.AnnotationMirror;
@@ -41,12 +39,6 @@ public abstract class ModelUtils {
 	 */
 	public static final String CONFIGURATION_PROPERTIES_FQN
 			= "org.springframework.boot.context.properties.ConfigurationProperties";
-
-	/**
-	 * The fully qualified name of the {@code ConditionalOnProperty} annotation.
-	 */
-	public static final String CONDITIONAL_ON_PROPERTY_FQN =
-			"org.springframework.boot.autoconfigure.condition.ConditionalOnProperty";
 
 	private static final Map<TypeKind, Class<?>> primitivesToWrappers;
 
@@ -107,20 +99,6 @@ public abstract class ModelUtils {
 	}
 
 	/**
-	 * Return the {@link AnnotationMirror} corresponding to the {@code @ConfigurationProperties}
-	 * defined on the specified {@link Element} or {@code null} if that element does not
-	 * define the annotation
-	 */
-	public static AnnotationMirror getConditionalOnPropertyAnnotation(Element element) {
-		for (AnnotationMirror annotation : element.getAnnotationMirrors()) {
-			if (isAnnotation(ModelUtils.CONDITIONAL_ON_PROPERTY_FQN, annotation)) {
-				return annotation;
-			}
-		}
-		return null;
-	}
-
-	/**
 	 * Return the attributes of the specified annotation. Note that if the annotation
 	 * defines a default for a property, the property is not defined at all in the
 	 * result map if it's absent from this specific annotation.
@@ -132,7 +110,7 @@ public abstract class ModelUtils {
 				: annotation.getElementValues().entrySet()) {
 			String name = ModelUtils.getName(entry.getKey());
 			Object value = entry.getValue().getValue();
-			parameters.put(name, parseValue(value));
+			parameters.put(name, value);
 		}
 		return parameters;
 	}
@@ -183,16 +161,4 @@ public abstract class ModelUtils {
 		return annotation.getAnnotationType().toString().equals(fqn);
 	}
 
-	@SuppressWarnings("unchecked")
-	private static Object parseValue(Object value) {
-		if (value instanceof List) {
-			List<AnnotationValue> list = (List<AnnotationValue>) value;
-			List<Object> result = new ArrayList<Object>();
-			for (AnnotationValue annotationValue : list) {
-				result.add(annotationValue.getValue());
-			}
-			return result;
-		}
-		return value;
-	}
 }

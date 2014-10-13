@@ -37,7 +37,7 @@ import org.springframework.boot.config.processor.util.ModelUtils;
  * @author Stephane Nicoll
  * @since 1.2.0
  */
-@SupportedAnnotationTypes({ModelUtils.CONFIGURATION_PROPERTIES_FQN, ModelUtils.CONDITIONAL_ON_PROPERTY_FQN})
+@SupportedAnnotationTypes({ModelUtils.CONFIGURATION_PROPERTIES_FQN})
 @SupportedSourceVersion(SourceVersion.RELEASE_6)
 public class ConfigMetadataProcessor extends AbstractProcessor {
 

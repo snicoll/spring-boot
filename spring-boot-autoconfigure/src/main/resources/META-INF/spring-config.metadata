@@ -1,5 +1,123 @@
 {
     "groups": {
+        "spring.aop": {
+            "items": {
+                "auto": {
+                    "type": "java.lang.Boolean",
+                    "description": "Automatically adds @EnableAspectJAutoProxy",
+                    "defaultValue": "true"
+                },
+                "proxy-target-class": {
+                    "type": "java.lang.Boolean",
+                    "description": "Whether subclass-based (CGLIB) proxies are to be created (true) as opposed to standard Java interface-based proxies (false)",
+                    "defaultValue": "false"
+                }
+            }
+        },
+        "spring.batch": {
+            "items": {
+                "job.enabled": {
+                    "type": "java.lang.Boolean",
+                    "description": "Execute all jobs in the context on startup",
+                    "defaultValue": "true"
+                }
+            }
+        },
+        "spring.data": {
+            "groups": {
+                "elasticsearch": {
+                    "items": {
+                        "repositories.enabled": {
+                            "type": "java.lang.Boolean",
+                            "description": "Automatically enable elasticsearch repositories",
+                            "defaultValue": "true"
+                        }
+
+                    }
+                },
+                "jpa": {
+                    "items": {
+                        "repositories.enabled": {
+                            "type": "java.lang.Boolean",
+                            "description": "Automatically enable JPA repositories",
+                            "defaultValue": "true"
+                        }
+
+                    }
+                },
+                "mongo": {
+                    "items": {
+                        "repositories.enabled": {
+                            "type": "java.lang.Boolean",
+                            "description": "Automatically enable mongo repositories",
+                            "defaultValue": "true"
+                        }
+
+                    }
+                },
+                "solr": {
+                    "items": {
+                        "repositories.enabled": {
+                            "type": "java.lang.Boolean",
+                            "description": "Automatically enable solr repositories",
+                            "defaultValue": "true"
+                        }
+
+                    }
+                }
+
+
+            }
+        },
+        "spring.jmx": {
+            "items": {
+                "enabled": {
+                    "type": "java.lang.Boolean",
+                    "description": "Automatically expose management beans to the JMX domain",
+                    "defaultValue": "true"
+                }
+            }
+        },
+        "spring.jpa": {
+            "items": {
+                "open-in-view": {
+                    "type": "java.lang.Boolean",
+                    "description": "Automatically register OpenEntityManagerInViewInterceptor. Binds a JPA EntityManager to the thread for the entire processing of the request.",
+                    "defaultValue": "true"
+                }
+            }
+        },
+        "spring.mobile": {
+            "groups": {
+                "devicedelegatingviewresolver": {
+                    "items": {
+                        "enabled": {
+                            "type": "java.lang.Boolean",
+                            "description": "Enable device view resolver",
+                            "defaultValue": "false"
+                        }
+                    }
+                },
+                "sitepreference": {
+                    "items": {
+                        "enabled": {
+                            "type": "java.lang.Boolean",
+                            "description": "Enable SitePreferenceHandler",
+                            "defaultValue": "true"
+                        }
+                    }
+                }
+            }
+        },
+        "spring.social": {
+            "items": {
+                "auto-connection-views": {
+                    "type": "java.lang.Boolean",
+                    "description": "Automatically enable the connection status view for supported providers",
+                    "defaultValue": "false"
+                }
+            }
+        },
         "spring.view": {
             "type": "org.springframework.boot.autoconfigure.web.JspTemplateAvailabilityProvider",
             "items": {

@@ -63,16 +63,12 @@ class Processor {
 
 	private final Set<? extends Element> allConfigurationPropertiesElements;
 
-	private final Set<? extends Element> allConditionElements;
-
 	Processor(ProcessingEnvironment env, RoundEnvironment roundEnv) {
 		this.env = env;
 		this.modelHelper = new ModelHelper(env);
 		this.msg = env.getMessager();
 		this.allConfigurationPropertiesElements =
 				roundEnv.getElementsAnnotatedWith(getConfigurationPropertiesType());
-		this.allConditionElements =
-				roundEnv.getElementsAnnotatedWith(getConditionalOnPropertyType());
 	}
 
 	/**
@@ -90,9 +86,6 @@ class Processor {
 		// Build the initial repository
 		SimpleConfigMetadataRepository repository = buildConfigMetadataRepository(model);
 
-		// Post process the detect the conditions
-		harvestConditions(repository);
-
 		// Write the result
 		try {
 			writeConfigMetadataRepository(repository);
@@ -103,7 +96,7 @@ class Processor {
 	}
 
 	private boolean shouldRun() {
-		return !this.allConfigurationPropertiesElements.isEmpty() || !this.allConditionElements.isEmpty();
+		return !this.allConfigurationPropertiesElements.isEmpty();
 	}
 
 	private Collection<EntityModel> parseEntityModel() {
@@ -135,13 +128,6 @@ class Processor {
 			}
 		}
 		return repository;
-	}
-
-	private void harvestConditions(SimpleConfigMetadataRepository repository) {
-		ConditionHarvester harvester = new ConditionHarvester(repository);
-		for (Element conditionElement : allConditionElements) {
-			harvester.harvest(conditionElement);
-		}
 	}
 
 	private void writeConfigMetadataRepository(ConfigMetadataRepository repository) throws IOException {
@@ -225,7 +211,4 @@ class Processor {
 		return env.getElementUtils().getTypeElement(ModelUtils.CONFIGURATION_PROPERTIES_FQN);
 	}
 
-	private TypeElement getConditionalOnPropertyType() {
-		return env.getElementUtils().getTypeElement(ModelUtils.CONDITIONAL_ON_PROPERTY_FQN);
-	}
 }
