@@ -103,6 +103,22 @@ public class ConfigMetadataItemAssert {
 	}
 
 	/**
+	 * Assert that no default value is defined on this item.
+	 */
+	public ConfigMetadataItemAssert noDefaultValue() {
+		return defaultValue(null);
+	}
+
+	/**
+	 * Assert the default value for the item.
+	 * @see #noDefaultValue() ()
+	 */
+	public ConfigMetadataItemAssert defaultValue(String defaultValue) {
+		assertEquals("Wrong default value for '" + actual + "'", defaultValue, actual.getDefaultValue());
+		return this;
+	}
+
+	/**
 	 * Assert that no description is defined on this item.
 	 */
 	public ConfigMetadataItemAssert noDescription() {

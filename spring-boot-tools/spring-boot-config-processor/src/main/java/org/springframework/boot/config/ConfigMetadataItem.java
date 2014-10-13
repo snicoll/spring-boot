@@ -39,6 +39,8 @@ public class ConfigMetadataItem {
 
 	private String valueType;
 
+	private String defaultValue;
+
 	private String description;
 
 	private String tagLine;
@@ -98,6 +100,17 @@ public class ConfigMetadataItem {
 
 	public void setValueType(String valueType) {
 		this.valueType = valueType;
+	}
+
+	/**
+	 * Return the default value.
+	 */
+	public String getDefaultValue() {
+		return defaultValue;
+	}
+
+	public void setDefaultValue(String defaultValue) {
+		this.defaultValue = defaultValue;
 	}
 
 	/**

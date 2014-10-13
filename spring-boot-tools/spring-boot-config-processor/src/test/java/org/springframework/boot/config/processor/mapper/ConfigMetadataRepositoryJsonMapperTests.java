@@ -26,6 +26,7 @@ import java.io.InputStream;
 import org.junit.Test;
 
 import org.springframework.boot.config.ConfigMetadataGroup;
+import org.springframework.boot.config.ConfigMetadataItem;
 import org.springframework.boot.config.ConfigMetadataRepository;
 import org.springframework.boot.config.SimpleConfigMetadataRepository;
 import org.springframework.core.io.ClassPathResource;
@@ -83,20 +84,26 @@ public class ConfigMetadataRepositoryJsonMapperTests {
 		ConfigMetadataGroup group = createGroup("foo");
 		group.addType("org.foo.Type1");
 		group.addType("org.foo.Type2");
-		group.registerItem(createItem("one", String.class, "The one", "org.foo.Type1"));
+		ConfigMetadataItem one = createItem("one", String.class, "The one", "org.foo.Type1");
+		one.setDefaultValue("FooBar");
+		group.registerItem(one);
+
 		group.registerItem(createItem("two", Integer.class, "The two", "org.foo.Type2"));
 		group.registerItem(createItem("three", null, null, "org.foo.Type1", "org.foo.Type2"));
+		group.registerItem(createItem("four", null, null));
 		repository.registerRootGroup(group);
 
 		ConfigMetadataRepository result = writeAndRead(repository);
-		assertRepo(result).size(1, 3)
-				.group("foo").name("foo").types("org.foo.Type1", "org.foo.Type2").localItems(3).localGroups(0);
+		assertRepo(result).size(1, 4)
+				.group("foo").name("foo").types("org.foo.Type1", "org.foo.Type2").localItems(4).localGroups(0);
 		assertItem(result, "foo.one").name("one").valueType(String.class)
-				.description("The one").groupTypes("org.foo.Type1");
+				.defaultValue("FooBar").description("The one").groupTypes("org.foo.Type1");
 		assertItem(result, "foo.two").name("two").valueType(Integer.class)
-				.description("The two").groupTypes("org.foo.Type2");
+				.noDefaultValue().description("The two").groupTypes("org.foo.Type2");
 		assertItem(result, "foo.three").name("three").noValueType().noDescription()
-				.groupTypes("org.foo.Type1", "org.foo.Type2");
+				.noDefaultValue().groupTypes("org.foo.Type1", "org.foo.Type2");
+		assertItem(result, "foo.four").name("four").noValueType().noDescription()
+				.noDefaultValue().noGroupType();
 	}
 
 	@Test

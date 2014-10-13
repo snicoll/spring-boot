@@ -51,6 +51,8 @@ public class ConfigMetadataRepositoryJsonMapper implements ConfigMetadataReposit
 
 	public static final String TYPE_ATTRIBUTE = "type";
 
+	public static final String DEFAULT_VALUE_ATTRIBUTE = "defaultValue";
+
 	public static final String TYPES_ARRAY = "types";
 
 	public static final String GROUP_TYPE_ATTRIBUTE = "groupType";
@@ -170,6 +172,9 @@ public class ConfigMetadataRepositoryJsonMapper implements ConfigMetadataReposit
 		if (item.getValueType() != null) {
 			json.put(TYPE_ATTRIBUTE, item.getValueType());
 		}
+		if (item.getDefaultValue() != null) {
+			json.put(DEFAULT_VALUE_ATTRIBUTE, item.getDefaultValue());
+		}
 		if (item.getDescription() != null) {
 			json.put(DESCRIPTION_ATTRIBUTE, item.getDescription());
 		}
@@ -225,6 +230,9 @@ public class ConfigMetadataRepositoryJsonMapper implements ConfigMetadataReposit
 		}
 		if (json.has(TYPE_ATTRIBUTE)) {
 			item.setValueType(json.getString(TYPE_ATTRIBUTE));
+		}
+		if (json.has(DEFAULT_VALUE_ATTRIBUTE)) {
+			item.setDefaultValue(json.getString(DEFAULT_VALUE_ATTRIBUTE));
 		}
 		if (json.has(DESCRIPTION_ATTRIBUTE)) {
 			item.setDescription(json.getString(DESCRIPTION_ATTRIBUTE));
