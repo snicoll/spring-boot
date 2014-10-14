@@ -16,7 +16,9 @@
 
 package org.springframework.boot.config.processor.model;
 
-import javax.annotation.processing.ProcessingEnvironment;
+import java.util.Collections;
+import java.util.Map;
+import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.VariableElement;
@@ -36,6 +38,8 @@ class PropertyModelBuilder {
 
 	private String name;
 
+	private EntityModel owner;
+
 	private ExecutableElement getter;
 
 	private ExecutableElement setter;
@@ -51,6 +55,11 @@ class PropertyModelBuilder {
 
 	public PropertyModelBuilder(String name) {
 		this.name = name;
+	}
+
+	public PropertyModelBuilder withOwner(EntityModel owner) {
+		this.owner = owner;
+		return this;
 	}
 
 	/**
@@ -81,46 +90,73 @@ class PropertyModelBuilder {
 	 * Build a {@link PropertyModel} based on its source code definition.
 	 * <p>Detect the type and description based on available information.
 	 */
-	public PropertyModel build(ProcessingEnvironment env) {
-		String type = detectType(env);
-		String description = detectDescription(env);
+	public PropertyModel build(ModelHelper modelHelper) {
+		TypeMirror type = detectType();
+		String cleanType = cleanType(modelHelper, type);
+		String description = detectDescription(modelHelper);
 
-		return new PropertyModel(name, type, description);
+		// Check @ConfigurationItem annotation
+		Map<String, Object> annotationAttributes = detectConfigurationItemAnnotation();
+		boolean nestedValue = getNestedValue(annotationAttributes, isNestedEntity(modelHelper, type));
+
+		return new PropertyModel(name, cleanType, description, nestedValue);
 	}
 
-	private String detectType(ProcessingEnvironment env) {
-		if (setter != null) {
-			return cleanType(env, setter.getParameters().get(0).asType());
+	/**
+	 * Return the attributes of the {@code ConfigurationItem} annotation. If
+	 * the attribute is not defined, it is not present at all even if that attribute
+	 * has a default value.
+	 */
+	private Map<String, Object> detectConfigurationItemAnnotation() {
+		AnnotationMirror fieldAnnotation = detectConfigurationItemAnnotation(this.field);
+		if (fieldAnnotation != null) {
+			return ModelUtils.parseAnnotationProperties(fieldAnnotation);
 		}
-		else if (field != null) {
-			return cleanType(env, field.asType());
+		AnnotationMirror getterAnnotation = detectConfigurationItemAnnotation(this.getter);
+		if (getterAnnotation != null) {
+			return ModelUtils.parseAnnotationProperties(getterAnnotation);
 		}
-		else if (getter != null) {
-			return cleanType(env, getter.getReturnType());
+		AnnotationMirror setterAnnotation = detectConfigurationItemAnnotation(this.setter);
+		if (setterAnnotation != null) {
+			return ModelUtils.parseAnnotationProperties(setterAnnotation);
 		}
-		else {
-			return null;
-		}
+		return Collections.emptyMap();
 	}
 
-	private String detectDescription(ProcessingEnvironment env) {
-		String fieldJavadoc = cleanJavadoc(env, field);
+	private AnnotationMirror detectConfigurationItemAnnotation(Element element) {
+		return (element != null ? ModelUtils.getConfigurationItemAnnotation(element) : null);
+	}
+
+	private String detectDescription(ModelHelper modelHelper) {
+		String fieldJavadoc = cleanJavadoc(modelHelper, field);
 		if (fieldJavadoc != null) {
 			return fieldJavadoc;
 		}
-		String getterJavadoc = cleanJavadoc(env, getter);
+		String getterJavadoc = cleanJavadoc(modelHelper, getter);
 		if (getterJavadoc != null) {
 			return getterJavadoc;
 		}
-		String setterJavadoc = cleanJavadoc(env, setter);
+		String setterJavadoc = cleanJavadoc(modelHelper, setter);
 		if (setterJavadoc != null) {
 			return setterJavadoc;
 		}
 		return null;
 	}
 
-	private String cleanType(ProcessingEnvironment env, TypeMirror typeMirror) {
-		ModelHelper modelHelper = new ModelHelper(env);
+	private TypeMirror detectType() {
+		if (setter != null) {
+			return setter.getParameters().get(0).asType();
+		}
+		else if (field != null) {
+			return field.asType();
+		}
+		else if (getter != null) {
+			return getter.getReturnType();
+		}
+		throw new IllegalStateException("Could not detect type");
+	}
+
+	private String cleanType(ModelHelper modelHelper, TypeMirror typeMirror) {
 		Class<?> wrapper = ModelUtils.getWrapper(typeMirror.getKind());
 		if (wrapper != null) {
 			return wrapper.getName();
@@ -136,19 +172,22 @@ class PropertyModelBuilder {
 		return typeMirror.toString();
 	}
 
-	private String cleanJavadoc(ProcessingEnvironment env, Element element) {
-		String javadoc = getJavadoc(env, element);
+	private String cleanJavadoc(ModelHelper modelHelper, Element element) {
+		String javadoc = modelHelper.getJavadoc(element);
 		if (javadoc != null) {
 			javadoc = javadoc.trim();
 		}
 		return javadoc;
 	}
 
-	private String getJavadoc(ProcessingEnvironment env, Element element) {
-		if (element != null) {
-			return env.getElementUtils().getDocComment(element);
-		}
-		return null;
+	private boolean getNestedValue(Map<String, Object> annotationAttributes, boolean defaultValue) {
+		Boolean attributeValue = (Boolean) annotationAttributes.get("nested");
+		return (attributeValue != null ? attributeValue : defaultValue);
+	}
+
+	private boolean isNestedEntity(ModelHelper modelHelper, TypeMirror propertyType) {
+		return modelHelper.isConcreteClass(propertyType)
+				&& modelHelper.isNestedType(propertyType, owner.getTypeElement());
 	}
 
 }

@@ -24,6 +24,7 @@ import org.springframework.boot.config.ConfigMetadataRepository;
 import org.springframework.boot.config.ConfigMetadataRepositoryAssert;
 import org.springframework.boot.config.sample.specific.CustomListTypeConfig;
 import org.springframework.boot.config.sample.specific.CustomMapTypeConfig;
+import org.springframework.boot.config.sample.specific.SimplePojo;
 import org.springframework.boot.config.sample.specific.InnerClassAnnotatedGetterConfig;
 import org.springframework.boot.config.sample.specific.InnerClassConfig;
 import org.springframework.boot.config.sample.specific.InnerClassRootConfig;
@@ -46,11 +47,13 @@ public class SpecificProcessorTests extends AbstractProcessorTests {
 		ConfigMetadataRepositoryAssert repoAssert = assertRepo(repository)
 				.itemsExist("config.first.name", "config.first.bar.name",
 						"config.second.name", "config.second.bar.name");
-		repoAssert.group("config").types(InnerClassConfig.class).localGroups(2).localItems(0);
+		repoAssert.group("config").types(InnerClassConfig.class).localGroups(4).localItems(0);
 		repoAssert.group("config.first").types(InnerClassConfig.Foo.class).localGroups(1).localItems(1);
 		repoAssert.group("config.second").types(InnerClassConfig.Foo.class).localGroups(1).localItems(1);
 		repoAssert.group("config.second.bar").types(InnerClassConfig.Foo.Bar.class).localGroups(0).localItems(1);
-		repoAssert.size(1, 4);
+		repoAssert.group("config.fourth").types(SimplePojo.class).localGroups(0).localItems(1);
+		repoAssert.group("config.fifth").types(SimplePojo.class).localGroups(0).localItems(1);
+		repoAssert.size(1, 6);
 	}
 
 	@Test // Demonstrates how the type is standardized so that tools can rely on it

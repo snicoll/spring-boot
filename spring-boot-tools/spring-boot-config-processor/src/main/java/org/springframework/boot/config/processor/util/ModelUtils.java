@@ -40,6 +40,12 @@ public abstract class ModelUtils {
 	public static final String CONFIGURATION_PROPERTIES_FQN
 			= "org.springframework.boot.context.properties.ConfigurationProperties";
 
+	/**
+	 * The fully qualified name of the {@code ConfigurationItem} annotation.
+	 */
+	public static final String CONFIGURATION_ITEM_FQN
+			= "org.springframework.boot.context.properties.ConfigurationItem";
+
 	private static final Map<TypeKind, Class<?>> primitivesToWrappers;
 
 	static {
@@ -78,6 +84,20 @@ public abstract class ModelUtils {
 	}
 
 	/**
+	 * Return the {@link AnnotationMirror} with the specified fully qualified name
+	 * defined on the specified {@link Element} or {@code null} if that element does not
+	 * define the annotation.
+	 */
+	public static AnnotationMirror getAnnotation(Element element, String annotationFqn) {
+		for (AnnotationMirror annotation : element.getAnnotationMirrors()) {
+			if (isAnnotation(annotationFqn, annotation)) {
+				return annotation;
+			}
+		}
+		return null;
+	}
+
+	/**
 	 * Specify if the given {@link Element} is annotated with {@code @ConfigurationProperties}.
 	 */
 	public static boolean isConfigurationPropertiesAnnotated(Element element) {
@@ -87,22 +107,25 @@ public abstract class ModelUtils {
 	/**
 	 * Return the {@link AnnotationMirror} corresponding to the {@code @ConfigurationProperties}
 	 * defined on the specified {@link Element} or {@code null} if that element does not
-	 * define the annotation
+	 * define the annotation.
 	 */
 	public static AnnotationMirror getConfigurationPropertiesAnnotation(Element element) {
-		for (AnnotationMirror annotation : element.getAnnotationMirrors()) {
-			if (isAnnotation(ModelUtils.CONFIGURATION_PROPERTIES_FQN, annotation)) {
-				return annotation;
-			}
-		}
-		return null;
+		return getAnnotation(element, ModelUtils.CONFIGURATION_PROPERTIES_FQN);
+	}
+
+	/**
+	 * Return the {@link AnnotationMirror} corresponding to the {@code @ConfigurationItem}
+	 * defined on the specified {@link Element} or {@code null} if that element does not
+	 * define the annotation.
+	 */
+	public static AnnotationMirror getConfigurationItemAnnotation(Element element) {
+		return getAnnotation(element, ModelUtils.CONFIGURATION_ITEM_FQN);
 	}
 
 	/**
 	 * Return the attributes of the specified annotation. Note that if the annotation
 	 * defines a default for a property, the property is not defined at all in the
 	 * result map if it's absent from this specific annotation.
-	 * <p>Array are represented as a {@code List<Object>}.
 	 */
 	public static Map<String, Object> parseAnnotationProperties(AnnotationMirror annotation) {
 		Map<String, Object> parameters = new HashMap<String, Object>();

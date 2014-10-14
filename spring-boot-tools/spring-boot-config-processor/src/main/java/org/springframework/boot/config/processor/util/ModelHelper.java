@@ -25,6 +25,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 
 /**
@@ -159,6 +160,17 @@ public class ModelHelper {
 		Element element = env.getTypeUtils().asElement(typeMirror);
 		if (element != null && element instanceof TypeElement) {
 			return (TypeElement) element;
+		}
+		return null;
+	}
+
+	/**
+	 * Return the javadoc of the specified {@link Element}
+	 * @see Elements#getDocComment(Element)
+	 */
+	public String getJavadoc(Element element) {
+		if (element != null) {
+			return this.env.getElementUtils().getDocComment(element);
 		}
 		return null;
 	}

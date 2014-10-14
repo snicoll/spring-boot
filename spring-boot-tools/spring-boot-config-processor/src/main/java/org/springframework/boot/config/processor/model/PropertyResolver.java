@@ -114,18 +114,19 @@ class PropertyResolver {
 			public boolean process(String name, ExecutableElement method) {
 				String propertyName = WriteMethodUtils.toPropertyName(name);
 				TypeMirror propertyType = ModelUtils.getPropertyType(method, true);
+				ExecutableElement getter = resolveGetter(propertyName);
+				PropertyModel property = createProperty(getter, method, propertyName);
 				if (modelHelper.isElementContainerType(propertyType)) {
-					handleProperty(resolveGetter(propertyName), method, propertyName);
+					addProperty(property);
 					return true;
 				}
-				if (isNestedEntity(propertyType)) {
+				if (property.isNested()) {
 					handleNestedEntity(modelHelper.safeToTypeElement(propertyType), propertyName);
 					return true;
 				}
 				else {
-					ExecutableElement getter = resolveGetter(propertyName);
 					if (getter != null) {
-						handleProperty(getter, method, propertyName);
+						addProperty(property);
 						return true;
 					}
 				}
@@ -141,11 +142,12 @@ class PropertyResolver {
 			public boolean process(String name, ExecutableElement method) {
 				String propertyName = ReadMethodUtils.toPropertyName(name);
 				TypeMirror propertyType = method.getReturnType();
+				PropertyModel property = createProperty(method, null, propertyName);
 				if (modelHelper.isElementContainerType(propertyType)) {
-					handleProperty(method, null, propertyName);
+					addProperty(property);
 					return true;
 				}
-				if (isNestedEntity(propertyType)) {
+				if (property.isNested()) {
 					handleNestedEntity(modelHelper.safeToTypeElement(propertyType), propertyName);
 					return true;
 				}
@@ -154,16 +156,16 @@ class PropertyResolver {
 		});
 	}
 
-	private boolean isNestedEntity(TypeMirror propertyType) {
-		return modelHelper.isConcreteClass(propertyType)
-				&& modelHelper.isNestedType(propertyType, entityModel.getTypeElement());
-	}
-
-	private void handleProperty(ExecutableElement getter, ExecutableElement setter, String propertyName) {
-		PropertyModel property = PropertyModelBuilder.forName(propertyName)
+	private PropertyModel createProperty(ExecutableElement getter, ExecutableElement setter, String propertyName) {
+		return PropertyModelBuilder.forName(propertyName)
+				.withOwner(this.entityModel)
 				.withGetter(getter)
 				.withSetter(setter)
-				.withField(resolveField(propertyName)).build(this.env);
+				.withField(resolveField(propertyName))
+				.build(this.modelHelper);
+	}
+
+	private void addProperty(PropertyModel property) {
 		entityModel.addProperty(property);
 	}
 

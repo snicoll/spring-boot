@@ -16,6 +16,7 @@
 
 package org.springframework.boot.config.sample.specific;
 
+import org.springframework.boot.context.properties.ConfigurationItem;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -30,16 +31,37 @@ public class InnerClassConfig {
 
 	private Foo second = new Foo();
 
+	private final SimplePojo third = new SimplePojo();
+
+	private final SimplePojo fourth = new SimplePojo();
+
+	@ConfigurationItem(nested = true)
+	private final SimplePojo fifth = new SimplePojo();
+
 	public Foo getFirst() {
 		return first;
 	}
 
+	@ConfigurationItem
 	public Foo getSecond() {
 		return second;
 	}
 
 	public void setSecond(Foo second) {
 		this.second = second;
+	}
+
+	public SimplePojo getThird() {
+		return third;
+	}
+
+	@ConfigurationItem(nested = true)
+	public SimplePojo getFourth() {
+		return fourth;
+	}
+
+	public SimplePojo getFifth() {
+		return fifth;
 	}
 
 	public static class Foo {

@@ -30,10 +30,13 @@ public class PropertyModel {
 
 	private final String description;
 
-	public PropertyModel(String name, String type, String description) {
+	private final boolean nested;
+
+	PropertyModel(String name, String type, String description, boolean nested) {
 		this.name = name;
 		this.type = type;
 		this.description = description;
+		this.nested = nested;
 	}
 
 	/**
@@ -56,5 +59,12 @@ public class PropertyModel {
 	 */
 	public String getDescription() {
 		return description;
+	}
+
+	/**
+	 * Specify if the property defines a nested group.
+	 */
+	public boolean isNested() {
+		return nested;
 	}
 }
