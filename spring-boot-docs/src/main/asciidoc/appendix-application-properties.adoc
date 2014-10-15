@@ -14,11 +14,6 @@ WARNING: This sample file is meant as a guide only. Do **not** copy/paste the en
 content into your application; rather pick only the properties that you need.
 
 
-NOTE: the first table is an auto-generated content from metadata harvested at build
-time. For reference, the second table is the manual one that we have built so far.
-
-include::../../../target/generated-resources/configuration-items-table.adoc[]
-
 [source,properties,indent=0,subs="verbatim,attributes,macros"]
 ----
 	# ===================================================================
