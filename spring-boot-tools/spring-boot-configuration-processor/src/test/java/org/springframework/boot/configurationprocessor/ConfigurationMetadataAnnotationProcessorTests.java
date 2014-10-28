@@ -21,6 +21,7 @@ import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 
 import org.junit.Test;
+import org.springframework.boot.configurationprocessor.ConfigurationMetadataAnnotationProcessor;
 import org.springframework.boot.configurationprocessor.metadata.ConfigurationMetadata;
 import org.springframework.boot.configurationsample.method.EmptyTypeMethodConfig;
 import org.springframework.boot.configurationsample.method.InvalidMethodConfig;
@@ -36,11 +37,12 @@ import org.springframework.boot.configurationsample.specific.InnerClassAnnotated
 import org.springframework.boot.configurationsample.specific.InnerClassProperties;
 import org.springframework.boot.configurationsample.specific.InnerClassRootConfig;
 
+import static org.springframework.boot.configurationprocessor.ConfigurationMetadataMatchers.containsProperty;
+
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
-import static org.springframework.boot.configurationprocessor.ConfigurationMetadataMatchers.containsProperty;
 
 /**
  * Tests for {@link ConfigurationMetadataAnnotationProcessor}.
@@ -64,9 +66,10 @@ public class ConfigurationMetadataAnnotationProcessorTests {
 				.fromSource(SimpleProperties.class));
 		assertThat(
 				metadata,
-				containsProperty("simple.the-name", String.class).fromSource(
-						SimpleProperties.class).withDescription(
-						"The name of this simple properties."));
+				containsProperty("simple.the-name", String.class)
+						.fromSource(SimpleProperties.class)
+						.withDescription("The name of this simple properties.")
+						.withDefaultValue("boot"));
 		assertThat(
 				metadata,
 				containsProperty("simple.flag", Boolean.class).fromSource(

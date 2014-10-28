@@ -36,24 +36,29 @@ public final class PropertyMetadata implements Comparable<PropertyMetadata> {
 
 	private final String description;
 
+	private final Object defaultValue;
+
 	public PropertyMetadata(String name, String dataType, String sourceType,
-			String sourceMethod, String description) {
+			String sourceMethod, String description, Object defaultValue) {
 		super();
 		this.name = name;
 		this.dataType = dataType;
 		this.sourceType = sourceType;
 		this.sourceMethod = sourceMethod;
 		this.description = description;
+		this.defaultValue = defaultValue;
 	}
 
 	public PropertyMetadata(String prefix, String name, String dataType,
-			String sourceType, String sourceMethod, String description) {
+			String sourceType, String sourceMethod, String description,
+			Object defaultValue) {
 		super();
 		this.name = buildName(prefix, name);
 		this.dataType = dataType;
 		this.sourceType = sourceType;
 		this.sourceMethod = sourceMethod;
 		this.description = description;
+		this.defaultValue = defaultValue;
 	}
 
 	private String buildName(String prefix, String name) {
@@ -88,11 +93,16 @@ public final class PropertyMetadata implements Comparable<PropertyMetadata> {
 		return this.description;
 	}
 
+	public Object getDefaultValue() {
+		return this.defaultValue;
+	}
+
 	@Override
 	public String toString() {
 		StringBuilder string = new StringBuilder(this.name);
 		buildToString(string, "dataType", this.dataType);
 		buildToString(string, "sourceType", this.sourceType);
+		buildToString(string, "defaultValue", this.defaultValue);
 		buildToString(string, "description", this.description);
 		return string.toString();
 	}

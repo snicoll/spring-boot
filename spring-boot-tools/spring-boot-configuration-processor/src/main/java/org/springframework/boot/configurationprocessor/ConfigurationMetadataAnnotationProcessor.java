@@ -19,6 +19,7 @@ package org.springframework.boot.configurationprocessor;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -42,6 +43,8 @@ import javax.tools.Diagnostic.Kind;
 import javax.tools.FileObject;
 import javax.tools.StandardLocation;
 
+import org.springframework.boot.configurationprocessor.fieldvalues.FieldValuesParser;
+import org.springframework.boot.configurationprocessor.fieldvalues.javac.JavaCompilerFieldValuesParser;
 import org.springframework.boot.configurationprocessor.metadata.ConfigurationMetadata;
 import org.springframework.boot.configurationprocessor.metadata.JsonMarshaller;
 import org.springframework.boot.configurationprocessor.metadata.PropertyMetadata;
@@ -64,6 +67,8 @@ public class ConfigurationMetadataAnnotationProcessor extends AbstractProcessor 
 
 	private TypeUtils typeUtils;
 
+	private FieldValuesParser fieldValuesParser;
+
 	protected String annotationType() {
 		return ANNOTATION;
 	}
@@ -73,6 +78,14 @@ public class ConfigurationMetadataAnnotationProcessor extends AbstractProcessor 
 		super.init(env);
 		this.metadata = new ConfigurationMetadata();
 		this.typeUtils = new TypeUtils(env);
+		try {
+			this.fieldValuesParser = new JavaCompilerFieldValuesParser(env);
+		}
+		catch (Throwable ex) {
+			this.fieldValuesParser = FieldValuesParser.NONE;
+			logWarning("Field value processing of @ConfigurationProperty meta-data is "
+					+ "not supported");
+		}
 	}
 
 	private void logWarning(String msg) {
@@ -108,7 +121,7 @@ public class ConfigurationMetadataAnnotationProcessor extends AbstractProcessor 
 
 	private void processAnnotatedTypeElement(String prefix, TypeElement element) {
 		this.metadata.add(new PropertyMetadata(prefix, null, this.typeUtils
-				.getType(element), this.typeUtils.getType(element), null, null));
+				.getType(element), this.typeUtils.getType(element), null, null, null));
 		processTypeElement(prefix, element);
 	}
 
@@ -120,7 +133,7 @@ public class ConfigurationMetadataAnnotationProcessor extends AbstractProcessor 
 			if (returns instanceof TypeElement) {
 				this.metadata.add(new PropertyMetadata(prefix, null, this.typeUtils
 						.getType(returns), this.typeUtils.getType(element
-						.getEnclosingElement()), null, null));
+						.getEnclosingElement()), null, null, null));
 				processTypeElement(prefix, (TypeElement) returns);
 			}
 		}
@@ -128,12 +141,22 @@ public class ConfigurationMetadataAnnotationProcessor extends AbstractProcessor 
 
 	private void processTypeElement(String prefix, TypeElement element) {
 		TypeElementMembers members = new TypeElementMembers(this.processingEnv, element);
-		processSimpleTypes(prefix, element, members);
+		Map<String, Object> fieldValues = getFieldValues(element);
+		processSimpleTypes(prefix, element, members, fieldValues);
 		processNestedTypes(prefix, element, members);
 	}
 
+	private Map<String, Object> getFieldValues(TypeElement element) {
+		try {
+			return this.fieldValuesParser.getFieldValues(element);
+		}
+		catch (Exception ex) {
+			return Collections.emptyMap();
+		}
+	}
+
 	private void processSimpleTypes(String prefix, TypeElement element,
-			TypeElementMembers members) {
+			TypeElementMembers members, Map<String, Object> fieldValues) {
 		for (Map.Entry<String, ExecutableElement> entry : members.getPublicGetters()
 				.entrySet()) {
 			String name = entry.getKey();
@@ -145,8 +168,9 @@ public class ConfigurationMetadataAnnotationProcessor extends AbstractProcessor 
 				String dataType = this.typeUtils.getType(getter.getReturnType());
 				String sourceType = this.typeUtils.getType(element);
 				String description = this.typeUtils.getJavaDoc(field);
+				Object defaultValue = fieldValues.get(name);
 				this.metadata.add(new PropertyMetadata(prefix, name, dataType,
-						sourceType, null, description));
+						sourceType, null, description, defaultValue));
 			}
 		}
 	}
@@ -167,7 +191,7 @@ public class ConfigurationMetadataAnnotationProcessor extends AbstractProcessor 
 							entry.getKey());
 					this.metadata.add(new PropertyMetadata(nestedPrefix, null,
 							this.typeUtils.getType(returns), this.typeUtils
-									.getType(returns), getter.toString(), null));
+									.getType(returns), getter.toString(), null, null));
 					processTypeElement(nestedPrefix, returns);
 				}
 			}

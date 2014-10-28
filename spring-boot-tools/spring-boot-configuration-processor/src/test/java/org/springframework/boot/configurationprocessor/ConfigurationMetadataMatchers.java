@@ -52,16 +52,19 @@ public class ConfigurationMetadataMatchers {
 
 		private final String description;
 
+		private final Object defaultValue;
+
 		public ContainsPropertyMatcher(String name) {
-			this(name, null, null, null);
+			this(name, null, null, null, null);
 		}
 
 		public ContainsPropertyMatcher(String name, String dataType, Class<?> sourceType,
-				String description) {
+				String description, Object defaultValue) {
 			this.name = name;
 			this.dataType = dataType;
 			this.sourceType = sourceType;
 			this.description = description;
+			this.defaultValue = defaultValue;
 		}
 
 		@Override
@@ -76,6 +79,10 @@ public class ConfigurationMetadataMatchers {
 			}
 			if (this.sourceType != null
 					&& !this.sourceType.getName().equals(property.getSourceType())) {
+				return false;
+			}
+			if (this.defaultValue != null
+					&& !this.defaultValue.equals(property.getDefaultValue())) {
 				return false;
 			}
 			if (this.description != null
@@ -106,6 +113,9 @@ public class ConfigurationMetadataMatchers {
 			if (this.sourceType != null) {
 				description.appendText(" sourceType ").appendValue(this.sourceType);
 			}
+			if (this.defaultValue != null) {
+				description.appendText(" defaultValue ").appendValue(this.defaultValue);
+			}
 			if (this.description != null) {
 				description.appendText(" description ").appendValue(this.description);
 			}
@@ -113,22 +123,27 @@ public class ConfigurationMetadataMatchers {
 
 		public ContainsPropertyMatcher ofDataType(Class<?> dataType) {
 			return new ContainsPropertyMatcher(this.name, dataType.getName(),
-					this.sourceType, this.description);
+					this.sourceType, this.description, this.defaultValue);
 		}
 
 		public ContainsPropertyMatcher ofDataType(String dataType) {
 			return new ContainsPropertyMatcher(this.name, dataType, this.sourceType,
-					this.description);
+					this.description, this.defaultValue);
 		}
 
 		public ContainsPropertyMatcher fromSource(Class<?> sourceType) {
 			return new ContainsPropertyMatcher(this.name, this.dataType, sourceType,
-					this.description);
+					this.description, this.defaultValue);
+		}
+
+		public ContainsPropertyMatcher withDefaultValue(Object defaultValue) {
+			return new ContainsPropertyMatcher(this.name, this.dataType, this.sourceType,
+					this.description, defaultValue);
 		}
 
 		public ContainsPropertyMatcher withDescription(String description) {
 			return new ContainsPropertyMatcher(this.name, this.dataType, this.sourceType,
-					description);
+					description, this.defaultValue);
 		}
 
 		private PropertyMetadata getFirstPropertyWithName(ConfigurationMetadata metadata,
