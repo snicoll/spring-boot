@@ -187,7 +187,7 @@ public class ProjectGenerationRequestTests {
 	}
 
 	private static InitializrServiceMetadata readMetadata() {
-		return readMetadata("1.1.0");
+		return readMetadata("2.0.0");
 	}
 
 	private static InitializrServiceMetadata readMetadata(String version) {
