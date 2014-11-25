@@ -39,20 +39,44 @@ import com.mongodb.ServerAddress;
 @ConfigurationProperties(prefix = "spring.data.mongodb")
 public class MongoProperties {
 
+	/**
+	 * Mongo server host.
+	 */
 	private String host;
 
+	/**
+	 * Mongo server port.
+	 */
 	private int port = 27017;
 
+	/**
+	 * Mmongo database URI. When set, host and port are ignored.
+	 */
 	private String uri = "mongodb://localhost/test";
 
+	/**
+	 * Database name.
+	 */
 	private String database;
 
+	/**
+	 * Authentication database name.
+	 */
 	private String authenticationDatabase;
 
+	/**
+	 * GridFS database name.
+	 */
 	private String gridFsDatabase;
 
+	/**
+	 * Login user of the mongo server.
+	 */
 	private String username;
 
+	/**
+	 * Login password of the mongo server.
+	 */
 	private char[] password;
 
 	public String getHost() {
