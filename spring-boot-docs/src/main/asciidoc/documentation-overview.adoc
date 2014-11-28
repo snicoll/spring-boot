@@ -22,6 +22,16 @@ distribution to others, provided that you do not charge any fee for such copies 
 further provided that each copy contains this Copyright Notice, whether distributed in
 print or electronically.
 
+[[boot-documentation-requirements]]
+== Requirements
+Spring Boot requires JDK6 or later and a servlet 3.0+ container. It supports Tomcat,
+Jetty and Undertow.
+
+A default web application uses Tomcat8 (that requires Java7) but you can easily use
+a version of Tomcat or Jetty that runs with Java6.
+
+Spring Boot provides explicit build support for both Maven and Gradle. Maven 3.2+
+and Gradle 1.12+ are recommended.
 
 
 [[boot-documentation-getting-help]]
