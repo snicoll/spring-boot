@@ -38,6 +38,7 @@ import org.springframework.boot.configurationsample.simple.SimplePrefixValueProp
 import org.springframework.boot.configurationsample.simple.SimpleProperties;
 import org.springframework.boot.configurationsample.simple.SimpleTypeProperties;
 import org.springframework.boot.configurationsample.specific.BuilderPojo;
+import org.springframework.boot.configurationsample.specific.ExcludedTypesPojo;
 import org.springframework.boot.configurationsample.specific.InnerClassAnnotatedGetterConfig;
 import org.springframework.boot.configurationsample.specific.InnerClassProperties;
 import org.springframework.boot.configurationsample.specific.InnerClassRootConfig;
@@ -277,6 +278,16 @@ public class ConfigurationMetadataAnnotationProcessorTests {
 	public void builderPojo() throws IOException {
 		ConfigurationMetadata metadata = compile(BuilderPojo.class);
 		assertThat(metadata, containsProperty("builder.name"));
+	}
+
+	@Test
+	public void excludedTypesPojo() throws IOException {
+		ConfigurationMetadata metadata = compile(ExcludedTypesPojo.class);
+		assertThat(metadata, containsProperty("excluded.name"));
+		assertThat(metadata, not(containsProperty("excluded.class-loader")));
+		assertThat(metadata, not(containsProperty("excluded.data-source")));
+		assertThat(metadata, not(containsProperty("excluded.print-writer")));
+		assertThat(metadata, not(containsProperty("excluded.writer")));
 	}
 
 	private ConfigurationMetadata compile(Class<?>... types) throws IOException {

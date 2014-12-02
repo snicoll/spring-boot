@@ -19,8 +19,10 @@ package org.springframework.boot.configurationprocessor;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -68,6 +70,9 @@ public class ConfigurationMetadataAnnotationProcessor extends AbstractProcessor 
 
 	static final String NESTED_CONFIGURATION_PROPERTY_ANNOTATION = "org.springframework.boot."
 			+ "context.properties.NestedConfigurationProperty";
+
+	static final List<String> EXCLUDED_TYPES = Arrays.asList("java.io.Writer", "java.io.PrintWriter",
+			"javax.sql.DataSource", "java.lang.ClassLoader");
 
 	private ConfigurationMetadata metadata;
 
@@ -180,7 +185,7 @@ public class ConfigurationMetadataAnnotationProcessor extends AbstractProcessor 
 			boolean isNested = isNested(returnType, field, element);
 			boolean isCollection = this.typeUtils.isCollectionOrMap(getter
 					.getReturnType());
-			if (!isNested && (setter != null || isCollection)) {
+			if (!isTypeExcluded(returnType) && !isNested && (setter != null || isCollection)) {
 				String dataType = this.typeUtils.getType(getter.getReturnType());
 				String sourceType = this.typeUtils.getType(element);
 				String description = this.typeUtils.getJavaDoc(field);
@@ -192,6 +197,14 @@ public class ConfigurationMetadataAnnotationProcessor extends AbstractProcessor 
 						sourceType, null, description, defaultValue, deprecated));
 			}
 		}
+	}
+
+	private boolean isTypeExcluded(Element returnType) {
+		if (returnType == null) {
+			return false;
+		}
+		String name = returnType.toString();
+		return EXCLUDED_TYPES.contains(name);
 	}
 
 	private void processNestedTypes(String prefix, TypeElement element,
