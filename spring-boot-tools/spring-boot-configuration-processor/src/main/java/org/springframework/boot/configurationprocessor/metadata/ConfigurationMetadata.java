@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 the original author or authors.
+ * Copyright 2012-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,23 +34,40 @@ public class ConfigurationMetadata {
 
 	private static final Pattern CAMEL_CASE_PATTERN = Pattern.compile("([^A-Z-])([A-Z])");
 
-	private final List<ItemMetadata> items;
+	private final List<GroupMetadata> groups;
+
+	private final List<PropertyMetadata> properties;
 
 	public ConfigurationMetadata() {
-		this.items = new ArrayList<ItemMetadata>();
+		this.groups = new ArrayList<GroupMetadata>();
+		this.properties = new ArrayList<PropertyMetadata>();
 	}
 
 	public ConfigurationMetadata(ConfigurationMetadata metadata) {
-		this.items = new ArrayList<ItemMetadata>(metadata.getItems());
+		this.groups = new ArrayList<GroupMetadata>(metadata.groups);
+		this.properties = new ArrayList<PropertyMetadata>(metadata.properties);
+	}
+
+	public boolean isEmpty() {
+		return this.groups.isEmpty() && this.properties.isEmpty();
 	}
 
 	/**
-	 * Add item meta-data.
-	 * @param itemMetadata the meta-data to add
+	 * Add group meta-data.
+	 * @param groupMetadata the meta-data to add
 	 */
-	public void add(ItemMetadata itemMetadata) {
-		this.items.add(itemMetadata);
-		Collections.sort(this.items);
+	public void add(GroupMetadata groupMetadata) {
+		this.groups.add(groupMetadata);
+		Collections.sort(this.groups);
+	}
+
+	/**
+	 * Add property meta-data.
+	 * @param propertyMetadata the meta-data to add
+	 */
+	public void add(PropertyMetadata propertyMetadata) {
+		this.properties.add(propertyMetadata);
+		Collections.sort(this.properties);
 	}
 
 	/**
@@ -58,15 +75,24 @@ public class ConfigurationMetadata {
 	 * @param metadata the {@link ConfigurationMetadata} instance to merge
 	 */
 	public void addAll(ConfigurationMetadata metadata) {
-		this.items.addAll(metadata.getItems());
-		Collections.sort(this.items);
+		this.groups.addAll(metadata.groups);
+		this.properties.addAll(metadata.properties);
+		Collections.sort(this.groups);
+		Collections.sort(this.properties);
+	}
+
+	/**
+	 * @return the meta-data groups.
+	 */
+	public List<GroupMetadata> getGroups() {
+		return Collections.unmodifiableList(this.groups);
 	}
 
 	/**
 	 * @return the meta-data properties.
 	 */
-	public List<ItemMetadata> getItems() {
-		return Collections.unmodifiableList(this.items);
+	public List<PropertyMetadata> getProperties() {
+		return Collections.unmodifiableList(this.properties);
 	}
 
 	public static String nestedPrefix(String prefix, String name) {

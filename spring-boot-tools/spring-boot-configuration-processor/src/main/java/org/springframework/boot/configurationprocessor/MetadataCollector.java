@@ -16,7 +16,6 @@
 
 package org.springframework.boot.configurationprocessor;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -27,7 +26,9 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 
 import org.springframework.boot.configurationprocessor.metadata.ConfigurationMetadata;
+import org.springframework.boot.configurationprocessor.metadata.GroupMetadata;
 import org.springframework.boot.configurationprocessor.metadata.ItemMetadata;
+import org.springframework.boot.configurationprocessor.metadata.PropertyMetadata;
 
 /**
  * Used by {@link ConfigurationMetadataAnnotationProcessor} to collect
@@ -39,7 +40,7 @@ import org.springframework.boot.configurationprocessor.metadata.ItemMetadata;
  */
 public class MetadataCollector {
 
-	private final List<ItemMetadata> metadataItems = new ArrayList<ItemMetadata>();
+	private final ConfigurationMetadata currentMetadata = new ConfigurationMetadata();
 
 	private final ProcessingEnvironment processingEnvironment;
 
@@ -73,20 +74,27 @@ public class MetadataCollector {
 		}
 	}
 
-	public void add(ItemMetadata metadata) {
-		this.metadataItems.add(metadata);
+	public void add(GroupMetadata metadata) {
+		this.currentMetadata.add(metadata);
+	}
+
+	public void add(PropertyMetadata metadata) {
+		this.currentMetadata.add(metadata);
 	}
 
 	public ConfigurationMetadata getMetadata() {
-		ConfigurationMetadata metadata = new ConfigurationMetadata();
-		for (ItemMetadata item : this.metadataItems) {
-			metadata.add(item);
-		}
+		ConfigurationMetadata metadata = new ConfigurationMetadata(this.currentMetadata);
 		if (this.previousMetadata != null) {
-			List<ItemMetadata> items = this.previousMetadata.getItems();
-			for (ItemMetadata item : items) {
+			List<GroupMetadata> groups = this.previousMetadata.getGroups();
+			for (GroupMetadata item : groups) {
 				if (shouldBeMerged(item)) {
 					metadata.add(item);
+				}
+			}
+			List<PropertyMetadata> properties = this.previousMetadata.getProperties();
+			for (PropertyMetadata property : properties) {
+				if (shouldBeMerged(property)) {
+					metadata.add(property);
 				}
 			}
 		}

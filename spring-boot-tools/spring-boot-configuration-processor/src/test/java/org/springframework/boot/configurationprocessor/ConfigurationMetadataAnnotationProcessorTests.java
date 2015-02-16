@@ -51,7 +51,6 @@ import org.springframework.boot.configurationsample.specific.InnerClassRootConfi
 import org.springframework.boot.configurationsample.specific.SimplePojo;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertFalse;
@@ -85,7 +84,7 @@ public class ConfigurationMetadataAnnotationProcessorTests {
 	public void notAnnotated() throws Exception {
 		ConfigurationMetadata metadata = compile(NotAnnotated.class);
 		assertThat("No config metadata file should have been generated when "
-				+ "no metadata is discovered", metadata.getItems(), empty());
+				+ "no metadata is discovered", metadata.isEmpty(), is(true));
 	}
 
 	@Test
@@ -149,7 +148,9 @@ public class ConfigurationMetadataAnnotationProcessorTests {
 		assertThat(metadata, containsProperty("simple.type.my-float", Float.class));
 		assertThat(metadata,
 				containsProperty("simple.type.my-primitive-float", Float.class));
-		assertThat(metadata.getItems().size(), equalTo(18));
+
+		assertThat(metadata.getGroups().size(), equalTo(1));
+		assertThat(metadata.getProperties().size(), equalTo(17));
 	}
 
 	@Test

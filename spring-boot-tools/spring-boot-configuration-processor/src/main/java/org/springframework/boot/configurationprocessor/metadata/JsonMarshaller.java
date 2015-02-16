@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 the original author or authors.
+ * Copyright 2012-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,12 +23,12 @@ import java.io.OutputStream;
 import java.lang.reflect.Array;
 import java.nio.charset.Charset;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.springframework.boot.configurationprocessor.metadata.ItemMetadata.ItemType;
 
 /**
  * Marshaller to write {@link ConfigurationMetadata} as JSON.
@@ -46,20 +46,37 @@ public class JsonMarshaller {
 	public void write(ConfigurationMetadata metadata, OutputStream outputStream)
 			throws IOException {
 		JSONObject object = new JSONObject();
-		object.put("groups", toJsonArray(metadata, ItemType.GROUP));
-		object.put("properties", toJsonArray(metadata, ItemType.PROPERTY));
+		object.put("groups", toGroupArray(metadata.getGroups()));
+		object.put("properties", toPropertyArray(metadata.getProperties()));
 		outputStream.write(object.toString(2).getBytes(UTF_8));
 	}
 
-	private JSONArray toJsonArray(ConfigurationMetadata metadata, ItemType itemType) {
+	private JSONArray toGroupArray(List<GroupMetadata> groups) {
 		JSONArray jsonArray = new JSONArray();
-		for (ItemMetadata item : metadata.getItems()) {
-			if (item.isOfItemType(itemType)) {
-				jsonArray.put(toJsonObject(item));
-			}
+		for (GroupMetadata group : groups) {
+			jsonArray.put(toJsonObject(group));
 		}
 		return jsonArray;
 	}
+
+	private JSONArray toPropertyArray(List<PropertyMetadata> properties) {
+		JSONArray jsonArray = new JSONArray();
+		for (PropertyMetadata property : properties) {
+			jsonArray.put(toJsonProperty(property));
+		}
+		return jsonArray;
+	}
+
+	private JSONObject toJsonProperty(PropertyMetadata metadata) {
+		JSONObject object = toJsonObject(metadata);
+		TypeDescriptor typeDescriptor = metadata.getTypeDescriptor();
+		if (typeDescriptor != null &&
+				(typeDescriptor.getKeyType() != null || typeDescriptor.getValueTypeDescriptor() != null)) {
+			object.put("domain", toJsonTypeDescriptor(typeDescriptor, false));
+		}
+		return object;
+	}
+
 
 	private JSONObject toJsonObject(ItemMetadata item) {
 		JSONObject jsonObject = new JSONOrderedObject();
@@ -74,6 +91,22 @@ public class JsonMarshaller {
 		}
 		if (item.isDeprecated()) {
 			jsonObject.put("deprecated", true);
+		}
+		return jsonObject;
+	}
+
+	private JSONObject toJsonTypeDescriptor(TypeDescriptor typeDescriptor, boolean includeType) {
+		JSONObject jsonObject = new JSONObject();
+		if (includeType) {
+			jsonObject.put("type", typeDescriptor.getType());
+		}
+		if (typeDescriptor.getKeyType() != null) {
+			JSONObject keyType = new JSONObject();
+			keyType.put("type", typeDescriptor.getKeyType());
+			jsonObject.put("key", keyType);
+		}
+		if (typeDescriptor.getValueTypeDescriptor() != null) {
+			jsonObject.put("value", toJsonTypeDescriptor(typeDescriptor.getValueTypeDescriptor(), true));
 		}
 		return jsonObject;
 	}
@@ -104,20 +137,19 @@ public class JsonMarshaller {
 		JSONArray groups = object.optJSONArray("groups");
 		if (groups != null) {
 			for (int i = 0; i < groups.length(); i++) {
-				metadata.add(toItemMetadata((JSONObject) groups.get(i), ItemType.GROUP));
+				metadata.add(toGroupMetadata((JSONObject) groups.get(i)));
 			}
 		}
 		JSONArray properties = object.optJSONArray("properties");
 		if (properties != null) {
 			for (int i = 0; i < properties.length(); i++) {
-				metadata.add(toItemMetadata((JSONObject) properties.get(i),
-						ItemType.PROPERTY));
+				metadata.add(toPropertyMetadata((JSONObject) properties.get(i)));
 			}
 		}
 		return metadata;
 	}
 
-	private ItemMetadata toItemMetadata(JSONObject object, ItemType itemType) {
+	private GroupMetadata toGroupMetadata(JSONObject object) {
 		String name = object.getString("name");
 		String type = object.optString("type", null);
 		String description = object.optString("description", null);
@@ -125,8 +157,37 @@ public class JsonMarshaller {
 		String sourceMethod = object.optString("sourceMethod", null);
 		Object defaultValue = readDefaultValue(object);
 		boolean deprecated = object.optBoolean("deprecated");
-		return new ItemMetadata(itemType, name, null, type, sourceType, sourceMethod,
+		return new GroupMetadata(name, null, sourceType, sourceMethod,
+				description, defaultValue, deprecated, type);
+	}
+
+	private PropertyMetadata toPropertyMetadata(JSONObject object) {
+		String name = object.getString("name");
+		String type = object.optString("type", null);
+		String description = object.optString("description", null);
+		String sourceType = object.optString("sourceType", null);
+		String sourceMethod = object.optString("sourceMethod", null);
+		Object defaultValue = readDefaultValue(object);
+		boolean deprecated = object.optBoolean("deprecated");
+		TypeDescriptor typeDescriptor = toTypeDescriptor(object, type);
+		return new PropertyMetadata(name, null, typeDescriptor, sourceType, sourceMethod,
 				description, defaultValue, deprecated);
+	}
+
+	private TypeDescriptor toTypeDescriptor(JSONObject object, String type) {
+		JSONObject domain = object.optJSONObject("domain");
+		if (domain != null) {
+			JSONObject keyJson = domain.optJSONObject("key");
+			String keyType = (keyJson != null ? keyJson.optString("type", null) : null);
+			JSONObject valueJson = domain.optJSONObject("value");
+			TypeDescriptor valueTypeDescriptor =
+					(valueJson != null ? toTypeDescriptor(valueJson, valueJson.getString("type")) : null);
+			return new TypeDescriptor(type, valueTypeDescriptor, keyType);
+		}
+		else {
+			return new TypeDescriptor(type);
+
+		}
 	}
 
 	private Object readDefaultValue(JSONObject object) {

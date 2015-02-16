@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 the original author or authors.
+ * Copyright 2012-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,15 @@
 
 package org.springframework.boot.configurationprocessor;
 
+import java.util.List;
+
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
+
 import org.springframework.boot.configurationprocessor.metadata.ConfigurationMetadata;
 import org.springframework.boot.configurationprocessor.metadata.ItemMetadata;
-import org.springframework.boot.configurationprocessor.metadata.ItemMetadata.ItemType;
+import org.springframework.boot.configurationprocessor.metadata.TypeDescriptor;
 
 /**
  * Hamcrest {@link Matcher} to help test {@link ConfigurationMetadata}.
@@ -30,35 +33,34 @@ import org.springframework.boot.configurationprocessor.metadata.ItemMetadata.Ite
  */
 public class ConfigurationMetadataMatchers {
 
-	public static ContainsItemMatcher containsGroup(String name) {
-		return new ContainsItemMatcher(ItemType.GROUP, name);
+	public static ContainsGroupMatcher containsGroup(String name) {
+		return new ContainsGroupMatcher(name);
 	}
 
-	public static ContainsItemMatcher containsGroup(String name, Class<?> type) {
-		return new ContainsItemMatcher(ItemType.GROUP, name).ofType(type);
+	public static ContainsGroupMatcher containsGroup(String name, Class<?> type) {
+		return new ContainsGroupMatcher(name).ofType(type);
 	}
 
-	public static ContainsItemMatcher containsGroup(String name, String type) {
-		return new ContainsItemMatcher(ItemType.GROUP, name).ofType(type);
+	public static ContainsGroupMatcher containsGroup(String name, String type) {
+		return new ContainsGroupMatcher(name).ofType(type);
 	}
 
-	public static ContainsItemMatcher containsProperty(String name) {
-		return new ContainsItemMatcher(ItemType.PROPERTY, name);
+	public static ContainsPropertyMatcher containsProperty(String name) {
+		return new ContainsPropertyMatcher(name);
 	}
 
-	public static ContainsItemMatcher containsProperty(String name, Class<?> type) {
-		return new ContainsItemMatcher(ItemType.PROPERTY, name).ofType(type);
+	public static ContainsPropertyMatcher containsProperty(String name, Class<?> type) {
+		return new ContainsPropertyMatcher(name).ofType(type);
 	}
 
-	public static ContainsItemMatcher containsProperty(String name, String type) {
-		return new ContainsItemMatcher(ItemType.PROPERTY, name).ofType(type);
+	public static ContainsPropertyMatcher containsProperty(String name, String type) {
+		return new ContainsPropertyMatcher(name).ofType(type);
 	}
 
-	public static class ContainsItemMatcher extends BaseMatcher<ConfigurationMetadata> {
 
-		private final ItemType itemType;
+	public static abstract class AbstractItemMatcher<B> extends BaseMatcher<ConfigurationMetadata> {
 
-		private final String name;
+		protected final String name;
 
 		private final String type;
 
@@ -70,14 +72,13 @@ public class ConfigurationMetadataMatchers {
 
 		private final boolean deprecated;
 
-		public ContainsItemMatcher(ItemType itemType, String name) {
-			this(itemType, name, null, null, null, null, false);
+		protected AbstractItemMatcher(String name) {
+			this(name, null, null, null, null, false);
 		}
 
-		public ContainsItemMatcher(ItemType itemType, String name, String type,
+		protected AbstractItemMatcher(String name, String type,
 				Class<?> sourceType, String description, Matcher<?> defaultValue,
 				boolean deprecated) {
-			this.itemType = itemType;
 			this.name = name;
 			this.type = type;
 			this.sourceType = sourceType;
@@ -88,8 +89,7 @@ public class ConfigurationMetadataMatchers {
 
 		@Override
 		public boolean matches(Object item) {
-			ConfigurationMetadata metadata = (ConfigurationMetadata) item;
-			ItemMetadata itemMetadata = getFirstPropertyWithName(metadata, this.name);
+			ItemMetadata itemMetadata = getItemMetadata(item);
 			if (itemMetadata == null) {
 				return false;
 			}
@@ -114,18 +114,17 @@ public class ConfigurationMetadataMatchers {
 			return true;
 		}
 
+		protected abstract ItemMetadata getItemMetadata(Object item);
+
 		@Override
 		public void describeMismatch(Object item, Description description) {
-			ConfigurationMetadata metadata = (ConfigurationMetadata) item;
-			ItemMetadata property = getFirstPropertyWithName(metadata, this.name);
+			ItemMetadata property = getItemMetadata(item);
 			if (property == null) {
-				description.appendText("missing "
-						+ this.itemType.toString().toLowerCase() + " " + this.name);
+				description.appendText("missing " + this.name);
 			}
 			else {
 				description.appendText(
-						"was " + this.itemType.toString().toLowerCase() + " ")
-						.appendValue(property);
+						"was  ").appendValue(property);
 			}
 		}
 
@@ -133,7 +132,7 @@ public class ConfigurationMetadataMatchers {
 		public void describeTo(Description description) {
 			description.appendText("metadata containing " + this.name);
 			if (this.type != null) {
-				description.appendText(" dataType ").appendValue(this.type);
+				description.appendText(" type ").appendValue(this.type);
 			}
 			if (this.sourceType != null) {
 				description.appendText(" sourceType ").appendValue(this.sourceType);
@@ -149,46 +148,106 @@ public class ConfigurationMetadataMatchers {
 			}
 		}
 
-		public ContainsItemMatcher ofType(Class<?> dataType) {
-			return new ContainsItemMatcher(this.itemType, this.name, dataType.getName(),
+		protected abstract B create(String name, String type,
+				Class<?> sourceType, String description, Matcher<?> defaultValue,
+				boolean deprecated);
+
+		public B ofType(Class<?> dataType) {
+			return create(this.name, dataType.getName(),
 					this.sourceType, this.description, this.defaultValue, this.deprecated);
 		}
 
-		public ContainsItemMatcher ofType(String dataType) {
-			return new ContainsItemMatcher(this.itemType, this.name, dataType,
+		public B ofType(String dataType) {
+			return create(this.name, dataType,
 					this.sourceType, this.description, this.defaultValue, this.deprecated);
 		}
 
-		public ContainsItemMatcher fromSource(Class<?> sourceType) {
-			return new ContainsItemMatcher(this.itemType, this.name, this.type,
+		public B fromSource(Class<?> sourceType) {
+			return create(this.name, this.type,
 					sourceType, this.description, this.defaultValue, this.deprecated);
 		}
 
-		public ContainsItemMatcher withDescription(String description) {
-			return new ContainsItemMatcher(this.itemType, this.name, this.type,
+		public B withDescription(String description) {
+			return create(this.name, this.type,
 					this.sourceType, description, this.defaultValue, this.deprecated);
 		}
 
-		public ContainsItemMatcher withDefaultValue(Matcher<?> defaultValue) {
-			return new ContainsItemMatcher(this.itemType, this.name, this.type,
+		public B withDefaultValue(Matcher<?> defaultValue) {
+			return create(this.name, this.type,
 					this.sourceType, this.description, defaultValue, this.deprecated);
 		}
 
-		public ContainsItemMatcher withDeprecated() {
-			return new ContainsItemMatcher(this.itemType, this.name, this.type,
+		public B withDeprecated() {
+			return create(this.name, this.type,
 					this.sourceType, this.description, this.defaultValue, true);
 		}
 
-		private ItemMetadata getFirstPropertyWithName(ConfigurationMetadata metadata,
-				String name) {
-			for (ItemMetadata item : metadata.getItems()) {
-				if (item.isOfItemType(this.itemType) && name.equals(item.getName())) {
+
+		protected <T extends ItemMetadata> T getFirstItemWithName(List<T> items, String name) {
+			for (T item : items) {
+				if (name.equals(item.getName())) {
 					return item;
 				}
 			}
 			return null;
 		}
 
+	}
+
+	public static class ContainsGroupMatcher extends AbstractItemMatcher<ContainsGroupMatcher> {
+
+		public ContainsGroupMatcher(String name) {
+			super(name);
+		}
+
+		public ContainsGroupMatcher(String name, String type, Class<?> sourceType,
+				String description, Matcher<?> defaultValue, boolean deprecated) {
+			super(name, type, sourceType, description, defaultValue, deprecated);
+		}
+
+		@Override
+		protected ItemMetadata getItemMetadata(Object item) {
+			ConfigurationMetadata metadata = (ConfigurationMetadata) item;
+			return getFirstItemWithName(metadata.getGroups(), this.name);
+		}
+
+		@Override
+		protected ContainsGroupMatcher create(String name, String type, Class<?> sourceType,
+				String description, Matcher<?> defaultValue, boolean deprecated) {
+			return new ContainsGroupMatcher(name, type, sourceType, description, defaultValue, deprecated);
+		}
+	}
+
+	public static class ContainsPropertyMatcher extends AbstractItemMatcher<ContainsPropertyMatcher> {
+
+		private final TypeDescriptor typeDescriptor;
+
+		public ContainsPropertyMatcher(String name) {
+			super(name);
+			this.typeDescriptor = null;
+		}
+
+		public ContainsPropertyMatcher(String name, TypeDescriptor type, Class<?> sourceType,
+				String description, Matcher<?> defaultValue, boolean deprecated) {
+			super(name, "", sourceType, description, defaultValue, deprecated);
+			this.typeDescriptor = type;
+		}
+
+		@Override
+		protected ItemMetadata getItemMetadata(Object item) {
+			ConfigurationMetadata metadata = (ConfigurationMetadata) item;
+			return getFirstItemWithName(metadata.getProperties(), this.name);
+		}
+
+		@Override
+		protected ContainsPropertyMatcher create(String name, String type, Class<?> sourceType,
+				String description, Matcher<?> defaultValue, boolean deprecated) {
+			return new ContainsPropertyMatcher(name, createFrom(type), sourceType, description, defaultValue, deprecated);
+		}
+
+		private static TypeDescriptor createFrom(String type) {
+			return (type != null ? new TypeDescriptor(type) : null);
+		}
 	}
 
 }

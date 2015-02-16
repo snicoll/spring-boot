@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 the original author or authors.
+ * Copyright 2012-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,8 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.WildcardType;
 import javax.lang.model.util.Types;
 
+import org.springframework.boot.configurationprocessor.metadata.TypeDescriptor;
+
 /**
  * Type Utilities.
  *
@@ -59,6 +61,8 @@ class TypeUtils {
 
 	private final TypeMirror mapType;
 
+	private final TypeMirror objectType;
+
 	public TypeUtils(ProcessingEnvironment env) {
 		this.env = env;
 		Types types = env.getTypeUtils();
@@ -67,7 +71,29 @@ class TypeUtils {
 				.getTypeElement(Collection.class.getName()), wc);
 		this.mapType = types.getDeclaredType(
 				this.env.getElementUtils().getTypeElement(Map.class.getName()), wc, wc);
+		this.objectType = types.getDeclaredType(this.env.getElementUtils()
+						.getTypeElement(Object.class.getName()));
 
+	}
+
+	public TypeDescriptor getTypeDescriptor(TypeMirror type) {
+		if (type == null) {
+			return null;
+		}
+		if (isMap(type)) {
+			TypeMirror[] entryType = getMapEntryType(type);
+			TypeDescriptor keyTypeDescriptor = getTypeDescriptor(entryType[0]);
+			TypeDescriptor valueTypeDescriptor = getTypeDescriptor(entryType[1]);
+			return new TypeDescriptor(getType(type), valueTypeDescriptor, keyTypeDescriptor.getType());
+		}
+		else if (isCollection(type)) {
+			TypeMirror elementType = getCollectionElementType(type);
+			TypeDescriptor elementTypeDescriptor = getTypeDescriptor(elementType);
+			return new TypeDescriptor(getType(type), elementTypeDescriptor, null);
+		}
+		else {
+			return new TypeDescriptor(getType(type));
+		}
 	}
 
 	public String getType(Element element) {
@@ -94,8 +120,7 @@ class TypeUtils {
 	}
 
 	public boolean isCollectionOrMap(TypeMirror type) {
-		return this.env.getTypeUtils().isAssignable(type, this.collectionType)
-				|| this.env.getTypeUtils().isAssignable(type, this.mapType);
+		return isCollection(type) || isMap(type);
 	}
 
 	public boolean isEnclosedIn(Element candidate, TypeElement element) {
@@ -115,6 +140,52 @@ class TypeUtils {
 			javadoc = javadoc.trim();
 		}
 		return ("".equals(javadoc) ? null : javadoc);
+	}
+
+	private boolean isCollection(TypeMirror type) {
+		return this.env.getTypeUtils().isAssignable(type, this.collectionType);
+	}
+
+	private boolean isMap(TypeMirror type) {
+		return this.env.getTypeUtils().isAssignable(type, this.mapType);
+	}
+
+	private TypeMirror getCollectionElementType(TypeMirror type) {
+		TypeElement typeElement = (TypeElement) this.env.getTypeUtils().asElement(type);
+		if (typeElement.getQualifiedName().contentEquals(Collection.class.getName())) {
+			DeclaredType declaredType = (DeclaredType) type;
+			if (declaredType.getTypeArguments().size() == 0) { // raw type, just "Collection"
+				return this.objectType;
+			} else {
+				return declaredType.getTypeArguments().get(0);
+			}
+		}
+		for (TypeMirror superType : this.env.getTypeUtils().directSupertypes(type)) {
+			if (isCollection(superType)) {
+				return getCollectionElementType(superType);
+			}
+		}
+		throw new IllegalStateException("Not a collection type " + type.toString());
+	}
+
+	private TypeMirror[] getMapEntryType(TypeMirror type) {
+		TypeElement typeElement = (TypeElement) this.env.getTypeUtils().asElement(type);
+		if (typeElement.getQualifiedName().contentEquals(Map.class.getName())) {
+			DeclaredType declaredType = (DeclaredType) type;
+			if (declaredType.getTypeArguments().size() == 0) { // raw type, just "Map"
+				return new TypeMirror[]{this.objectType, this.objectType};
+			} else {
+				TypeMirror keyType = declaredType.getTypeArguments().get(0);
+				TypeMirror valueType = declaredType.getTypeArguments().get(1);
+				return new TypeMirror[]{keyType, valueType};
+			}
+		}
+		for (TypeMirror superType : this.env.getTypeUtils().directSupertypes(type)) {
+			if (isMap(superType)) {
+				return getMapEntryType(superType);
+			}
+		}
+		throw new IllegalStateException("Not a map type " + type.toString());
 	}
 
 }

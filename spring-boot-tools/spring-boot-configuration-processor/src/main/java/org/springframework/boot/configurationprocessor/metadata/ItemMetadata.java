@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 the original author or authors.
+ * Copyright 2012-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,13 +24,9 @@ package org.springframework.boot.configurationprocessor.metadata;
  * @since 1.2.0
  * @see ConfigurationMetadata
  */
-public class ItemMetadata implements Comparable<ItemMetadata> {
-
-	private final ItemType itemType;
+public abstract class ItemMetadata implements Comparable<ItemMetadata> {
 
 	private final String name;
-
-	private final String type;
 
 	private final String description;
 
@@ -42,13 +38,11 @@ public class ItemMetadata implements Comparable<ItemMetadata> {
 
 	private final boolean deprecated;
 
-	ItemMetadata(ItemType itemType, String prefix, String name, String type,
-			String sourceType, String sourceMethod, String description,
+	ItemMetadata(String prefix, String name, String sourceType,
+			String sourceMethod, String description,
 			Object defaultValue, boolean deprecated) {
 		super();
-		this.itemType = itemType;
 		this.name = buildName(prefix, name);
-		this.type = type;
 		this.sourceType = sourceType;
 		this.sourceMethod = sourceMethod;
 		this.description = description;
@@ -68,17 +62,12 @@ public class ItemMetadata implements Comparable<ItemMetadata> {
 		return fullName.toString();
 	}
 
-	public boolean isOfItemType(ItemType itemType) {
-		return this.itemType == itemType;
-	}
 
 	public String getName() {
 		return this.name;
 	}
 
-	public String getType() {
-		return this.type;
-	}
+	public abstract String getType();
 
 	public String getSourceType() {
 		return this.sourceType;
@@ -103,7 +92,6 @@ public class ItemMetadata implements Comparable<ItemMetadata> {
 	@Override
 	public String toString() {
 		StringBuilder string = new StringBuilder(this.name);
-		buildToStringProperty(string, "type", this.type);
 		buildToStringProperty(string, "sourceType", this.sourceType);
 		buildToStringProperty(string, "description", this.description);
 		buildToStringProperty(string, "defaultValue", this.defaultValue);
@@ -123,24 +111,17 @@ public class ItemMetadata implements Comparable<ItemMetadata> {
 		return getName().compareTo(o.getName());
 	}
 
-	public static ItemMetadata newGroup(String name, String type, String sourceType,
+	public static GroupMetadata newGroup(String name, String type, String sourceType,
 			String sourceMethod) {
-		return new ItemMetadata(ItemType.GROUP, name, null, type, sourceType,
-				sourceMethod, null, null, false);
+		return new GroupMetadata(name, null, sourceType,
+				sourceMethod, null, null, false, type);
 	}
 
-	public static ItemMetadata newProperty(String prefix, String name, String type,
+	public static PropertyMetadata newProperty(String prefix, String name, TypeDescriptor typeDescriptor,
 			String sourceType, String sourceMethod, String description,
 			Object defaultValue, boolean deprecated) {
-		return new ItemMetadata(ItemType.PROPERTY, prefix, name, type, sourceType,
+		return new PropertyMetadata(prefix, name, typeDescriptor, sourceType,
 				sourceMethod, description, defaultValue, deprecated);
-	}
-
-	/**
-	 * The item type.
-	 */
-	public static enum ItemType {
-		GROUP, PROPERTY
 	}
 
 }

@@ -48,6 +48,7 @@ import org.springframework.boot.configurationprocessor.fieldvalues.FieldValuesPa
 import org.springframework.boot.configurationprocessor.fieldvalues.javac.JavaCompilerFieldValuesParser;
 import org.springframework.boot.configurationprocessor.metadata.ConfigurationMetadata;
 import org.springframework.boot.configurationprocessor.metadata.ItemMetadata;
+import org.springframework.boot.configurationprocessor.metadata.TypeDescriptor;
 
 /**
  * Annotation {@link Processor} that writes meta-data file for
@@ -194,7 +195,7 @@ public class ConfigurationMetadataAnnotationProcessor extends AbstractProcessor 
 			boolean isNested = isNested(returnTypeElement, field, element);
 			boolean isCollection = this.typeUtils.isCollectionOrMap(returnType);
 			if (!isExcluded && !isNested && (setter != null || isCollection)) {
-				String dataType = this.typeUtils.getType(returnType);
+				TypeDescriptor dataTypeDescriptor = this.typeUtils.getTypeDescriptor(returnType);
 				String sourceType = this.typeUtils.getType(element);
 				String description = this.typeUtils.getJavaDoc(field);
 				Object defaultValue = fieldValues.get(name);
@@ -202,7 +203,7 @@ public class ConfigurationMetadataAnnotationProcessor extends AbstractProcessor 
 						|| hasDeprecateAnnotation(setter)
 						|| hasDeprecateAnnotation(element);
 				this.metadataCollector.add(ItemMetadata
-						.newProperty(prefix, name, dataType, sourceType, null,
+						.newProperty(prefix, name, dataTypeDescriptor, sourceType, null,
 								description, defaultValue, deprecated));
 			}
 		}
@@ -224,14 +225,14 @@ public class ConfigurationMetadataAnnotationProcessor extends AbstractProcessor 
 			boolean isCollection = this.typeUtils.isCollectionOrMap(returnType);
 			boolean hasSetter = hasLombokSetter(field, element);
 			if (!isExcluded && !isNested && (hasSetter || isCollection)) {
-				String dataType = this.typeUtils.getType(returnType);
+				TypeDescriptor dataTypeDescriptor = this.typeUtils.getTypeDescriptor(returnType);
 				String sourceType = this.typeUtils.getType(element);
 				String description = this.typeUtils.getJavaDoc(field);
 				Object defaultValue = fieldValues.get(name);
 				boolean deprecated = hasDeprecateAnnotation(field)
 						|| hasDeprecateAnnotation(element);
 				this.metadataCollector.add(ItemMetadata
-						.newProperty(prefix, name, dataType, sourceType, null,
+						.newProperty(prefix, name, dataTypeDescriptor, sourceType, null,
 								description, defaultValue, deprecated));
 			}
 		}
@@ -327,7 +328,7 @@ public class ConfigurationMetadataAnnotationProcessor extends AbstractProcessor 
 	protected ConfigurationMetadata writeMetaData() {
 		ConfigurationMetadata metadata = this.metadataCollector.getMetadata();
 		metadata = mergeAdditionalMetadata(metadata);
-		if (!metadata.getItems().isEmpty()) {
+		if (!metadata.isEmpty()) {
 			try {
 				this.metadataStore.writeMetadata(metadata);
 			}
