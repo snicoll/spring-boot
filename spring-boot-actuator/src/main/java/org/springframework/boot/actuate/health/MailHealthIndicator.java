@@ -16,8 +16,6 @@
 
 package org.springframework.boot.actuate.health;
 
-import java.net.URI;
-
 import javax.mail.MessagingException;
 import javax.mail.NoSuchProviderException;
 import javax.mail.Session;
@@ -27,9 +25,13 @@ import org.springframework.boot.actuate.health.Health.Builder;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 
 /**
+ * {@link HealthIndicator} for configured smtp server(s).
+ *
  * @author Johannes Stelzer
+ * @since 1.3.0
  */
 public class MailHealthIndicator extends AbstractHealthIndicator {
+
 	private final JavaMailSenderImpl mailSender;
 
 	public MailHealthIndicator(JavaMailSenderImpl mailSender) {
@@ -38,11 +40,10 @@ public class MailHealthIndicator extends AbstractHealthIndicator {
 
 	@Override
 	protected void doHealthCheck(Builder builder) throws Exception {
-		URI uri = new URI(this.mailSender.getProtocol(), null, this.mailSender.getHost(),
-				this.mailSender.getPort(), null, null, null);
-		builder.withDetail("connection", uri.toString());
-		Transport transport = null;
+		String location = String.format("%s:%d", this.mailSender.getHost(), this.mailSender.getPort());
+		builder.withDetail("location", location);
 
+		Transport transport = null;
 		try {
 			transport = connectTransport();
 			builder.up();
@@ -54,7 +55,8 @@ public class MailHealthIndicator extends AbstractHealthIndicator {
 		}
 	}
 
-	protected Transport connectTransport() throws MessagingException {
+	// Copy-paste from JavaMailSenderImpl - see SPR-12799
+	private Transport connectTransport() throws MessagingException {
 		String username = this.mailSender.getUsername();
 		String password = this.mailSender.getPassword();
 		if ("".equals(username)) {
@@ -70,7 +72,7 @@ public class MailHealthIndicator extends AbstractHealthIndicator {
 		return transport;
 	}
 
-	protected Transport getTransport(Session session) throws NoSuchProviderException {
+	private Transport getTransport(Session session) throws NoSuchProviderException {
 		String protocol = this.mailSender.getProtocol();
 		if (protocol == null) {
 			protocol = session.getProperty("mail.transport.protocol");
@@ -80,4 +82,5 @@ public class MailHealthIndicator extends AbstractHealthIndicator {
 		}
 		return session.getTransport(protocol);
 	}
+
 }

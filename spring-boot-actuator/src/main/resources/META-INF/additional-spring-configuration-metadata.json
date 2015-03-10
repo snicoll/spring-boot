@@ -61,7 +61,7 @@
   {
     "name": "management.health.mail.enabled",
     "type": "java.lang.Boolean",
-    "description": "Enable JavaMail health check.",
+    "description": "Enable Mail health check.",
     "defaultValue": true
   },
   {
