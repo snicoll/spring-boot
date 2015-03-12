@@ -17,70 +17,51 @@
 package org.springframework.boot.maven;
 
 import java.net.URLClassLoader;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
+import java.util.LinkedList;
 
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.ResolutionScope;
-
-import org.springframework.boot.loader.tools.JavaExecutable;
-import org.springframework.boot.loader.tools.RunProcess;
 
 /**
  *
  * @author Stephane Nicoll
  */
-@Mojo(name = "run", requiresProject = true, defaultPhase = LifecyclePhase.VALIDATE, requiresDependencyResolution = ResolutionScope.TEST)
-@Execute(phase = LifecyclePhase.TEST_COMPILE)
-public class RunMojo extends AbstractRunMojo {
+@Mojo(name = "start", requiresProject = true, defaultPhase = LifecyclePhase.PRE_INTEGRATION_TEST, requiresDependencyResolution = ResolutionScope.TEST)
+public class StartMojo extends AbstractRunMojo {
+
+	private static final String ENABLE_SHUTDOWN = "--spring.application.lifecycle.enabled=true";
+
+	private final Object lock = new Object();
 
 	protected void runWithForkedJvm(String startClassName) throws MojoExecutionException {
-		List<String> args = new ArrayList<String>();
-		addAgents(args);
-		addJvmArgs(args);
-		addClasspath(args);
-		args.add(startClassName);
-		addArgs(args);
-		try {
-			new RunProcess(new JavaExecutable().toString()).run(args
-					.toArray(new String[args.size()]));
-		}
-		catch (Exception ex) {
-			throw new MojoExecutionException("Could not exec java", ex);
-		}
+		throw new UnsupportedOperationException("Fork mode not supported by start goal");
 	}
 
 	protected void runWithMavenJvm(String startClassName, String... arguments) throws MojoExecutionException {
 		IsolatedThreadGroup threadGroup = new IsolatedThreadGroup(startClassName);
 		Thread launchThread = new Thread(threadGroup, new LaunchRunner(startClassName,
-				arguments), startClassName + ".main()");
+				resolveArguments(arguments)), startClassName + ".main()");
 		launchThread.setContextClassLoader(new URLClassLoader(getClassPathUrls()));
 		launchThread.start();
-		join(threadGroup);
-		threadGroup.rethrowUncaughtException();
-	}
 
-	protected void join(ThreadGroup threadGroup) {
-		boolean hasNonDaemonThreads;
-		do {
-			hasNonDaemonThreads = false;
-			Thread[] threads = new Thread[threadGroup.activeCount()];
-			threadGroup.enumerate(threads);
-			for (Thread thread : threads) {
-				if (thread != null && !thread.isDaemon()) {
-					try {
-						hasNonDaemonThreads = true;
-						thread.join();
-					}
-					catch (InterruptedException ex) {
-						Thread.currentThread().interrupt();
-					}
-				}
+		// TODO: waaaaaaat?
+		synchronized (this.lock) {
+			try {
+				this.lock.wait(10000);
+			}
+			catch (InterruptedException e) {
+				e.printStackTrace();
 			}
 		}
-		while (hasNonDaemonThreads);
+	}
+
+	private String[] resolveArguments(String... arguments) {
+		LinkedList<String> args = (arguments != null ?
+				new LinkedList<String>(Arrays.asList(arguments)) : new LinkedList<String>());
+		args.addFirst(ENABLE_SHUTDOWN);
+		return args.toArray(new String[args.size()]);
 	}
 }

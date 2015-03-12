@@ -19,7 +19,7 @@ package org.springframework.boot.maven;
 import org.codehaus.plexus.util.cli.CommandLineUtils;
 
 /**
- * Parse and expose arguments specified as {@link RunMojo} parameters.
+ * Parse and expose arguments specified as {@link AbstractRunMojo} parameters.
  *
  * @author Stephane Nicoll
  * @since 1.1.0
