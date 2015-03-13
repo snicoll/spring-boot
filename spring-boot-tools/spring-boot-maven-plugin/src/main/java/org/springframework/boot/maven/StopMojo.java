@@ -16,17 +16,20 @@
 
 package org.springframework.boot.maven;
 
+import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import javax.management.InstanceNotFoundException;
-import javax.management.MBeanServer;
-import javax.management.MalformedObjectNameException;
-import javax.management.ObjectName;
+import javax.management.MBeanException;
+import javax.management.MBeanServerConnection;
+import javax.management.ReflectionException;
+import javax.management.remote.JMXConnector;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
 
 /**
  *
@@ -35,28 +38,78 @@ import org.apache.maven.plugins.annotations.Mojo;
 @Mojo(name = "stop", requiresProject = true, defaultPhase = LifecyclePhase.POST_INTEGRATION_TEST)
 public class StopMojo extends AbstractMojo {
 
-	//Note: see org.springframework.boot.autoconfigure.test.ApplicationShutdownAutoConfiguration
-	static final String OBJECT_NAME = "org.springframework.boot.test:type=SpringApplicationLifecycle";
+	/**
+	 * Flag to indicate if the run processes should be forked. By default process forking
+	 * is only used if an agent or jvmArguments are specified.
+	 * @since 1.2
+	 */
+	@Parameter(property = "fork")
+	private Boolean fork;
+
+	/**
+	 * The JMX name of the automatically deployed MBean managing the lifecycle
+	 * of the Spring application.
+	 */
+	@Parameter
+	private String jmxName = SpringApplicationLifecycleHelper.DEFAULT_OBJECT_NAME;
+
+	/**
+	 * The port to use to expose the platform MBeanServer if the application
+	 * needs to be forked.
+	 */
+	@Parameter
+	private int jmxPort = 9001;
 
 	@Override
 	public void execute() throws MojoExecutionException, MojoFailureException {
-		//TODO: support fork?
 		getLog().info("Stopping Spring Boot application.");
-		MBeanServer server = ManagementFactory.getPlatformMBeanServer();
 		try {
-			ObjectName objectName = new ObjectName(OBJECT_NAME);
-			server.invoke(objectName, "shutdown", null, null);
+			if (Boolean.TRUE.equals(this.fork)) {
+				stopForkedProcess();
+			}
+			else {
+				stop();
+			}
 		}
-		catch (MalformedObjectNameException e) {
-			throw new IllegalStateException("Invalid object name", e);
-		}
-		catch (InstanceNotFoundException e) {
-			throw new MojoFailureException("Application shutdown hook not found. Could not " +
-					"stop application gracefully", e);
+		catch (IOException e) {
+			throw new MojoFailureException("Could not contact Spring Boot application", e);
 		}
 		catch (Exception e) {
 			throw new MojoExecutionException("Could not stop application", e);
 		}
-
 	}
+
+	private void stop() throws IOException, MojoFailureException, MojoExecutionException {
+		doStop(ManagementFactory.getPlatformMBeanServer());
+	}
+
+	private void stopForkedProcess() throws IOException, MojoFailureException, MojoExecutionException {
+		JMXConnector jmxConnector = SpringApplicationLifecycleHelper.createLocalJmxConnector(this.jmxPort);
+		try {
+			MBeanServerConnection mBeanServerConnection = jmxConnector.getMBeanServerConnection();
+			doStop(mBeanServerConnection);
+		}
+		finally {
+			jmxConnector.close();
+		}
+	}
+
+	private void doStop(MBeanServerConnection connection)
+			throws IOException, MojoFailureException, MojoExecutionException {
+		SpringApplicationLifecycleHelper helper = new SpringApplicationLifecycleHelper(connection, this.jmxName);
+		try {
+			helper.stop();
+		}
+		catch (InstanceNotFoundException e) {
+			throw new MojoFailureException("Spring Application lifecycle JMX bean not found. Could not " +
+					"stop application gracefully", e);
+		}
+		catch (ReflectionException e) {
+			throw new MojoExecutionException("Shutdown failed", e.getCause());
+		}
+		catch (MBeanException e) {
+			throw new MojoFailureException("Could not invoke shutdown operation", e);
+		}
+	}
+
 }

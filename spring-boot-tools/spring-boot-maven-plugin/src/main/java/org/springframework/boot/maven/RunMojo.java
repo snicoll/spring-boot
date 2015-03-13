@@ -17,7 +17,6 @@
 package org.springframework.boot.maven;
 
 import java.net.URLClassLoader;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.maven.plugin.MojoExecutionException;
@@ -37,15 +36,11 @@ import org.springframework.boot.loader.tools.RunProcess;
 @Execute(phase = LifecyclePhase.TEST_COMPILE)
 public class RunMojo extends AbstractRunMojo {
 
-	protected void runWithForkedJvm(String startClassName) throws MojoExecutionException {
-		List<String> args = new ArrayList<String>();
-		addAgents(args);
-		addJvmArgs(args);
-		addClasspath(args);
-		args.add(startClassName);
-		addArgs(args);
+
+	@Override
+	protected void runWithForkedJvm(List<String> args) throws MojoExecutionException {
 		try {
-			new RunProcess(new JavaExecutable().toString()).run(args
+			new RunProcess(new JavaExecutable().toString()).run(true, args
 					.toArray(new String[args.size()]));
 		}
 		catch (Exception ex) {

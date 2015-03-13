@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 the original author or authors.
+ * Copyright 2012-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,11 @@
 
 package org.springframework.boot.maven;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+
 import org.codehaus.plexus.util.cli.CommandLineUtils;
 
 /**
@@ -26,21 +31,21 @@ import org.codehaus.plexus.util.cli.CommandLineUtils;
  */
 class RunArguments {
 
-	private static final String[] NO_ARGS = {};
+	private static final List<String> NO_ARGS = Collections.emptyList();
 
-	private final String[] args;
+	private final LinkedList<String> args;
 
 	public RunArguments(String arguments) {
-		this.args = parseArgs(arguments);
+		this.args = new LinkedList<String>(parseArgs(arguments));
 	}
 
-	private String[] parseArgs(String arguments) {
+	private List<String> parseArgs(String arguments) {
 		if (arguments == null || arguments.trim().isEmpty()) {
 			return NO_ARGS;
 		}
 		try {
 			arguments = arguments.replace('\n', ' ').replace('\t', ' ');
-			return CommandLineUtils.translateCommandline(arguments);
+			return Arrays.asList(CommandLineUtils.translateCommandline(arguments));
 		}
 		catch (Exception ex) {
 			throw new IllegalArgumentException("Failed to parse arguments [" + arguments
@@ -48,8 +53,12 @@ class RunArguments {
 		}
 	}
 
+	public LinkedList<String> getArgs() {
+		return args;
+	}
+
 	public String[] asArray() {
-		return this.args;
+		return this.args.toArray(new String[this.args.size()]);
 	}
 
 }

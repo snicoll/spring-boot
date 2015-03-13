@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 the original author or authors.
+ * Copyright 2012-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -130,6 +130,10 @@ public abstract class AbstractRunMojo extends AbstractDependencyFilterMojo {
 	@Parameter(property = "fork")
 	private Boolean fork;
 
+	protected Boolean isFork() {
+		return fork;
+	}
+
 	@Override
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		final String startClassName = getStartClass();
@@ -159,13 +163,13 @@ public abstract class AbstractRunMojo extends AbstractDependencyFilterMojo {
 		}
 	}
 
-	private void run(String startClassName) throws MojoExecutionException {
+	private void run(String startClassName) throws MojoExecutionException, MojoFailureException {
 		findAgent();
 		boolean hasAgent = (this.agent != null && this.agent.length > 0);
 		boolean hasJvmArgs = (this.jvmArguments != null && this.jvmArguments.length() > 0);
 		if (Boolean.TRUE.equals(this.fork)
 				|| (this.fork == null && (hasAgent || hasJvmArgs))) {
-			runWithForkedJvm(startClassName);
+			doRunWithForkedJvm(startClassName);
 		}
 		else {
 			if (hasAgent) {
@@ -180,10 +184,26 @@ public abstract class AbstractRunMojo extends AbstractDependencyFilterMojo {
 		}
 	}
 
-	protected abstract void runWithForkedJvm(String startClassName) throws MojoExecutionException;
+	protected abstract void runWithForkedJvm(List<String> args) throws MojoExecutionException, MojoFailureException;
+
+	protected abstract void runWithMavenJvm(String startClassName, String... arguments)
+			throws MojoExecutionException, MojoFailureException;
 
 
-	protected abstract void runWithMavenJvm(String startClassName, String... arguments) throws MojoExecutionException;
+	protected void doRunWithForkedJvm(String startClassName)
+			throws MojoExecutionException, MojoFailureException {
+		List<String> args = new ArrayList<String>();
+		addAgents(args);
+		addJvmArgs(args);
+		addClasspath(args);
+		args.add(startClassName);
+		addArgs(args);
+		runWithForkedJvm(args);
+	}
+
+	protected RunArguments resolveJvmArguments() {
+		return new RunArguments(this.jvmArguments);
+	}
 
 	protected void addAgents(List<String> args) {
 		if (this.agent != null) {
@@ -198,7 +218,7 @@ public abstract class AbstractRunMojo extends AbstractDependencyFilterMojo {
 	}
 
 	protected void addJvmArgs(List<String> args) {
-		RunArguments jvmArguments = new RunArguments(this.jvmArguments);
+		RunArguments jvmArguments = resolveJvmArguments();
 		Collections.addAll(args, jvmArguments.asArray());
 		logArguments("JVM argument(s): ", jvmArguments.asArray());
 	}

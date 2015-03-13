@@ -27,7 +27,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.boot.context.event.ApplicationStartedEvent;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationListener;
@@ -42,9 +42,9 @@ import org.springframework.util.Assert;
  * @since 1.3.0
  */
 class SpringApplicationLifecycleRegistrar implements ApplicationContextAware, InitializingBean, DisposableBean,
-		ApplicationListener<ApplicationStartedEvent> {
+		ApplicationListener<ApplicationReadyEvent> {
 
-	private static final Log logger = LogFactory.getLog(SpringApplicationLifecycleRegistrar.class);
+	private static final Log logger = LogFactory.getLog(SpringApplicationLifecycle.class);
 
 	private ConfigurableApplicationContext applicationContext;
 
@@ -64,7 +64,7 @@ class SpringApplicationLifecycleRegistrar implements ApplicationContextAware, In
 	}
 
 	@Override
-	public void onApplicationEvent(ApplicationStartedEvent event) {
+	public void onApplicationEvent(ApplicationReadyEvent event) {
 		ready = true;
 	}
 
