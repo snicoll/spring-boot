@@ -28,6 +28,7 @@ import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.concurrent.ConcurrentMapCache;
 import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
+import org.springframework.cache.support.NoOpCacheManager;
 import org.springframework.cache.support.SimpleCacheManager;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -142,6 +143,13 @@ public class CacheAutoConfigurationTests {
 		RedisCacheManager cacheManager = validateCacheManager(RedisCacheManager.class);
 		assertThat(cacheManager.getCacheNames(), contains("foo", "bar"));
 		assertThat(cacheManager.getCacheNames(), hasSize(2));
+	}
+
+	@Test
+	public void noOpCacheExplicit() {
+		load(DefaultCacheConfiguration.class, "spring.cache.mode=none");
+		NoOpCacheManager cacheManager = validateCacheManager(NoOpCacheManager.class);
+		assertThat(cacheManager.getCacheNames(), is(empty()));
 	}
 
 	private <T extends CacheManager> T validateCacheManager(Class<T> type) {

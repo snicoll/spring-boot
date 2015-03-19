@@ -31,7 +31,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class CacheProperties {
 
 	/**
-	 * Cache mode (can be "simple", "redis" or "generic"). Auto-detected
+	 * Cache mode (can be "simple", "redis", "generic" or "none"). Auto-detected
 	 * according to the environment.
 	 */
 	private String mode = "simple";
