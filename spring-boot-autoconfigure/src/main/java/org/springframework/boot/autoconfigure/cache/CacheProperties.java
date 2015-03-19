@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.core.io.Resource;
 
 /**
  * Configuration properties for the cache abstraction.
@@ -31,10 +32,16 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class CacheProperties {
 
 	/**
-	 * Cache mode (can be "simple", "jcache", "redis", "generic" or "none"). Auto-detected
-	 * according to the environment.
+	 * Cache mode (can be "generic", "hazelcast", "jcache", "redis", "simple" or
+	 * "none"). Auto-detected according to the environment.
 	 */
 	private String mode = "simple";
+
+	/**
+	 * The location of the configuration file to use to initialize the cache
+	 * library.
+	 */
+	private Resource location;
 
 	/**
 	 * Comma-separated list of cache names to create if supported by the
@@ -51,8 +58,33 @@ public class CacheProperties {
 		this.mode = mode;
 	}
 
+	public Resource getLocation() {
+		return location;
+	}
+
+	public void setLocation(Resource location) {
+		this.location = location;
+	}
+
 	public List<String> getCacheNames() {
 		return cacheNames;
+	}
+
+	/**
+	 * Resolve the location attribute.
+	 * @return the location or {@code null} if it is not set
+	 * @throws IllegalArgumentException if the location is set to a unknown location
+	 */
+	public Resource resolveLocation() {
+		if (this.location != null) {
+			if (this.location.exists()) {
+				return this.location;
+			}
+			else {
+				throw new IllegalArgumentException("Cache configuration field defined by 'spring.config.location' does not exist " + this.location);
+			}
+		}
+		return null;
 	}
 
 }

@@ -107,7 +107,7 @@ class JCacheCacheConfiguration {
 		static class DefaultCachingProviderAvailable {
 		}
 
-		@ConditionalOnProperty(prefix = "spring.cache.jcache", value = "caching-provider")
+		@ConditionalOnProperty(prefix = "spring.cache.jcache", name = "provider")
 		static class CachingProviderProperty {
 		}
 

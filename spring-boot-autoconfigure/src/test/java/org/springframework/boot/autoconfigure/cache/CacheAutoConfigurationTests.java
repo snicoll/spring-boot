@@ -18,6 +18,8 @@ package org.springframework.boot.autoconfigure.cache;
 
 import javax.cache.configuration.CompleteConfiguration;
 
+import com.hazelcast.cache.HazelcastCachingProvider;
+import com.hazelcast.spring.cache.HazelcastCacheManager;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
@@ -136,15 +138,16 @@ public class CacheAutoConfigurationTests {
 	}
 
 	@Test
-	public void redisCache() {
-		load(RedisCacheConfiguration.class);
+	public void redisCacheExplicit() {
+		load(RedisCacheConfiguration.class, "spring.cache.mode=redis");
 		RedisCacheManager cacheManager = validateCacheManager(RedisCacheManager.class);
 		assertThat(cacheManager.getCacheNames(), is(empty()));
 	}
 
 	@Test
-	public void redisCacheWithCaches() {
+	public void redisCacheExplicitWithCaches() {
 		load(RedisCacheConfiguration.class,
+				"spring.cache.mode=redis",
 				"spring.cache.cacheNames[0]=foo",
 				"spring.cache.cacheNames[1]=bar");
 		RedisCacheManager cacheManager = validateCacheManager(RedisCacheManager.class);
@@ -159,8 +162,10 @@ public class CacheAutoConfigurationTests {
 		assertThat(cacheManager.getCacheNames(), is(empty()));
 	}
 
-	@Test // This test won't last for long once we add another JSR-107 providers on the classpath
+	@Test
 	public void jCacheCacheNoProviderExplicit() {
+		thrown.expect(IllegalStateException.class);
+		thrown.expectMessage("CacheManager found");  // no cache manager found as we have multiples providers
 		load(DefaultCacheConfiguration.class, "spring.cache.mode=jcache");
 		JCacheCacheManager cacheManager = validateCacheManager(JCacheCacheManager.class);
 		assertThat(cacheManager.getCacheNames(), is(empty()));
@@ -215,6 +220,51 @@ public class CacheAutoConfigurationTests {
 		load(DefaultCacheConfiguration.class,
 				"spring.cache.mode=jcache",
 				"spring.cache.jcache.provider=" + wrongCachingProviderFqn);
+	}
+
+	@Test
+	public void hazelcastCacheExplicit() {
+		load(DefaultCacheConfiguration.class,
+				"spring.cache.mode=hazelcast");
+		HazelcastCacheManager cacheManager = validateCacheManager(HazelcastCacheManager.class);
+		// TODO: this should not need to retrieve the cache first.
+		cacheManager.getCache("defaultCache");
+		assertThat(cacheManager.getCacheNames(), containsInAnyOrder("defaultCache"));
+		assertThat(cacheManager.getCacheNames(), hasSize(1));
+	}
+
+	@Test
+	public void hazelcastCacheWithLocation() {
+		load(DefaultCacheConfiguration.class,
+				"spring.cache.mode=hazelcast",
+				"spring.cache.location=org/springframework/boot/autoconfigure/cache/hazelcast-specific.xml");
+		HazelcastCacheManager cacheManager = validateCacheManager(HazelcastCacheManager.class);
+		// TODO: this should not need to retrieve the cache first.
+		cacheManager.getCache("foobar");
+		assertThat(cacheManager.getCacheNames(), containsInAnyOrder("foobar"));
+		assertThat(cacheManager.getCacheNames(), hasSize(1));
+	}
+
+	@Test
+	public void hazelcastWithWrongLocation() {
+		thrown.expect(BeanCreationException.class);
+		thrown.expectMessage("foo/bar/unknown.xml");
+		load(DefaultCacheConfiguration.class,
+				"spring.cache.mode=hazelcast",
+				"spring.cache.location=foo/bar/unknown.xml");
+	}
+
+	@Test
+	public void hazelCastAsJCacheWithCaches() {
+		String cachingProviderFqn = HazelcastCachingProvider.class.getName();
+		load(DefaultCacheConfiguration.class,
+				"spring.cache.mode=jcache",
+				"spring.cache.jcache.provider=" + cachingProviderFqn,
+				"spring.cache.cacheNames[0]=foo",
+				"spring.cache.cacheNames[1]=bar");
+		JCacheCacheManager cacheManager = validateCacheManager(JCacheCacheManager.class);
+		assertThat(cacheManager.getCacheNames(), containsInAnyOrder("foo", "bar"));
+		assertThat(cacheManager.getCacheNames(), hasSize(2));
 	}
 
 	private <T extends CacheManager> T validateCacheManager(Class<T> type) {
