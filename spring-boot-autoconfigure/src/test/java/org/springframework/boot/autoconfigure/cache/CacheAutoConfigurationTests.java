@@ -16,18 +16,23 @@
 
 package org.springframework.boot.autoconfigure.cache;
 
+import javax.cache.configuration.CompleteConfiguration;
+
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
+import org.springframework.boot.autoconfigure.cache.support.MockCachingProvider;
 import org.springframework.boot.test.EnvironmentTestUtils;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.concurrent.ConcurrentMapCache;
 import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
+import org.springframework.cache.jcache.JCacheCacheManager;
 import org.springframework.cache.support.NoOpCacheManager;
 import org.springframework.cache.support.SimpleCacheManager;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -40,11 +45,13 @@ import org.springframework.data.redis.core.RedisTemplate;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 /**
  * Tests for {@link CacheAutoConfiguration}.
@@ -95,7 +102,7 @@ public class CacheAutoConfigurationTests {
 				"spring.cache.cacheNames[0]=foo",
 				"spring.cache.cacheNames[1]=bar");
 		ConcurrentMapCacheManager cacheManager = validateCacheManager(ConcurrentMapCacheManager.class);
-		assertThat(cacheManager.getCacheNames(), contains("foo", "bar"));
+		assertThat(cacheManager.getCacheNames(), containsInAnyOrder("foo", "bar"));
 		assertThat(cacheManager.getCacheNames(), hasSize(2));
 	}
 
@@ -141,7 +148,7 @@ public class CacheAutoConfigurationTests {
 				"spring.cache.cacheNames[0]=foo",
 				"spring.cache.cacheNames[1]=bar");
 		RedisCacheManager cacheManager = validateCacheManager(RedisCacheManager.class);
-		assertThat(cacheManager.getCacheNames(), contains("foo", "bar"));
+		assertThat(cacheManager.getCacheNames(), containsInAnyOrder("foo", "bar"));
 		assertThat(cacheManager.getCacheNames(), hasSize(2));
 	}
 
@@ -150,6 +157,64 @@ public class CacheAutoConfigurationTests {
 		load(DefaultCacheConfiguration.class, "spring.cache.mode=none");
 		NoOpCacheManager cacheManager = validateCacheManager(NoOpCacheManager.class);
 		assertThat(cacheManager.getCacheNames(), is(empty()));
+	}
+
+	@Test // This test won't last for long once we add another JSR-107 providers on the classpath
+	public void jCacheCacheNoProviderExplicit() {
+		load(DefaultCacheConfiguration.class, "spring.cache.mode=jcache");
+		JCacheCacheManager cacheManager = validateCacheManager(JCacheCacheManager.class);
+		assertThat(cacheManager.getCacheNames(), is(empty()));
+	}
+
+	@Test
+	public void jCacheCacheWithProvider() {
+		String cachingProviderFqn = MockCachingProvider.class.getName();
+		load(DefaultCacheConfiguration.class,
+				"spring.cache.mode=jcache",
+				"spring.cache.jcache.provider=" + cachingProviderFqn);
+		JCacheCacheManager cacheManager = validateCacheManager(JCacheCacheManager.class);
+		assertThat(cacheManager.getCacheNames(), is(empty()));
+	}
+
+	@Test
+	public void jCacheCacheWithCaches() {
+		String cachingProviderFqn = MockCachingProvider.class.getName();
+		load(DefaultCacheConfiguration.class,
+				"spring.cache.mode=jcache",
+				"spring.cache.jcache.provider=" + cachingProviderFqn,
+				"spring.cache.cacheNames[0]=foo",
+				"spring.cache.cacheNames[1]=bar");
+		JCacheCacheManager cacheManager = validateCacheManager(JCacheCacheManager.class);
+		assertThat(cacheManager.getCacheNames(), containsInAnyOrder("foo", "bar"));
+		assertThat(cacheManager.getCacheNames(), hasSize(2));
+	}
+
+	@Test
+	public void jCacheCacheWithCachesAndCustomConfig() {
+		String cachingProviderFqn = MockCachingProvider.class.getName();
+		load(CustomJCacheConfiguration.class,
+				"spring.cache.mode=jcache",
+				"spring.cache.jcache.provider=" + cachingProviderFqn,
+				"spring.cache.cacheNames[0]=one",
+				"spring.cache.cacheNames[1]=two");
+		JCacheCacheManager cacheManager = validateCacheManager(JCacheCacheManager.class);
+		assertThat(cacheManager.getCacheNames(), containsInAnyOrder("one", "two"));
+		assertThat(cacheManager.getCacheNames(), hasSize(2));
+
+		CompleteConfiguration<?,?> defaultCacheConfiguration = this.context.getBean(CompleteConfiguration.class);
+		verify(cacheManager.getCacheManager()).createCache("one", defaultCacheConfiguration);
+		verify(cacheManager.getCacheManager()).createCache("two", defaultCacheConfiguration);
+	}
+
+	@Test
+	public void jCacheCacheWithUnknownProvider() {
+		String wrongCachingProviderFqn = "org.acme.FooBar";
+
+		thrown.expect(BeanCreationException.class);
+		thrown.expectMessage(wrongCachingProviderFqn);
+		load(DefaultCacheConfiguration.class,
+				"spring.cache.mode=jcache",
+				"spring.cache.jcache.provider=" + wrongCachingProviderFqn);
 	}
 
 	private <T extends CacheManager> T validateCacheManager(Class<T> type) {
@@ -165,9 +230,9 @@ public class CacheAutoConfigurationTests {
 	private AnnotationConfigApplicationContext doLoad(Class<?> config,
 			String... environment) {
 		AnnotationConfigApplicationContext applicationContext = new AnnotationConfigApplicationContext();
+		EnvironmentTestUtils.addEnvironment(applicationContext, environment);
 		applicationContext.register(config);
 		applicationContext.register(CacheAutoConfiguration.class);
-		EnvironmentTestUtils.addEnvironment(applicationContext, environment);
 		applicationContext.refresh();
 		return applicationContext;
 	}
@@ -207,6 +272,17 @@ public class CacheAutoConfigurationTests {
 		@Bean
 		public RedisTemplate<?, ?> redisTemplate() {
 			return mock(RedisTemplate.class);
+		}
+
+	}
+
+	@Configuration
+	@EnableCaching
+	static class CustomJCacheConfiguration {
+
+		@Bean
+		public CompleteConfiguration<?,?> defaultCacheConfiguration() {
+			return mock(CompleteConfiguration.class);
 		}
 
 	}

@@ -16,43 +16,30 @@
 
 package org.springframework.boot.autoconfigure.cache;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Configuration properties for the cache abstraction.
+ * JCache (JSR-107) specific cache properties.
  *
  * @author Stephane Nicoll
  * @since 1.3.0
  */
-@ConfigurationProperties(prefix = "spring.cache")
-public class CacheProperties {
+@ConfigurationProperties(prefix = "spring.cache.jcache")
+public class JCacheCacheProperties {
 
 	/**
-	 * Cache mode (can be "simple", "jcache", "redis", "generic" or "none"). Auto-detected
-	 * according to the environment.
+	 * Fully qualified name of the CachingProvider implementation to use to
+	 * retrieve the JSR-107 compliant cache manager. Only needed if more than
+	 * one JSR-107 implementation is available on the classpath.
 	 */
-	private String mode = "simple";
+	private String provider;
 
-	/**
-	 * Comma-separated list of cache names to create if supported by the
-	 * underlying cache manager. Usually, this disables the ability to
-	 * create caches on-the-fly.
-	 */
-	private final List<String> cacheNames = new ArrayList<String>();
-
-	public String getMode() {
-		return mode;
+	public String getProvider() {
+		return provider;
 	}
 
-	public void setMode(String mode) {
-		this.mode = mode;
-	}
-
-	public List<String> getCacheNames() {
-		return cacheNames;
+	public void setProvider(String provider) {
+		this.provider = provider;
 	}
 
 }

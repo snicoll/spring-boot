@@ -47,9 +47,9 @@ import org.springframework.context.annotation.Import;
 @AutoConfigureAfter(RedisAutoConfiguration.class)
 @Import({GenericCacheConfiguration.class,
 		RedisCacheConfiguration.class,
+		JCacheCacheConfiguration.class,
 		SimpleCacheConfiguration.class,
 		NoOpCacheConfiguration.class})
 public class CacheAutoConfiguration {
-
 
 }
