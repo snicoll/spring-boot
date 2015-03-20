@@ -16,15 +16,13 @@
 
 package org.springframework.boot.autoconfigure.cache;
 
-import javax.cache.configuration.CompleteConfiguration;
-
 import com.hazelcast.cache.HazelcastCachingProvider;
 import com.hazelcast.spring.cache.HazelcastCacheManager;
+import org.ehcache.jcache.JCacheCachingProvider;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.boot.autoconfigure.cache.support.MockCachingProvider;
@@ -34,6 +32,7 @@ import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.concurrent.ConcurrentMapCache;
 import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
+import org.springframework.cache.ehcache.EhCacheCacheManager;
 import org.springframework.cache.jcache.JCacheCacheManager;
 import org.springframework.cache.support.NoOpCacheManager;
 import org.springframework.cache.support.SimpleCacheManager;
@@ -44,12 +43,11 @@ import org.springframework.context.annotation.Import;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.core.RedisTemplate;
 
+import javax.cache.configuration.CompleteConfiguration;
+
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.*;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
@@ -59,6 +57,7 @@ import static org.mockito.Mockito.verify;
  * Tests for {@link CacheAutoConfiguration}.
  *
  * @author Stephane Nicoll
+ * @author Eddú Meléndez
  */
 public class CacheAutoConfigurationTests {
 
@@ -223,6 +222,28 @@ public class CacheAutoConfigurationTests {
 	}
 
 	@Test
+	public void ehCacheCacheWithCaches() {
+		load(DefaultCacheConfiguration.class,
+				"spring.cache.mode=ehcache");
+		EhCacheCacheManager cacheManager = validateCacheManager(EhCacheCacheManager.class);
+		assertThat(cacheManager.getCacheNames(), containsInAnyOrder("cacheTest1", "cacheTest2"));
+		assertThat(cacheManager.getCacheNames(), hasSize(2));
+		cacheManager.getCacheManager().shutdown();
+	}
+
+	@Test
+	public void ehCacheCacheWithLocation() {
+		load(DefaultCacheConfiguration.class,
+				"spring.cache.mode=ehcache",
+				"spring.cache.location=cache/ehcache-override.xml");
+		EhCacheCacheManager cacheManager = validateCacheManager(EhCacheCacheManager.class);
+		assertThat(cacheManager.getCacheNames(),
+			containsInAnyOrder("cacheOverrideTest1", "cacheOverrideTest2"));
+		assertThat(cacheManager.getCacheNames(), hasSize(2));
+		cacheManager.getCacheManager().shutdown();
+	}
+
+	@Test
 	public void hazelcastCacheExplicit() {
 		load(DefaultCacheConfiguration.class,
 				"spring.cache.mode=hazelcast");
@@ -264,6 +285,17 @@ public class CacheAutoConfigurationTests {
 				"spring.cache.cacheNames[1]=bar");
 		JCacheCacheManager cacheManager = validateCacheManager(JCacheCacheManager.class);
 		assertThat(cacheManager.getCacheNames(), containsInAnyOrder("foo", "bar"));
+		assertThat(cacheManager.getCacheNames(), hasSize(2));
+	}
+
+	@Test
+	public void ehCacheAsJCacheWithCaches() {
+		String cachingProviderFqn = JCacheCachingProvider.class.getName();
+		load(DefaultCacheConfiguration.class,
+			"spring.cache.mode=jcache",
+			"spring.cache.jcache.provider=" + cachingProviderFqn);
+		JCacheCacheManager cacheManager = validateCacheManager(JCacheCacheManager.class);
+		assertThat(cacheManager.getCacheNames(), containsInAnyOrder("cacheTest1", "cacheTest2"));
 		assertThat(cacheManager.getCacheNames(), hasSize(2));
 	}
 

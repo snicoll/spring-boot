@@ -26,13 +26,14 @@ import org.springframework.core.io.Resource;
  * Configuration properties for the cache abstraction.
  *
  * @author Stephane Nicoll
+ * @author Eddú Meléndez
  * @since 1.3.0
  */
 @ConfigurationProperties(prefix = "spring.cache")
 public class CacheProperties {
 
 	/**
-	 * Cache mode (can be "generic", "hazelcast", "jcache", "redis", "simple" or
+	 * Cache mode (can be "ehcache", "generic", "hazelcast", "jcache", "redis", "simple" or
 	 * "none"). Auto-detected according to the environment.
 	 */
 	private String mode = "simple";
