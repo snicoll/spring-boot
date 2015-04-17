@@ -29,19 +29,11 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.jmx.JmxAutoConfiguration;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.test.EnvironmentTestUtils;
-import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.event.ContextRefreshedEvent;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
@@ -86,20 +78,7 @@ public class SpringApplicationLifecycleAutoConfigurationTests {
 
 		ObjectName objectName = createDefaultObjectName();
 		ObjectInstance objectInstance = this.mBeanServer.getObjectInstance(objectName);
-		assertNotNull(objectInstance);
-
-		assertEquals("Simple context does not trigger proper event",
-				false, isCurrentApplicationReady(objectName));
-		this.context.publishEvent(new ApplicationReadyEvent(new SpringApplication(), null, this.context));
-		assertEquals("Application should be ready",
-				true, isCurrentApplicationReady(objectName));
-
-		assertTrue("context has been started", this.context.isActive());
-		mBeanServer.invoke(objectName, "shutdown", null, null);
-		assertFalse("Context should have been closed", this.context.isActive());
-
-		thrown.expect(InstanceNotFoundException.class); // JMX cleanup
-		this.mBeanServer.getObjectInstance(objectName);
+		assertNotNull("Lifecycle bean should have been registered", objectInstance);
 	}
 
 	@Test
@@ -124,27 +103,6 @@ public class SpringApplicationLifecycleAutoConfigurationTests {
 		}
 	}
 
-	@Test
-	public void registerWithSpringApplication() throws Exception {
-		final ObjectName objectName = createDefaultObjectName();
-		SpringApplication application = new SpringApplication(ExampleConfig.class,
-				SpringApplicationLifecycleAutoConfiguration.class);
-		application.setWebEnvironment(false);
-		application.addListeners(new ApplicationListener<ContextRefreshedEvent>() {
-			@Override
-			public void onApplicationEvent(ContextRefreshedEvent event) {
-				try {
-					assertFalse("Application should not be ready yet", isCurrentApplicationReady(objectName));
-				}
-				catch (Exception e) {
-					throw new IllegalStateException("Could not contact spring application lifecycle bean", e);
-				}
-			}
-		});
-		application.run("--" + ENABLE_LIFECYCLE_PROP);
-		assertTrue("application should be ready now", isCurrentApplicationReady(objectName));
-	}
-
 	private ObjectName createDefaultObjectName() {
 		return createObjectName(SpringApplicationLifecycleAutoConfiguration.DEFAULT_JMX_NAME);
 	}
@@ -158,21 +116,12 @@ public class SpringApplicationLifecycleAutoConfigurationTests {
 		}
 	}
 
-	private Boolean isCurrentApplicationReady(ObjectName objectName) throws Exception {
-		return (Boolean) this.mBeanServer.getAttribute(objectName, "Ready");
-	}
-
 	private void load(String... environment) {
 		AnnotationConfigApplicationContext applicationContext = new AnnotationConfigApplicationContext();
 		EnvironmentTestUtils.addEnvironment(applicationContext, environment);
 		applicationContext.register(JmxAutoConfiguration.class, SpringApplicationLifecycleAutoConfiguration.class);
 		applicationContext.refresh();
 		this.context = applicationContext;
-	}
-
-
-	@Configuration
-	static class ExampleConfig {
 	}
 
 }

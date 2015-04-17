@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.boot.autoconfigure.lifecycle;
+package org.springframework.boot.context;
 
 import java.lang.management.ManagementFactory;
 import javax.management.MBeanServer;
@@ -41,8 +41,8 @@ import org.springframework.util.Assert;
  * @author Stephane Nicoll
  * @since 1.3.0
  */
-public class SpringApplicationLifecycleRegistrar implements ApplicationContextAware, InitializingBean, DisposableBean,
-		ApplicationListener<ApplicationReadyEvent> {
+public class SpringApplicationLifecycleRegistrar implements ApplicationContextAware,
+		InitializingBean, DisposableBean, ApplicationListener<ApplicationReadyEvent> {
 
 	private static final Log logger = LogFactory.getLog(SpringApplicationLifecycle.class);
 

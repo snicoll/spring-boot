@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.boot.autoconfigure.lifecycle;
+package org.springframework.boot.context;
 
 /**
  * A simple MBean contract to control the lifecycle of a {@code SpringApplication} via
