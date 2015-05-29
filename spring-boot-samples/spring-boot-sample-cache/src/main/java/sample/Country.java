@@ -16,18 +16,15 @@
 
 package sample;
 
-import org.junit.runner.RunWith;
-import org.springframework.boot.test.SpringApplicationConfiguration;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+public class Country {
 
-/**
- * @author Eddú Meléndez
- * @since 1.3.0
- */
-@RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = {SampleEhCacheCacheApplication.class})
-@ActiveProfiles("override")
-public class SampleEhCacheCacheApplicationOverrideTests extends AbstractEhCacheCacheTests {
+	private final String code;
 
+	public Country(String code) {
+		this.code = code;
+	}
+
+	public String getCode() {
+		return code;
+	}
 }

@@ -1,0 +1,13 @@
+= Spring Boot Cache Sample
+
+This sample demonstrates the caching auto-configuration support. Spring's caching
+abstraction is supported by many caching libraries, including:
+
+* Any compliant `JSR-107` (JCache) provider
+* `EhCache`
+* `Hazelcast`
+* `Infinispan`
+* `Redis`
+* `Guava`
+
+There is also a _simple_ provider based on `ConcurrentHashMap`.
