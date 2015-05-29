@@ -16,7 +16,10 @@
 
 package sample;
 
-public class Country {
+import java.io.Serializable;
+
+@SuppressWarnings("serial")
+public class Country implements Serializable {
 
 	private final String code;
 

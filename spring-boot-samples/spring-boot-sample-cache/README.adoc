@@ -9,5 +9,35 @@ abstraction is supported by many caching libraries, including:
 * `Infinispan`
 * `Redis`
 * `Guava`
+* Simple provider based on `ConcurrentHashMap`
 
-There is also a _simple_ provider based on `ConcurrentHashMap`.
+The sample defines a simple `CountryService` that caches countries by ISO code. When
+the application starts a client invokes the service with a random code every 500ms. You
+can look at the `/metrics` endpoint to review the cache statistics if your chosen
+caching provider is supported.
+
+== Using a different cache provider
+
+Initially, the project does not define any caching library so the abstraction works
+on simple `ConcurrentHashMap`-based caches. You can try out your favorite caching library
+as explained below.
+
+=== Ehcache 2.x
+
+Simply add the `net.sf.ehcache:ehcache` dependency to the project. Since there is a
+default `ehcache.xml` configuration file at the root of the classpath, it is automatically
+used to configure the underlying `CacheManager`.
+
+=== Hazelcast
+
+Both `hazelcast` and `hazelcast-spring` should be added to the project to enable support
+for Hazelcast.  Since there is a default `hazelcast.xml` configuration file at the root
+of the classpath, it is used to automatically configure the underlying `HazelcastInstance`.
+
+=== Infinispan
+
+Simply add the `org.infinispan:infinispan-spring4` dependency to enable support for
+Infinispan. There is no default configuration location so if you don't specify anything
+it will bootstrap on a default configuration. You can set the
+`spring.cache.infinispan.config` property to use the provided `infinispan.xml`
+configuration.
