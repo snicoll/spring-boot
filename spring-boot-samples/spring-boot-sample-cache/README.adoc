@@ -30,14 +30,31 @@ used to configure the underlying `CacheManager`.
 
 === Hazelcast
 
-Both `hazelcast` and `hazelcast-spring` should be added to the project to enable support
-for Hazelcast.  Since there is a default `hazelcast.xml` configuration file at the root
-of the classpath, it is used to automatically configure the underlying `HazelcastInstance`.
+Both `com.hazelcast:hazelcast` and `com.hazelcast:hazelcast-spring` should be added to
+the project to enable support for Hazelcast.  Since there is a default `hazelcast.xml`
+configuration file at the root of the classpath, it is used to automatically configure
+the underlying `HazelcastInstance`.
 
 === Infinispan
 
 Simply add the `org.infinispan:infinispan-spring4` dependency to enable support for
-Infinispan. There is no default configuration location so if you don't specify anything
-it will bootstrap on a default configuration. You can set the
-`spring.cache.infinispan.config` property to use the provided `infinispan.xml`
-configuration.
+Infinispan. There is no default location that Infinispan uses to look for a config
+file so if you don't specify anything it will bootstrap on a hardcoded default. You
+can set the `spring.cache.infinispan.config` property to use the provided
+`infinispan.xml` configuration.
+
+=== JCache (JSR-107)
+
+You do not need to use a JSR-107 compliant `CacheManager` to use the standard
+annotations. As a matter of a fact, this sample uses by default the standard annotations
+with a simple map-based `CacheManager` by default. If you want to configure your cache
+infrastructure via the standard, you need a compliant implementation. You could try
+the following:
+
+* `Hazelcast`: add `com.hazelcast:hazelcast`
+* `Infinispan`: add `org.infinispan:infinispan-jcache`
+
+
+Since Spring Boot supports the native cache library and the JCache wrapper, you
+should set the `spring.cache.type` property to `jcache` to specify that you want the
+cache manager to be auto-configured that way.

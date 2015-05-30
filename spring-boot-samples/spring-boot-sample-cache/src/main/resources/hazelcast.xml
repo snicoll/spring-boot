@@ -7,4 +7,11 @@
 		<max-size>200</max-size>
 	</map>
 
+	<cache name="countries">
+		<eviction size="200"/>
+
+		<statistics-enabled>true</statistics-enabled>
+		<management-enabled>true</management-enabled>
+	</cache>
+
 </hazelcast>
