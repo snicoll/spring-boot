@@ -58,3 +58,12 @@ the following:
 Since Spring Boot supports the native cache library and the JCache wrapper, you
 should set the `spring.cache.type` property to `jcache` to specify that you want the
 cache manager to be auto-configured that way.
+
+=== Redis
+
+=== Guava
+
+Spring Boot does not provide any dependency management for _Guava_ so you'll have to add
+the `com.google.guava:guava` dependency with a version. You can customize how caches are
+created in different ways, see `application.properites` for an example and the documentation
+for more details.
