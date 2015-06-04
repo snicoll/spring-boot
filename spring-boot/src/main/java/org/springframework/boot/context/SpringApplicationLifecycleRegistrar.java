@@ -17,22 +17,27 @@
 package org.springframework.boot.context;
 
 import java.lang.management.ManagementFactory;
-
+import java.util.HashMap;
+import java.util.Map;
 import javax.management.MBeanServer;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
+import org.springframework.boot.context.embedded.EmbeddedWebApplicationContext;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
-import org.springframework.context.ApplicationListener;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.event.EventListener;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 /**
  * Register a {@link SpringApplicationLifecycleMXBean} implementation to the platform
@@ -42,7 +47,7 @@ import org.springframework.util.Assert;
  * @since 1.3.0
  */
 public class SpringApplicationLifecycleRegistrar implements ApplicationContextAware,
-		InitializingBean, DisposableBean, ApplicationListener<ApplicationReadyEvent> {
+		InitializingBean, DisposableBean {
 
 	private static final Log logger = LogFactory.getLog(SpringApplicationLifecycle.class);
 
@@ -51,6 +56,8 @@ public class SpringApplicationLifecycleRegistrar implements ApplicationContextAw
 	private final ObjectName objectName;
 
 	private boolean ready = false;
+
+	private final Map<String, Integer> servletContainerPorts = new HashMap<String, Integer>();
 
 	public SpringApplicationLifecycleRegistrar(String name)
 			throws MalformedObjectNameException {
@@ -65,9 +72,18 @@ public class SpringApplicationLifecycleRegistrar implements ApplicationContextAw
 		this.applicationContext = (ConfigurableApplicationContext) applicationContext;
 	}
 
-	@Override
-	public void onApplicationEvent(ApplicationReadyEvent event) {
+	@EventListener
+	public void handleApplicationReadyEvent(ApplicationReadyEvent event) {
 		this.ready = true;
+	}
+
+	@EventListener
+	public void handleEmbeddedServletContainerInitializedEvent(EmbeddedServletContainerInitializedEvent event) {
+		String name = event.getApplicationContext().getNamespace();
+		if (StringUtils.isEmpty(name)) {
+			name = "server";
+		}
+		this.servletContainerPorts.put(name, event.getEmbeddedServletContainer().getPort());
 	}
 
 	@Override
@@ -90,6 +106,22 @@ public class SpringApplicationLifecycleRegistrar implements ApplicationContextAw
 		@Override
 		public boolean isReady() {
 			return SpringApplicationLifecycleRegistrar.this.ready;
+		}
+
+		@Override
+		public boolean isEmbeddedWebApplication() {
+			return (applicationContext != null
+					&& applicationContext instanceof EmbeddedWebApplicationContext);
+		}
+
+		@Override
+		public Integer getLocalServerPort() {
+			return servletContainerPorts.get("server");
+		}
+
+		@Override
+		public Integer getLocalManagementPort() {
+			return servletContainerPorts.get("management");
 		}
 
 		@Override

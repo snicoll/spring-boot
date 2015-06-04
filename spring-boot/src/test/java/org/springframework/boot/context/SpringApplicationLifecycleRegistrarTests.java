@@ -17,7 +17,6 @@
 package org.springframework.boot.context;
 
 import java.lang.management.ManagementFactory;
-
 import javax.management.InstanceNotFoundException;
 import javax.management.MBeanServer;
 import javax.management.MalformedObjectNameException;
@@ -28,15 +27,22 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.context.embedded.EmbeddedServletContainer;
+import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
+import org.springframework.boot.context.embedded.EmbeddedWebApplicationContext;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.ContextRefreshedEvent;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Tests for {@link SpringApplicationLifecycleRegistrar}.
@@ -75,8 +81,7 @@ public class SpringApplicationLifecycleRegistrarTests {
 			@Override
 			public void onApplicationEvent(ContextRefreshedEvent event) {
 				try {
-					assertFalse("Application should not be ready yet",
-							isCurrentApplicationReady(objectName));
+					assertThat(isApplicationReady(objectName), is(false));
 				}
 				catch (Exception ex) {
 					throw new IllegalStateException(
@@ -85,8 +90,19 @@ public class SpringApplicationLifecycleRegistrarTests {
 			}
 		});
 		this.context = application.run();
-		assertTrue("application should be ready now",
-				isCurrentApplicationReady(objectName));
+		assertThat(isApplicationReady(objectName), is(true));
+	}
+
+	@Test
+	public void notAWebApplication() {
+		final ObjectName objectName = createObjectName(OBJECT_NAME);
+		SpringApplication application = new SpringApplication(Config.class);
+		application.setWebEnvironment(false);
+		this.context = application.run();
+		assertThat(isApplicationReady(objectName), is(true));
+		assertThat(isApplicationEmbeddedWebApplication(objectName), is(false));
+		assertThat(getLocalServerPort(objectName), is(nullValue()));
+		assertThat(getLocalManagementPort(objectName), is(nullValue()));
 	}
 
 	@Test
@@ -95,16 +111,81 @@ public class SpringApplicationLifecycleRegistrarTests {
 		SpringApplication application = new SpringApplication(Config.class);
 		application.setWebEnvironment(false);
 		this.context = application.run();
-		assertTrue("application should be running", this.context.isRunning());
+		assertThat(this.context.isRunning(), is(true));
 		invokeShutdown(objectName);
-		assertFalse("application should not be running", this.context.isRunning());
+		assertThat(this.context.isRunning(), is(false));
 		this.thrown.expect(InstanceNotFoundException.class); // JMX cleanup
 		this.mBeanServer.getObjectInstance(objectName);
 	}
 
-	private Boolean isCurrentApplicationReady(ObjectName objectName) {
+	@Test
+	public void registerHttpPort() throws Exception {
+		final ObjectName objectName = createObjectName(OBJECT_NAME);
+		SpringApplicationLifecycleRegistrar registrar = new SpringApplicationLifecycleRegistrar(OBJECT_NAME);
 		try {
-			return (Boolean) this.mBeanServer.getAttribute(objectName, "Ready");
+			registrar.afterPropertiesSet();
+			registrar.handleEmbeddedServletContainerInitializedEvent(
+					createEmbeddedServletContainerInitializedEvent("server", 8080));
+			assertThat(getLocalServerPort(objectName), is(8080));
+			assertThat(getLocalManagementPort(objectName), is(nullValue()));
+		}
+		finally {
+			registrar.destroy();
+		}
+	}
+
+	@Test
+	public void registerNullPortAndManagementPort() throws Exception {
+		final ObjectName objectName = createObjectName(OBJECT_NAME);
+		SpringApplicationLifecycleRegistrar registrar = new SpringApplicationLifecycleRegistrar(OBJECT_NAME);
+		try {
+			registrar.afterPropertiesSet();
+			registrar.handleEmbeddedServletContainerInitializedEvent(
+					createEmbeddedServletContainerInitializedEvent("", 7070));
+			registrar.handleEmbeddedServletContainerInitializedEvent(
+					createEmbeddedServletContainerInitializedEvent("management", 9090));
+			assertThat(getLocalServerPort(objectName), is(7070));
+			assertThat(getLocalManagementPort(objectName), is(9090));
+		}
+		finally {
+			registrar.destroy();
+		}
+	}
+
+	private EmbeddedServletContainerInitializedEvent createEmbeddedServletContainerInitializedEvent(
+			String namespace, int port) {
+		EmbeddedServletContainerInitializedEvent event = mock(EmbeddedServletContainerInitializedEvent.class);
+		EmbeddedWebApplicationContext context = mock(EmbeddedWebApplicationContext.class);
+		when(context.getNamespace()).thenReturn(namespace);
+		when(event.getApplicationContext()).thenReturn(context);
+		EmbeddedServletContainer container = mock(EmbeddedServletContainer.class);
+		when(container.getPort()).thenReturn(port);
+		when(event.getEmbeddedServletContainer()).thenReturn(container);
+		return event;
+	}
+
+
+	private Boolean isApplicationReady(ObjectName objectName) {
+		return getAttribute(objectName, Boolean.class, "Ready");
+	}
+
+	private Boolean isApplicationEmbeddedWebApplication(ObjectName objectName) {
+		return getAttribute(objectName, Boolean.class, "EmbeddedWebApplication");
+	}
+
+	private Integer getLocalServerPort(ObjectName objectName) {
+		return getAttribute(objectName, Integer.class, "LocalServerPort");
+	}
+
+	private Integer getLocalManagementPort(ObjectName objectName) {
+		return getAttribute(objectName, Integer.class, "LocalManagementPort");
+	}
+
+	private <T> T getAttribute(ObjectName objectName, Class<T> type, String attribute) {
+		try {
+			Object value = this.mBeanServer.getAttribute(objectName, attribute);
+			assertThat((value == null || type.isInstance(value)), is(true));
+			return type.cast(value);
 		}
 		catch (Exception ex) {
 			throw new IllegalStateException(ex.getMessage(), ex);

@@ -17,7 +17,6 @@
 package org.springframework.boot.autoconfigure.context;
 
 import java.lang.management.ManagementFactory;
-
 import javax.management.InstanceNotFoundException;
 import javax.management.MBeanServer;
 import javax.management.MalformedObjectNameException;
@@ -29,11 +28,20 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+
 import org.springframework.boot.autoconfigure.jmx.JmxAutoConfiguration;
+import org.springframework.boot.autoconfigure.web.DispatcherServletAutoConfiguration;
+import org.springframework.boot.autoconfigure.web.EmbeddedServletContainerAutoConfiguration;
+import org.springframework.boot.autoconfigure.web.ServerPropertiesAutoConfiguration;
+import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.boot.context.embedded.EmbeddedWebApplicationContext;
 import org.springframework.boot.test.EnvironmentTestUtils;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
@@ -48,7 +56,7 @@ public class SpringApplicationLifecycleAutoConfigurationTests {
 	@Rule
 	public final ExpectedException thrown = ExpectedException.none();
 
-	private AnnotationConfigApplicationContext context;
+	private ConfigurableApplicationContext context;
 
 	private MBeanServer mBeanServer;
 
@@ -99,6 +107,22 @@ public class SpringApplicationLifecycleAutoConfigurationTests {
 		finally {
 			System.clearProperty(SpringApplicationLifecycleAutoConfiguration.JMX_NAME_PROPERTY);
 		}
+	}
+
+	@SuppressWarnings("unchecked")
+	@Test
+	public void registerWithSimpleWebApp() throws Exception {
+		this.context = new SpringApplicationBuilder()
+				.sources(
+						EmbeddedServletContainerAutoConfiguration.class,
+						ServerPropertiesAutoConfiguration.class, DispatcherServletAutoConfiguration.class,
+						JmxAutoConfiguration.class, SpringApplicationLifecycleAutoConfiguration.class)
+				.run("--" + ENABLE_LIFECYCLE_PROP, "--server.port=0", "--debug");
+		assertTrue(this.context instanceof EmbeddedWebApplicationContext);
+		assertEquals(true, this.mBeanServer.getAttribute(createDefaultObjectName(), "EmbeddedWebApplication"));
+		int expected = ((EmbeddedWebApplicationContext) this.context).getEmbeddedServletContainer().getPort();
+		Object actual = this.mBeanServer.getAttribute(createDefaultObjectName(), "LocalServerPort");
+		assertEquals(expected, actual);
 	}
 
 	private ObjectName createDefaultObjectName() {
