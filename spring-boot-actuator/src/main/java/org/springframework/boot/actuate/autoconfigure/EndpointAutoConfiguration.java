@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -29,7 +28,6 @@ import liquibase.integration.spring.SpringLiquibase;
 import org.flywaydb.core.Flyway;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.endpoint.AutoConfigurationReportEndpoint;
 import org.springframework.boot.actuate.endpoint.BeansEndpoint;
 import org.springframework.boot.actuate.endpoint.ConfigurationPropertiesReportEndpoint;
@@ -49,6 +47,7 @@ import org.springframework.boot.actuate.endpoint.TraceEndpoint;
 import org.springframework.boot.actuate.health.HealthAggregator;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.boot.actuate.health.OrderedHealthAggregator;
+import org.springframework.boot.actuate.info.InfoProvider;
 import org.springframework.boot.actuate.trace.InMemoryTraceRepository;
 import org.springframework.boot.actuate.trace.TraceRepository;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -65,11 +64,9 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
-import org.springframework.core.env.ConfigurableEnvironment;
-import org.springframework.core.env.StandardEnvironment;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.support.PropertiesLoaderUtils;
 import org.springframework.web.servlet.handler.AbstractHandlerMethodMapping;
+
+import liquibase.integration.spring.SpringLiquibase;
 
 /**
  * {@link EnableAutoConfiguration Auto-configuration} for common management
@@ -81,14 +78,13 @@ import org.springframework.web.servlet.handler.AbstractHandlerMethodMapping;
  * @author Christian Dupuis
  * @author Stephane Nicoll
  * @author Eddú Meléndez
+ * @author Meang Akira Tanaka
+ * 
  */
 @Configuration
 @AutoConfigureAfter({ FlywayAutoConfiguration.class, LiquibaseAutoConfiguration.class })
 @EnableConfigurationProperties(EndpointProperties.class)
 public class EndpointAutoConfiguration {
-
-	@Autowired
-	private InfoPropertiesConfiguration properties;
 
 	@Autowired(required = false)
 	private HealthAggregator healthAggregator = new OrderedHealthAggregator();
@@ -96,6 +92,9 @@ public class EndpointAutoConfiguration {
 	@Autowired(required = false)
 	private Map<String, HealthIndicator> healthIndicators = new HashMap<String, HealthIndicator>();
 
+	@Autowired(required = false)
+	private Map<String, InfoProvider> infoProviders = new HashMap<String, InfoProvider>();
+	
 	@Autowired(required = false)
 	private Collection<PublicMetrics> publicMetrics;
 
@@ -123,13 +122,7 @@ public class EndpointAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	public InfoEndpoint infoEndpoint() throws Exception {
-		LinkedHashMap<String, Object> info = new LinkedHashMap<String, Object>();
-		info.putAll(this.properties.infoMap());
-		GitInfo gitInfo = this.properties.gitInfo();
-		if (gitInfo.getBranch() != null) {
-			info.put("git", gitInfo);
-		}
-		return new InfoEndpoint(info);
+		return new InfoEndpoint(infoProviders);
 	}
 
 	@Bean
@@ -213,7 +206,7 @@ public class EndpointAutoConfiguration {
 
 	}
 
-	@Configuration
+/*	@Configuration
 	protected static class InfoPropertiesConfiguration {
 
 		@Autowired
@@ -288,5 +281,5 @@ public class EndpointAutoConfiguration {
 		}
 
 	}
-
+*/
 }

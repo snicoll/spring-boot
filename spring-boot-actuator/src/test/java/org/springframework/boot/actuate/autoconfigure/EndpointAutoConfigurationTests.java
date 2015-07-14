@@ -37,6 +37,7 @@ import org.springframework.boot.actuate.endpoint.RequestMappingEndpoint;
 import org.springframework.boot.actuate.endpoint.ShutdownEndpoint;
 import org.springframework.boot.actuate.endpoint.TraceEndpoint;
 import org.springframework.boot.actuate.health.Health;
+import org.springframework.boot.actuate.info.Info;
 import org.springframework.boot.actuate.metrics.Metric;
 import org.springframework.boot.autoconfigure.condition.ConditionEvaluationReport;
 import org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration;
@@ -58,6 +59,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Christian Dupuis
  * @author Stephane Nicoll
  * @author Eddú Meléndez
+ * @author Meang Akira Tanaka
+ *
  */
 public class EndpointAutoConfigurationTests {
 
@@ -140,8 +143,9 @@ public class EndpointAutoConfigurationTests {
 	public void testInfoEndpointConfiguration() throws Exception {
 		this.context = new AnnotationConfigApplicationContext();
 		EnvironmentTestUtils.addEnvironment(this.context, "info.foo:bar");
-		this.context.register(EndpointAutoConfiguration.class);
+		this.context.register(InfoProviderAutoConfiguration.class, EndpointAutoConfiguration.class);
 		this.context.refresh();
+
 		InfoEndpoint endpoint = this.context.getBean(InfoEndpoint.class);
 		assertThat(endpoint).isNotNull();
 		assertThat(endpoint.invoke().get("git")).isNotNull();
@@ -153,7 +157,7 @@ public class EndpointAutoConfigurationTests {
 		this.context = new AnnotationConfigApplicationContext();
 		EnvironmentTestUtils.addEnvironment(this.context,
 				"spring.git.properties:classpath:nonexistent");
-		this.context.register(EndpointAutoConfiguration.class);
+		this.context.register(InfoProviderAutoConfiguration.class, EndpointAutoConfiguration.class);
 		this.context.refresh();
 		InfoEndpoint endpoint = this.context.getBean(InfoEndpoint.class);
 		assertThat(endpoint).isNotNull();
