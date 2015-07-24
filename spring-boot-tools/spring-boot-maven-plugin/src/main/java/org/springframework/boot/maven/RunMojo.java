@@ -51,6 +51,8 @@ public class RunMojo extends AbstractRunMojo {
 	@Override
 	protected void runWithMavenJvm(String startClassName, String... arguments)
 			throws MojoExecutionException {
+		// Make sure devtools is enabled
+		System.setProperty("DEVTOOLS_SAFE_MODE", "true");
 		IsolatedThreadGroup threadGroup = new IsolatedThreadGroup(startClassName);
 		Thread launchThread = new Thread(threadGroup, new LaunchRunner(startClassName,
 				arguments), "main");

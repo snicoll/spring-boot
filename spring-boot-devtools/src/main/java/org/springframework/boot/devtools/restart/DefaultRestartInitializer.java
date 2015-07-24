@@ -33,6 +33,13 @@ import java.util.Set;
 public class DefaultRestartInitializer implements RestartInitializer {
 
 	private static final Set<String> SKIPPED_STACK_ELEMENTS;
+
+	/**
+	 * A system property that must be present to enable safe mode. The
+	 * reload feature is always enabled when safe mode is on.
+	 */
+	public static final String SAFE_MODE_PROPERTY = "DEVTOOLS_SAFE_MODE";
+
 	static {
 		Set<String> skipped = new LinkedHashSet<String>();
 		skipped.add("org.junit.runners.");
@@ -42,6 +49,9 @@ public class DefaultRestartInitializer implements RestartInitializer {
 
 	@Override
 	public URL[] getInitialUrls(Thread thread) {
+		if (safeModeEnabled()) {
+			return getUrls(thread);
+		}
 		if (!isMain(thread)) {
 			return null;
 		}
@@ -89,6 +99,11 @@ public class DefaultRestartInitializer implements RestartInitializer {
 	protected URL[] getUrls(Thread thread) {
 		return ChangeableUrls.fromUrlClassLoader(
 				(URLClassLoader) thread.getContextClassLoader()).toArray();
+	}
+
+	private boolean safeModeEnabled() {
+		String property = System.getProperty(SAFE_MODE_PROPERTY);
+		return property != null && !"false".equals(property);
 	}
 
 }
