@@ -22,7 +22,6 @@ import org.springframework.boot.bind.RelaxedPropertyResolver;
 import org.springframework.context.annotation.Condition;
 import org.springframework.context.annotation.ConditionContext;
 import org.springframework.core.annotation.AnnotationAttributes;
-import org.springframework.core.env.PropertyResolver;
 import org.springframework.core.type.AnnotatedTypeMetadata;
 
 /**
@@ -38,32 +37,33 @@ class OnHealthIndicatorEnabledCondition extends SpringBootCondition {
 		AnnotationAttributes annotationAttributes = AnnotationAttributes.fromMap(metadata
 				.getAnnotationAttributes(ConditionalOnHealthIndicatorEnabled.class.getName()));
 
-		String value = annotationAttributes.getString("value").trim();
-		PropertyResolver specificResolver =
-				new RelaxedPropertyResolver(context.getEnvironment(), "management.health." + value + ".");
-		Boolean enabled = specificResolver.getProperty("enabled", Boolean.class);
-		if (enabled != null) {
-			if (Boolean.TRUE.equals(enabled)) {
-				return ConditionOutcome.match("Specific enabled flag for " + value + " is enabled.");
-			}
-			else {
-				return ConditionOutcome.noMatch("Specific enabled flag for " + value + " is disabled.");
-			}
+		String endpointName = annotationAttributes.getString("value");
+		ConditionOutcome outcome = determineHealthIndicatorOutcome(endpointName, context);
+		if (outcome != null) {
+			return outcome;
 		}
+		return determineDefaultIndicatorsOutcome(context);
+	}
 
-		PropertyResolver defaultResolver =
-				new RelaxedPropertyResolver(context.getEnvironment(), "management.health.");
-		Boolean defaultEnabled = defaultResolver.getProperty("enabled", Boolean.class);
-		if (defaultEnabled != null) {
-			if (Boolean.TRUE.equals(defaultEnabled)) {
-				return ConditionOutcome.match("Default enabled flag for " + value + " is enabled.");
-			}
-			else {
-				return ConditionOutcome.noMatch("Default enabled flag for " + value + " is disabled.");
-			}
+	private ConditionOutcome determineHealthIndicatorOutcome(String endpointName,
+			ConditionContext context) {
+		RelaxedPropertyResolver resolver = new RelaxedPropertyResolver(
+				context.getEnvironment(), "management.health." + endpointName + ".");
+		if (resolver.containsProperty("enabled")) {
+			boolean match = resolver.getProperty("enabled", Boolean.class,
+					true);
+			return new ConditionOutcome(match, "The health indicator " + endpointName +
+					" is " + (match ? "enabled" : "disabled"));
 		}
+		return null;
+	}
 
-		return ConditionOutcome.match("No specific configuration for " + value + " health indicator.");
+	private ConditionOutcome determineDefaultIndicatorsOutcome(ConditionContext context) {
+		RelaxedPropertyResolver resolver = new RelaxedPropertyResolver(
+				context.getEnvironment(), "management.health.default.");
+		boolean match = Boolean.valueOf(resolver.getProperty("enabled", "true"));
+		return new ConditionOutcome(match, "All default health indicators are "
+				+ (match ? "enabled" : "disabled") + " by default");
 	}
 
 }

@@ -24,12 +24,11 @@ import java.lang.annotation.Target;
 import org.springframework.context.annotation.Conditional;
 
 /**
- * {@link Conditional} that checks if the specified health indicator is enabled. Assume
- * a "management.health.xxx.enabled" property to fine-tune that specific health indicator.
- * <p>
- * If no such specific property is available, check for the standard
- * "management.health.enabled" property. If none of these are set, the health indicator
- * is considered enabled.
+ * {@link Conditional} that checks whether or not a default health indicator is enabled.
+ * Matches if the value of the {@code management.health.<name>.enabled} property is
+ * {@code true}. Otherwise , matches if the value of the
+ * {@code management.health.enable-default-indicators} property is {@code true} or if it
+ * is not configured.
  *
  * @author Stephane Nicoll
  * @since 1.3.0
@@ -37,11 +36,10 @@ import org.springframework.context.annotation.Conditional;
 @Conditional(OnHealthIndicatorEnabledCondition.class)
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE, ElementType.METHOD})
-@interface ConditionalOnHealthIndicatorEnabled {
+public @interface ConditionalOnHealthIndicatorEnabled {
 
 	/**
-	 * The name of the health indicator that must be enabled. Should match a
-	 * "management.health.xxx.enabled" property where "xxx" is the specified value.
+	 * The name of the health indicator.
 	 * @return the name of the health indicator
 	 */
 	String value();

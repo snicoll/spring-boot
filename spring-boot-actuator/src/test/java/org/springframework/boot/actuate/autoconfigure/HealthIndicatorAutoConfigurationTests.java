@@ -93,7 +93,7 @@ public class HealthIndicatorAutoConfigurationTests {
 		this.context.register(HealthIndicatorAutoConfiguration.class,
 				ManagementServerProperties.class);
 		EnvironmentTestUtils.addEnvironment(this.context,
-				"management.health.enabled:false");
+				"management.health.default.enabled:false");
 		this.context.refresh();
 		Map<String, HealthIndicator> beans = this.context
 				.getBeansOfType(HealthIndicator.class);
@@ -108,7 +108,7 @@ public class HealthIndicatorAutoConfigurationTests {
 				HealthIndicatorAutoConfiguration.class,
 				ManagementServerProperties.class);
 		EnvironmentTestUtils.addEnvironment(this.context,
-				"management.health.enabled:false");
+				"management.health.default.enabled:false");
 		this.context.refresh();
 		Map<String, HealthIndicator> beans = this.context
 				.getBeansOfType(HealthIndicator.class);
