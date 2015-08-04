@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 the original author or authors.
+ * Copyright 2012-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,20 +22,22 @@ package org.springframework.boot.autoconfigure.web;
  *
  * @author Michael Stummvoll
  */
-public enum StackTracePolicy {
+public enum StacktracePolicy {
+
 	/**
-	 * Always add stacktrace information to the model
+	 * Always add stacktrace information to the model.
 	 */
 	ALWAYS,
 
 	/**
-	 * Never add stacktrace information to the model
+	 * Never add stacktrace information to the model.
 	 */
 	NEVER,
 
 	/**
 	 * Add stacktrace information to the model depending on the "trace" request
-	 * parameter
+	 * parameter.
 	 */
 	REQUEST
+
 }

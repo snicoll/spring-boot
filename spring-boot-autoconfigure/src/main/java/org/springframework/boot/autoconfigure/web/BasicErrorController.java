@@ -20,7 +20,6 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.embedded.AbstractEmbeddedServletContainerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -40,56 +39,58 @@ import org.springframework.web.servlet.ModelAndView;
  *
  * @author Dave Syer
  * @author Phillip Webb
+ * @author Michael Stummvoll
+ * @author Stephane Nicoll
  * @see ErrorAttributes
+ * @see ErrorProperties
  */
 @Controller
 public class BasicErrorController implements ErrorController {
 
-	@Value("${error.path:/error}")
-	private String errorPath;
-
-	@Value("${error.trace:REQUEST}")
-	private StackTracePolicy defaultStackTracePolicy;
-
-	@Value("${error.trace.html:NEVER}")
-	private StackTracePolicy htmlStackTracePolicy;
-
 	private final ErrorAttributes errorAttributes;
 
-	public BasicErrorController(ErrorAttributes errorAttributes) {
+	private final ErrorProperties errorProperties;
+
+	public BasicErrorController(ErrorAttributes errorAttributes, ErrorProperties errorProperties) {
 		Assert.notNull(errorAttributes, "ErrorAttributes must not be null");
+		Assert.notNull(errorProperties, "ErrorProperties must not be null");
 		this.errorAttributes = errorAttributes;
+		this.errorProperties = errorProperties;
+	}
+
+	@Deprecated
+	public BasicErrorController(ErrorAttributes errorAttributes) {
+		this(errorAttributes, new ErrorProperties());
 	}
 
 	@Override
 	public String getErrorPath() {
-		return this.errorPath;
+		return this.errorProperties.getPath();
 	}
 
 	@RequestMapping(value = "${error.path:/error}", produces = "text/html")
 	public ModelAndView errorHtml(HttpServletRequest request) {
-		return new ModelAndView("error", getErrorAttributes(request, getTraceParameter(request, htmlStackTracePolicy)));
+		return new ModelAndView("error", getErrorAttributes(request, getTraceParameter(
+				request, this.errorProperties.getHtmlStacktracePolicy())));
 	}
 
 	@RequestMapping(value = "${error.path:/error}")
 	@ResponseBody
 	public ResponseEntity<Map<String, Object>> error(HttpServletRequest request) {
-		Map<String, Object> body = getErrorAttributes(request, getTraceParameter(request, defaultStackTracePolicy));
+		Map<String, Object> body = getErrorAttributes(request, getTraceParameter(request,
+				this.errorProperties.getDefaultStacktracePolicy()));
 		HttpStatus status = getStatus(request);
 		return new ResponseEntity<Map<String, Object>>(body, status);
 	}
 
-	private boolean getTraceParameter(HttpServletRequest request, StackTracePolicy policy) {
-		if(policy == StackTracePolicy.NEVER) {
+	private boolean getTraceParameter(HttpServletRequest request, StacktracePolicy policy) {
+		if(policy == StacktracePolicy.NEVER) {
 			return false;
-		} else if(policy == StackTracePolicy.ALWAYS) {
+		} else if(policy == StacktracePolicy.ALWAYS) {
 			return true;
 		} else {
 			String parameter = request.getParameter("trace");
-			if (parameter == null) {
-				return false;
-			}
-			return !"false".equals(parameter.toLowerCase());
+			return parameter != null && !"false".equals(parameter.toLowerCase());
 		}
 	}
 
