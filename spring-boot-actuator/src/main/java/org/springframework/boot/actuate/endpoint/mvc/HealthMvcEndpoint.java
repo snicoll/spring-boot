@@ -25,6 +25,7 @@ import org.springframework.boot.actuate.endpoint.Endpoint;
 import org.springframework.boot.actuate.endpoint.HealthEndpoint;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.Status;
+import org.springframework.boot.bind.RelaxedNames;
 import org.springframework.boot.bind.RelaxedPropertyResolver;
 import org.springframework.context.EnvironmentAware;
 import org.springframework.core.env.Environment;
@@ -41,6 +42,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
  * @author Dave Syer
  * @author Andy Wilkinson
  * @author Phillip Webb
+ * @author Stephane Nicoll
  * @since 1.1.0
  */
 public class HealthMvcEndpoint implements MvcEndpoint, EnvironmentAware {
@@ -85,7 +87,8 @@ public class HealthMvcEndpoint implements MvcEndpoint, EnvironmentAware {
 	 */
 	public void setStatusMapping(Map<String, HttpStatus> statusMapping) {
 		Assert.notNull(statusMapping, "StatusMapping must not be null");
-		this.statusMapping = new HashMap<String, HttpStatus>(statusMapping);
+		this.statusMapping.clear();
+		addStatusMapping(statusMapping);
 	}
 
 	/**
@@ -94,7 +97,9 @@ public class HealthMvcEndpoint implements MvcEndpoint, EnvironmentAware {
 	 */
 	public void addStatusMapping(Map<String, HttpStatus> statusMapping) {
 		Assert.notNull(statusMapping, "StatusMapping must not be null");
-		this.statusMapping.putAll(statusMapping);
+		for (Map.Entry<String, HttpStatus> entry : statusMapping.entrySet()) {
+			addStatusMapping(entry.getKey(), entry.getValue());
+		}
 	}
 
 	/**
@@ -103,9 +108,7 @@ public class HealthMvcEndpoint implements MvcEndpoint, EnvironmentAware {
 	 * @param httpStatus the http status
 	 */
 	public void addStatusMapping(Status status, HttpStatus httpStatus) {
-		Assert.notNull(status, "Status must not be null");
-		Assert.notNull(httpStatus, "HttpStatus must not be null");
-		addStatusMapping(status.getCode(), httpStatus);
+		registerStatusMapping(status.getCode(), httpStatus);
 	}
 
 	/**
@@ -116,7 +119,7 @@ public class HealthMvcEndpoint implements MvcEndpoint, EnvironmentAware {
 	public void addStatusMapping(String statusCode, HttpStatus httpStatus) {
 		Assert.notNull(statusCode, "StatusCode must not be null");
 		Assert.notNull(httpStatus, "HttpStatus must not be null");
-		this.statusMapping.put(statusCode, httpStatus);
+		registerStatusMapping(statusCode, httpStatus);
 	}
 
 	@RequestMapping
@@ -128,11 +131,37 @@ public class HealthMvcEndpoint implements MvcEndpoint, EnvironmentAware {
 					"message", "This endpoint is disabled"), HttpStatus.NOT_FOUND);
 		}
 		Health health = getHealth(principal);
-		HttpStatus status = this.statusMapping.get(health.getStatus().getCode());
+		HttpStatus status = getHttpStatus(health.getStatus());
 		if (status != null) {
 			return new ResponseEntity<Health>(health, status);
 		}
 		return health;
+	}
+
+	protected HttpStatus getHttpStatus(Status status) {
+		HttpStatus httpStatus = this.statusMapping.get(status.getCode());
+		if (httpStatus != null) {
+			return httpStatus;
+		}
+		for (String candidate : new RelaxedNames(status.getCode())) {
+			HttpStatus fallback = this.statusMapping.get(candidate);
+			if (fallback != null) {
+				this.addStatusMapping(status.getCode(), fallback);
+				return fallback;
+			}
+		}
+		return null;
+	}
+
+	private void registerStatusMapping(String statusCode, HttpStatus httpStatus) {
+		Assert.notNull(statusCode, "StatusCode must not be null");
+		Assert.notNull(httpStatus, "HttpStatus must not be null");
+		this.statusMapping.put(statusCode, httpStatus);
+		for (String candidate : new RelaxedNames(statusCode)) {
+			if (this.statusMapping.containsKey(candidate)) {
+				this.statusMapping.put(candidate, httpStatus);
+			}
+		}
 	}
 
 	private Health getHealth(Principal principal) {

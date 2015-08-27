@@ -206,4 +206,24 @@ public class HealthMvcEndpointTests {
 		assertTrue(health.getStatus() == Status.DOWN);
 	}
 
+	@Test
+	public void statusUseRelaxedNames() {
+		Status status = new Status("MY_SUPER_STATUS");
+		this.mvc.addStatusMapping("my-super-status", HttpStatus.I_AM_A_TEAPOT);
+		assertEquals(HttpStatus.I_AM_A_TEAPOT, this.mvc.getHttpStatus(status));
+	}
+
+	@Test
+	public void statusUseRelaxedNamesOnDefaultStatus() {
+		this.mvc.addStatusMapping("out-of-service", HttpStatus.I_AM_A_TEAPOT);
+		assertEquals(HttpStatus.I_AM_A_TEAPOT, this.mvc.getHttpStatus(Status.OUT_OF_SERVICE));
+	}
+
+	@Test
+	public void statusCanBeOverriddenWithRelaxedNames() {
+		this.mvc.addStatusMapping("out-of-service", HttpStatus.I_AM_A_TEAPOT);
+		this.mvc.addStatusMapping("out_of_service", HttpStatus.SEE_OTHER);
+		assertEquals(HttpStatus.SEE_OTHER, this.mvc.getHttpStatus(Status.OUT_OF_SERVICE));
+	}
+
 }
