@@ -18,6 +18,8 @@ package org.springframework.boot.gradle.repackage;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -153,12 +155,29 @@ class ProjectLibraries implements Libraries {
 	private void libraries(Set<GradleLibrary> libraries, LibraryCallback callback)
 			throws IOException {
 		if (libraries != null) {
-			Set<String> duplicates = getDuplicates(libraries);
-			for (GradleLibrary library : libraries) {
+			Set<GradleLibrary> filtered = filter(libraries, getFilters());
+			Set<String> duplicates = getDuplicates(filtered);
+			for (GradleLibrary library : filtered) {
 				library.setIncludeGroupName(duplicates.contains(library.getName()));
 				callback.library(library);
 			}
 		}
+	}
+
+	private Set<GradleLibrary> filter(Set<GradleLibrary> libraries,
+			Collection<GradleLibrariesFilter> filters) {
+		for (GradleLibrariesFilter filter : filters) {
+			libraries = filter.filter(libraries);
+		}
+		return libraries;
+	}
+
+	private Collection<GradleLibrariesFilter> getFilters() {
+		Collection<GradleLibrariesFilter> filters = new ArrayList<GradleLibrariesFilter>();
+		if (this.extension.isExcludeDevtools()) {
+			filters.add(new DevtoolsGradleLibrariesFilter());
+		}
+		return filters;
 	}
 
 	private Set<String> getDuplicates(Set<GradleLibrary> libraries) {
@@ -238,6 +257,31 @@ class ProjectLibraries implements Libraries {
 			return false;
 		}
 
+	}
+
+	private interface GradleLibrariesFilter {
+
+		Set<GradleLibrary> filter(Set<GradleLibrary> libraries);
+
+	}
+
+	private static class DevtoolsGradleLibrariesFilter implements GradleLibrariesFilter  {
+
+		@Override
+		public Set<GradleLibrary> filter(Set<GradleLibrary> libraries) {
+			Set<GradleLibrary> filtered = new LinkedHashSet<GradleLibrary>();
+			for (GradleLibrary library : libraries) {
+				if (!isDevtools(library)) {
+					filtered.add(library);
+				}
+			}
+			return filtered;
+		}
+
+		private boolean isDevtools(GradleLibrary library) {
+			return "org.springframework.boot".equals(library.group)
+					&& library.getName().startsWith("spring-boot-devtools");
+		}
 	}
 
 }

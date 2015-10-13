@@ -18,6 +18,8 @@ package org.springframework.boot.maven;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
@@ -35,6 +37,8 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
+import org.apache.maven.shared.artifact.filter.collection.ArtifactsFilter;
+import org.apache.maven.shared.artifact.filter.collection.FilterArtifacts;
 import org.springframework.boot.loader.tools.DefaultLaunchScript;
 import org.springframework.boot.loader.tools.LaunchScript;
 import org.springframework.boot.loader.tools.Layout;
@@ -153,6 +157,13 @@ public class RepackageMojo extends AbstractDependencyFilterMojo {
 	@Parameter
 	private Properties embeddedLaunchScriptProperties;
 
+	/**
+	 * Exclude Spring Boot devtools.
+	 * @since 1.3
+	 */
+	@Parameter(defaultValue = "false")
+	private boolean excludeDevtools;
+
 	@Override
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		if (this.project.getPackaging().equals("pom")) {
@@ -190,7 +201,7 @@ public class RepackageMojo extends AbstractDependencyFilterMojo {
 		}
 
 		Set<Artifact> artifacts = filterDependencies(this.project.getArtifacts(),
-				getFilters());
+				doGetFilters());
 
 		Libraries libraries = new ArtifactsLibraries(artifacts, this.requiresUnpack,
 				getLog());
@@ -211,6 +222,16 @@ public class RepackageMojo extends AbstractDependencyFilterMojo {
 			this.project.getArtifact().setFile(target);
 			getLog().info("Replacing main artifact " + source + " to " + target);
 		}
+	}
+
+	private FilterArtifacts doGetFilters() {
+		List<ArtifactsFilter> additionalFilters = new ArrayList<ArtifactsFilter>();
+		if (this.excludeDevtools) {
+			additionalFilters.add(new ExcludeFilter(Collections.singletonList(
+					Exclude.create("org.springframework.boot", "spring-boot-devtools"))));
+		}
+		return getFilters(additionalFilters.toArray(
+				new ArtifactsFilter[additionalFilters.size()]));
 	}
 
 	private File getTargetFile() {
