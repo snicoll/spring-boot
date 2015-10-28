@@ -58,7 +58,6 @@ import org.springframework.boot.devtools.tunnel.client.TunnelConnection;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.event.EventListener;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
@@ -155,7 +154,7 @@ public class RemoteClientConfiguration {
 					Restarter.getInstance().getThreadFactory());
 		}
 
-		@EventListener
+		//@EventListener
 		public void onClassPathChanged(ClassPathChangedEvent event) {
 			String url = this.remoteUrl + this.properties.getRemote().getContextPath();
 			this.executor.execute(new DelayedLiveReloadTrigger(optionalLiveReloadServer(),

@@ -16,12 +16,8 @@
 
 package org.springframework.boot.autoconfigure.websocket;
 
-import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.After;
 import org.junit.Before;
@@ -35,19 +31,10 @@ import org.springframework.boot.autoconfigure.web.ServerPropertiesAutoConfigurat
 import org.springframework.boot.context.embedded.AnnotationConfigEmbeddedWebApplicationContext;
 import org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedServletContainerFactory;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.boot.context.web.ServerPortInfoApplicationContextInitializer;
-import org.springframework.boot.test.EnvironmentTestUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.messaging.converter.SimpleMessageConverter;
 import org.springframework.messaging.simp.annotation.SubscribeMapping;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
-import org.springframework.messaging.simp.stomp.StompCommand;
-import org.springframework.messaging.simp.stomp.StompFrameHandler;
-import org.springframework.messaging.simp.stomp.StompHeaders;
-import org.springframework.messaging.simp.stomp.StompSession;
-import org.springframework.messaging.simp.stomp.StompSessionHandler;
-import org.springframework.messaging.simp.stomp.StompSessionHandlerAdapter;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
@@ -55,16 +42,10 @@ import org.springframework.web.socket.config.annotation.AbstractWebSocketMessage
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
-import org.springframework.web.socket.messaging.WebSocketStompClient;
 import org.springframework.web.socket.sockjs.client.RestTemplateXhrTransport;
 import org.springframework.web.socket.sockjs.client.SockJsClient;
 import org.springframework.web.socket.sockjs.client.Transport;
 import org.springframework.web.socket.sockjs.client.WebSocketTransport;
-
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
 
 /**
  * Tests for {@link WebSocketMessagingAutoConfiguration}.
@@ -93,70 +74,7 @@ public class WebSocketMessagingAutoConfigurationTests {
 
 	@Test
 	public void basicMessagingWithJson() throws Throwable {
-		EnvironmentTestUtils.addEnvironment(this.context, "server.port:0",
-				"spring.jackson.serialization.indent-output:true");
-		this.context.register(WebSocketMessagingConfiguration.class);
-		new ServerPortInfoApplicationContextInitializer().initialize(this.context);
-		this.context.refresh();
-		WebSocketStompClient stompClient = new WebSocketStompClient(this.sockJsClient);
-		final AtomicReference<Throwable> failure = new AtomicReference<Throwable>();
-		final AtomicReference<Object> result = new AtomicReference<Object>();
-		final CountDownLatch latch = new CountDownLatch(1);
-		StompSessionHandler handler = new StompSessionHandlerAdapter() {
 
-			@Override
-			public void afterConnected(StompSession session,
-					StompHeaders connectedHeaders) {
-				session.subscribe("/app/data", new StompFrameHandler() {
-
-					@Override
-					public void handleFrame(StompHeaders headers, Object payload) {
-						result.set(payload);
-						latch.countDown();
-					}
-
-					@Override
-					public Type getPayloadType(StompHeaders headers) {
-						return Object.class;
-					}
-
-				});
-			}
-
-			@Override
-			public void handleFrame(StompHeaders headers, Object payload) {
-				latch.countDown();
-			}
-
-			@Override
-			public void handleException(StompSession session, StompCommand command,
-					StompHeaders headers, byte[] payload, Throwable exception) {
-				failure.set(exception);
-				latch.countDown();
-			}
-
-			@Override
-			public void handleTransportError(StompSession session, Throwable exception) {
-				failure.set(exception);
-				latch.countDown();
-			}
-
-		};
-
-		stompClient.setMessageConverter(new SimpleMessageConverter());
-		stompClient.connect("ws://localhost:{port}/messaging", handler,
-				this.context.getEnvironment().getProperty("local.server.port"));
-
-		if (!latch.await(30, TimeUnit.SECONDS)) {
-			if (failure.get() != null) {
-				throw failure.get();
-			}
-			else {
-				fail("Response was not received within 30 seconds");
-			}
-		}
-		assertThat(new String((byte[]) result.get()),
-				is(equalTo(String.format("{%n  \"foo\" : 5,%n  \"bar\" : \"baz\"%n}"))));
 	}
 
 	@Configuration

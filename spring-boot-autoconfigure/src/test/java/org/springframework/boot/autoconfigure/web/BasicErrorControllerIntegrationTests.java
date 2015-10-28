@@ -260,7 +260,7 @@ public class BasicErrorControllerIntegrationTests {
 				throw error;
 			}
 
-			@RequestMapping(path = "/bodyValidation", method = RequestMethod.POST, produces = "application/json")
+			@RequestMapping(value = "/bodyValidation", method = RequestMethod.POST, produces = "application/json")
 			public String bodyValidation(@Valid @RequestBody DummyBody body) {
 				return body.content;
 			}

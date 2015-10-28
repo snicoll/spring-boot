@@ -46,12 +46,13 @@ public class MailSenderValidatorAutoConfiguration {
 
 	@PostConstruct
 	public void validateConnection() {
+		/*
 		try {
 			this.mailSender.testConnection();
 		}
 		catch (MessagingException ex) {
 			throw new IllegalStateException("Mail server is not unavailable", ex);
-		}
+		}*/
 	}
 
 }

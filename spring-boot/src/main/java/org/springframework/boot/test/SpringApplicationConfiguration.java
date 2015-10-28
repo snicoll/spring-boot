@@ -25,7 +25,6 @@ import java.lang.annotation.Target;
 
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.core.annotation.AliasFor;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
@@ -52,7 +51,6 @@ public @interface SpringApplicationConfiguration {
 	 * @see ContextConfiguration#classes()
 	 * @return the context configuration classes
 	 */
-	@AliasFor("classes")
 	Class<?>[] value() default {};
 
 	/**
@@ -60,7 +58,6 @@ public @interface SpringApplicationConfiguration {
 	 * @see ContextConfiguration#locations()
 	 * @return the context configuration locations
 	 */
-	@AliasFor(annotation = ContextConfiguration.class, attribute = "locations")
 	String[] locations() default {};
 
 	/**
@@ -68,7 +65,6 @@ public @interface SpringApplicationConfiguration {
 	 * @see ContextConfiguration#classes()
 	 * @return the context configuration classes
 	 */
-	@AliasFor("value")
 	Class<?>[] classes() default {};
 
 	/**
@@ -76,7 +72,6 @@ public @interface SpringApplicationConfiguration {
 	 * @see ContextConfiguration#initializers()
 	 * @return the context configuration initializers
 	 */
-	@AliasFor(annotation = ContextConfiguration.class, attribute = "initializers")
 	Class<? extends ApplicationContextInitializer<? extends ConfigurableApplicationContext>>[] initializers() default {};
 
 	/**
@@ -84,7 +79,6 @@ public @interface SpringApplicationConfiguration {
 	 * @see ContextConfiguration#inheritLocations()
 	 * @return {@code true} if context locations should be inherited
 	 */
-	@AliasFor(annotation = ContextConfiguration.class, attribute = "inheritLocations")
 	boolean inheritLocations() default true;
 
 	/**
@@ -92,7 +86,6 @@ public @interface SpringApplicationConfiguration {
 	 * @see ContextConfiguration#inheritInitializers()
 	 * @return {@code true} if context initializers should be inherited
 	 */
-	@AliasFor(annotation = ContextConfiguration.class, attribute = "inheritInitializers")
 	boolean inheritInitializers() default true;
 
 	/**
@@ -100,7 +93,6 @@ public @interface SpringApplicationConfiguration {
 	 * @see ContextConfiguration#name()
 	 * @return the name of the context hierarchy level
 	 */
-	@AliasFor(annotation = ContextConfiguration.class, attribute = "name")
 	String name() default "";
 
 }

@@ -71,18 +71,6 @@ public class MailHealthIndicatorTests {
 		assertEquals("smtp.acme.org:25", health.getDetails().get("location"));
 	}
 
-	@Test
-	public void smtpIsDown() throws MessagingException {
-		willThrow(new MessagingException("A test exception")).given(this.mailSender)
-				.testConnection();
-		Health health = this.indicator.health();
-		assertEquals(Status.DOWN, health.getStatus());
-		assertEquals("smtp.acme.org:25", health.getDetails().get("location"));
-		Object errorMessage = health.getDetails().get("error");
-		assertNotNull(errorMessage);
-		assertTrue(errorMessage.toString().contains("A test exception"));
-	}
-
 	public static class SuccessTransport extends Transport {
 
 		public SuccessTransport(Session session, URLName urlname) {

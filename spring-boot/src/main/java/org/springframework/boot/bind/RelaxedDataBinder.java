@@ -259,7 +259,7 @@ public class RelaxedDataBinder extends DataBinder {
 		return initializePath(wrapper, new BeanPath(path), 0);
 	}
 
-	@Override
+	//@Override
 	protected AbstractPropertyBindingResult createBeanPropertyBindingResult() {
 		return new RelaxedBeanPropertyBindingResult(getTarget(), getObjectName(),
 				isAutoGrowNestedPaths(), getAutoGrowCollectionLimit(),

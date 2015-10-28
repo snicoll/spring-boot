@@ -36,10 +36,9 @@ import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.event.ApplicationContextEvent;
 import org.springframework.context.event.ContextRefreshedEvent;
-import org.springframework.context.event.GenericApplicationListener;
+import org.springframework.context.event.SmartApplicationListener;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.Ordered;
-import org.springframework.core.ResolvableType;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 
@@ -207,7 +206,7 @@ public class AutoConfigurationReportLoggingInitializer
 
 	}
 
-	private class AutoConfigurationReportListener implements GenericApplicationListener {
+	private class AutoConfigurationReportListener implements SmartApplicationListener {
 
 		@Override
 		public int getOrder() {
@@ -215,11 +214,7 @@ public class AutoConfigurationReportLoggingInitializer
 		}
 
 		@Override
-		public boolean supportsEventType(ResolvableType resolvableType) {
-			Class<?> type = resolvableType.getRawClass();
-			if (type == null) {
-				return false;
-			}
+		public boolean supportsEventType(Class<? extends ApplicationEvent> type) {
 			return ContextRefreshedEvent.class.isAssignableFrom(type)
 					|| ApplicationFailedEvent.class.isAssignableFrom(type);
 		}

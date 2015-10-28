@@ -26,7 +26,6 @@ import java.lang.annotation.Target;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.annotation.AliasFor;
 
 /**
  * Indicates a {@link Configuration configuration} class that declares one or more
@@ -68,7 +67,6 @@ public @interface SpringBootApplication {
 	 * @return base packages to scan
 	 * @since 1.3.0
 	 */
-	@AliasFor(annotation = ComponentScan.class, attribute = "basePackages")
 	String[] scanBasePackages() default {};
 
 	/**
@@ -80,7 +78,6 @@ public @interface SpringBootApplication {
 	 * @return base packages to scan
 	 * @since 1.3.0
 	 */
-	@AliasFor(annotation = ComponentScan.class, attribute = "basePackageClasses")
 	Class<?>[] scanBasePackageClasses() default {};
 
 }

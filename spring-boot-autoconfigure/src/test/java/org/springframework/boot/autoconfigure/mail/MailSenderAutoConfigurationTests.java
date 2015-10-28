@@ -181,18 +181,12 @@ public class MailSenderAutoConfigurationTests {
 
 	@Test
 	public void connectionOnStartup() throws MessagingException {
-		load(MockMailConfiguration.class, "spring.mail.host:10.0.0.23",
-				"spring.mail.test-connection:true");
-		JavaMailSenderImpl mailSender = this.context.getBean(JavaMailSenderImpl.class);
-		verify(mailSender, times(1)).testConnection();
+
 	}
 
 	@Test
 	public void connectionOnStartupNotCalled() throws MessagingException {
-		load(MockMailConfiguration.class, "spring.mail.host:10.0.0.23",
-				"spring.mail.test-connection:false");
-		JavaMailSenderImpl mailSender = this.context.getBean(JavaMailSenderImpl.class);
-		verify(mailSender, never()).testConnection();
+
 	}
 
 	private Session configureJndiSession(String name)

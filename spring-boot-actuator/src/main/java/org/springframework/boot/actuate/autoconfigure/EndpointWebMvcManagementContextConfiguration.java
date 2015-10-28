@@ -48,7 +48,6 @@ import org.springframework.core.env.Environment;
 import org.springframework.core.type.AnnotatedTypeMetadata;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
-import org.springframework.web.cors.CorsConfiguration;
 
 /**
  * Configuration to expose {@link Endpoint} instances over Spring MVC.
@@ -77,9 +76,7 @@ public class EndpointWebMvcManagementContextConfiguration {
 	@ConditionalOnMissingBean
 	public EndpointHandlerMapping endpointHandlerMapping() {
 		Set<? extends MvcEndpoint> endpoints = mvcEndpoints().getEndpoints();
-		CorsConfiguration corsConfiguration = getCorsConfiguration(this.corsProperties);
-		EndpointHandlerMapping mapping = new EndpointHandlerMapping(endpoints,
-				corsConfiguration);
+		EndpointHandlerMapping mapping = new EndpointHandlerMapping(endpoints);
 		boolean disabled = this.managementServerProperties.getPort() != null
 				&& this.managementServerProperties.getPort() == -1;
 		mapping.setDisabled(disabled);
@@ -92,30 +89,6 @@ public class EndpointWebMvcManagementContextConfiguration {
 			}
 		}
 		return mapping;
-	}
-
-	private CorsConfiguration getCorsConfiguration(EndpointCorsProperties properties) {
-		if (CollectionUtils.isEmpty(properties.getAllowedOrigins())) {
-			return null;
-		}
-		CorsConfiguration configuration = new CorsConfiguration();
-		configuration.setAllowedOrigins(properties.getAllowedOrigins());
-		if (!CollectionUtils.isEmpty(properties.getAllowedHeaders())) {
-			configuration.setAllowedHeaders(properties.getAllowedHeaders());
-		}
-		if (!CollectionUtils.isEmpty(properties.getAllowedMethods())) {
-			configuration.setAllowedMethods(properties.getAllowedMethods());
-		}
-		if (!CollectionUtils.isEmpty(properties.getExposedHeaders())) {
-			configuration.setExposedHeaders(properties.getExposedHeaders());
-		}
-		if (properties.getMaxAge() != null) {
-			configuration.setMaxAge(properties.getMaxAge());
-		}
-		if (properties.getAllowCredentials() != null) {
-			configuration.setAllowCredentials(properties.getAllowCredentials());
-		}
-		return configuration;
 	}
 
 	@Bean

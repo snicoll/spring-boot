@@ -35,7 +35,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextClosedEvent;
-import org.springframework.context.event.GenericApplicationListener;
+import org.springframework.context.event.SmartApplicationListener;
 import org.springframework.core.Ordered;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.env.ConfigurableEnvironment;
@@ -67,7 +67,7 @@ import org.springframework.util.StringUtils;
  * @author Andy Wilkinson
  * @see LoggingSystem#get(ClassLoader)
  */
-public class LoggingApplicationListener implements GenericApplicationListener {
+public class LoggingApplicationListener implements SmartApplicationListener {
 
 	/**
 	 * The default order for the LoggingApplicationListener.
@@ -147,8 +147,8 @@ public class LoggingApplicationListener implements GenericApplicationListener {
 	private LogLevel springBootLogging = null;
 
 	@Override
-	public boolean supportsEventType(ResolvableType resolvableType) {
-		return isAssignableFrom(resolvableType.getRawClass(), EVENT_TYPES);
+	public boolean supportsEventType(Class<? extends ApplicationEvent> eventType) {
+		return isAssignableFrom(eventType, EVENT_TYPES);
 	}
 
 	@Override

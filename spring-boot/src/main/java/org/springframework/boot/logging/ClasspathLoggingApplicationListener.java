@@ -25,9 +25,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.boot.context.event.ApplicationFailedEvent;
 import org.springframework.boot.context.event.ApplicationStartedEvent;
 import org.springframework.context.ApplicationEvent;
-import org.springframework.context.event.GenericApplicationListener;
 import org.springframework.context.event.SmartApplicationListener;
-import org.springframework.core.ResolvableType;
 
 /**
  * A {@link SmartApplicationListener} that reacts to {@link ApplicationStartedEvent start
@@ -38,7 +36,7 @@ import org.springframework.core.ResolvableType;
  * @author Andy Wilkinson
  */
 public final class ClasspathLoggingApplicationListener
-		implements GenericApplicationListener {
+		implements SmartApplicationListener {
 
 	private static final int ORDER = LoggingApplicationListener.DEFAULT_ORDER + 1;
 
@@ -66,11 +64,7 @@ public final class ClasspathLoggingApplicationListener
 	}
 
 	@Override
-	public boolean supportsEventType(ResolvableType resolvableType) {
-		Class<?> type = resolvableType.getRawClass();
-		if (type == null) {
-			return false;
-		}
+	public boolean supportsEventType(Class<? extends ApplicationEvent> type) {
 		return ApplicationStartedEvent.class.isAssignableFrom(type)
 				|| ApplicationFailedEvent.class.isAssignableFrom(type);
 	}

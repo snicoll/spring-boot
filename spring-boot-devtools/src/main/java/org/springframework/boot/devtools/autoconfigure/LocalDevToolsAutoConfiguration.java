@@ -39,7 +39,6 @@ import org.springframework.boot.devtools.restart.Restarter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.ContextRefreshedEvent;
-import org.springframework.context.event.EventListener;
 import org.springframework.util.StringUtils;
 
 /**
@@ -73,12 +72,12 @@ public class LocalDevToolsAutoConfiguration {
 					Restarter.getInstance().getThreadFactory());
 		}
 
-		@EventListener
+		//@EventListener
 		public void onContextRefreshed(ContextRefreshedEvent event) {
 			optionalLiveReloadServer().triggerReload();
 		}
 
-		@EventListener
+		//@EventListener
 		public void onClassPathChanged(ClassPathChangedEvent event) {
 			if (!event.isRestartRequired()) {
 				optionalLiveReloadServer().triggerReload();
@@ -101,7 +100,7 @@ public class LocalDevToolsAutoConfiguration {
 		@Autowired
 		private DevToolsProperties properties;
 
-		@EventListener
+		//@EventListener
 		public void onClassPathChanged(ClassPathChangedEvent event) {
 			if (event.isRestartRequired()) {
 				Restarter.getInstance().restart(

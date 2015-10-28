@@ -163,7 +163,7 @@ public class EndpointWebMvcHypermediaManagementContextConfiguration {
 		public boolean supports(MethodParameter returnType,
 				Class<? extends HttpMessageConverter<?>> converterType) {
 			returnType.increaseNestingLevel();
-			Type nestedType = returnType.getNestedGenericParameterType();
+			Type nestedType = returnType.getGenericParameterType();
 			returnType.decreaseNestingLevel();
 			return ResourceSupport.class.isAssignableFrom(returnType.getParameterType())
 					|| TypeUtils.isAssignable(ResourceSupport.class, nestedType);
