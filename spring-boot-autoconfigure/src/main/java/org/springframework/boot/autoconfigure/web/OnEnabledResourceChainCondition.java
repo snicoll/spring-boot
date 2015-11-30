@@ -24,6 +24,7 @@ import org.springframework.context.annotation.Condition;
 import org.springframework.context.annotation.ConditionContext;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.type.AnnotatedTypeMetadata;
+import org.springframework.util.ClassUtils;
 
 /**
  * {@link Condition} that checks whether or not the Spring resource handling chain is
@@ -32,6 +33,8 @@ import org.springframework.core.type.AnnotatedTypeMetadata;
  * @author Stephane Nicoll
  */
 class OnEnabledResourceChainCondition extends SpringBootCondition {
+
+	public static final String WEBJAR_ASSERT_LOCATOR = "org.webjars.WebJarAssetLocator";
 
 	@Override
 	public ConditionOutcome getMatchOutcome(ConditionContext context,
@@ -42,6 +45,13 @@ class OnEnabledResourceChainCondition extends SpringBootCondition {
 		RelaxedDataBinder binder = new RelaxedDataBinder(properties, "spring.resources");
 		binder.bind(new PropertySourcesPropertyValues(environment.getPropertySources()));
 		Boolean match = properties.getChain().getEnabled();
+		if (match == null) {
+			boolean webJarsLocatorPresent = ClassUtils.isPresent(
+					WEBJAR_ASSERT_LOCATOR, getClass().getClassLoader());
+			return new ConditionOutcome(webJarsLocatorPresent,
+					"Webjars locator (" + WEBJAR_ASSERT_LOCATOR + ") is "
+							+ (webJarsLocatorPresent ? "present" : "absent"));
+		}
 		return new ConditionOutcome(match,
 				"Resource chain is " + (match ? "enabled" : "disabled"));
 	}
