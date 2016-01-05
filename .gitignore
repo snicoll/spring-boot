@@ -29,7 +29,12 @@ overridedb.*
 *.iml
 *.ipr
 *.iws
-.idea
+.idea/libraries
+.idea/compiler.xml
+.idea/encodings.xml
+.idea/misc.xml
+.idea/modules.xml
+.idea/workspace.xml
 *.jar
 .DS_Store
 .factorypath
