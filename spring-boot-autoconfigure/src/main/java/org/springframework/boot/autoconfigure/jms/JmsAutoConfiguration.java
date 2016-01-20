@@ -23,6 +23,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnSingleCandidate;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -44,31 +45,36 @@ import org.springframework.jms.support.destination.DestinationResolver;
 @Import(JmsAnnotationDrivenConfiguration.class)
 public class JmsAutoConfiguration {
 
-	@Autowired
-	private JmsProperties properties;
+	@Configuration
+	protected static class JmsTemplateConfiguration {
 
-	@Autowired
-	private ConnectionFactory connectionFactory;
+		@Autowired
+		private JmsProperties properties;
 
-	@Autowired(required = false)
-	private DestinationResolver destinationResolver;
+		@Autowired(required = false)
+		private DestinationResolver destinationResolver;
 
-	@Bean
-	@ConditionalOnMissingBean
-	public JmsTemplate jmsTemplate() {
-		JmsTemplate jmsTemplate = new JmsTemplate(this.connectionFactory);
-		jmsTemplate.setPubSubDomain(this.properties.isPubSubDomain());
-		if (this.destinationResolver != null) {
-			jmsTemplate.setDestinationResolver(this.destinationResolver);
+		@Bean
+		@ConditionalOnMissingBean
+		@ConditionalOnSingleCandidate(ConnectionFactory.class)
+		public JmsTemplate jmsTemplate(ConnectionFactory connectionFactory) {
+			JmsTemplate jmsTemplate = new JmsTemplate(connectionFactory);
+			jmsTemplate.setPubSubDomain(this.properties.isPubSubDomain());
+			if (this.destinationResolver != null) {
+				jmsTemplate.setDestinationResolver(this.destinationResolver);
+			}
+			return jmsTemplate;
+
 		}
-		return jmsTemplate;
 	}
 
 	@ConditionalOnClass(JmsMessagingTemplate.class)
-	@ConditionalOnMissingBean(JmsMessagingTemplate.class)
+	@Import(JmsTemplateConfiguration.class)
 	protected static class MessagingTemplateConfiguration {
 
 		@Bean
+		@ConditionalOnMissingBean
+		@ConditionalOnSingleCandidate(JmsTemplate.class)
 		public JmsMessagingTemplate jmsMessagingTemplate(JmsTemplate jmsTemplate) {
 			return new JmsMessagingTemplate(jmsTemplate);
 		}

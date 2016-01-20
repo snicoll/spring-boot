@@ -25,11 +25,11 @@ import org.springframework.amqp.rabbit.connection.RabbitConnectionFactoryBean;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.amqp.rabbit.core.RabbitMessagingTemplate;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnSingleCandidate;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -76,22 +76,6 @@ import org.springframework.context.annotation.Import;
 @Import(RabbitAnnotationDrivenConfiguration.class)
 public class RabbitAutoConfiguration {
 
-	@Bean
-	@ConditionalOnProperty(prefix = "spring.rabbitmq", name = "dynamic", matchIfMissing = true)
-	@ConditionalOnMissingBean(AmqpAdmin.class)
-	public AmqpAdmin amqpAdmin(ConnectionFactory connectionFactory) {
-		return new RabbitAdmin(connectionFactory);
-	}
-
-	@Autowired
-	private ConnectionFactory connectionFactory;
-
-	@Bean
-	@ConditionalOnMissingBean(RabbitTemplate.class)
-	public RabbitTemplate rabbitTemplate() {
-		return new RabbitTemplate(this.connectionFactory);
-	}
-
 	@Configuration
 	@ConditionalOnMissingBean(ConnectionFactory.class)
 	protected static class RabbitConnectionFactoryCreator {
@@ -133,11 +117,36 @@ public class RabbitAutoConfiguration {
 
 	}
 
+	@Configuration
+	@Import(RabbitConnectionFactoryCreator.class)
+	protected static class RabbitTemplateConfiguration {
+
+		@Bean
+		@ConditionalOnSingleCandidate(ConnectionFactory.class)
+		@ConditionalOnMissingBean(RabbitTemplate.class)
+		public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
+			return new RabbitTemplate(connectionFactory);
+		}
+
+		@Bean
+		@ConditionalOnSingleCandidate(ConnectionFactory.class)
+		@ConditionalOnProperty(prefix = "spring.rabbitmq", name = "dynamic", matchIfMissing = true)
+		@ConditionalOnMissingBean(AmqpAdmin.class)
+		public AmqpAdmin amqpAdmin(ConnectionFactory connectionFactory) {
+			return new RabbitAdmin(connectionFactory);
+		}
+
+
+	}
+
+	@Configuration
 	@ConditionalOnClass(RabbitMessagingTemplate.class)
 	@ConditionalOnMissingBean(RabbitMessagingTemplate.class)
+	@Import(RabbitTemplateConfiguration.class)
 	protected static class MessagingTemplateConfiguration {
 
 		@Bean
+		@ConditionalOnSingleCandidate(RabbitTemplate.class)
 		public RabbitMessagingTemplate rabbitMessagingTemplate(
 				RabbitTemplate rabbitTemplate) {
 			return new RabbitMessagingTemplate(rabbitTemplate);
