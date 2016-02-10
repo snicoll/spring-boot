@@ -25,6 +25,7 @@ import java.util.List;
 import javax.sql.DataSource;
 
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.boot.jdbc.DatabaseDriver;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.DataAccessUtils;
 import org.springframework.jdbc.IncorrectResultSetColumnCountException;
@@ -131,9 +132,9 @@ public class DataSourceHealthIndicator extends AbstractHealthIndicator
 	protected String getValidationQuery(String product) {
 		String query = this.query;
 		if (!StringUtils.hasText(query)) {
-			Product specific = Product.forProduct(product);
+			DatabaseDriver specific = DatabaseDriver.fromName(product);
 			if (specific != null) {
-				query = specific.getQuery();
+				query = specific.getValidationQuery();
 			}
 		}
 		if (!StringUtils.hasText(query)) {
@@ -181,76 +182,6 @@ public class DataSourceHealthIndicator extends AbstractHealthIndicator
 				throw new IncorrectResultSetColumnCountException(1, columns);
 			}
 			return JdbcUtils.getResultSetValue(rs, 1);
-		}
-
-	}
-
-	/**
-	 * Known database products.
-	 */
-	protected enum Product {
-
-		HSQLDB("HSQL Database Engine",
-				"SELECT COUNT(*) FROM INFORMATION_SCHEMA.SYSTEM_USERS"),
-
-		ORACLE("Oracle", "SELECT 'Hello' from DUAL"),
-
-		DERBY("Apache Derby", "SELECT 1 FROM SYSIBM.SYSDUMMY1"),
-
-		DB2("DB2", "SELECT 1 FROM SYSIBM.SYSDUMMY1") {
-
-			@Override
-			protected boolean matchesProduct(String product) {
-				return super.matchesProduct(product)
-						|| product.toLowerCase().startsWith("db2/");
-			}
-
-		},
-
-		DB2_AS400("DB2 UDB for AS/400", "SELECT 1 FROM SYSIBM.SYSDUMMY1") {
-			@Override
-			protected boolean matchesProduct(String product) {
-				return super.matchesProduct(product)
-						|| product.toLowerCase().contains("as/400");
-			}
-		},
-
-		INFORMIX("Informix Dynamic Server", "select count(*) from systables"),
-
-		FIREBIRD("Firebird", "SELECT 1 FROM RDB$DATABASE") {
-
-			@Override
-			protected boolean matchesProduct(String product) {
-				return super.matchesProduct(product)
-						|| product.toLowerCase().startsWith("firebird");
-			}
-
-		};
-
-		private final String product;
-
-		private final String query;
-
-		Product(String product, String query) {
-			this.product = product;
-			this.query = query;
-		}
-
-		protected boolean matchesProduct(String product) {
-			return this.product.equalsIgnoreCase(product);
-		}
-
-		public String getQuery() {
-			return this.query;
-		}
-
-		public static Product forProduct(String product) {
-			for (Product candidate : values()) {
-				if (candidate.matchesProduct(product)) {
-					return candidate;
-				}
-			}
-			return null;
 		}
 
 	}

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2014 the original author or authors.
+ * Copyright 2012-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.boot.autoconfigure.jdbc;
+package org.springframework.boot.jdbc;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -57,6 +57,22 @@ public class DatabaseDriverTests {
 		this.thrown.expect(IllegalArgumentException.class);
 		this.thrown.expectMessage("URL must start with");
 		DatabaseDriver.fromJdbcUrl("malformed:url");
+	}
+
+	@Test
+	public void databaseProductNameLookups() throws Exception {
+		assertThat(DatabaseDriver.fromName("newone")).isNull();
+		assertThat(DatabaseDriver.fromName("HSQL Database Engine")).isEqualTo(DatabaseDriver.HSQLDB);
+		assertThat(DatabaseDriver.fromName("Oracle")).isEqualTo(DatabaseDriver.ORACLE);
+		assertThat(DatabaseDriver.fromName("Apache Derby")).isEqualTo(DatabaseDriver.DERBY);
+		assertThat(DatabaseDriver.fromName("DB2")).isEqualTo(DatabaseDriver.DB2);
+		assertThat(DatabaseDriver.fromName("DB2/LINUXX8664")).isEqualTo(DatabaseDriver.DB2);
+		assertThat(DatabaseDriver.fromName("DB2 UDB for AS/400")).isEqualTo(DatabaseDriver.DB2_AS400);
+		assertThat(DatabaseDriver.fromName("DB3 XDB for AS/400")).isEqualTo(DatabaseDriver.DB2_AS400);
+		assertThat(DatabaseDriver.fromName("Informix Dynamic Server"))
+				.isEqualTo(DatabaseDriver.INFORMIX);
+		assertThat(DatabaseDriver.fromName("Firebird 2.5.WI")).isEqualTo(DatabaseDriver.FIREBIRD);
+		assertThat(DatabaseDriver.fromName("Firebird 2.1.LI")).isEqualTo(DatabaseDriver.FIREBIRD);
 	}
 
 }
