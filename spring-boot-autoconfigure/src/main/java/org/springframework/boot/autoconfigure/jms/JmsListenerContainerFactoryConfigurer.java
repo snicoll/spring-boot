@@ -19,7 +19,6 @@ package org.springframework.boot.autoconfigure.jms;
 import javax.jms.ConnectionFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.jms.config.DefaultJmsListenerContainerFactory;
 import org.springframework.jms.support.destination.DestinationResolver;
 import org.springframework.transaction.jta.JtaTransactionManager;
@@ -29,17 +28,40 @@ import org.springframework.util.Assert;
  *
  * @author Stephane Nicoll
  */
-@Configuration
-public abstract class JmsListenerContainerFactoryConfiguration {
+public class JmsListenerContainerFactoryConfigurer {
 
-	@Autowired(required = false)
 	private DestinationResolver destinationResolver;
 
-	@Autowired(required = false)
 	private JtaTransactionManager transactionManager;
 
+	private JmsProperties jmsProperties;
+
+	public DestinationResolver getDestinationResolver() {
+		return this.destinationResolver;
+	}
+
+	@Autowired(required = false)
+	public void setDestinationResolver(DestinationResolver destinationResolver) {
+		this.destinationResolver = destinationResolver;
+	}
+
+	public JtaTransactionManager getTransactionManager() {
+		return this.transactionManager;
+	}
+
+	@Autowired(required = false)
+	public void setTransactionManager(JtaTransactionManager transactionManager) {
+		this.transactionManager = transactionManager;
+	}
+
+	public JmsProperties getJmsProperties() {
+		return this.jmsProperties;
+	}
+
 	@Autowired
-	private JmsProperties properties;
+	public void setJmsProperties(JmsProperties jmsProperties) {
+		this.jmsProperties = jmsProperties;
+	}
 
 	/**
 	 * Create a new and pre-configured {@link DefaultJmsListenerContainerFactory} instance
@@ -49,7 +71,7 @@ public abstract class JmsListenerContainerFactoryConfiguration {
 	 */
 	public DefaultJmsListenerContainerFactory createJmsListenerContainerFactory(ConnectionFactory connectionFactory) {
 		DefaultJmsListenerContainerFactory factory = new DefaultJmsListenerContainerFactory();
-		applySettings(factory, connectionFactory);
+		configure(factory, connectionFactory);
 		return factory;
 	}
 
@@ -59,11 +81,11 @@ public abstract class JmsListenerContainerFactoryConfiguration {
 	 * @param factory the {@link DefaultJmsListenerContainerFactory} instance to configure
 	 * @param connectionFactory the {@link ConnectionFactory} to use
 	 */
-	public void applySettings(DefaultJmsListenerContainerFactory factory, ConnectionFactory connectionFactory) {
+	public void configure(DefaultJmsListenerContainerFactory factory, ConnectionFactory connectionFactory) {
 		Assert.notNull(factory, "Factory must not be null");
 		Assert.notNull(connectionFactory, "ConnectionFactory must not be null");
 		factory.setConnectionFactory(connectionFactory);
-		factory.setPubSubDomain(this.properties.isPubSubDomain());
+		factory.setPubSubDomain(this.jmsProperties.isPubSubDomain());
 		if (this.transactionManager != null) {
 			factory.setTransactionManager(this.transactionManager);
 		}
@@ -73,7 +95,7 @@ public abstract class JmsListenerContainerFactoryConfiguration {
 		if (this.destinationResolver != null) {
 			factory.setDestinationResolver(this.destinationResolver);
 		}
-		JmsProperties.Listener listener = this.properties.getListener();
+		JmsProperties.Listener listener = this.jmsProperties.getListener();
 		factory.setAutoStartup(listener.isAutoStartup());
 		if (listener.getAcknowledgeMode() != null) {
 			factory.setSessionAcknowledgeMode(listener.getAcknowledgeMode().getMode());

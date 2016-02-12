@@ -38,13 +38,19 @@ import org.springframework.jms.support.destination.JndiDestinationResolver;
  */
 @Configuration
 @ConditionalOnClass(EnableJms.class)
-class JmsAnnotationDrivenConfiguration extends JmsListenerContainerFactoryConfiguration {
+class JmsAnnotationDrivenConfiguration extends JmsListenerContainerFactoryConfigurer {
+
+	@Bean
+	@ConditionalOnMissingBean
+	public JmsListenerContainerFactoryConfigurer jmsListenerContainerFactoryConfigurer() {
+		return new JmsListenerContainerFactoryConfigurer();
+	}
 
 	@Bean
 	@ConditionalOnMissingBean(name = "jmsListenerContainerFactory")
 	public DefaultJmsListenerContainerFactory jmsListenerContainerFactory(
-			ConnectionFactory connectionFactory) {
-		return createJmsListenerContainerFactory(connectionFactory);
+			JmsListenerContainerFactoryConfigurer configurer, ConnectionFactory connectionFactory) {
+		return configurer.createJmsListenerContainerFactory(connectionFactory);
 	}
 
 	@EnableJms
