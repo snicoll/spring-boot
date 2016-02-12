@@ -18,7 +18,6 @@ package org.springframework.boot.autoconfigure.jms;
 
 import javax.jms.ConnectionFactory;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnJndi;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -29,7 +28,6 @@ import org.springframework.jms.config.DefaultJmsListenerContainerFactory;
 import org.springframework.jms.config.JmsListenerConfigUtils;
 import org.springframework.jms.support.destination.DestinationResolver;
 import org.springframework.jms.support.destination.JndiDestinationResolver;
-import org.springframework.transaction.jta.JtaTransactionManager;
 
 /**
  * Configuration for Spring 4.1 annotation driven JMS.
@@ -40,43 +38,13 @@ import org.springframework.transaction.jta.JtaTransactionManager;
  */
 @Configuration
 @ConditionalOnClass(EnableJms.class)
-class JmsAnnotationDrivenConfiguration {
-
-	@Autowired(required = false)
-	private DestinationResolver destinationResolver;
-
-	@Autowired(required = false)
-	private JtaTransactionManager transactionManager;
-
-	@Autowired
-	private JmsProperties properties;
+class JmsAnnotationDrivenConfiguration extends JmsListenerContainerFactoryConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean(name = "jmsListenerContainerFactory")
 	public DefaultJmsListenerContainerFactory jmsListenerContainerFactory(
 			ConnectionFactory connectionFactory) {
-		DefaultJmsListenerContainerFactory factory = new DefaultJmsListenerContainerFactory();
-		factory.setConnectionFactory(connectionFactory);
-		factory.setPubSubDomain(this.properties.isPubSubDomain());
-		if (this.transactionManager != null) {
-			factory.setTransactionManager(this.transactionManager);
-		}
-		else {
-			factory.setSessionTransacted(true);
-		}
-		if (this.destinationResolver != null) {
-			factory.setDestinationResolver(this.destinationResolver);
-		}
-		JmsProperties.Listener listener = this.properties.getListener();
-		factory.setAutoStartup(listener.isAutoStartup());
-		if (listener.getAcknowledgeMode() != null) {
-			factory.setSessionAcknowledgeMode(listener.getAcknowledgeMode().getMode());
-		}
-		String concurrency = listener.formatConcurrency();
-		if (concurrency != null) {
-			factory.setConcurrency(concurrency);
-		}
-		return factory;
+		return createJmsListenerContainerFactory(connectionFactory);
 	}
 
 	@EnableJms
