@@ -16,38 +16,43 @@
 
 package org.springframework.boot.autoconfigure.couchbase;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * Configuration properties for Couchbase.
  *
  * @author Eddú Meléndez
+ * @author Stephane Nicoll
  * @since 1.4.0
  */
 @ConfigurationProperties(prefix = "spring.data.couchbase")
 public class CouchbaseProperties {
 
 	/**
-	 * Couchabase server hosts.
+	 * Couchbase nodes (host or IP address) to bootstrap from.
 	 */
-	private String[] hosts;
+	private List<String> bootstrapHosts = new ArrayList<String>(Collections.singletonList("localhost"));
 
 	/**
-	 * Couchbase bucket name.
+	 * Name of the bucket to connect to.
 	 */
 	private String bucketName;
 
 	/**
-	 * Couchbase bucket password.
+	 * Password of the bucket.
 	 */
-	private String bucketPassword;
+	private String bucketPassword = "";
 
-	public String[] getHosts() {
-		return this.hosts;
+	public List<String> getBootstrapHosts() {
+		return this.bootstrapHosts;
 	}
 
-	public void setHosts(String[] hosts) {
-		this.hosts = hosts;
+	public void setBootstrapHosts(List<String> bootstrapHosts) {
+		this.bootstrapHosts = bootstrapHosts;
 	}
 
 	public String getBucketName() {
