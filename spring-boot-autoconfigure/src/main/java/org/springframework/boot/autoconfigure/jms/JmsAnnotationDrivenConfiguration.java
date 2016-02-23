@@ -18,6 +18,8 @@ package org.springframework.boot.autoconfigure.jms;
 
 import javax.jms.ConnectionFactory;
 
+import org.springframework.beans.factory.SmartObjectFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnJndi;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -28,6 +30,7 @@ import org.springframework.jms.config.DefaultJmsListenerContainerFactory;
 import org.springframework.jms.config.JmsListenerConfigUtils;
 import org.springframework.jms.support.destination.DestinationResolver;
 import org.springframework.jms.support.destination.JndiDestinationResolver;
+import org.springframework.transaction.jta.JtaTransactionManager;
 
 /**
  * Configuration for Spring 4.1 annotation driven JMS.
@@ -40,10 +43,23 @@ import org.springframework.jms.support.destination.JndiDestinationResolver;
 @ConditionalOnClass(EnableJms.class)
 class JmsAnnotationDrivenConfiguration {
 
+	@Autowired
+	private SmartObjectFactory<DestinationResolver> destinationResolverProvider;
+
+	@Autowired
+	private SmartObjectFactory<JtaTransactionManager> jtaTransactionManagerProvider;
+
+	@Autowired
+	private JmsProperties jmsProperties;
+
 	@Bean
 	@ConditionalOnMissingBean
 	public JmsListenerContainerFactoryConfigurer jmsListenerContainerFactoryConfigurer() {
-		return new JmsListenerContainerFactoryConfigurer();
+		JmsListenerContainerFactoryConfigurer configurer = new JmsListenerContainerFactoryConfigurer();
+		configurer.setDestinationResolver(this.destinationResolverProvider.getIfUnique());
+		configurer.setTransactionManager(this.jtaTransactionManagerProvider.getIfUnique());
+		configurer.setJmsProperties(this.jmsProperties);
+		return configurer;
 	}
 
 	@Bean

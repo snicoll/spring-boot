@@ -18,8 +18,6 @@ package org.springframework.boot.autoconfigure.jms;
 
 import javax.jms.ConnectionFactory;
 
-import org.springframework.beans.factory.SmartObjectFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jms.config.DefaultJmsListenerContainerFactory;
 import org.springframework.jms.config.JmsListenerContainerFactory;
 import org.springframework.jms.support.destination.DestinationResolver;
@@ -49,11 +47,6 @@ public final class JmsListenerContainerFactoryConfigurer {
 		this.destinationResolver = destinationResolver;
 	}
 
-	@Autowired
-	void setDestinationResolver(SmartObjectFactory<DestinationResolver> factory) {
-		this.destinationResolver = factory.getIfUnique();
-	}
-
 	/**
 	 * Set the {@link JtaTransactionManager} to use or {@code null} if the JTA support
 	 * should not be used.
@@ -63,16 +56,10 @@ public final class JmsListenerContainerFactoryConfigurer {
 		this.transactionManager = transactionManager;
 	}
 
-	@Autowired
-	public void setTransactionManager(SmartObjectFactory<JtaTransactionManager> factory) {
-		this.transactionManager = factory.getIfUnique();
-	}
-
 	/**
 	 * Set the {@link JmsProperties to use}.
 	 * @param jmsProperties the {@link JmsProperties}
 	 */
-	@Autowired
 	public void setJmsProperties(JmsProperties jmsProperties) {
 		this.jmsProperties = jmsProperties;
 	}
