@@ -18,6 +18,7 @@ package org.springframework.boot.autoconfigure.jms;
 
 import javax.jms.ConnectionFactory;
 
+import org.springframework.beans.factory.SmartObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jms.config.DefaultJmsListenerContainerFactory;
 import org.springframework.jms.config.JmsListenerContainerFactory;
@@ -44,9 +45,13 @@ public final class JmsListenerContainerFactoryConfigurer {
 	 * resolver should be associated with the factory by default.
 	 * @param destinationResolver the {@link DestinationResolver}
 	 */
-	@Autowired(required = false)
 	public void setDestinationResolver(DestinationResolver destinationResolver) {
 		this.destinationResolver = destinationResolver;
+	}
+
+	@Autowired
+	void setDestinationResolver(SmartObjectFactory<DestinationResolver> factory) {
+		this.destinationResolver = factory.getIfUnique();
 	}
 
 	/**
@@ -54,9 +59,13 @@ public final class JmsListenerContainerFactoryConfigurer {
 	 * should not be used.
 	 * @param transactionManager the {@link JtaTransactionManager}
 	 */
-	@Autowired(required = false)
 	public void setTransactionManager(JtaTransactionManager transactionManager) {
 		this.transactionManager = transactionManager;
+	}
+
+	@Autowired
+	public void setTransactionManager(SmartObjectFactory<JtaTransactionManager> factory) {
+		this.transactionManager = factory.getIfUnique();
 	}
 
 	/**
