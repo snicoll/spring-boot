@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,6 +54,8 @@ public class CacheProperties {
 
 	private final Guava guava = new Guava();
 
+	private final Redis redis = new Redis();
+
 	public CacheType getType() {
 		return this.type;
 	}
@@ -88,6 +90,10 @@ public class CacheProperties {
 
 	public Guava getGuava() {
 		return this.guava;
+	}
+
+	public Redis getRedis() {
+		return this.redis;
 	}
 
 	/**
@@ -219,6 +225,26 @@ public class CacheProperties {
 
 		public void setSpec(String spec) {
 			this.spec = spec;
+		}
+
+	}
+
+	/**
+	 * Redis specific cache properties.
+	 */
+	public static class Redis {
+
+		/**
+		 * Add a prefix to each key to prevent key overlaps.
+		 */
+		private boolean usePrefix = true;
+
+		public boolean isUsePrefix() {
+			return this.usePrefix;
+		}
+
+		public void setUsePrefix(boolean usePrefix) {
+			this.usePrefix = usePrefix;
 		}
 
 	}

@@ -195,6 +195,8 @@ public class CacheAutoConfigurationTests {
 		load(RedisCacheConfiguration.class, "spring.cache.type=redis");
 		RedisCacheManager cacheManager = validateCacheManager(RedisCacheManager.class);
 		assertThat(cacheManager.getCacheNames(), empty());
+		assertThat((Boolean) new DirectFieldAccessor(cacheManager)
+				.getPropertyValue("usePrefix"), equalTo(true));
 	}
 
 	@Test
