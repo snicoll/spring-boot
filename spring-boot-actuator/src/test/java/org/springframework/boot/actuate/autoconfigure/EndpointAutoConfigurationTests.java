@@ -141,7 +141,7 @@ public class EndpointAutoConfigurationTests {
 	public void testInfoEndpointConfiguration() throws Exception {
 		this.context = new AnnotationConfigApplicationContext();
 		EnvironmentTestUtils.addEnvironment(this.context, "info.foo:bar");
-		this.context.register(InfoProviderAutoConfiguration.class,
+		this.context.register(InfoContributorAutoConfiguration.class,
 				EndpointAutoConfiguration.class);
 		this.context.refresh();
 
@@ -156,7 +156,7 @@ public class EndpointAutoConfigurationTests {
 		this.context = new AnnotationConfigApplicationContext();
 		EnvironmentTestUtils.addEnvironment(this.context,
 				"spring.git.properties:classpath:nonexistent");
-		this.context.register(InfoProviderAutoConfiguration.class, EndpointAutoConfiguration.class);
+		this.context.register(InfoContributorAutoConfiguration.class, EndpointAutoConfiguration.class);
 		this.context.refresh();
 		InfoEndpoint endpoint = this.context.getBean(InfoEndpoint.class);
 		assertThat(endpoint).isNotNull();

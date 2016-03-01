@@ -16,9 +16,12 @@
 
 package org.springframework.boot.actuate.info;
 
+import java.io.IOException;
+
 import org.junit.Test;
 
-import org.springframework.boot.actuate.info.ScmGitPropertiesInfoProvider.GitInfo.Commit;
+import org.springframework.boot.actuate.info.GitInfoContributor.GitInfo;
+import org.springframework.boot.actuate.info.GitInfoContributor.GitInfo.Commit;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 
@@ -26,25 +29,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
-public class ScmGitPropertiesInfoProviderTests {
-
-
-	@Test
-	public void provide_HasBadFormatButExists_EmptyInfoReturned() throws Exception {
-		Resource resource = new ByteArrayResource("GARBAGE".getBytes());
-		ScmGitPropertiesInfoProvider scmGitPropertiesInfoProvider = new ScmGitPropertiesInfoProvider(resource);
-
-		Info actual = scmGitPropertiesInfoProvider.provide();
-		assertThat(actual).isNotNull();
-		assertThat((String) actual.get("branch")).isNull();
-		Commit actualCommit = actual.get("commit");
-		assertThat(actualCommit).isNotNull();
-		assertThat(actualCommit.getId()).isEqualTo("");
-		assertThat(actualCommit.getTime()).isNull();
-	}
+/**
+ * Tests for {@link GitInfoContributor}
+ */
+public class GitInfoContributorTests {
 
 	@Test
-	public void provide_HasValidFormat_ExpectedDataReturned() throws Exception {
+	public void extractGitInfo() {
 		String gitProperties = "git.commit.id.abbrev=e02a4f3\r\n"
 				+ "git.commit.user.email=dsyer@vmware.com\r\n"
 				+ "git.commit.message.full=Update Spring\r\n"
@@ -58,20 +49,19 @@ public class ScmGitPropertiesInfoProviderTests {
 				+ "git.build.time=2013-05-23T09\\:26\\:42+0100\r\n";
 
 		Resource resource = new ByteArrayResource(gitProperties.getBytes());
-		ScmGitPropertiesInfoProvider scmGitPropertiesInfoProvider = new ScmGitPropertiesInfoProvider(resource);
 
-		Info actual = scmGitPropertiesInfoProvider.provide();
+		Info actual = contributeFrom(resource);
 		assertThat(actual).isNotNull();
-		assertThat((String) actual.get("branch")).isEqualTo("develop");
-		Commit actualCommit = actual.get("commit");
+		GitInfo gitInfo = actual.get("git", GitInfo.class);
+		assertThat(gitInfo.getBranch()).isEqualTo("develop");
+		Commit actualCommit = gitInfo.getCommit();
 		assertThat(actualCommit).isNotNull();
 		assertThat(actualCommit.getId()).isEqualTo("e02a4f3");
 		assertThat(actualCommit.getTime()).isEqualTo("2013-04-24T08:42:13+0100");
 	}
 
-
 	@Test
-	public void provide_HasValidFormatButMissingCommitTime_ExpectedDataReturnedWithoutCommitTime() throws Exception {
+	public void extractGitInfoMissingData() {
 		String gitProperties = "git.commit.id.abbrev=e02a4f3\r\n"
 				+ "git.commit.user.email=dsyer@vmware.com\r\n"
 				+ "git.commit.message.full=Update Spring\r\n"
@@ -84,25 +74,52 @@ public class ScmGitPropertiesInfoProviderTests {
 				+ "git.build.time=2013-05-23T09\\:26\\:42+0100\r\n";
 
 		Resource resource = new ByteArrayResource(gitProperties.getBytes());
-		ScmGitPropertiesInfoProvider scmGitPropertiesInfoProvider = new ScmGitPropertiesInfoProvider(resource);
 
-		Info actual = scmGitPropertiesInfoProvider.provide();
+		Info actual = contributeFrom(resource);
 		assertThat(actual).isNotNull();
-		assertThat((String) actual.get("branch")).isEqualTo("develop");
-		Commit actualCommit = (Commit) actual.get("commit");
+		GitInfo gitInfo = actual.get("git", GitInfo.class);
+		assertThat(gitInfo.getBranch()).isEqualTo("develop");
+		Commit actualCommit = gitInfo.getCommit();
 		assertThat(actualCommit).isNotNull();
 		assertThat(actualCommit.getId()).isEqualTo("e02a4f3");
 		assertThat(actualCommit.getTime()).isNull();
 	}
 
 	@Test
-	public void provide_DoesNotExists_NullReturned() throws Exception {
+	public void extractGitInfoWrongFormat() {
+		Resource resource = new ByteArrayResource("GARBAGE".getBytes());
+
+		Info actual = contributeFrom(resource);
+		assertThat(actual).isNotNull();
+		GitInfo gitInfo = actual.get("git", GitInfo.class);
+		assertThat(gitInfo).isNotNull();
+		assertThat((String) gitInfo.getBranch()).isNull();
+		Commit actualCommit = gitInfo.getCommit();
+		assertThat(actualCommit).isNotNull();
+		assertThat(actualCommit.getId()).isEqualTo("");
+		assertThat(actualCommit.getTime()).isNull();
+	}
+
+	@Test
+	public void extractGitInfoResourceDoesNotExist() {
 		Resource resource = mock(Resource.class);
 		given(resource.exists()).willReturn(false);
-		ScmGitPropertiesInfoProvider scmGitPropertiesInfoProvider = new ScmGitPropertiesInfoProvider(resource);
 
-		Info actual = scmGitPropertiesInfoProvider.provide();
-		assertThat(actual).isNull();
+		Info actual = contributeFrom(resource);
+		assertThat(actual).isNotNull();
+		assertThat(actual.get("git")).isNull();
+	}
+
+	private static Info contributeFrom(Resource resource) {
+		try {
+			GitInfoContributor contributor = new GitInfoContributor(resource);
+			Info.Builder builder = new Info.Builder();
+			contributor.contribute(builder);
+			return builder.build();
+		}
+		catch (IOException ex) {
+			throw new IllegalStateException(ex);
+		}
 	}
 
 }

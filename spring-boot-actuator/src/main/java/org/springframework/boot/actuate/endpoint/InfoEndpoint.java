@@ -16,60 +16,42 @@
 
 package org.springframework.boot.actuate.endpoint;
 
-import java.util.Map;
+import java.util.List;
 
 import org.springframework.boot.actuate.info.Info;
-import org.springframework.boot.actuate.info.InfoProvider;
+import org.springframework.boot.actuate.info.InfoContributor;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.util.Assert;
 
 /**
  * {@link Endpoint} to expose arbitrary application information.
  *
- * The information, which the {@link InfoEndpoint} can provide can be customized to
- * display any information, however initially the info endpoint will provide git version
- * information (if available) and environment information,whose entries are prefixed with
- * info.
- *
- * In order to add additional information to the endpoint, one has to implement a class,
- * which implements the {@link org.springframework.boot.actuate.info.InfoProvider}
- * interface and register it in the application context. The InfoEndpoint will
- * automatically pick it up, when it is being instantiated.
- *
- * The standard InfoProvider for GIT is registered as the scmInfoProvider, and the
- * registration can be changed in case standard provider does not meet ones requirements.
- *
- * @see org.springframework.boot.actuate.info.ScmGitPropertiesInfoProvider
- * @see org.springframework.boot.actuate.info.EnvironmentInfoProvider
- *
  * @author Dave Syer
  * @author Meang Akira Tanaka
+ * @author Stephane Nicoll
  */
-@ConfigurationProperties(prefix = "endpoints.info", ignoreUnknownFields = false)
+@ConfigurationProperties(prefix = "endpoints.info")
 public class InfoEndpoint extends AbstractEndpoint<Info> {
 
-	private final Map<String, InfoProvider> infoProviders;
+	private final List<InfoContributor> infoContributors;
 
 	/**
 	 * Create a new {@link InfoEndpoint} instance.
-	 *
-	 * @param infoProviders the infoProviders to be used
+	 * @param infoContributors the info contributors to use
 	 */
-	public InfoEndpoint(Map<String, InfoProvider> infoProviders) {
+	public InfoEndpoint(List<InfoContributor> infoContributors) {
 		super("info", false);
-		Assert.notNull(infoProviders, "Info providers must not be null");
-		this.infoProviders = infoProviders;
+		Assert.notNull(infoContributors, "Info contributors must not be null");
+		this.infoContributors = infoContributors;
 	}
 
 	@Override
 	public Info invoke() {
-		Info result = new Info();
-		for (InfoProvider provider : this.infoProviders.values()) {
-			Info info = provider.provide();
-			if (info != null) {
-				result.put(provider.name(), info);
-			}
+		Info.Builder builder = new Info.Builder();
+		for (InfoContributor contributor : this.infoContributors) {
+			contributor.contribute(builder);
 		}
-		return result;
+		return builder.build();
 	}
+
 }

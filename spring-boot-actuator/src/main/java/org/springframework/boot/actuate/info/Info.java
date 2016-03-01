@@ -16,7 +16,7 @@
 
 package org.springframework.boot.actuate.info;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
@@ -27,19 +27,17 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
  * Carries information from a specific info provider.
  *
  * @author Meang Akira Tanaka
- * @since 1.3.0
- * @see org.springframework.boot.actuate.endpoint.InfoEndpoint
+ * @author Stephane Nicoll
+ * @since 1.4.0
  */
 @JsonInclude(Include.NON_EMPTY)
 public final class Info {
 
-	private final Map<String, Object> details = new HashMap<String, Object>();
+	private final Map<String, Object> details;
 
-	public Info() {
-	}
-
-	public Info(Map<String, Object> details) {
-		this.details.putAll(details);
+	private Info(Builder builder) {
+		this.details = new LinkedHashMap<String, Object>();
+		this.details.putAll(builder.content);
 	}
 
 	/**
@@ -51,13 +49,17 @@ public final class Info {
 		return this.details;
 	}
 
-	public void put(String infoId, Object value) {
-		this.details.put(infoId, value);
+	public Object get(String id) {
+		return this.details.get(id);
 	}
 
 	@SuppressWarnings("unchecked")
-	public <T> T get(String infoId) {
-		return (T) this.details.get(infoId);
+	public <T> T get(String id, Class<T> type) {
+		Object value = get(id);
+		if (value != null && type != null && !type.isInstance(value)) {
+			throw new IllegalStateException("Info entry is not of required type [" + type.getName() + "]: " + value);
+		}
+		return (T) value;
 	}
 
 	@Override
@@ -80,5 +82,32 @@ public final class Info {
 	@Override
 	public String toString() {
 		return getDetails().toString();
+	}
+
+	/**
+	 * Builder for creating immutable {@link Info} instances.
+	 */
+	public static class Builder {
+
+		private final Map<String, Object> content;
+
+		public Builder() {
+			this.content = new LinkedHashMap<String, Object>();
+		}
+
+		public Builder withDetail(String key, Object detail) {
+			this.content.put(key, detail);
+			return this;
+		}
+
+		public Builder withDetails(Map<String, Object> details) {
+			this.content.putAll(details);
+			return this;
+		}
+
+		public Info build() {
+			return new Info(this);
+		}
+
 	}
 }

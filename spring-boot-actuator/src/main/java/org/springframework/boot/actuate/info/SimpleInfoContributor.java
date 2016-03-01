@@ -16,19 +16,30 @@
 
 package org.springframework.boot.actuate.info;
 
+import org.springframework.util.Assert;
+
 /**
- * information provider for the info endpoint.
+ * A simple {@link InfoContributor} that exposes a single detail.
  *
- * @author Meang Akira Tanaka
+ * @author Stephane Nicoll
+ * @since 1.4.0
  */
-public interface InfoProvider {
+public class SimpleInfoContributor implements InfoContributor {
 
-	String name();
+	private final String prefix;
+	private final Object detail;
 
-	/**
-	 * Return the {@link Info} instance.
-	 * @return a collection of information
-	 */
-	Info provide();
+	public SimpleInfoContributor(String prefix, Object detail) {
+		Assert.notNull(prefix, "Prefix must not be null");
+		this.prefix = prefix;
+		this.detail = detail;
+	}
+
+	@Override
+	public void contribute(Info.Builder builder) {
+		if (this.detail != null) {
+			builder.withDetail(this.prefix, this.detail);
+		}
+	}
 
 }

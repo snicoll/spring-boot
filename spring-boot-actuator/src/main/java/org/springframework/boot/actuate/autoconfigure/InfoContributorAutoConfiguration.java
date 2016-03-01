@@ -16,46 +16,43 @@
 
 package org.springframework.boot.actuate.autoconfigure;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import java.io.IOException;
+
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.actuate.info.EnvironmentInfoProvider;
-import org.springframework.boot.actuate.info.InfoProvider;
-import org.springframework.boot.actuate.info.ScmGitPropertiesInfoProvider;
+import org.springframework.boot.actuate.info.EnvironmentInfoContributor;
+import org.springframework.boot.actuate.info.GitInfoContributor;
+import org.springframework.boot.actuate.info.InfoContributor;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.ConfigurableEnvironment;
-import org.springframework.core.env.StandardEnvironment;
 import org.springframework.core.io.Resource;
 
 /**
- * {@link EnableAutoConfiguration Auto-configuration} for standard {@link InfoProvider}s.
+ * {@link EnableAutoConfiguration Auto-configuration} for standard {@link InfoContributor}s.
  *
  * @author Meang Akira Tanaka
- * @since 1.3.0
+ * @author Stephane Nicoll
+ * @since 1.4.0
  */
 @Configuration
 @AutoConfigureBefore({EndpointAutoConfiguration.class})
-public class InfoProviderAutoConfiguration {
-
-	@Autowired
-	private final ConfigurableEnvironment environment = new StandardEnvironment();
+public class InfoContributorAutoConfiguration {
 
 	@Value("${spring.git.properties:classpath:git.properties}")
 	private Resource gitProperties;
 
 	@Bean
-	@ConditionalOnMissingBean(name = "environmentInfoProvider")
-	public InfoProvider environmentInfoProvider() throws Exception {
-		return new EnvironmentInfoProvider(this.environment);
+	@ConditionalOnEnabledInfoContributor("env")
+	public EnvironmentInfoContributor envInfoContributor(ConfigurableEnvironment environment) {
+		return new EnvironmentInfoContributor(environment);
 	}
 
 	@Bean
-	@ConditionalOnMissingBean(name = "scmInfoProvider")
-	public InfoProvider scmInfoProvider() throws Exception {
-		return new ScmGitPropertiesInfoProvider(this.gitProperties);
+	@ConditionalOnEnabledInfoContributor("git")
+	public GitInfoContributor gitInfoContributor() throws IOException {
+		return new GitInfoContributor(this.gitProperties);
 	}
 
 }
