@@ -93,7 +93,7 @@ public class ProjectInfoAutoConfigurationTests {
 		assertThat(buildInfo.getGroup()).isEqualTo("com.example");
 		assertThat(buildInfo.getArtifact()).isEqualTo("demo");
 		assertThat(buildInfo.getVersion()).isEqualTo("0.0.1-SNAPSHOT");
-		assertThat(buildInfo.getTimestamp()).isEqualTo("2016-03-04T11:02:00+0100");
+		assertThat(buildInfo.getTime()).isEqualTo("2016-03-04T15:16:05");
 	}
 
 	@Test
@@ -103,7 +103,7 @@ public class ProjectInfoAutoConfigurationTests {
 		assertThat(buildInfo.getGroup()).isEqualTo("com.example.acme");
 		assertThat(buildInfo.getArtifact()).isEqualTo("acme");
 		assertThat(buildInfo.getVersion()).isEqualTo("1.0.1-SNAPSHOT");
-		assertThat(buildInfo.getTimestamp()).isEqualTo("2016-03-04T11:42:00+0100");
+		assertThat(buildInfo.getTime()).isEqualTo("2016-03-04T11:42:00");
 	}
 
 	@Test

@@ -20,7 +20,9 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 import java.util.Properties;
 
 import org.apache.maven.plugin.AbstractMojo;
@@ -84,8 +86,13 @@ public class GenerateBuildInfoMojo extends AbstractMojo {
 		properties.put("build.group", this.project.getGroupId());
 		properties.put("build.artifact", this.project.getArtifactId());
 		properties.put("build.version", this.project.getVersion());
-		properties.put("build.timestamp", new Date().toString());
+		properties.put("build.time", formatDate(new Date()));
 		return properties;
+	}
+
+	private String formatDate(Date date) {
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssX", Locale.US);
+		return sdf.format(date);
 	}
 
 	private void createFileIfNecessary(File file) throws MojoExecutionException, IOException {

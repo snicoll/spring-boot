@@ -16,6 +16,8 @@
 
 package org.springframework.boot.autoconfigure.info;
 
+import java.util.Date;
+
 /**
  * Provide build-related information.
  *
@@ -30,7 +32,7 @@ public class BuildInfo {
 
 	private String version;
 
-	private String timestamp;
+	private Date time;
 
 	public String getGroup() {
 		return this.group;
@@ -56,12 +58,11 @@ public class BuildInfo {
 		this.version = version;
 	}
 
-	public String getTimestamp() {
-		return this.timestamp;
+	public Date getTime() {
+		return this.time;
 	}
 
-	public void setTimestamp(String timestamp) {
-		this.timestamp = timestamp;
+	public void setTime(Date time) {
+		this.time = time;
 	}
-
 }

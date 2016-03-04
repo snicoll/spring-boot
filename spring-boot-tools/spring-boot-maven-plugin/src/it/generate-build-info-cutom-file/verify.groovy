@@ -6,4 +6,4 @@ def file = new File(basedir, "target/build.info")
 println file.getAbsolutePath()
 Properties properties = Verify.verifyBuildInfo(file,
 		'org.springframework.boot.maven.it', 'generate-build-info-custom-file', '0.0.1.BUILD-SNAPSHOT')
-assertTrue properties.containsKey('build.timestamp')
+assertTrue properties.containsKey('build.time')
