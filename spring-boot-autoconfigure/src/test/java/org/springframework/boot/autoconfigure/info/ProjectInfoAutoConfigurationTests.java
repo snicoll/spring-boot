@@ -80,12 +80,51 @@ public class ProjectInfoAutoConfigurationTests {
 
 	@Test
 	public void gitInfoFallbackWithGitInfoBean() {
-		load(CustomGitInfoConfiguration.class,
+		load(CustomProjectInfoConfiguration.class,
 				"spring.info.git.location=classpath:/org/springframework/boot/autoconfigure/info/git.properties");
 		GitInfo gitInfo = this.context.getBean(GitInfo.class);
 		assertThat(gitInfo).isSameAs(this.context.getBean("customGitInfo"));
 	}
 
+	@Test
+	public void buildInfoDefaultLocation() {
+		load();
+		BuildInfo buildInfo = this.context.getBean(BuildInfo.class);
+		assertThat(buildInfo.getGroup()).isEqualTo("com.example");
+		assertThat(buildInfo.getArtifact()).isEqualTo("demo");
+		assertThat(buildInfo.getVersion()).isEqualTo("0.0.1-SNAPSHOT");
+		assertThat(buildInfo.getTimestamp()).isEqualTo("2016-03-04T11:02:00+0100");
+	}
+
+	@Test
+	public void buildInfoCustomLocation() {
+		load("spring.info.build.location=classpath:/org/springframework/boot/autoconfigure/info/build.properties");
+		BuildInfo buildInfo = this.context.getBean(BuildInfo.class);
+		assertThat(buildInfo.getGroup()).isEqualTo("com.example.acme");
+		assertThat(buildInfo.getArtifact()).isEqualTo("acme");
+		assertThat(buildInfo.getVersion()).isEqualTo("1.0.1-SNAPSHOT");
+		assertThat(buildInfo.getTimestamp()).isEqualTo("2016-03-04T11:42:00+0100");
+	}
+
+	@Test
+	public void buildInfoCustomInvalidLocation() {
+		load("spring.info.build.location=classpath:/org/acme/no-build.properties");
+		Map<String, BuildInfo> beans = this.context.getBeansOfType(BuildInfo.class);
+		assertThat(beans).hasSize(0);
+	}
+
+	@Test
+	public void buildInfoFallbackWithBuildInfoBean() {
+		load(CustomProjectInfoConfiguration.class);
+		BuildInfo buildInfo = this.context.getBean(BuildInfo.class);
+		assertThat(buildInfo).isSameAs(this.context.getBean("customBuildInfo"));
+	}
+
+	private void assertGitInfo(GitInfo gitInfo) {
+		assertThat(gitInfo.getBranch()).isNull();
+		assertThat(gitInfo.getCommit().getId()).isEqualTo("f95038e");
+		assertThat(gitInfo.getCommit().getTime()).isEqualTo("2016-03-03T10:02:00+0100");
+	}
 
 	private void load(String... environment) {
 		load(null, environment);
@@ -104,11 +143,16 @@ public class ProjectInfoAutoConfigurationTests {
 	}
 
 	@Configuration
-	static class CustomGitInfoConfiguration {
+	static class CustomProjectInfoConfiguration {
 
 		@Bean
 		public GitInfo customGitInfo() {
 			return new GitInfo();
+		}
+
+		@Bean
+		public BuildInfo customBuildInfo() {
+			return new BuildInfo();
 		}
 
 	}

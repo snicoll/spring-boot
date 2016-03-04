@@ -25,6 +25,7 @@ import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnSingleCandidate;
+import org.springframework.boot.autoconfigure.info.BuildInfo;
 import org.springframework.boot.autoconfigure.info.GitInfo;
 import org.springframework.boot.autoconfigure.info.ProjectInfoAutoConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -65,6 +66,14 @@ public class InfoContributorAutoConfiguration {
 	@Order(DEFAULT_ORDER)
 	public InfoContributor gitInfoContributor(GitInfo gitInfo) throws IOException {
 		return new SimpleInfoContributor("git", gitInfo);
+	}
+
+	@Bean
+	@ConditionalOnEnabledInfoContributor("build")
+	@ConditionalOnSingleCandidate(BuildInfo.class)
+	@Order(DEFAULT_ORDER)
+	public InfoContributor buildInfoContributor(BuildInfo buildInfo) throws IOException {
+		return new SimpleInfoContributor("build", buildInfo);
 	}
 
 }

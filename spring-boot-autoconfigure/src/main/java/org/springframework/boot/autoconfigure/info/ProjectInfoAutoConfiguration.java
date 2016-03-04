@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionOutcome;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnResource;
 import org.springframework.boot.autoconfigure.condition.SpringBootCondition;
 import org.springframework.boot.bind.PropertiesConfigurationFactory;
 import org.springframework.boot.bind.RelaxedPropertyResolver;
@@ -72,6 +73,15 @@ public class ProjectInfoAutoConfiguration {
 		return gitInfo;
 	}
 
+	@ConditionalOnResource(resources = "${spring.info.build.location:classpath:META-INF/boot/build.properties}")
+	@ConditionalOnMissingBean
+	@Bean
+	public BuildInfo buildInfo() throws Exception {
+		BuildInfo buildInfo = new BuildInfo();
+		bindPropertiesTo(buildInfo, this.properties.getBuild().getLocation(), "build");
+		return buildInfo;
+	}
+
 	protected void bindPropertiesTo(Object target, Resource location, String prefix)
 			throws BindException, IOException {
 		PropertiesConfigurationFactory<Object> factory =
@@ -88,7 +98,6 @@ public class ProjectInfoAutoConfiguration {
 		conversionService.addConverter(new StringToDateConverter());
 		return conversionService;
 	}
-
 
 	static class GitResourceAvailableCondition extends SpringBootCondition {
 

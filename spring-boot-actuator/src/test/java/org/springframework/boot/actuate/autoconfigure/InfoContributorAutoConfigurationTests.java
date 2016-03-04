@@ -23,6 +23,7 @@ import org.junit.Test;
 
 import org.springframework.boot.actuate.info.Info;
 import org.springframework.boot.actuate.info.InfoContributor;
+import org.springframework.boot.autoconfigure.info.BuildInfo;
 import org.springframework.boot.autoconfigure.info.GitInfo;
 import org.springframework.boot.test.EnvironmentTestUtils;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -82,6 +83,14 @@ public class InfoContributorAutoConfigurationTests {
 		assertThat(beans).containsKeys("gitInfoContributor");
 	}
 
+	@Test
+	public void buildInfoAvailable() {
+		load(BuildInfoConfiguration.class);
+		Map<String, InfoContributor> beans = this.context
+				.getBeansOfType(InfoContributor.class);
+		assertThat(beans).containsKeys("buildInfoContributor");
+	}
+
 	private void load(String... environment) {
 		load(null, environment);
 	}
@@ -106,6 +115,19 @@ public class InfoContributorAutoConfigurationTests {
 			gitInfo.setBranch("master");
 			gitInfo.getCommit().setId("abcdefg");
 			return gitInfo;
+		}
+
+	}
+
+	@Configuration
+	static class BuildInfoConfiguration {
+
+		@Bean
+		public BuildInfo buildInfo() {
+			BuildInfo buildInfo = new BuildInfo();
+			buildInfo.setGroup("com.example");
+			buildInfo.setArtifact("demo");
+			return buildInfo;
 		}
 
 	}
