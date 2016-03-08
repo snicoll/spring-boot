@@ -16,7 +16,14 @@
 
 package org.springframework.boot.actuate.info;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Properties;
+
+import org.springframework.boot.bind.PropertiesConfigurationFactory;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
+import org.springframework.validation.BindException;
 
 /**
  * A simple {@link InfoContributor} that exposes a single detail.
@@ -34,6 +41,27 @@ public class SimpleInfoContributor implements InfoContributor {
 		Assert.notNull(prefix, "Prefix must not be null");
 		this.prefix = prefix;
 		this.detail = detail;
+	}
+
+	public static SimpleInfoContributor fromProperties(String prefix, Properties properties) {
+		return fromProperties(prefix, properties, null);
+	}
+
+	public static SimpleInfoContributor fromProperties(String prefix, Properties properties, String propertyPrefix) {
+		Map<String, Object> target = new LinkedHashMap<String, Object>();
+		PropertiesConfigurationFactory<Map<String, Object>> factory = new PropertiesConfigurationFactory<Map<String, Object>>(
+				target);
+		if (StringUtils.hasText(propertyPrefix)) {
+			factory.setTargetName(propertyPrefix);
+		}
+		factory.setProperties(properties);
+		try {
+			factory.bindPropertiesToTarget();
+		}
+		catch (BindException ex) {
+			throw new IllegalStateException("Cannot bind properties to " + target, ex);
+		}
+		return new SimpleInfoContributor(prefix, target);
 	}
 
 	@Override

@@ -17,10 +17,6 @@
 package org.springframework.boot.autoconfigure.info;
 
 import java.io.IOException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
 import java.util.Properties;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,25 +24,19 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionOutcome;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.SpringBootCondition;
-import org.springframework.boot.bind.PropertiesConfigurationFactory;
 import org.springframework.boot.bind.RelaxedPropertyResolver;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.info.GitProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ConditionContext;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.convert.ConversionFailedException;
-import org.springframework.core.convert.ConversionService;
-import org.springframework.core.convert.TypeDescriptor;
-import org.springframework.core.convert.converter.Converter;
-import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.core.env.PropertyResolver;
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.support.PropertiesLoaderUtils;
 import org.springframework.core.type.AnnotatedTypeMetadata;
-import org.springframework.validation.BindException;
 
 /**
  * {@link EnableAutoConfiguration Auto-configuration} for various project information.
@@ -61,32 +51,23 @@ public class ProjectInfoAutoConfiguration {
 	@Autowired
 	private ProjectInfoProperties properties;
 
-	private final ConversionService conversionService = createConversionService();
-
 	@Conditional(GitResourceAvailableCondition.class)
 	@ConditionalOnMissingBean
 	@Bean
-	public GitInfo gitInfo() throws Exception {
-		GitInfo gitInfo = new GitInfo();
-		bindPropertiesTo(gitInfo, this.properties.getGit().getLocation(), "git");
-		return gitInfo;
+	public GitProperties gitProperties() throws Exception {
+		return new GitProperties(loadFrom(this.properties.getGit().getLocation(), "git"));
 	}
 
-	protected void bindPropertiesTo(Object target, Resource location, String prefix)
-			throws BindException, IOException {
-		PropertiesConfigurationFactory<Object> factory =
-				new PropertiesConfigurationFactory<Object>(target);
-		factory.setConversionService(this.conversionService);
-		factory.setTargetName(prefix);
-		Properties gitInfoProperties = PropertiesLoaderUtils.loadProperties(location);
-		factory.setProperties(gitInfoProperties);
-		factory.bindPropertiesToTarget();
-	}
-
-	private static ConversionService createConversionService() {
-		DefaultConversionService conversionService = new DefaultConversionService();
-		conversionService.addConverter(new StringToDateConverter());
-		return conversionService;
+	protected Properties loadFrom(Resource location, String prefix) throws IOException {
+		String p = prefix.endsWith(".") ? prefix : prefix + ".";
+		Properties source = PropertiesLoaderUtils.loadProperties(location);
+		Properties target = new Properties();
+		for (String key : source.stringPropertyNames()) {
+			if (key.startsWith(p)) {
+				target.put(key.substring(p.length(), key.length()), source.get(key));
+			}
+		}
+		return target;
 	}
 
 
@@ -115,40 +96,6 @@ public class ProjectInfoAutoConfiguration {
 					"Git info " + (match ? "found" : "not found") + " at " + location);
 		}
 
-	}
-
-	private static class StringToDateConverter implements Converter<String, Date> {
-
-		@Override
-		public Date convert(String s) {
-			Long epoch = parseEpochSecond(s);
-			if (epoch != null) {
-				return new Date(epoch);
-			}
-			SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssX", Locale.US);
-			try {
-				return format.parse(s);
-			}
-			catch (ParseException ex) {
-				throw new ConversionFailedException(TypeDescriptor.valueOf(String.class),
-						TypeDescriptor.valueOf(Date.class), s, ex);
-			}
-		}
-
-		/**
-		 * Attempt to parse a {@code Long} from the specified input, representing the
-		 * epoch time in seconds.
-		 * @param s the input
-		 * @return the epoch time in msec
-		 */
-		private Long parseEpochSecond(String s) {
-			try {
-				return Long.parseLong(s) * 1000;
-			}
-			catch (NumberFormatException e) {
-				return null;
-			}
-		}
 	}
 
 }
