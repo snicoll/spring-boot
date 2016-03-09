@@ -16,6 +16,7 @@
 
 package org.springframework.boot.actuate.autoconfigure;
 
+import org.springframework.boot.actuate.info.GitInfoContributor;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -38,28 +39,15 @@ public class InfoContributorProperties {
 		/**
 		 * Mode to use to expose git information.
 		 */
-		private GitMode mode = GitMode.SIMPLE;
+		private GitInfoContributor.Mode mode = GitInfoContributor.Mode.SIMPLE;
 
-		public GitMode getMode() {
+		public GitInfoContributor.Mode getMode() {
 			return this.mode;
 		}
 
-		public void setMode(GitMode mode) {
+		public void setMode(GitInfoContributor.Mode mode) {
 			this.mode = mode;
 		}
-	}
-
-	public enum GitMode {
-
-		/**
-		 * Expose all available data, including custom properties.
-		 */
-		FULL,
-
-		/**
-		 * Expose a pre-defined set of core settings only.
-		 */
-		SIMPLE
 
 	}
 

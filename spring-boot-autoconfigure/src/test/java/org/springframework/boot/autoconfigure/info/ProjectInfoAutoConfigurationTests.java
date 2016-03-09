@@ -61,7 +61,7 @@ public class ProjectInfoAutoConfigurationTests {
 		GitProperties gitProperties = this.context.getBean(GitProperties.class);
 		assertThat(gitProperties.getBranch()).isNull();
 		assertThat(gitProperties.getCommitId()).isEqualTo("f95038ec09e29d8f91982fd1cbcc0f3b131b1d0a");
-		assertThat(gitProperties.getCommitTime()).isEqualTo("2016-03-03T10:02:00+0100");
+		assertThat(gitProperties.getCommitTime()).isEqualTo("1456995720000");
 	}
 
 	@Test
@@ -70,7 +70,7 @@ public class ProjectInfoAutoConfigurationTests {
 		GitProperties gitProperties = this.context.getBean(GitProperties.class);
 		assertThat(gitProperties.getBranch()).isEqualTo("master");
 		assertThat(gitProperties.getCommitId()).isEqualTo("5009933788f5f8c687719de6a697074ff80b1b69");
-		assertThat(gitProperties.getCommitTime()).isEqualTo("1457103850");
+		assertThat(gitProperties.getCommitTime()).isEqualTo("1457103850000");
 	}
 
 	@Test

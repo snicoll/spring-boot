@@ -19,7 +19,6 @@ package org.springframework.boot.autoconfigure.info;
 import java.io.IOException;
 import java.util.Properties;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionOutcome;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -48,8 +47,11 @@ import org.springframework.core.type.AnnotatedTypeMetadata;
 @EnableConfigurationProperties(ProjectInfoProperties.class)
 public class ProjectInfoAutoConfiguration {
 
-	@Autowired
-	private ProjectInfoProperties properties;
+	private final ProjectInfoProperties properties;
+
+	public ProjectInfoAutoConfiguration(ProjectInfoProperties properties) {
+		this.properties = properties;
+	}
 
 	@Conditional(GitResourceAvailableCondition.class)
 	@ConditionalOnMissingBean

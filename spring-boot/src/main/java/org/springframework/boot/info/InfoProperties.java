@@ -20,6 +20,8 @@ import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.Properties;
 
+import org.springframework.core.env.PropertiesPropertySource;
+import org.springframework.core.env.PropertySource;
 import org.springframework.util.Assert;
 
 /**
@@ -37,6 +39,11 @@ public class InfoProperties implements Iterable<InfoProperties.Entry> {
 		this.entries = entries;
 	}
 
+	/**
+	 * Return the value of the specified property or {@code null}.
+	 * @param property the id of the property
+	 * @return the property value
+	 */
 	public String get(String property) {
 		return this.entries.getProperty(property);
 	}
@@ -46,15 +53,16 @@ public class InfoProperties implements Iterable<InfoProperties.Entry> {
 		return new PropertiesIterator(this.entries);
 	}
 
-	// TODO
-	public Properties toProperties() {
-		Properties properties = new Properties();
-		properties.putAll(this.entries);
-		return properties;
+	/**
+	 * Return a {@link PropertySource} of this instance.
+	 * @return a {@link PropertySource}
+	 */
+	public PropertySource<?> toPropertySource() {
+		return new PropertiesPropertySource(getClass().getSimpleName(), this.entries);
 	}
 
 	/**
-	 * Property entry.          I
+	 * Property entry.
 	 */
 	public final class Entry {
 
