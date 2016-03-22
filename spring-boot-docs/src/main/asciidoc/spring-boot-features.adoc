@@ -3025,7 +3025,9 @@ access Neo4j databases.
 In your `application properties`, you can supply any domain packages to be scanned by the OGM at startup
 as well as the lifetime of the OGM session that will be established for web clients.
 
-By default your application will be configured to use an in-process embedded instance of Neo4j that will not persist any data when your application shuts down. You can also connect to a remote Neo4j server, or to an embedded instance that persists data between restarts of your application.
+By default your application will be configured to use an in-process embedded instance of Neo4j that will
+not persist any data when your application shuts down. You can also connect to a remote Neo4j server, or
+to an embedded instance that persists data between restarts of your application.
 
 The following sections show how you can configure your application for each of these scenarios.
 
@@ -3046,7 +3048,7 @@ The following sections show how you can configure your application for each of t
         # OGM session lifetime for web clients
         # options: session (httpSession), request (httpRequest)
         # default: session
-        spring.data.neo4j.session.lifetime=session
+        spring.data.neo4j.session.scope=session
 ----
 
 [[boot-features-neo4j-remote]]
@@ -3066,23 +3068,9 @@ The following sections show how you can configure your application for each of t
         # OGM session lifetime for web clients
         # options: session (httpSession), request (httpRequest)
         # default: session
-        spring.data.neo4j.session.lifetime=session
+        spring.data.neo4j.session.scope=session
 ----
 
-[[boot-features-spring-data-neo4j-application]]
-==== Application
-[source,java,indent=0]]
-----
-    @SpringBootApplication
-    @Import(Neo4jAutoConfiguration.class)
-    public class Application {
-
-        public static void main(String[] args) {
-           new SpringApplication(Application.class).run(args);
-        }
-
-    }
-----
 
 [[boot-features-neo4j-ogm-session]]
 ==== Neo4jSession
@@ -3151,8 +3139,8 @@ In fact, both Spring Data JPA and Spring Data Neo4j share the same common
 infrastructure; so you could take the JPA example from earlier and, assuming that `City`
 is now a Neo4j OGM `@NodeEntity` rather than a JPA `@Entity`, it will work in the same way.
 
-To enable repository support (and optionally support for `@Transactional`), add the following two annotations to
-your Spring configuration:
+To enable repository support (and optionally support for `@Transactional`), add the following
+two annotations to your Spring configuration:
 
 [source,java,indent=0]
 ----
