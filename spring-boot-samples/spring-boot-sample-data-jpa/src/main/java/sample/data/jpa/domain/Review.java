@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2013 the original author or authors.
+ * Copyright 2012-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.Temporal;
@@ -37,7 +38,7 @@ public class Review implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	@Id
-	@GeneratedValue
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
 	@ManyToOne(optional = false)
@@ -50,11 +51,11 @@ public class Review implements Serializable {
 	@Enumerated(EnumType.ORDINAL)
 	private Rating rating;
 
-	@Column(nullable = false)
+	@Column(name= "CHECK_IN_DATE", nullable = false)
 	@Temporal(TemporalType.DATE)
 	private Date checkInDate;
 
-	@Column(nullable = false)
+	@Column(name = "TRIP_TYPE", nullable = false)
 	@Enumerated(EnumType.ORDINAL)
 	private TripType tripType;
 
