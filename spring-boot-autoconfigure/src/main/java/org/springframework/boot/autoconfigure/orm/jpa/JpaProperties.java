@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,9 @@ import javax.sql.DataSource;
 
 import org.springframework.boot.autoconfigure.jdbc.EmbeddedDatabaseConnection;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.DeprecatedConfigurationProperty;
 import org.springframework.orm.jpa.vendor.Database;
+import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -31,6 +33,7 @@ import org.springframework.util.StringUtils;
  *
  * @author Dave Syer
  * @author Andy Wilkinson
+ * @author Stephane Nicoll
  * @since 1.1.0
  */
 @ConfigurationProperties(prefix = "spring.jpa")
@@ -125,13 +128,6 @@ public class JpaProperties {
 
 	public static class Hibernate {
 
-		private static final String DEFAULT_NAMING_STRATEGY = "org.springframework.boot.orm.jpa.hibernate.SpringNamingStrategy";
-
-		/**
-		 * Naming strategy fully qualified name.
-		 */
-		private Class<?> namingStrategy;
-
 		/**
 		 * DDL mode. This is actually a shortcut for the "hibernate.hbm2ddl.auto"
 		 * property. Default to "create-drop" when using an embedded database, "none"
@@ -139,12 +135,17 @@ public class JpaProperties {
 		 */
 		private String ddlAuto;
 
-		public Class<?> getNamingStrategy() {
-			return this.namingStrategy;
+		private final Naming naming = new Naming();
+
+		@Deprecated
+		@DeprecatedConfigurationProperty(replacement = "spring.jpa.hibernate.naming.strategy")
+		public String getNamingStrategy() {
+			return getNaming().getStrategy();
 		}
 
-		public void setNamingStrategy(Class<?> namingStrategy) {
-			this.namingStrategy = namingStrategy;
+		@Deprecated
+		public void setNamingStrategy(String namingStrategy) {
+			getNaming().setStrategy(namingStrategy);
 		}
 
 		public String getDdlAuto() {
@@ -155,13 +156,14 @@ public class JpaProperties {
 			this.ddlAuto = ddlAuto;
 		}
 
+		public Naming getNaming() {
+			return this.naming;
+		}
+
 		private Map<String, String> getAdditionalProperties(Map<String, String> existing,
 				DataSource dataSource) {
 			Map<String, String> result = new HashMap<String, String>(existing);
-			if (!existing.containsKey("hibernate." + "ejb.naming_strategy_delegator")) {
-				result.put("hibernate.ejb.naming_strategy",
-						getHibernateNamingStrategy(existing));
-			}
+			getNaming().applyNamingStrategy(result);
 			String ddlAuto = getOrDeduceDdlAuto(existing, dataSource);
 			if (StringUtils.hasText(ddlAuto) && !"none".equals(ddlAuto)) {
 				result.put("hibernate.hbm2ddl.auto", ddlAuto);
@@ -170,14 +172,6 @@ public class JpaProperties {
 				result.remove("hibernate.hbm2ddl.auto");
 			}
 			return result;
-		}
-
-		private String getHibernateNamingStrategy(Map<String, String> existing) {
-			if (!existing.containsKey("hibernate." + "ejb.naming_strategy")
-					&& this.namingStrategy != null) {
-				return this.namingStrategy.getName();
-			}
-			return DEFAULT_NAMING_STRATEGY;
 		}
 
 		private String getOrDeduceDdlAuto(Map<String, String> existing,
@@ -199,6 +193,81 @@ public class JpaProperties {
 				return "create-drop";
 			}
 			return "none";
+		}
+
+	}
+
+	public static class Naming {
+
+		private static final String DEFAULT_HIBERNATE4_NAMING_STRATEGY =
+				"org.springframework.boot.orm.jpa.hibernate.SpringNamingStrategy";
+
+		/**
+		 * Hibernate 5 implicit naming strategy fully qualified name.
+		 */
+		private String implicitStrategy;
+
+		/**
+		 * Hibernate 5 physical naming strategy fully qualified name.
+		 */
+		private String physicalStrategy;
+
+		/**
+		 * Hibernate 4 naming strategy fully qualified name. Not supported with
+		 * Hibernate 5.
+		 */
+		private String strategy;
+
+		private ClassLoader classLoader = Naming.class.getClassLoader();
+
+		public String getImplicitStrategy() {
+			return this.implicitStrategy;
+		}
+
+		public void setImplicitStrategy(String implicitStrategy) {
+			this.implicitStrategy = implicitStrategy;
+		}
+
+		public String getPhysicalStrategy() {
+			return this.physicalStrategy;
+		}
+
+		public void setPhysicalStrategy(String physicalStrategy) {
+			this.physicalStrategy = physicalStrategy;
+		}
+
+		public String getStrategy() {
+			return this.strategy;
+		}
+
+		public void setStrategy(String strategy) {
+			this.strategy = strategy;
+		}
+
+		private void applyNamingStrategy(Map<String, String> properties) {
+			if (ClassUtils.isPresent("org.hibernate.boot.model.naming.PhysicalNamingStrategy",
+					this.classLoader)) {
+				if (this.implicitStrategy != null) {
+					properties.put("hibernate.implicit_naming_strategy", this.implicitStrategy);
+				}
+				if (this.physicalStrategy != null) {
+					properties.put("hibernate.physical_naming_strategy", this.physicalStrategy);
+				}
+			}
+			else {
+				if (!properties.containsKey("hibernate.ejb.naming_strategy_delegator")) {
+					properties.put("hibernate.ejb.naming_strategy",
+							getHibernateNamingStrategy(properties));
+				}
+			}
+		}
+
+		private String getHibernateNamingStrategy(Map<String, String> existing) {
+			if (!existing.containsKey("hibernate.ejb.naming_strategy")
+					&& this.strategy != null) {
+				return this.strategy;
+			}
+			return DEFAULT_HIBERNATE4_NAMING_STRATEGY;
 		}
 
 	}
