@@ -4337,7 +4337,7 @@ on the classpath, Spring Boot will auto-configure Spring Session through its
 `@EnableRedisHttpSession`. Session data will be stored in the provider and the session timeout
 can be configured using the `server.session.timeout` property.
 
-It is also possible to _force_ the session provider to use via the `spring.session.store.type`
+It is also possible to _force_ the session provider to use via the `spring.session.store-type`
 property.
 
 

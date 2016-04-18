@@ -16,44 +16,43 @@
 
 package org.springframework.boot.autoconfigure.session;
 
-import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
 
+import org.springframework.beans.DirectFieldAccessor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.session.jdbc.JdbcOperationsSessionRepository;
-import org.springframework.session.jdbc.config.annotation.web.http.EnableJdbcHttpSession;
+import org.springframework.session.jdbc.config.annotation.web.http.JdbcHttpSessionConfiguration;
+import org.springframework.util.StringUtils;
 
 /**
- * JDBC backed session auto-configuration.
+ * JDBC backed session configuration.
  *
  * @author Eddú Meléndez
- * @since 1.4.0
  */
 @Configuration
 @ConditionalOnBean(DataSource.class)
-@EnableJdbcHttpSession
 @Conditional(SessionCondition.class)
 class JdbcSessionConfiguration {
 
-	private ServerProperties serverProperties;
+	@Configuration
+	public static class SpringBootJdbcHttpSessionConfiguration
+			extends JdbcHttpSessionConfiguration {
 
-	private JdbcOperationsSessionRepository sessionRepository;
-
-	JdbcSessionConfiguration(ServerProperties serverProperties,
-			JdbcOperationsSessionRepository sessionRepository) {
-		this.serverProperties = serverProperties;
-		this.sessionRepository = sessionRepository;
-	}
-
-	@PostConstruct
-	public void applyConfigurationProperties() {
-		Integer timeout = this.serverProperties.getSession().getTimeout();
-		if (timeout != null) {
-			this.sessionRepository.setDefaultMaxInactiveInterval(timeout);
+		@Autowired
+		public void customize(SessionProperties sessionProperties) {
+			DirectFieldAccessor fieldAccessor = new DirectFieldAccessor(this);
+			Integer timeout = sessionProperties.getTimeout();
+			if (timeout != null) {
+				fieldAccessor.setPropertyValue("maxInactiveIntervalInSeconds", timeout);
+			}
+			String tableName = sessionProperties.getJdbc().getTableName();
+			if (StringUtils.hasText(tableName)) {
+				fieldAccessor.setPropertyValue("tableName", tableName);
+			}
 		}
+
 	}
 
 }

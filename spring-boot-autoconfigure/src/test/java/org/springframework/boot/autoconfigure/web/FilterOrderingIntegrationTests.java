@@ -84,9 +84,10 @@ public class FilterOrderingIntegrationTests {
 
 	private void load() {
 		this.context = new AnnotationConfigEmbeddedWebApplicationContext();
-		EnvironmentTestUtils.addEnvironment(this.context, "spring.session.store.type=hash-map");
+		EnvironmentTestUtils.addEnvironment(this.context, "spring.session.store-type=hash-map");
 		this.context.register(MockEmbeddedServletContainerConfiguration.class,
 				TestRedisConfiguration.class, WebMvcAutoConfiguration.class,
+				ServerPropertiesAutoConfiguration.class,
 				SecurityAutoConfiguration.class, SessionAutoConfiguration.class,
 				HttpMessageConvertersAutoConfiguration.class,
 				PropertyPlaceholderAutoConfiguration.class,

@@ -16,7 +16,6 @@
 
 package org.springframework.boot.autoconfigure.session;
 
-import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
@@ -29,21 +28,21 @@ import org.springframework.session.config.annotation.web.http.EnableSpringHttpSe
  * In-memory session configuration, intended as a fallback.
  *
  * @author Tommy Ludwig
- * @since 1.4.0
+ * @author Stephane Nicoll
  */
 @Configuration
 @EnableSpringHttpSession
 @Conditional(SessionCondition.class)
-class SimpleSessionConfiguration {
+class MapSessionConfiguration {
 
 	@Bean
-	public SessionRepository<ExpiringSession> sessionRepository(ServerProperties serverProperties) {
+	public SessionRepository<ExpiringSession> sessionRepository(SessionProperties sessionProperties) {
 		MapSessionRepository sessionRepository = new MapSessionRepository();
-
-		Integer timeout = serverProperties.getSession().getTimeout();
-		if (serverProperties.getSession().getTimeout() != null) {
+		Integer timeout = sessionProperties.getTimeout();
+		if (timeout != null) {
 			sessionRepository.setDefaultMaxInactiveInterval(timeout);
 		}
 		return sessionRepository;
 	}
+
 }
