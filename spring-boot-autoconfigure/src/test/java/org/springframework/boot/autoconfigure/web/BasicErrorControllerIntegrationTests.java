@@ -17,34 +17,27 @@
 package org.springframework.boot.autoconfigure.web;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 import org.junit.After;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.web.BasicErrorControllerMockMvcTests.MinimalWebConfiguration;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -52,8 +45,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.servlet.View;
-import org.springframework.web.servlet.view.AbstractView;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -64,9 +55,6 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Dave Syer
  * @author Stephane Nicoll
  */
-@RunWith(SpringRunner.class)
-@DirtiesContext
-@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 public class BasicErrorControllerIntegrationTests {
 
 	private ConfigurableApplicationContext context;
@@ -148,7 +136,7 @@ public class BasicErrorControllerIntegrationTests {
 	@SuppressWarnings("rawtypes")
 	public void testBindingExceptionForMachineClient() throws Exception {
 		load();
-		RequestEntity request = RequestEntity.get(URI.create(createUrl("/bind")))
+		RequestEntity request = RequestEntity.get(createUrl("/bind"))
 				.accept(MediaType.APPLICATION_JSON).build();
 		ResponseEntity<Map> entity = new TestRestTemplate().exchange(request, Map.class);
 		String resp = entity.getBody().toString();
@@ -163,7 +151,7 @@ public class BasicErrorControllerIntegrationTests {
 	public void testRequestBodyValidationForMachineClient() throws Exception {
 		load();
 		RequestEntity request = RequestEntity
-				.post(URI.create(createUrl("/bodyValidation")))
+				.post(createUrl("/bodyValidation"))
 				.contentType(MediaType.APPLICATION_JSON).body("{}");
 		ResponseEntity<Map> entity = new TestRestTemplate().exchange(request, Map.class);
 		String resp = entity.getBody().toString();
@@ -183,10 +171,10 @@ public class BasicErrorControllerIntegrationTests {
 		assertThat(content.get("path")).as("Wrong path").isEqualTo(path);
 	}
 
-	private String createUrl(String path) {
+	private URI createUrl(String path) throws URISyntaxException {
 		int port = this.context.getEnvironment().getProperty("local.server.port",
 				int.class);
-		return "http://localhost:" + port + path;
+		return URI.create("http://localhost:" + port + path);
 	}
 
 	private void load(String... arguments) {
@@ -206,18 +194,6 @@ public class BasicErrorControllerIntegrationTests {
 		// For manual testing
 		public static void main(String[] args) {
 			SpringApplication.run(TestConfiguration.class, args);
-		}
-
-		@Bean
-		public View error() {
-			return new AbstractView() {
-				@Override
-				protected void renderMergedOutputModel(Map<String, Object> model,
-						HttpServletRequest request, HttpServletResponse response)
-								throws Exception {
-					response.getWriter().write("ERROR_BEAN");
-				}
-			};
 		}
 
 		@RestController

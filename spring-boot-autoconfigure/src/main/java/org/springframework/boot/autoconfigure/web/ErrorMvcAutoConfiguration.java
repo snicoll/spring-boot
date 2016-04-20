@@ -39,9 +39,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplicat
 import org.springframework.boot.autoconfigure.condition.SearchStrategy;
 import org.springframework.boot.autoconfigure.condition.SpringBootCondition;
 import org.springframework.boot.autoconfigure.template.TemplateAvailabilityProvider;
-import org.springframework.boot.context.embedded.ConfigurableEmbeddedServletContainer;
-import org.springframework.boot.context.embedded.EmbeddedServletContainerCustomizer;
-import org.springframework.boot.context.embedded.ErrorPage;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ConditionContext;
 import org.springframework.context.annotation.Conditional;
@@ -76,10 +73,10 @@ import org.springframework.web.util.HtmlUtils;
 @Configuration
 public class ErrorMvcAutoConfiguration {
 
-	private final ServerProperties properties;
+	private final ServerProperties serverProperties;
 
-	public ErrorMvcAutoConfiguration(ServerProperties properties) {
-		this.properties = properties;
+	public ErrorMvcAutoConfiguration(ServerProperties serverProperties) {
+		this.serverProperties = serverProperties;
 	}
 
 	@Bean
@@ -90,13 +87,17 @@ public class ErrorMvcAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean(value = ErrorController.class, search = SearchStrategy.CURRENT)
-	public BasicErrorController basicErrorController(ErrorAttributes errorAttributes) {
-		return new BasicErrorController(errorAttributes, this.properties.getError());
+	public BasicErrorController basicErrorController(ErrorAttributes errorAttributes,
+			ErrorPathResolver errorPathResolver) {
+		return new BasicErrorController(errorAttributes, this.serverProperties.getError(),
+				errorPathResolver);
 	}
 
 	@Bean
-	public ErrorPageCustomizer errorPageCustomizer() {
-		return new ErrorPageCustomizer(this.properties);
+	@ConditionalOnMissingBean
+	public ErrorPageCustomizer errorPageCustomizer(ResourceProperties resourceProperties) {
+		return new ErrorPageCustomizer(new String[] {"classpath:/templates"},
+				resourceProperties.getStaticLocations(), this.serverProperties.getGlobalErrorPath());
 	}
 
 	@Bean
@@ -249,32 +250,6 @@ public class ErrorMvcAutoConfiguration {
 
 		private String escape(Object value) {
 			return HtmlUtils.htmlEscape(value == null ? null : value.toString());
-		}
-
-	}
-
-	/**
-	 * {@link EmbeddedServletContainerCustomizer} that configures the container's error
-	 * pages.
-	 */
-	private static class ErrorPageCustomizer
-			implements EmbeddedServletContainerCustomizer, Ordered {
-
-		private final ServerProperties properties;
-
-		protected ErrorPageCustomizer(ServerProperties properties) {
-			this.properties = properties;
-		}
-
-		@Override
-		public void customize(ConfigurableEmbeddedServletContainer container) {
-			container.addErrorPages(new ErrorPage(this.properties.getServletPrefix()
-					+ this.properties.getError().getPath()));
-		}
-
-		@Override
-		public int getOrder() {
-			return 0;
 		}
 
 	}

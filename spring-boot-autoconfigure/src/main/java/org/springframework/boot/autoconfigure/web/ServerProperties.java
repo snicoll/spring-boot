@@ -253,6 +253,10 @@ public class ServerProperties
 		return result;
 	}
 
+	public String getGlobalErrorPath() {
+		return getServletPrefix() + getError().getPath();
+	}
+
 	public String[] getPathsArray(Collection<String> paths) {
 		String[] result = new String[paths.size()];
 		int i = 0;

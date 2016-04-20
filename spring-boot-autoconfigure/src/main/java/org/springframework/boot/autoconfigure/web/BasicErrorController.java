@@ -50,17 +50,20 @@ import org.springframework.web.servlet.ModelAndView;
 public class BasicErrorController extends AbstractErrorController {
 
 	private final ErrorProperties errorProperties;
+	private final ErrorPathResolver errorPathResolver;
 
 	/**
 	 * Create a new {@link BasicErrorController} instance.
 	 * @param errorAttributes the error attributes
 	 * @param errorProperties configuration properties
+	 * @param errorPathResolver the error path resolver
 	 */
 	public BasicErrorController(ErrorAttributes errorAttributes,
-			ErrorProperties errorProperties) {
+			ErrorProperties errorProperties, ErrorPathResolver errorPathResolver) {
 		super(errorAttributes);
 		Assert.notNull(errorProperties, "ErrorProperties must not be null");
 		this.errorProperties = errorProperties;
+		this.errorPathResolver = errorPathResolver;
 	}
 
 	@Override
@@ -71,10 +74,15 @@ public class BasicErrorController extends AbstractErrorController {
 	@RequestMapping(produces = "text/html")
 	public ModelAndView errorHtml(HttpServletRequest request,
 			HttpServletResponse response) {
-		response.setStatus(getStatus(request).value());
+		HttpStatus status = getStatus(request);
+		response.setStatus(status.value());
 		Map<String, Object> model = getErrorAttributes(request,
 				isIncludeStackTrace(request, MediaType.TEXT_HTML));
-		return new ModelAndView("error", model);
+		String viewName = this.errorPathResolver.resolveErrorPath(status);
+		if (viewName == null) {
+			viewName = "error";
+		}
+		return new ModelAndView(viewName, model);
 	}
 
 	@RequestMapping
