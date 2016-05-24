@@ -73,6 +73,11 @@ public class WebMvcProperties {
 	private boolean throwExceptionIfNoHandlerFound = false;
 
 	/**
+	 * Enable warn logging of exceptions resolved by a "HandlerExceptionResolver".
+	 */
+	private boolean logResolvedException = false;
+
+	/**
 	 * Maps file extensions to media types for content negotiation, e.g. yml->text/yaml.
 	 */
 	private Map<String, MediaType> mediaTypes = new LinkedHashMap<String, MediaType>();
@@ -128,6 +133,14 @@ public class WebMvcProperties {
 	public void setThrowExceptionIfNoHandlerFound(
 			boolean throwExceptionIfNoHandlerFound) {
 		this.throwExceptionIfNoHandlerFound = throwExceptionIfNoHandlerFound;
+	}
+
+	public boolean isLogResolvedException() {
+		return this.logResolvedException;
+	}
+
+	public void setLogResolvedException(boolean logResolvedException) {
+		this.logResolvedException = logResolvedException;
 	}
 
 	public Map<String, MediaType> getMediaTypes() {

@@ -51,6 +51,7 @@ public class DevToolsPropertyDefaultsPostProcessor implements EnvironmentPostPro
 		properties.put("server.session.persistent", "true");
 		properties.put("spring.h2.console.enabled", "true");
 		properties.put("spring.resources.cache-period", "0");
+		properties.put("spring.mvc.log-resolved-exception", "true");
 		PROPERTIES = Collections.unmodifiableMap(properties);
 	}
 
