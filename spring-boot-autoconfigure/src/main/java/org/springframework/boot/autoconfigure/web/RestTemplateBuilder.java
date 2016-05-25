@@ -16,7 +16,6 @@
 
 package org.springframework.boot.autoconfigure.web;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -39,17 +38,16 @@ public class RestTemplateBuilder {
 	 * {@link HttpMessageConverters}.
 	 * @param httpMessageConverters the http message converters to use
 	 */
-	public RestTemplateBuilder httpMessageConverters(HttpMessageConverters httpMessageConverters) {
-		this.httpMessageConverters = new ArrayList<HttpMessageConverter<?>>(
-				httpMessageConverters.getConverters());
-		return this;
+	protected RestTemplateBuilder httpMessageConverters(HttpMessageConverters httpMessageConverters) {
+		List<HttpMessageConverter<?>> converters = httpMessageConverters.getConverters();
+		return httpMessageConverters(converters.toArray(new HttpMessageConverter[converters.size()]));
 	}
 
 	/**
 	 * Use the specified {@link HttpMessageConverter} instances.
 	 * @param httpMessageConverters the http message converters to use
 	 */
-	public RestTemplateBuilder httpMessageConverters(HttpMessageConverter<?>... httpMessageConverters) {
+	protected RestTemplateBuilder httpMessageConverters(HttpMessageConverter<?>... httpMessageConverters) {
 		this.httpMessageConverters = Arrays.asList(httpMessageConverters);
 		return this;
 	}

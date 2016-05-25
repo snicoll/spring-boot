@@ -88,6 +88,16 @@ public class WebClientAutoConfigurationTests {
 		});
 	}
 
+	@Test
+	public void buildCustomBuilder() {
+		load(TestConfig.class, CustomBuilderConfig.class);
+		assertThat(this.context.getBeansOfType(RestTemplate.class)).hasSize(1);
+		RestTemplate restTemplate = this.context.getBean(RestTemplate.class);
+		assertThat(restTemplate.getMessageConverters()).hasSize(1);
+		assertThat(restTemplate.getMessageConverters().get(0)).isInstanceOf(CustomHttpMessageConverter.class);
+	}
+
+
 	public void load(Class<?>... config) {
 		AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext();
 		ctx.register(config);
@@ -102,6 +112,16 @@ public class WebClientAutoConfigurationTests {
 		@Bean
 		public RestTemplate restTemplate(RestTemplateBuilder builder) {
 			return builder.build();
+		}
+
+	}
+
+	@Configuration
+	static class CustomBuilderConfig {
+
+		@Bean
+		public RestTemplateBuilder restTemplateBuilder() {
+			return new RestTemplateBuilder().httpMessageConverters(new CustomHttpMessageConverter());
 		}
 
 	}
