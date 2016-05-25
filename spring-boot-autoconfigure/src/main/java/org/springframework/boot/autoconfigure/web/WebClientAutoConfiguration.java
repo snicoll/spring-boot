@@ -16,10 +16,10 @@
 
 package org.springframework.boot.autoconfigure.web;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnSingleCandidate;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestTemplate;
@@ -35,11 +35,21 @@ import org.springframework.web.client.RestTemplate;
 @AutoConfigureAfter(HttpMessageConvertersAutoConfiguration.class)
 public class WebClientAutoConfiguration {
 
+	private final ObjectProvider<HttpMessageConverters> messageConvertersProvider;
+
+	public WebClientAutoConfiguration(ObjectProvider<HttpMessageConverters> messageConvertersProvider) {
+		this.messageConvertersProvider = messageConvertersProvider;
+	}
+
 	@Bean
-	@ConditionalOnSingleCandidate(HttpMessageConverters.class)
 	@ConditionalOnMissingBean
-	public RestTemplateConfigurer restTemplateConfigurer(HttpMessageConverters httpMessageConverters) {
-		return new RestTemplateConfigurer(httpMessageConverters);
+	public RestTemplateBuilder restTemplateBuilder() {
+		RestTemplateBuilder builder = new RestTemplateBuilder();
+		HttpMessageConverters messageConverters = this.messageConvertersProvider.getIfUnique();
+		if (messageConverters != null) {
+			builder.httpMessageConverters(messageConverters);
+		}
+		return builder;
 	}
 
 }
