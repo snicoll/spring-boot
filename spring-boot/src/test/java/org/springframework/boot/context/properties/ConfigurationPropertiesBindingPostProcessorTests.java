@@ -136,6 +136,16 @@ public class ConfigurationPropertiesBindingPostProcessorTests {
 	}
 
 	@Test
+	public void testSuccessfulValidationWithJSR303PostConstructLogic() {
+		MockEnvironment env = new MockEnvironment();
+		env.setProperty("test.foo", "123456");
+		this.context = new AnnotationConfigApplicationContext();
+		this.context.setEnvironment(env);
+		this.context.register(TestConfigurationWithJSR303PostConstructLogic.class);
+		this.context.refresh();
+	}
+
+	@Test
 	public void testInitializersSeeBoundProperties() {
 		MockEnvironment env = new MockEnvironment();
 		env.setProperty("bar", "foo");
@@ -425,6 +435,17 @@ public class ConfigurationPropertiesBindingPostProcessorTests {
 
 	@Configuration
 	@EnableConfigurationProperties
+	public static class TestConfigurationWithJSR303PostConstructLogic {
+
+		@Bean
+		public PropertyWithJSR303PostConstructLogic testProperties() {
+			return new PropertyWithJSR303PostConstructLogic();
+		}
+
+	}
+
+	@Configuration
+	@EnableConfigurationProperties
 	@ConfigurationProperties
 	public static class TestConfigurationWithInitializer {
 
@@ -474,6 +495,16 @@ public class ConfigurationPropertiesBindingPostProcessorTests {
 
 		public String getBar() {
 			return this.bar;
+		}
+
+	}
+
+	@ConfigurationProperties(prefix = "test")
+	public static class PropertyWithJSR303PostConstructLogic extends PropertyWithJSR303 {
+
+		@PostConstruct
+		public void init() {
+			setBar("the value is never null after this method");
 		}
 
 	}
