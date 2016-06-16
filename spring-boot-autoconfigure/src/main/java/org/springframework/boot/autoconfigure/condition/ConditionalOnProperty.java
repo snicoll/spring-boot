@@ -128,4 +128,11 @@ public @interface ConditionalOnProperty {
 	 */
 	boolean relaxedNames() default true;
 
+	/**
+	 * If the expected value should be validated using relaxed values. Defaults
+	 * to {@code false}.
+	 * @return if relaxed value is used
+	 */
+	boolean relaxedValue() default false;
+
 }

@@ -156,6 +156,12 @@ public class ConditionalOnPropertyTests {
 	}
 
 	@Test
+	public void relaxedValue() {
+		load(RelaxedValueConfig.class, "simple.myProperty:SOME_VALUE");
+		assertThat(this.context.containsBean("foo")).isTrue();
+	}
+
+	@Test
 	public void defaultValueIsSet() {
 		load(DefaultValueConfig.class, "simple.myProperty:bar");
 		assertThat(this.context.containsBean("foo")).isTrue();
@@ -348,6 +354,17 @@ public class ConditionalOnPropertyTests {
 	@Configuration
 	@ConditionalOnProperty(prefix = "simple", name = "my-property", havingValue = "bar")
 	static class SimpleValueConfig {
+
+		@Bean
+		public String foo() {
+			return "foo";
+		}
+
+	}
+
+	@Configuration
+	@ConditionalOnProperty(prefix = "simple", name = "my-property", havingValue = "some-value", relaxedValue = true)
+	static class RelaxedValueConfig {
 
 		@Bean
 		public String foo() {
