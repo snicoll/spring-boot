@@ -63,8 +63,7 @@ class EntityScanRegistrar implements ImportBeanDefinitionRegistrar {
 	private Set<String> getPackagesToScan(AnnotationMetadata metadata) {
 		AnnotationAttributes attributes = AnnotationAttributes
 				.fromMap(metadata.getAnnotationAttributes(EntityScan.class.getName()));
-		String[] basePackages = attributes.getAliasedStringArray("basePackages",
-				EntityScan.class, metadata.getClassName());
+		String[] basePackages = attributes.getStringArray("basePackages");
 		Class<?>[] basePackageClasses = attributes.getClassArray("basePackageClasses");
 		Set<String> packagesToScan = new LinkedHashSet<String>();
 		packagesToScan.addAll(Arrays.asList(basePackages));
