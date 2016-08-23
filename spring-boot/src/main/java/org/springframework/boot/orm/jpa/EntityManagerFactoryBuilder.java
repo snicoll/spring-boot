@@ -16,6 +16,7 @@
 
 package org.springframework.boot.orm.jpa;
 
+import java.net.URL;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -24,10 +25,15 @@ import java.util.Set;
 
 import javax.sql.DataSource;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import org.springframework.boot.ApplicationInfo;
 import org.springframework.orm.jpa.JpaVendorAdapter;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.persistenceunit.PersistenceUnitManager;
 import org.springframework.util.ClassUtils;
+import org.springframework.util.ResourceUtils;
 
 /**
  * Convenient builder for JPA EntityManagerFactory instances. Collects common
@@ -43,6 +49,8 @@ import org.springframework.util.ClassUtils;
  */
 public class EntityManagerFactoryBuilder {
 
+	private static final Log logger = LogFactory.getLog(EntityManagerFactoryBuilder.class);
+
 	private JpaVendorAdapter jpaVendorAdapter;
 
 	private PersistenceUnitManager persistenceUnitManager;
@@ -50,6 +58,8 @@ public class EntityManagerFactoryBuilder {
 	private Map<String, Object> jpaProperties;
 
 	private EntityManagerFactoryBeanCallback callback;
+
+	private Class<?> applicationClass;
 
 	/**
 	 * Create a new instance passing in the common pieces that will be shared if multiple
@@ -77,6 +87,34 @@ public class EntityManagerFactoryBuilder {
 	public void setCallback(EntityManagerFactoryBeanCallback callback) {
 		this.callback = callback;
 	}
+
+	/**
+	 * An optional {@link ApplicationInfo} used to further tune the entity manager.
+	 * @param applicationInfo the application info
+	 */
+	public void setApplicationInfo(ApplicationInfo applicationInfo) {
+		this.applicationClass = applicationInfo.getMainApplicationClass();
+	}
+
+	/**
+	 * Determine a persistence unit root location to use if no {@code persistence.xml} or
+	 * {@code orm.xml} are present in the project.
+	 * @return the persistence unit root location or {@code null}
+	 */
+	protected String determinePersistenceUnitRootLocation() {
+		if (this.applicationClass != null) {
+			try {
+				URL mainLocation = this.applicationClass.getProtectionDomain().
+						getCodeSource().getLocation();
+				return ResourceUtils.extractJarFileURL(mainLocation).toString();
+			}
+			catch (Exception ex) {
+				logger.info("Could not determine persistence unit root location: " + ex);
+			}
+		}
+		return null;
+	}
+
 
 	/**
 	 * A fluent builder for a LocalContainerEntityManagerFactoryBean.
@@ -181,6 +219,10 @@ public class EntityManagerFactoryBuilder {
 			entityManagerFactoryBean.getJpaPropertyMap()
 					.putAll(EntityManagerFactoryBuilder.this.jpaProperties);
 			entityManagerFactoryBean.getJpaPropertyMap().putAll(this.properties);
+			String rootLocation = determinePersistenceUnitRootLocation();
+			if (rootLocation != null) {
+				entityManagerFactoryBean.setPersistenceUnitRootLocation(rootLocation);
+			}
 			if (EntityManagerFactoryBuilder.this.callback != null) {
 				EntityManagerFactoryBuilder.this.callback
 						.execute(entityManagerFactoryBean);
