@@ -185,6 +185,22 @@ public class DataSourceAutoConfigurationTests {
 		assertThat(pool.getUsername()).isEqualTo("sa");
 	}
 
+	@Test
+	public void hikariCanConfigureDataSourceClassName() throws SQLException {
+		EnvironmentTestUtils.addEnvironment(this.context,
+				"spring.datasource.hikari.data-source-class-name=org.hsqldb.jdbc.JDBCDataSource",
+				"spring.datasource.url:jdbc:hsqldb:mem:testdb",
+				"spring.datasource.type:" + HikariDataSource.class.getName());
+		this.context.register(DataSourceAutoConfiguration.class,
+				PropertyPlaceholderAutoConfiguration.class);
+		this.context.refresh();
+		HikariDataSource ds = this.context.getBean(HikariDataSource.class);
+		// Make sure that the datasource is fully initialized
+		ds.getConnection().close();
+		assertThat(ds.getDataSourceClassName())
+				.isEqualTo("org.hsqldb.jdbc.JDBCDataSource");
+	}
+
 	/**
 	 * This test makes sure that if no supported data source is present, a datasource
 	 * is still created if "spring.datasource.type" is present.

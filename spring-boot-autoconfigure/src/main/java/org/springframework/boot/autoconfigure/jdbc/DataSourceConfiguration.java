@@ -20,6 +20,7 @@ import javax.sql.DataSource;
 
 import com.zaxxer.hikari.HikariDataSource;
 
+import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -73,6 +74,12 @@ abstract class DataSourceConfiguration {
 		public HikariDataSource dataSource(DataSourceProperties properties) {
 			return createDataSource(properties, HikariDataSource.class);
 		}
+
+		@Bean
+		public static BeanPostProcessor hikariDataSourcePostProcessor() {
+			return new HikariDataSourcePostProcessor();
+		}
+
 	}
 
 	@ConditionalOnClass(org.apache.commons.dbcp.BasicDataSource.class)
