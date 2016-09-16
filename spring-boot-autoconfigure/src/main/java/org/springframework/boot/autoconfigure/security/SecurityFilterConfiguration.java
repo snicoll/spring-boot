@@ -22,8 +22,6 @@ import java.util.Set;
 
 import javax.servlet.DispatcherType;
 
-import org.springframework.boot.autoconfigure.AutoConfigureAfter;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -37,10 +35,9 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.context.AbstractSecurityWebApplicationInitializer;
 
 /**
- * {@link EnableAutoConfiguration Auto-configuration} for Spring Security's Filter.
- * Configured separately from {@link SpringBootWebSecurityConfiguration} to ensure that
- * the filter's order is still configured when a user-provided
- * {@link WebSecurityConfiguration} exists.
+ * Configuration for Spring Security's Filter. Configured separately from
+ * {@link SpringBootWebSecurityConfiguration} to ensure that the filter's order is
+ * still configured when a user-provided {@link WebSecurityConfiguration} exists.
  *
  * @author Rob Winch
  * @author Phillip Webb
@@ -52,8 +49,7 @@ import org.springframework.security.web.context.AbstractSecurityWebApplicationIn
 @EnableConfigurationProperties
 @ConditionalOnClass({ AbstractSecurityWebApplicationInitializer.class,
 		SessionCreationPolicy.class })
-@AutoConfigureAfter(SecurityAutoConfiguration.class)
-public class SecurityFilterAutoConfiguration {
+public class SecurityFilterConfiguration {
 
 	private static final String DEFAULT_FILTER_NAME = AbstractSecurityWebApplicationInitializer.DEFAULT_FILTER_NAME;
 

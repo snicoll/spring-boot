@@ -39,8 +39,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.security.web.FilterChainProxy;
 import org.springframework.session.web.http.SessionRepositoryFilter;
+import org.springframework.web.filter.DelegatingFilterProxy;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
@@ -79,7 +79,7 @@ public class FilterOrderingIntegrationTests {
 		assertThat(iterator.next()).isInstanceOf(Filter.class);
 		assertThat(iterator.next()).isInstanceOf(Filter.class);
 		assertThat(iterator.next()).isInstanceOf(OrderedRequestContextFilter.class);
-		assertThat(iterator.next()).isInstanceOf(FilterChainProxy.class);
+		assertThat(iterator.next()).isInstanceOf(DelegatingFilterProxy.class);
 	}
 
 	private void load() {

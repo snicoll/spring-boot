@@ -48,12 +48,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Integration test to ensure {@link SecurityFilterAutoConfiguration} doesn't cause early
+ * Integration test to ensure {@link SecurityFilterConfiguration} doesn't cause early
  * initialization.
  *
  * @author Phillip Webb
  */
-public class SecurityFilterAutoConfigurationEarlyInitializationTests {
+public class SecurityFilterConfigurationEarlyInitializationTests {
 
 	// gh-4154
 
@@ -83,8 +83,7 @@ public class SecurityFilterAutoConfigurationEarlyInitializationTests {
 	@ImportAutoConfiguration({ WebMvcAutoConfiguration.class,
 			JacksonAutoConfiguration.class, HttpMessageConvertersAutoConfiguration.class,
 			DispatcherServletAutoConfiguration.class, WebSecurity.class,
-			SecurityAutoConfiguration.class, SecurityFilterAutoConfiguration.class,
-			ServerPropertiesAutoConfiguration.class,
+			SecurityAutoConfiguration.class, ServerPropertiesAutoConfiguration.class,
 			PropertyPlaceholderAutoConfiguration.class })
 	static class Config {
 

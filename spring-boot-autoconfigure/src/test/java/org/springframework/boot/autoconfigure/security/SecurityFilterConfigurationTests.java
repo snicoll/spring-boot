@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,10 +22,10 @@ import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.SecurityAutoConfigurationTests.WebSecurity;
-import org.springframework.boot.autoconfigure.security.SecurityFilterAutoConfigurationEarlyInitializationTests.ConverterBean;
-import org.springframework.boot.autoconfigure.security.SecurityFilterAutoConfigurationEarlyInitializationTests.DeserializerBean;
-import org.springframework.boot.autoconfigure.security.SecurityFilterAutoConfigurationEarlyInitializationTests.ExampleController;
-import org.springframework.boot.autoconfigure.security.SecurityFilterAutoConfigurationEarlyInitializationTests.JacksonModuleBean;
+import org.springframework.boot.autoconfigure.security.SecurityFilterConfigurationEarlyInitializationTests.ConverterBean;
+import org.springframework.boot.autoconfigure.security.SecurityFilterConfigurationEarlyInitializationTests.DeserializerBean;
+import org.springframework.boot.autoconfigure.security.SecurityFilterConfigurationEarlyInitializationTests.ExampleController;
+import org.springframework.boot.autoconfigure.security.SecurityFilterConfigurationEarlyInitializationTests.JacksonModuleBean;
 import org.springframework.boot.autoconfigure.web.DispatcherServletAutoConfiguration;
 import org.springframework.boot.autoconfigure.web.HttpMessageConvertersAutoConfiguration;
 import org.springframework.boot.autoconfigure.web.ServerPropertiesAutoConfiguration;
@@ -36,11 +36,11 @@ import org.springframework.mock.web.MockServletContext;
 import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
 
 /**
- * Tests for {@link SecurityFilterAutoConfiguration}.
+ * Tests for {@link SecurityFilterConfiguration}.
  *
  * @author Andy Wilkinson
  */
-public class SecurityFilterAutoConfigurationTests {
+public class SecurityFilterConfigurationTests {
 
 	@Test
 	public void filterAutoConfigurationWorksWithoutSecurityAutoConfiguration()
@@ -63,7 +63,6 @@ public class SecurityFilterAutoConfigurationTests {
 	@ImportAutoConfiguration({ WebMvcAutoConfiguration.class,
 			JacksonAutoConfiguration.class, HttpMessageConvertersAutoConfiguration.class,
 			DispatcherServletAutoConfiguration.class, WebSecurity.class,
-			SecurityFilterAutoConfiguration.class,
 			ServerPropertiesAutoConfiguration.class,
 			PropertyPlaceholderAutoConfiguration.class })
 	static class Config {

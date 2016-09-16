@@ -30,8 +30,8 @@ import org.springframework.context.annotation.Import;
  */
 @Configuration
 @ConditionalOnProperty(prefix = "spring.test.mockmvc", name = "secure", havingValue = "true", matchIfMissing = true)
-@Import({ SecurityAutoConfiguration.class, ServerPropertiesAutoConfiguration.class,
-		MockMvcSecurityConfiguration.class })
+@Import({ MockMvcSecurityConfiguration.class , SecurityAutoConfiguration.class,
+		ServerPropertiesAutoConfiguration.class })
 public class MockMvcSecurityAutoConfiguration {
 
 }

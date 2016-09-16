@@ -100,7 +100,6 @@ public class SecurityAutoConfigurationTests {
 		this.context = new AnnotationConfigWebApplicationContext();
 		this.context.setServletContext(new MockServletContext());
 		this.context.register(WebSecurity.class, SecurityAutoConfiguration.class,
-				SecurityFilterAutoConfiguration.class,
 				ServerPropertiesAutoConfiguration.class,
 				PropertyPlaceholderAutoConfiguration.class);
 		this.context.refresh();
@@ -113,7 +112,6 @@ public class SecurityAutoConfigurationTests {
 	public void testFilterIsNotRegisteredInNonWeb() throws Exception {
 		AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
 		context.register(SecurityAutoConfiguration.class,
-				SecurityFilterAutoConfiguration.class,
 				ServerPropertiesAutoConfiguration.class,
 				PropertyPlaceholderAutoConfiguration.class);
 		try {
@@ -130,7 +128,6 @@ public class SecurityAutoConfigurationTests {
 		this.context = new AnnotationConfigWebApplicationContext();
 		this.context.setServletContext(new MockServletContext());
 		this.context.register(SecurityAutoConfiguration.class,
-				SecurityFilterAutoConfiguration.class,
 				ServerPropertiesAutoConfiguration.class,
 				PropertyPlaceholderAutoConfiguration.class);
 		this.context.refresh();
@@ -145,7 +142,6 @@ public class SecurityAutoConfigurationTests {
 		EnvironmentTestUtils.addEnvironment(this.context, "security.filter-order:12345");
 		this.context.setServletContext(new MockServletContext());
 		this.context.register(SecurityAutoConfiguration.class,
-				SecurityFilterAutoConfiguration.class,
 				ServerPropertiesAutoConfiguration.class,
 				PropertyPlaceholderAutoConfiguration.class);
 		this.context.refresh();
@@ -367,7 +363,6 @@ public class SecurityAutoConfigurationTests {
 		this.context = new AnnotationConfigWebApplicationContext();
 		this.context.setServletContext(new MockServletContext());
 		this.context.register(SecurityAutoConfiguration.class,
-				SecurityFilterAutoConfiguration.class,
 				ServerPropertiesAutoConfiguration.class,
 				PropertyPlaceholderAutoConfiguration.class);
 		this.context.refresh();
@@ -385,7 +380,6 @@ public class SecurityAutoConfigurationTests {
 		this.context = new AnnotationConfigWebApplicationContext();
 		this.context.setServletContext(new MockServletContext());
 		this.context.register(SecurityAutoConfiguration.class,
-				SecurityFilterAutoConfiguration.class,
 				ServerPropertiesAutoConfiguration.class,
 				PropertyPlaceholderAutoConfiguration.class);
 		EnvironmentTestUtils.addEnvironment(this.context,
