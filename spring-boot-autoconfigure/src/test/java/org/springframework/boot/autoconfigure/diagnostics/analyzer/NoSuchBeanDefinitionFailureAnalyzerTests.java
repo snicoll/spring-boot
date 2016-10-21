@@ -17,7 +17,9 @@
 package org.springframework.boot.autoconfigure.diagnostics.analyzer;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.Test;
 
@@ -71,9 +73,28 @@ public class NoSuchBeanDefinitionFailureAnalyzerTests {
 
 	@Test
 	public void failureAnalysisForMissingPropertyExactType() {
+		testFailureAnalysisForMissingPropertyExactType(
+				StringPropertyTypeConfiguration.class, StringHandler.class);
+	}
+
+	@Test
+	public void failureAnalysisForMissingPropertyExactTypeWithCollection() {
+		testFailureAnalysisForMissingPropertyExactType(
+				StringPropertyTypeOnCollectionConfiguration.class,
+				StringCollectionHandler.class);
+	}
+
+	@Test
+	public void failureAnalysisForMissingPropertyExactTypeWithMap() {
+		testFailureAnalysisForMissingPropertyExactType(
+				StringPropertyTypeOnMapConfiguration.class, StringMapHandler.class);
+	}
+
+	private void testFailureAnalysisForMissingPropertyExactType(Class<?> config,
+			Class<?> targetClass) {
 		FailureAnalysis analysis = analyzeFailure(
-				createFailure(StringPropertyTypeConfiguration.class));
-		assertDescriptionConstructorMissingType(analysis, StringHandler.class, 0,
+				createFailure(config));
+		assertDescriptionConstructorMissingType(analysis, targetClass, 0,
 				String.class);
 		assertBeanMethodDisabled(analysis,
 				"did not find property 'spring.string.enabled'",
@@ -242,6 +263,20 @@ public class NoSuchBeanDefinitionFailureAnalyzerTests {
 
 	@Configuration
 	@ImportAutoConfiguration(TestPropertyAutoConfiguration.class)
+	@Import(StringCollectionHandler.class)
+	protected static class StringPropertyTypeOnCollectionConfiguration {
+
+	}
+
+	@Configuration
+	@ImportAutoConfiguration(TestPropertyAutoConfiguration.class)
+	@Import(StringMapHandler.class)
+	protected static class StringPropertyTypeOnMapConfiguration {
+
+	}
+
+	@Configuration
+	@ImportAutoConfiguration(TestPropertyAutoConfiguration.class)
 	@Import(NumberHandler.class)
 	protected static class IntegerPropertyTypeConfiguration {
 
@@ -328,6 +363,18 @@ public class NoSuchBeanDefinitionFailureAnalyzerTests {
 			beanFactory.getBean("test-string");
 		}
 
+	}
+
+	protected static class StringCollectionHandler {
+
+		public StringCollectionHandler(Collection<String> strings) {
+		}
+	}
+
+	protected static class StringMapHandler {
+
+		public StringMapHandler(Map<String, String> strings) {
+		}
 	}
 
 }
