@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -31,6 +32,7 @@ import javax.servlet.SessionTrackingMode;
 
 import org.apache.catalina.Context;
 import org.apache.catalina.Valve;
+import org.apache.catalina.core.StandardContext;
 import org.apache.catalina.valves.RemoteIpValve;
 import org.apache.coyote.AbstractProtocol;
 import org.junit.Before;
@@ -39,6 +41,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.MockitoAnnotations;
 
+import org.springframework.beans.DirectFieldAccessor;
 import org.springframework.beans.MutablePropertyValues;
 import org.springframework.boot.bind.RelaxedDataBinder;
 import org.springframework.boot.context.embedded.ConfigurableEmbeddedServletContainer;
@@ -462,6 +465,40 @@ public class ServerPropertiesTests {
 				.getEmbeddedServletContainer();
 		assertThat(((AbstractProtocol<?>) embeddedContainer.getTomcat().getConnector()
 				.getProtocolHandler()).getMaxConnections()).isEqualTo(5);
+	}
+
+	@Test
+	public void customTomcatTldSkip() {
+		Map<String, String> map = new HashMap<String, String>();
+		map.put("server.tomcat.tld-skip", "foo.jar,bar.jar");
+		bindProperties(map);
+
+		testCustomTomcatTldSkip("foo.jar", "bar.jar");
+	}
+
+	@Test
+	public void customTomcatTldSkipAsList() {
+		Map<String, String> map = new HashMap<String, String>();
+		map.put("server.tomcat.tld-skip[0]", "biz.jar");
+		map.put("server.tomcat.tld-skip[1]", "bah.jar");
+		bindProperties(map);
+
+		testCustomTomcatTldSkip("biz.jar", "bah.jar");
+	}
+
+	private void testCustomTomcatTldSkip(String... expectedJars) {
+		TomcatEmbeddedServletContainerFactory container = new TomcatEmbeddedServletContainerFactory();
+		this.properties.customize(container);
+		TomcatEmbeddedServletContainer embeddedContainer = (TomcatEmbeddedServletContainer) container
+				.getEmbeddedServletContainer();
+		StandardContext context = (StandardContext) (embeddedContainer)
+				.getTomcat().getHost().findChildren()[0];
+
+		Object skipPattern = new DirectFieldAccessor(context.getJarScanner())
+				.getPropertyValue("pattern");
+		Set<String> patterns = (Set<String>) new DirectFieldAccessor(skipPattern)
+				.getPropertyValue("patterns");
+		assertThat(patterns).contains(expectedJars);
 	}
 
 	@Test
