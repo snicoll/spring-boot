@@ -19,8 +19,10 @@ package org.springframework.boot.autoconfigure.web;
 import java.io.File;
 import java.net.InetAddress;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -72,6 +74,7 @@ import org.springframework.boot.web.servlet.ServletContextInitializer;
 import org.springframework.context.EnvironmentAware;
 import org.springframework.core.Ordered;
 import org.springframework.core.env.Environment;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -671,6 +674,11 @@ public class ServerProperties
 		 */
 		private int acceptCount = 0;
 
+		/**
+		 * Comma-separated list of additional jars to ignore for TLD scanning.
+		 */
+		private List<String> additionalTldSkipPatterns = new ArrayList<String>();
+
 		public int getMaxThreads() {
 			return this.maxThreads;
 		}
@@ -779,6 +787,14 @@ public class ServerProperties
 			this.acceptCount = acceptCount;
 		}
 
+		public List<String> getAdditionalTldSkipPatterns() {
+			return this.additionalTldSkipPatterns;
+		}
+
+		public void setAdditionalTldSkipPatterns(List<String> additionalTldSkipPatterns) {
+			this.additionalTldSkipPatterns = additionalTldSkipPatterns;
+		}
+
 		void customizeTomcat(ServerProperties serverProperties,
 				TomcatEmbeddedServletContainerFactory factory) {
 			if (getBasedir() != null) {
@@ -818,6 +834,9 @@ public class ServerProperties
 			}
 			if (this.acceptCount > 0) {
 				customizeAcceptCount(factory);
+			}
+			if (!ObjectUtils.isEmpty(this.additionalTldSkipPatterns)) {
+				factory.getTldSkipPatterns().addAll(this.additionalTldSkipPatterns);
 			}
 		}
 
