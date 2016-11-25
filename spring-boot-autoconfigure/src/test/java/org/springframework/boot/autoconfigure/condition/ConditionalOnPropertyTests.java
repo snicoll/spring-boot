@@ -85,9 +85,23 @@ public class ConditionalOnPropertyTests {
 	}
 
 	@Test
+	public void propertyForList() {
+		load(RelaxedPropertiesRequiredConfiguration.class,
+				"spring.the-relaxed-property[0]=value1");
+		assertThat(this.context.containsBean("foo")).isTrue();
+	}
+
+	@Test
 	public void relaxedName() {
 		load(RelaxedPropertiesRequiredConfiguration.class,
 				"spring.theRelaxedProperty=value1");
+		assertThat(this.context.containsBean("foo")).isTrue();
+	}
+
+	@Test
+	public void relaxedNameForList() {
+		load(RelaxedPropertiesRequiredConfiguration.class,
+				"spring.theRelaxedProperty[0]=value1");
 		assertThat(this.context.containsBean("foo")).isTrue();
 	}
 

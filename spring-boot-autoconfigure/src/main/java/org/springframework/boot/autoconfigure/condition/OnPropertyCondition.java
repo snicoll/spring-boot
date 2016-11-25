@@ -16,6 +16,7 @@
 
 package org.springframework.boot.autoconfigure.condition;
 
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -23,17 +24,21 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.springframework.boot.autoconfigure.condition.ConditionMessage.Style;
-import org.springframework.boot.bind.RelaxedPropertyResolver;
+import org.springframework.boot.bind.PropertySourcesPropertyValues;
+import org.springframework.boot.bind.RelaxedDataBinder;
+import org.springframework.boot.bind.RelaxedNames;
 import org.springframework.context.annotation.Condition;
 import org.springframework.context.annotation.ConditionContext;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.annotation.Order;
-import org.springframework.core.env.PropertyResolver;
+import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.type.AnnotatedTypeMetadata;
 import org.springframework.util.Assert;
 import org.springframework.util.MultiValueMap;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
+import org.springframework.validation.DataBinder;
 
 /**
  * {@link Condition} that checks if properties are defined in environment.
@@ -58,7 +63,7 @@ class OnPropertyCondition extends SpringBootCondition {
 		List<ConditionMessage> match = new ArrayList<ConditionMessage>();
 		for (AnnotationAttributes annotationAttributes : allAnnotationAttributes) {
 			ConditionOutcome outcome = determineOutcome(annotationAttributes,
-					context.getEnvironment());
+					(ConfigurableEnvironment) context.getEnvironment());
 			(outcome.isMatch() ? match : noMatch).add(outcome.getConditionMessage());
 		}
 		if (!noMatch.isEmpty()) {
@@ -92,11 +97,11 @@ class OnPropertyCondition extends SpringBootCondition {
 	}
 
 	private ConditionOutcome determineOutcome(AnnotationAttributes annotationAttributes,
-			PropertyResolver resolver) {
+			ConfigurableEnvironment environment) {
 		Spec spec = new Spec(annotationAttributes);
 		List<String> missingProperties = new ArrayList<String>();
 		List<String> nonMatchingProperties = new ArrayList<String>();
-		spec.collectProperties(resolver, missingProperties, nonMatchingProperties);
+		spec.collectProperties(environment, missingProperties, nonMatchingProperties);
 		if (!missingProperties.isEmpty()) {
 			return ConditionOutcome.noMatch(
 					ConditionMessage.forCondition(ConditionalOnProperty.class, spec)
@@ -148,15 +153,14 @@ class OnPropertyCondition extends SpringBootCondition {
 			return (value.length > 0 ? value : name);
 		}
 
-		private void collectProperties(PropertyResolver resolver, List<String> missing,
+		private void collectProperties(ConfigurableEnvironment environment, List<String> missing,
 				List<String> nonMatching) {
-			if (this.relaxedNames) {
-				resolver = new RelaxedPropertyResolver(resolver, this.prefix);
-			}
+			PropertyResolver resolver = new PropertyResolver(environment, this.relaxedNames, this.prefix);
 			for (String name : this.names) {
-				String key = (this.relaxedNames ? name : this.prefix + name);
-				if (resolver.containsProperty(key)) {
-					if (!isMatch(resolver.getProperty(key), this.havingValue)) {
+				Entry<String, Object> entry = resolver.resolveProperty(name);
+				if (entry != null) {
+					if (!isMatch(ObjectUtils.nullSafeToString(entry.getValue()),
+							this.havingValue)) {
 						nonMatching.add(name);
 					}
 				}
@@ -193,6 +197,56 @@ class OnPropertyCondition extends SpringBootCondition {
 			}
 			result.append(")");
 			return result.toString();
+		}
+
+
+		private static class PropertyResolver {
+
+			private final boolean relaxedNames;
+
+			private final String prefix;
+
+			private final Map<String, Object> content;
+
+			PropertyResolver(ConfigurableEnvironment environment,
+					boolean relaxedNames, String prefix) {
+				this.relaxedNames = relaxedNames;
+				this.prefix = prefix;
+				this.content = new HashMap<String, Object>();
+				DataBinder binder = new RelaxedDataBinder(this.content, this.prefix);
+				binder.bind(new PropertySourcesPropertyValues(
+						environment.getPropertySources()));
+			}
+
+			Map.Entry<String, Object> resolveProperty(String name) {
+				if (this.relaxedNames) {
+					return resolveRelaxedProperty(name);
+				}
+				else {
+					String key = this.prefix + name;
+					if (this.content.containsKey(name)) {
+						return new AbstractMap.SimpleEntry<String, Object>(key,
+								this.content.get(name));
+					}
+					return null;
+				}
+			}
+
+			private Map.Entry<String, Object> resolveRelaxedProperty(String name) {
+				RelaxedNames prefixes = new RelaxedNames(this.prefix);
+				RelaxedNames keys = new RelaxedNames(name);
+				for (String prefix : prefixes) {
+					for (String relaxedKey : keys) {
+						String key = prefix + relaxedKey;
+						if (this.content.containsKey(relaxedKey)) {
+							return new AbstractMap.SimpleEntry<String, Object>(key,
+									this.content.get(relaxedKey));
+						}
+					}
+				}
+				return null;
+			}
+
 		}
 
 	}
