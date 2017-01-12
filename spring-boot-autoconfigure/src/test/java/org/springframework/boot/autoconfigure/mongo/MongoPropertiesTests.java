@@ -122,6 +122,18 @@ public class MongoPropertiesTests {
 	}
 
 	@Test
+	public void uriOverridesHostAndPort() throws UnknownHostException {
+		MongoProperties properties = new MongoProperties();
+		properties.setHost("localhost");
+		properties.setPort(27017);
+		properties.setUri("mongodb://mongo1.example.com:12345");
+		MongoClient client = properties.createMongoClient(null, null);
+		List<ServerAddress> allAddresses = extractServerAddresses(client);
+		assertThat(allAddresses).hasSize(1);
+		assertServerAddress(allAddresses.get(0), "mongo1.example.com", 12345);
+	}
+
+	@Test
 	public void allMongoClientOptionsCanBeSet() throws UnknownHostException {
 		MongoClientOptions.Builder builder = MongoClientOptions.builder();
 		builder.alwaysUseMBeans(true);
