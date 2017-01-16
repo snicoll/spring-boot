@@ -200,6 +200,10 @@
     "defaultValue": true
   },
   {
+    "name": "management.info.git.mode",
+    "defaultValue": "simple"
+  },
+  {
     "name": "spring.git.properties",
     "type": "java.lang.String",
     "description": "Resource reference to a generated git info properties file.",
