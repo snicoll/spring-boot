@@ -31,6 +31,7 @@ import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
  * this annotation directly.
  *
  * @author Michael J. Simons
+ * @since 1.5.0
  * @see DataMongoTest
  */
 @Target(ElementType.TYPE)

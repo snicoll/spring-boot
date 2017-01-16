@@ -28,7 +28,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.test.autoconfigure.OverrideAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.core.AutoConfigureCache;
 import org.springframework.boot.test.autoconfigure.filter.TypeExcludeFilters;
-import org.springframework.boot.test.context.SpringBootTestContextBootstrapper;
 import org.springframework.context.annotation.ComponentScan.Filter;
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.test.context.BootstrapWith;
@@ -46,13 +45,14 @@ import org.springframework.test.context.BootstrapWith;
  * classpath and thus replacing the default connection to a MongoDB.
  *
  * @author Michael J. Simons
+ * @author Stephane Nicoll
  * @since 1.5.0
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
-@BootstrapWith(SpringBootTestContextBootstrapper.class)
+@BootstrapWith(DataMongoTestContextBootstrapper.class)
 @OverrideAutoConfiguration(enabled = false)
 @TypeExcludeFilters(DataMongoTypeExcludeFilter.class)
 @AutoConfigureCache

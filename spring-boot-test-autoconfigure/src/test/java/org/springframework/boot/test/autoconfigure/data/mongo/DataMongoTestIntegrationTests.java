@@ -23,6 +23,7 @@ import org.junit.runner.RunWith;
 
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.mongo.MongoProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -42,6 +43,9 @@ public class DataMongoTestIntegrationTests {
 	public ExpectedException thrown = ExpectedException.none();
 
 	@Autowired
+	private MongoProperties mongoProperties;
+
+	@Autowired
 	private MongoTemplate mongoTemplate;
 
 	@Autowired
@@ -49,6 +53,11 @@ public class DataMongoTestIntegrationTests {
 
 	@Autowired
 	private ApplicationContext applicationContext;
+
+	@Test
+	public void testMongoPortWasSetToZero() {
+		assertThat(this.mongoProperties.getPort()).isEqualTo(0);
+	}
 
 	@Test
 	public void testRepository() {

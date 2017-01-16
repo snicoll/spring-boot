@@ -22,27 +22,40 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.mongo.MongoProperties;
 import org.springframework.boot.autoconfigure.mongo.embedded.EmbeddedMongoAutoConfiguration;
 import org.springframework.context.ApplicationContext;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 
 /**
+ * Sample test that disables the embedded mongodb support.
+ *
  * @author Michael J. Simons
  */
 @RunWith(SpringRunner.class)
 @DataMongoTest(excludeAutoConfiguration = EmbeddedMongoAutoConfiguration.class)
+@TestPropertySource(properties = "spring.data.mongodb.port=12345")
 public class DataMongoTestDisableEmbeddedMongoTest {
 
 	@Autowired
 	private ApplicationContext context;
 
-	@Test
-	public void testContextLoads() throws Exception {
+	@Autowired
+	private MongoProperties mongoProperties;
 
+	@Test
+	public void testEmbeddedSupportIsDisabled() throws Exception {
 		assertThat(this.context).isNotNull();
 		assertThat(this.context.getBeanNamesForType(MongodExecutable.class)).isEmpty();
 	}
+
+	@Test
+	public void testMongoPortIsNotOverridden() throws Exception {
+		assertThat(this.mongoProperties.getPort()).isEqualTo(12345);
+	}
+
 }
