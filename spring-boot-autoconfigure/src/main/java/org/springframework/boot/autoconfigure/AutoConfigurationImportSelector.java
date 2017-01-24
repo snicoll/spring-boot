@@ -147,12 +147,16 @@ public class AutoConfigurationImportSelector
 	 */
 	protected List<String> getCandidateConfigurations(AnnotationMetadata metadata,
 			AnnotationAttributes attributes) {
-		List<String> configurations = SpringFactoriesLoader.loadFactoryNames(
-				getSpringFactoriesLoaderFactoryClass(), getBeanClassLoader());
+		List<String> configurations = loadAllAutoConfigurationsClasses();
 		Assert.notEmpty(configurations,
 				"No auto configuration classes found in META-INF/spring.factories. If you "
 						+ "are using a custom packaging, make sure that file is correct.");
 		return configurations;
+	}
+
+	private List<String> loadAllAutoConfigurationsClasses() {
+		return SpringFactoriesLoader.loadFactoryNames(
+				getSpringFactoriesLoaderFactoryClass(), getBeanClassLoader());
 	}
 
 	/**
@@ -236,8 +240,9 @@ public class AutoConfigurationImportSelector
 
 	private List<String> sort(List<String> configurations,
 			AutoConfigurationMetadata autoConfigurationMetadata) throws IOException {
-		configurations = new AutoConfigurationSorter(getMetadataReaderFactory(),
-				autoConfigurationMetadata).getInPriorityOrder(configurations);
+		configurations = new AutoConfigurationSorter(loadAllAutoConfigurationsClasses(),
+				getMetadataReaderFactory(), autoConfigurationMetadata).getInPriorityOrder(
+				configurations);
 		return configurations;
 	}
 

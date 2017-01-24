@@ -40,6 +40,7 @@ import static org.mockito.Mockito.mock;
  * Tests for {@link AutoConfigurationSorter}.
  *
  * @author Phillip Webb
+ * @author Stephane Nicoll
  */
 public class AutoConfigurationSorterTests {
 
@@ -69,18 +70,25 @@ public class AutoConfigurationSorterTests {
 
 	private static final String W2 = AutoConfigureW2.class.getName();
 
+	private static final String IA = InvalidAutoConfigureA.class.getName();
+
+	private static final String IB = InvalidAutoConfigureB.class.getName();
+
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();
 
 	private AutoConfigurationSorter sorter;
+
+	private final List<String> autoConfigurationClasses = Arrays.asList(
+			A, B, C, D, E, W, X, Y, Z, A2, W2, IA, IB);
 
 	private AutoConfigurationMetadata autoConfigurationMetadata = mock(
 			AutoConfigurationMetadata.class);
 
 	@Before
 	public void setup() {
-		this.sorter = new AutoConfigurationSorter(new CachingMetadataReaderFactory(),
-				this.autoConfigurationMetadata);
+		this.sorter = new AutoConfigurationSorter(this.autoConfigurationClasses,
+				new CachingMetadataReaderFactory(), this.autoConfigurationMetadata);
 	}
 
 	@Test
@@ -144,11 +152,29 @@ public class AutoConfigurationSorterTests {
 	}
 
 	@Test
+	public void byInvalidAutoConfigureBefore() {
+		this.thrown.expect(IllegalStateException.class);
+		this.thrown.expectMessage(String.format("Invalid @AutoConfigureBefore setup on "
+				+ "%s", IA));
+		this.thrown.expectMessage(String.class.getName());
+		this.sorter.getInPriorityOrder(Arrays.asList(A, IA));
+	}
+
+	@Test
+	public void byInvalidAutoConfigureAfter() {
+		this.thrown.expect(IllegalStateException.class);
+		this.thrown.expectMessage(String.format("Invalid @AutoConfigureAfter setup on "
+				+ "%s", IB));
+		this.thrown.expectMessage(Integer.class.getName());
+		this.sorter.getInPriorityOrder(Arrays.asList(A, IB));
+	}
+
+	@Test
 	public void usesAnnotationPropertiesWhenPossible() throws Exception {
 		MetadataReaderFactory readerFactory = mock(MetadataReaderFactory.class);
 		this.autoConfigurationMetadata = getAutoConfigurationMetadata(A2, B, C, W2, X);
-		this.sorter = new AutoConfigurationSorter(readerFactory,
-				this.autoConfigurationMetadata);
+		this.sorter = new AutoConfigurationSorter(this.autoConfigurationClasses,
+				readerFactory, this.autoConfigurationMetadata);
 		List<String> actual = this.sorter
 				.getInPriorityOrder(Arrays.asList(A2, B, C, W2, X));
 		assertThat(actual).containsExactly(C, W2, B, A2, X);
@@ -253,6 +279,16 @@ public class AutoConfigurationSorterTests {
 
 	@AutoConfigureBefore(AutoConfigureY.class)
 	public static class AutoConfigureZ {
+
+	}
+
+	@AutoConfigureBefore(String.class)
+	public static class InvalidAutoConfigureA {
+
+	}
+
+	@AutoConfigureAfter(Integer.class)
+	public static class InvalidAutoConfigureB {
 
 	}
 

@@ -16,8 +16,10 @@
 
 package org.springframework.boot.autoconfigure;
 
+import java.util.List;
 import java.util.Properties;
 
+import org.springframework.core.io.support.SpringFactoriesLoader;
 import org.springframework.core.type.classreading.MetadataReaderFactory;
 
 /**
@@ -28,8 +30,13 @@ import org.springframework.core.type.classreading.MetadataReaderFactory;
 public class TestAutoConfigurationSorter extends AutoConfigurationSorter {
 
 	public TestAutoConfigurationSorter(MetadataReaderFactory metadataReaderFactory) {
-		super(metadataReaderFactory,
+		super(loadAutoConfigurationClasses(), metadataReaderFactory,
 				AutoConfigurationMetadataLoader.loadMetadata(new Properties()));
+	}
+
+	private static List<String> loadAutoConfigurationClasses() {
+		return SpringFactoriesLoader.loadFactoryNames(EnableAutoConfiguration.class,
+				TestAutoConfigurationSorter.class.getClassLoader());
 	}
 
 }
