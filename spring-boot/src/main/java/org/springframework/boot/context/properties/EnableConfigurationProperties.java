@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2015 the original author or authors.
+ * Copyright 2012-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@ import org.springframework.context.annotation.Import;
  * directly on this annotation.
  *
  * @author Dave Syer
+ * @author Stephane Nicoll
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
@@ -45,5 +46,32 @@ public @interface EnableConfigurationProperties {
 	 * @return {@link ConfigurationProperties} annotated beans to register
 	 */
 	Class<?>[] value() default {};
+
+	/**
+	 * Strategy to determine how {@link #value()} should be registered in the current
+	 * context.
+	 * @return the registration strategy
+	 */
+	RegistrationStrategy search() default RegistrationStrategy.MISSING;
+
+	/**
+	 * Defines the available registration strategies to determine if a
+	 * {@code ConfigurationProperties} bean should be created for the current
+	 * context.
+	 */
+	enum RegistrationStrategy {
+
+		/**
+		 * Register a new bean if is hasn't been registered in the current context
+		 * yet.
+		 */
+		CURRENT,
+
+		/**
+		 * Register a new bean if it hasn't been registered yet .
+		 */
+		MISSING
+
+	}
 
 }
