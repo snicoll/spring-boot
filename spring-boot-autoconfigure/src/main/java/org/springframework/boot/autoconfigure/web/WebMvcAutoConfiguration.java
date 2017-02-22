@@ -175,9 +175,8 @@ public class WebMvcAutoConfiguration {
 		final ResourceHandlerRegistrationCustomizer resourceHandlerRegistrationCustomizer;
 
 		public WebMvcAutoConfigurationAdapter(ApplicationContext applicationContext,
-				ResourceProperties resourceProperties,
-				WebMvcProperties mvcProperties, ListableBeanFactory beanFactory,
-				HttpMessageConverters messageConverters,
+				ResourceProperties resourceProperties, WebMvcProperties mvcProperties,
+				ListableBeanFactory beanFactory, HttpMessageConverters messageConverters,
 				ObjectProvider<List<WebMvcConfigurer>> webMvcConfigurers,
 				ObjectProvider<ResourceHandlerRegistrationCustomizer> resourceHandlerRegistrationCustomizerProvider) {
 			this.applicationContext = applicationContext;
@@ -304,18 +303,9 @@ public class WebMvcAutoConfiguration {
 			// We want to make sure that the exposed 'mvcValidator' bean isn't going to
 			// expose the standard JSR-303 type
 			if (isJsr303Present() && this.userDefinedValidator == null) {
-				Validator validator = new Jsr303ValidatorHandler(
-						this.applicationContext).wrapJsr303Validator();
-				if (validator != null) {
-					return validator;
-				}
-				else {
-					OptionalValidatorFactoryBean factory = new OptionalValidatorFactoryBean();
-					MessageInterpolatorFactory interpolatorFactory =
-							new MessageInterpolatorFactory();
-					factory.setMessageInterpolator(interpolatorFactory.getObject());
-					return new SpringValidatorAdapterWrapper(factory, false);
-				}
+				return new Jsr303ValidatorHandler(this.applicationContext)
+						.wrapJsr303Validator();
+
 			}
 			return null; // Keep default or user defined, if any
 		}
@@ -324,7 +314,6 @@ public class WebMvcAutoConfiguration {
 			return ClassUtils.isPresent(JSR303_VALIDATOR_CLASS,
 					this.applicationContext.getClassLoader());
 		}
-
 
 		private <T> Collection<T> getBeansOfType(Class<T> type) {
 			return this.beanFactory.getBeansOfType(type).values();
@@ -616,7 +605,10 @@ public class WebMvcAutoConfiguration {
 				}
 			}
 			catch (NoSuchBeanDefinitionException ex) {
-				return null;
+				OptionalValidatorFactoryBean factory = new OptionalValidatorFactoryBean();
+				MessageInterpolatorFactory interpolatorFactory = new MessageInterpolatorFactory();
+				factory.setMessageInterpolator(interpolatorFactory.getObject());
+				return new SpringValidatorAdapterWrapper(factory, false);
 			}
 
 		}
