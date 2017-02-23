@@ -146,7 +146,8 @@ public class SpringBootTestContextBootstrapper extends DefaultTestContextBootstr
 						.toArray(new String[propertySourceProperties.size()]));
 		WebEnvironment webEnvironment = getWebEnvironment(mergedConfig.getTestClass());
 		if (webEnvironment != null) {
-			if (deduceWebApplication() == WebApplicationType.SERVLET &&
+			WebApplicationType webApplicationType = deduceWebApplication();
+			if (webApplicationType == WebApplicationType.SERVLET &&
 					(webEnvironment.isEmbedded() || webEnvironment == WebEnvironment.MOCK)) {
 				WebAppConfiguration webAppConfiguration = AnnotatedElementUtils
 						.findMergedAnnotation(mergedConfig.getTestClass(),
@@ -155,6 +156,10 @@ public class SpringBootTestContextBootstrapper extends DefaultTestContextBootstr
 						: webAppConfiguration.value());
 				mergedConfig = new WebMergedContextConfiguration(mergedConfig,
 						resourceBasePath);
+			}
+			else if (webApplicationType == WebApplicationType.REACTIVE
+					&& webEnvironment.isEmbedded()) {
+				return new ReactiveWebMergedContextConfiguration(mergedConfig);
 			}
 		}
 		return mergedConfig;
