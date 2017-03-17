@@ -31,42 +31,43 @@ import org.springframework.core.annotation.AnnotatedElementUtils;
  */
 class DataElasticsearchTypeExcludeFilter extends AnnotationCustomizableTypeExcludeFilter {
 
-    private final DataElasticsearchTest annotation;
+	private final DataElasticsearchTest annotation;
 
-    DataElasticsearchTypeExcludeFilter(final Class<?> testClass) {
-        this.annotation = AnnotatedElementUtils.getMergedAnnotation(testClass,
-                DataElasticsearchTest.class);    }
+	DataElasticsearchTypeExcludeFilter(final Class<?> testClass) {
+		this.annotation = AnnotatedElementUtils.getMergedAnnotation(testClass,
+				DataElasticsearchTest.class);
+	}
 
-    @Override
-    protected boolean hasAnnotation() {
-        return this.annotation != null;
-    }
+	@Override
+	protected boolean hasAnnotation() {
+		return this.annotation != null;
+	}
 
-    @Override
-    protected ComponentScan.Filter[] getFilters(final FilterType type) {
-        switch (type) {
-            case INCLUDE:
-                return this.annotation.includeFilters();
-            case EXCLUDE:
-                return this.annotation.excludeFilters();
-            default:
-                throw new IllegalStateException("Unsupported type " + type);
-        }
-    }
+	@Override
+	protected ComponentScan.Filter[] getFilters(final FilterType type) {
+		switch (type) {
+			case INCLUDE:
+				return this.annotation.includeFilters();
+			case EXCLUDE:
+				return this.annotation.excludeFilters();
+			default:
+				throw new IllegalStateException("Unsupported type " + type);
+		}
+	}
 
-    @Override
-    protected boolean isUseDefaultFilters() {
-        return this.annotation.useDefaultFilters();
-    }
+	@Override
+	protected boolean isUseDefaultFilters() {
+		return this.annotation.useDefaultFilters();
+	}
 
-    @Override
-    protected Set<Class<?>> getDefaultIncludes() {
-        return Collections.emptySet();
-    }
+	@Override
+	protected Set<Class<?>> getDefaultIncludes() {
+		return Collections.emptySet();
+	}
 
-    @Override
-    protected Set<Class<?>> getComponentIncludes() {
-        return Collections.emptySet();
-    }
+	@Override
+	protected Set<Class<?>> getComponentIncludes() {
+		return Collections.emptySet();
+	}
 
 }

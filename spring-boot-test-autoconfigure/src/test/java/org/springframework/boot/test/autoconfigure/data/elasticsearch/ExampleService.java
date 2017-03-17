@@ -16,26 +16,19 @@
 
 package org.springframework.boot.test.autoconfigure.data.elasticsearch;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.ComponentScan;
+import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.test.context.junit4.SpringRunner;
 
-import static org.assertj.core.api.Assertions.assertThat;
+@Service
+public class ExampleService {
 
-@RunWith(SpringRunner.class)
-@DataElasticsearchTest(includeFilters = @ComponentScan.Filter(Service.class))
-public class DataElasticsearchWithIncludeFilterIntegrationTests {
+	private final ElasticsearchTemplate elasticsearchTemplate;
 
-	@Autowired
-	private ExampleService service;
-
-	@Test
-	public void testRepository() {
-		assertThat(this.service.hasIndex("foobar")).isFalse();
+	public ExampleService(ElasticsearchTemplate elasticsearchTemplate) {
+		this.elasticsearchTemplate = elasticsearchTemplate;
 	}
 
+	public boolean hasIndex(String name) {
+		return this.elasticsearchTemplate.indexExists(name);
+	}
 }

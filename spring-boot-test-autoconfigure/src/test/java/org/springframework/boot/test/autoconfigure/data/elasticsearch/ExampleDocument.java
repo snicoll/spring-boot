@@ -16,26 +16,40 @@
 
 package org.springframework.boot.test.autoconfigure.data.elasticsearch;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.annotations.Document;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.stereotype.Service;
-import org.springframework.test.context.junit4.SpringRunner;
+@Document(indexName = "books", type = "book")
+public class ExampleDocument {
 
-import static org.assertj.core.api.Assertions.assertThat;
+	@Id
+	private String ibsn;
 
-@RunWith(SpringRunner.class)
-@DataElasticsearchTest(includeFilters = @ComponentScan.Filter(Service.class))
-public class DataElasticsearchWithIncludeFilterIntegrationTests {
+	private String title;
 
-	@Autowired
-	private ExampleService service;
+	private String description;
 
-	@Test
-	public void testRepository() {
-		assertThat(this.service.hasIndex("foobar")).isFalse();
+	public String getIbsn() {
+		return this.ibsn;
 	}
 
+	public void setIbsn(String ibsn) {
+		this.ibsn = ibsn;
+	}
+
+	public String getTitle() {
+		return this.title;
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
+	}
+
+	public String getDescription() {
+		return this.description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
+	}
 }

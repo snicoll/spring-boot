@@ -26,9 +26,10 @@ import java.lang.annotation.Target;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 
 /**
- * {@link ImportAutoConfiguration Auto-configuration imports} for typical Data Elasticsearch
- * tests. Most tests should consider using {@link DataElasticsearchTest @DataElasticsearchTest} rather
- * than using this annotation directly.
+ * {@link ImportAutoConfiguration Auto-configuration imports} for typical Data
+ * Elasticsearch tests. Most tests should consider using
+ * {@link DataElasticsearchTest @DataElasticsearchTest} rather than using this annotation
+ * directly.
  *
  * @author Marten Deinum
  * @since 2.0.0

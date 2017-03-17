@@ -5861,31 +5861,33 @@ A list of the auto-configuration that is enabled by `@DataLdapTest` can be
 
 
 [boot-features-testing-spring-boot-applications-testing-autoconfigured-elasticsearch-test]]
-`@DataElasticSearchTest` can be used if you want to test ElasticSearch applications. By default, it will
-configure a local ElasticSearch (if available), configure an `ElasticSearchTemplate`, scan
-for `@Document` classes and configure Spring Data ElasticSearch repositories. Regular
-`@Component` beans will not be loaded into the `ApplicationContext`:
+==== Auto-configured Data Elasticsearch tests
+`@DataElasticsearchTest` can be used if you want to test Elasticsearch applications. By
+default, it will configure a local Elasticsearch (if available), configure an
+`ElasticsearchTemplate`, scan for `@Document` classes and configure Spring Data
+Elasticsearch repositories. Regular `@Component` beans will not be loaded into the
+`ApplicationContext`:
 
 [source,java,indent=0]
 ----
 	import org.junit.runner.RunWith;
 	import org.springframework.beans.factory.annotation.Autowired;
 	import org.springframework.boot.test.autoconfigure.data.elasticsearch.DataElasticsearchTest;
-	import org.springframework.data.elasticsearch.core.ElasticSearchTemplate;
+	import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 	import org.springframework.test.context.junit4.SpringRunner;
 
 	@RunWith(SpringRunner.class)
-	@DataElasticSearchTest
-	public class ExampleDataElasticSearchTests {
+	@DataElasticsearchTest
+	public class ExampleDataElasticsearchTests {
 
 		@Autowired
-		private ElasticSearchTemplate elasticTemplate;
+		private ElasticsearchTemplate elasticTemplate;
 
 		//
 	}
 ----
 
-A list of the auto-configuration that is enabled by `@DataElasticSearchTest` can be
+A list of the auto-configuration that is enabled by `@DataElasticsearchTest` can be
 <<appendix-test-auto-configuration#test-auto-configuration,found in the appendix>>.
 
 

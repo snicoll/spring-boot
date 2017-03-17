@@ -35,14 +35,14 @@ import org.springframework.test.context.BootstrapWith;
 
 /**
  * Annotation that can be used in combination with {@code @RunWith(SpringRunner.class)}
- * for a typical ElasticSearch test. Can be used when a test focuses
- * <strong>only</strong> on ElasticSearch components.
+ * for a typical Elasticsearch test. Can be used when a test focuses
+ * <strong>only</strong> on Elasticsearch components.
  * <p>
  * Using this annotation will disable full auto-configuration and instead apply only
- * configuration relevant to ElasticSearch tests.
+ * configuration relevant to Elasticsearch tests.
  * <p>
  * By default, tests annotated with {@code @DataElasticsearchTest} will use an embedded
- * ElasticSearch process (if available).
+ * Elasticsearch process (if available).
  *
  * @author Marten Deinum
  * @since 2.0.0
@@ -59,36 +59,35 @@ import org.springframework.test.context.BootstrapWith;
 @ImportAutoConfiguration
 public @interface DataElasticsearchTest {
 
-    /**
-     * Determines if default filtering should be used with
-     * {@link SpringBootApplication @SpringBootApplication}. By default no beans are
-     * included.
-     * @see #includeFilters()
-     * @see #excludeFilters()
-     * @return if default filters should be used
-     */
-    boolean useDefaultFilters() default true;
+	/**
+	 * Determines if default filtering should be used with
+	 * {@link SpringBootApplication @SpringBootApplication}. By default no beans are
+	 * included.
+	 * @see #includeFilters()
+	 * @see #excludeFilters()
+	 * @return if default filters should be used
+	 */
+	boolean useDefaultFilters() default true;
 
-    /**
-     * A set of include filters which can be used to add otherwise filtered beans to the
-     * application context.
-     * @return include filters to apply
-     */
-    ComponentScan.Filter[] includeFilters() default {};
+	/**
+	 * A set of include filters which can be used to add otherwise filtered beans to the
+	 * application context.
+	 * @return include filters to apply
+	 */
+	ComponentScan.Filter[] includeFilters() default {};
 
-    /**
-     * A set of exclude filters which can be used to filter beans that would otherwise be
-     * added to the application context.
-     * @return exclude filters to apply
-     */
-    ComponentScan.Filter[] excludeFilters() default {};
+	/**
+	 * A set of exclude filters which can be used to filter beans that would otherwise be
+	 * added to the application context.
+	 * @return exclude filters to apply
+	 */
+	ComponentScan.Filter[] excludeFilters() default {};
 
-    /**
-     * Auto-configuration exclusions that should be applied for this test.
-     * @return auto-configuration exclusions to apply
-     */
-    @AliasFor(annotation = ImportAutoConfiguration.class, attribute = "exclude")
-    Class<?>[] excludeAutoConfiguration() default {};
-
+	/**
+	 * Auto-configuration exclusions that should be applied for this test.
+	 * @return auto-configuration exclusions to apply
+	 */
+	@AliasFor(annotation = ImportAutoConfiguration.class, attribute = "exclude")
+	Class<?>[] excludeAutoConfiguration() default {};
 
 }

@@ -151,11 +151,6 @@
 			<artifactId>spring-security-test</artifactId>
 			<optional>true</optional>
 		</dependency>
-		<dependency>
-			<groupId>org.elasticsearch</groupId>
-			<artifactId>elasticsearch</artifactId>
-			<optional>true</optional>
-		</dependency>
 
 		<!-- Test -->
 		<dependency>
