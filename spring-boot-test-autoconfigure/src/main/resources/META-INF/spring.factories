@@ -11,6 +11,7 @@ org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConf
 org.springframework.boot.autoconfigure.jdbc.JdbcTemplateAutoConfiguration,\
 org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration,\
 org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration,\
+org.springframework.boot.autoconfigure.transaction.EnableTransactionManagementAutoConfiguration,\
 org.springframework.boot.autoconfigure.transaction.TransactionAutoConfiguration
 
 # AutoConfigureJson auto-configuration imports

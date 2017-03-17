@@ -25,8 +25,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.annotation.AbstractTransactionManagementConfiguration;
-import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -49,8 +47,6 @@ public class DataSourceTransactionManagerAutoConfigurationTests {
 		this.context.refresh();
 		assertThat(this.context.getBean(DataSource.class)).isNotNull();
 		assertThat(this.context.getBean(DataSourceTransactionManager.class)).isNotNull();
-		assertThat(this.context.getBean(AbstractTransactionManagementConfiguration.class))
-				.isNotNull();
 	}
 
 	@Test
@@ -64,8 +60,7 @@ public class DataSourceTransactionManagerAutoConfigurationTests {
 
 	@Test
 	public void testManualConfiguration() throws Exception {
-		this.context.register(SwitchTransactionsOn.class,
-				EmbeddedDataSourceConfiguration.class,
+		this.context.register(EmbeddedDataSourceConfiguration.class,
 				DataSourceTransactionManagerAutoConfiguration.class);
 		this.context.refresh();
 		assertThat(this.context.getBean(DataSource.class)).isNotNull();
@@ -74,8 +69,7 @@ public class DataSourceTransactionManagerAutoConfigurationTests {
 
 	@Test
 	public void testExistingTransactionManager() {
-		this.context.register(SwitchTransactionsOn.class,
-				TransactionManagerConfiguration.class,
+		this.context.register(TransactionManagerConfiguration.class,
 				EmbeddedDataSourceConfiguration.class,
 				DataSourceTransactionManagerAutoConfiguration.class);
 		this.context.refresh();
@@ -92,8 +86,6 @@ public class DataSourceTransactionManagerAutoConfigurationTests {
 		this.context.refresh();
 		assertThat(this.context.getBeansOfType(PlatformTransactionManager.class))
 				.isEmpty();
-		assertThat(this.context.getBean(AbstractTransactionManagementConfiguration.class))
-				.isNotNull();
 	}
 
 	@Test
@@ -102,13 +94,6 @@ public class DataSourceTransactionManagerAutoConfigurationTests {
 				DataSourceTransactionManagerAutoConfiguration.class);
 		this.context.refresh();
 		assertThat(this.context.getBean(DataSourceTransactionManager.class)).isNotNull();
-		assertThat(this.context.getBean(AbstractTransactionManagementConfiguration.class))
-				.isNotNull();
-	}
-
-	@EnableTransactionManagement
-	protected static class SwitchTransactionsOn {
-
 	}
 
 	@Configuration
