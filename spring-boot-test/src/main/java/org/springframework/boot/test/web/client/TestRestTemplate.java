@@ -52,6 +52,7 @@ import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.http.client.support.BasicAuthorizationInterceptor;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.client.RequestCallback;
 import org.springframework.web.client.ResponseExtractor;
@@ -113,7 +114,7 @@ public class TestRestTemplate {
 	 */
 	public TestRestTemplate(String username, String password,
 			HttpClientOption... httpClientOptions) {
-		this(new RestTemplate(), username, password, httpClientOptions);
+		this(new RestTemplateBuilder().build(), username, password, httpClientOptions);
 	}
 
 	public TestRestTemplate(RestTemplate restTemplate) {
@@ -124,7 +125,8 @@ public class TestRestTemplate {
 			HttpClientOption... httpClientOptions) {
 		Assert.notNull(restTemplate, "RestTemplate must not be null");
 		this.httpClientOptions = httpClientOptions;
-		if (ClassUtils.isPresent("org.apache.http.client.config.RequestConfig", null)) {
+		if (!ObjectUtils.isEmpty(httpClientOptions)
+				&& ClassUtils.isPresent("org.apache.http.client.config.RequestConfig", null)) {
 			restTemplate.setRequestFactory(
 					new CustomHttpComponentsClientHttpRequestFactory(httpClientOptions));
 		}

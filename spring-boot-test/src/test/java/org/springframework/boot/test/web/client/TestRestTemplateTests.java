@@ -75,10 +75,23 @@ public class TestRestTemplateTests {
 	}
 
 	@Test
+	public void fromRestTemplateBuilderWithNoOptionsUsesCustomRequestFactory() {
+		ClientHttpRequestFactory requestFactory = mock(ClientHttpRequestFactory.class);
+		RestTemplateBuilder builder = new RestTemplateBuilder()
+				.requestFactory(requestFactory);
+		assertThat(new TestRestTemplate(builder).getRestTemplate().getRequestFactory())
+				.isSameAs(requestFactory);
+	}
+
+	@Test
 	public void simple() {
 		// The Apache client is on the classpath so we get the fully-fledged factory
-		assertThat(new TestRestTemplate().getRestTemplate().getRequestFactory())
+		ClientHttpRequestFactory requestFactory = new TestRestTemplate().getRestTemplate()
+				.getRequestFactory();
+		assertThat(requestFactory)
 				.isInstanceOf(HttpComponentsClientHttpRequestFactory.class);
+		assertThat(requestFactory)
+				.isNotInstanceOf(CustomHttpComponentsClientHttpRequestFactory.class);
 	}
 
 	@Test
@@ -177,7 +190,7 @@ public class TestRestTemplateTests {
 		assertThat(ReflectionTestUtils.getField(
 				basicAuthTemplate.getRestTemplate().getRequestFactory(),
 				"requestFactory"))
-						.isInstanceOf(CustomHttpComponentsClientHttpRequestFactory.class);
+						.isInstanceOf(HttpComponentsClientHttpRequestFactory.class);
 		assertThat(basicAuthTemplate.getRestTemplate().getUriTemplateHandler())
 				.isSameAs(originalTemplate.getRestTemplate().getUriTemplateHandler());
 		assertThat(basicAuthTemplate.getRestTemplate().getInterceptors()).hasSize(1);
@@ -197,7 +210,7 @@ public class TestRestTemplateTests {
 				.isInstanceOf(InterceptingClientHttpRequestFactory.class);
 		assertThat(ReflectionTestUtils.getField(
 				basicAuth.getRestTemplate().getRequestFactory(), "requestFactory"))
-						.isInstanceOf(CustomHttpComponentsClientHttpRequestFactory.class);
+						.isInstanceOf(InterceptingClientHttpRequestFactory.class);
 		assertThat(basicAuth.getRestTemplate().getUriTemplateHandler())
 				.isSameAs(original.getRestTemplate().getUriTemplateHandler());
 		assertThat(basicAuth.getRestTemplate().getInterceptors()).hasSize(1);
