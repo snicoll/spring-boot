@@ -50,21 +50,19 @@ public class ReactiveCassandraDataAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean(ReactiveSession.class)
-	public ReactiveSession rectiveSession(Session session)
-			throws Exception {
+	public ReactiveSession reactiveSession(Session session) {
 		return new DefaultBridgedReactiveSession(session, Schedulers.elastic());
 	}
 
 	@Bean
-	public ReactiveSessionFactory reactiveSessionFactory(ReactiveSession reactiveSession)
-			throws Exception {
+	public ReactiveSessionFactory reactiveSessionFactory(ReactiveSession reactiveSession) {
 		return new DefaultReactiveSessionFactory(reactiveSession);
 	}
 
 	@Bean
 	@ConditionalOnMissingBean
 	public ReactiveCassandraTemplate reactiveCassandraTemplate(ReactiveSession session,
-			CassandraConverter converter) throws Exception {
+			CassandraConverter converter) {
 		return new ReactiveCassandraTemplate(session, converter);
 	}
 
