@@ -27,7 +27,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.context.properties.DeprecatedConfigurationProperty;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;
 import org.springframework.boot.web.server.Compression;
 import org.springframework.boot.web.server.Ssl;
@@ -942,12 +941,6 @@ public class ServerProperties {
 		private Integer bufferSize;
 
 		/**
-		 * Number of buffer per region.
-		 */
-		@Deprecated
-		private Integer buffersPerRegion;
-
-		/**
 		 * Number of I/O threads to create for the worker.
 		 */
 		private Integer ioThreads;
@@ -978,15 +971,6 @@ public class ServerProperties {
 
 		public void setBufferSize(Integer bufferSize) {
 			this.bufferSize = bufferSize;
-		}
-
-		@DeprecatedConfigurationProperty(reason = "The property is not used by Undertow. See https://issues.jboss.org/browse/UNDERTOW-587 for details")
-		public Integer getBuffersPerRegion() {
-			return this.buffersPerRegion;
-		}
-
-		public void setBuffersPerRegion(Integer buffersPerRegion) {
-			this.buffersPerRegion = buffersPerRegion;
 		}
 
 		public Integer getIoThreads() {
