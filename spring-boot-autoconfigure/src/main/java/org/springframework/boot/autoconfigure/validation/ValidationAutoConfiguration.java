@@ -28,6 +28,7 @@ import org.springframework.boot.bind.RelaxedPropertyResolver;
 import org.springframework.boot.validation.MessageInterpolatorFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Role;
 import org.springframework.core.env.Environment;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
@@ -47,8 +48,9 @@ public class ValidationAutoConfiguration {
 
 	@Bean
 	@Role(BeanDefinition.ROLE_INFRASTRUCTURE)
-	@ConditionalOnMissingBean
-	public static Validator jsr303Validator() {
+	@ConditionalOnMissingBean(Validator.class)
+	@Primary
+	public static LocalValidatorFactoryBean defaultValidator() {
 		LocalValidatorFactoryBean factoryBean = new LocalValidatorFactoryBean();
 		MessageInterpolatorFactory interpolatorFactory = new MessageInterpolatorFactory();
 		factoryBean.setMessageInterpolator(interpolatorFactory.getObject());
