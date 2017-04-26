@@ -32,14 +32,18 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 import org.springframework.validation.beanvalidation.MethodValidationPostProcessor;
+import org.springframework.validation.beanvalidation.OptionalValidatorFactoryBean;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 /**
  * Tests for {@link ValidationAutoConfiguration}.
  *
  * @author Stephane Nicoll
+ * @author Phillip Webb
  */
 public class ValidationAutoConfigurationTests {
 
@@ -53,6 +57,62 @@ public class ValidationAutoConfigurationTests {
 		if (this.context != null) {
 			this.context.close();
 		}
+	}
+
+	@Test
+	public void validationAutoConfigurationShouldConfigureDefaultValidator() {
+		load(Config.class);
+		String[] jsrValidatorNames = this.context.getBeanNamesForType(Validator.class);
+		String[] springValidatorNames = this.context
+				.getBeanNamesForType(org.springframework.validation.Validator.class);
+		assertThat(jsrValidatorNames).containsExactly("defaultValidator");
+		assertThat(springValidatorNames).containsExactly("defaultValidator");
+		Validator jsrValidator = this.context.getBean(Validator.class);
+		org.springframework.validation.Validator springValidator = this.context
+				.getBean(org.springframework.validation.Validator.class);
+		assertThat(jsrValidator).isInstanceOf(LocalValidatorFactoryBean.class);
+		assertThat(jsrValidator).isEqualTo(springValidator);
+	}
+
+	@Test
+	public void validationAutoConfigurationWhenUserProvidesValidatorShouldBackOff() {
+		load(UserDefinedValidatorConfig.class);
+		String[] jsrValidatorNames = this.context.getBeanNamesForType(Validator.class);
+		String[] springValidatorNames = this.context
+				.getBeanNamesForType(org.springframework.validation.Validator.class);
+		assertThat(jsrValidatorNames).containsExactly("customValidator");
+		assertThat(springValidatorNames).containsExactly("customValidator");
+		org.springframework.validation.Validator springValidator = this.context
+				.getBean(org.springframework.validation.Validator.class);
+		Validator jsrValidator = this.context.getBean(Validator.class);
+		assertThat(jsrValidator).isInstanceOf(OptionalValidatorFactoryBean.class);
+		assertThat(jsrValidator).isEqualTo(springValidator);
+	}
+
+	@Test
+	public void validationAutoConfigurationWhenUserProvidesJsrValidatorShouldBackOff() {
+		load(UserDefinedJsrValidatorConfig.class);
+		String[] jsrValidatorNames = this.context.getBeanNamesForType(Validator.class);
+		String[] springValidatorNames = this.context
+				.getBeanNamesForType(org.springframework.validation.Validator.class);
+		assertThat(jsrValidatorNames).containsExactly("customValidator");
+		assertThat(springValidatorNames).isEmpty();
+	}
+
+	@Test
+	public void validationAutoConfigurationWhenUserProvidesSpringValidatorShouldCreateJsrValidator() {
+		load(UserDefinedSpringValidatorConfig.class);
+		String[] jsrValidatorNames = this.context.getBeanNamesForType(Validator.class);
+		String[] springValidatorNames = this.context
+				.getBeanNamesForType(org.springframework.validation.Validator.class);
+		assertThat(jsrValidatorNames).containsExactly("defaultValidator");
+		assertThat(springValidatorNames)
+				.containsExactly("customValidator", "defaultValidator");
+		Validator jsrValidator = this.context.getBean(Validator.class);
+		org.springframework.validation.Validator springValidator = this.context
+				.getBean(org.springframework.validation.Validator.class);
+		assertThat(jsrValidator).isInstanceOf(LocalValidatorFactoryBean.class);
+		assertThat(jsrValidator).isEqualTo(springValidator);
 	}
 
 	@Test
@@ -113,6 +173,41 @@ public class ValidationAutoConfigurationTests {
 		ctx.register(ValidationAutoConfiguration.class);
 		ctx.refresh();
 		this.context = ctx;
+	}
+
+	@Configuration
+	static class Config {
+
+	}
+
+	@Configuration
+	static class UserDefinedValidatorConfig {
+
+		@Bean
+		public OptionalValidatorFactoryBean customValidator() {
+			return new OptionalValidatorFactoryBean();
+		}
+
+	}
+
+	@Configuration
+	static class UserDefinedJsrValidatorConfig {
+
+		@Bean
+		public Validator customValidator() {
+			return mock(Validator.class);
+		}
+
+	}
+
+	@Configuration
+	static class UserDefinedSpringValidatorConfig {
+
+		@Bean
+		public org.springframework.validation.Validator customValidator() {
+			return mock(org.springframework.validation.Validator.class);
+		}
+
 	}
 
 	@Validated
