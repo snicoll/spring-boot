@@ -42,7 +42,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
 import org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration;
-import org.springframework.boot.autoconfigure.validation.ValidationAutoConfiguration;
 import org.springframework.boot.autoconfigure.web.servlet.DispatcherServletAutoConfiguration;
 import org.springframework.boot.autoconfigure.web.servlet.ServletWebServerFactoryAutoConfiguration;
 import org.springframework.boot.autoconfigure.web.servlet.WebMvcAutoConfiguration;
@@ -155,9 +154,9 @@ public class EndpointMvcIntegrationTests {
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
 	@Import({ ServletWebServerFactoryAutoConfiguration.class,
-			DispatcherServletAutoConfiguration.class, ValidationAutoConfiguration.class,
-			WebMvcAutoConfiguration.class, JacksonAutoConfiguration.class,
-			ErrorMvcAutoConfiguration.class, PropertyPlaceholderAutoConfiguration.class })
+			DispatcherServletAutoConfiguration.class, WebMvcAutoConfiguration.class,
+			JacksonAutoConfiguration.class, ErrorMvcAutoConfiguration.class,
+			PropertyPlaceholderAutoConfiguration.class })
 	protected @interface MinimalWebConfiguration {
 
 	}
