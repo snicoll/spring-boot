@@ -18,6 +18,7 @@ package org.springframework.boot.junit.runner.classpath;
 
 import java.io.File;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -93,15 +94,15 @@ public class ModifiedClassPathRunner extends BlockJUnit4ClassRunner {
 	}
 
 	private URLClassLoader createTestClassLoader(Class<?> testClass) throws Exception {
-		URLClassLoader classLoader = (URLClassLoader) this.getClass().getClassLoader();
+		ClassLoader classLoader = this.getClass().getClassLoader();
 		return new ModifiedClassPathClassLoader(
 				processUrls(extractUrls(classLoader), testClass), classLoader.getParent(),
 				classLoader);
 	}
 
-	private URL[] extractUrls(URLClassLoader classLoader) throws Exception {
+	private URL[] extractUrls(ClassLoader classLoader) throws Exception {
 		List<URL> extractedUrls = new ArrayList<URL>();
-		for (URL url : classLoader.getURLs()) {
+		for (URL url : doExtractUrls(classLoader)) {
 			if (isSurefireBooterJar(url)) {
 				extractedUrls.addAll(extractUrlsFromManifestClassPath(url));
 			}
@@ -110,6 +111,20 @@ public class ModifiedClassPathRunner extends BlockJUnit4ClassRunner {
 			}
 		}
 		return extractedUrls.toArray(new URL[extractedUrls.size()]);
+	}
+
+	private URL[] doExtractUrls(ClassLoader classLoader) throws Exception {
+		if (classLoader instanceof URLClassLoader) {
+			return ((URLClassLoader) classLoader).getURLs();
+		}
+		Field ucpField = classLoader.getClass().getDeclaredField("ucp");
+		ucpField.setAccessible(true);
+		Object ucp = ucpField.get(classLoader);
+		Field pathField = ucp.getClass().getDeclaredField("path");
+		pathField.setAccessible(true);
+		@SuppressWarnings("unchecked")
+		List<URL> path = (List<URL>) pathField.get(ucp);
+		return path.toArray(new URL[path.size()]);
 	}
 
 	private boolean isSurefireBooterJar(URL url) {
