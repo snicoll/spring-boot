@@ -17,6 +17,7 @@
 	<properties>
 		<main.basedir>${basedir}/../..</main.basedir>
 		<ant.version>1.9.3</ant.version>
+		<skipTests>true</skipTests>
 	</properties>
 	<dependencies>
 		<dependency>
