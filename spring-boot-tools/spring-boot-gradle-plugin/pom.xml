@@ -60,6 +60,9 @@
 								<argument>-Pversion=${project.version}</argument>
 								<argument>-Pdescription=${project.description}</argument>
 							</arguments>
+							<environmentVariables>
+								<JDK_JAVA_OPTIONS>--add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED</JDK_JAVA_OPTIONS>
+							</environmentVariables>
 						</configuration>
 						<goals>
 							<goal>exec</goal>
