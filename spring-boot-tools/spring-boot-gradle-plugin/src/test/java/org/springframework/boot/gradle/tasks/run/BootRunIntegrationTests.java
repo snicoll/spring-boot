@@ -48,9 +48,12 @@ public class BootRunIntegrationTests {
 		new File(this.gradleBuild.getProjectDir(), "src/main/resources").mkdirs();
 		BuildResult result = this.gradleBuild.build("bootRun");
 		assertThat(result.task(":bootRun").getOutcome()).isEqualTo(TaskOutcome.SUCCESS);
-		assertThat(result.getOutput()).contains("1. " + urlOf("build/classes/main"));
-		assertThat(result.getOutput()).contains("2. " + urlOf("build/resources/main"));
-		assertThat(result.getOutput()).doesNotContain(urlOf("src/main/resources"));
+		assertThat(result.getOutput())
+				.contains("1. " + canonicalPathOf("build/classes/main"));
+		assertThat(result.getOutput())
+				.contains("2. " + canonicalPathOf("build/resources/main"));
+		assertThat(result.getOutput())
+				.doesNotContain(canonicalPathOf("src/main/resources"));
 	}
 
 	@Test
@@ -61,9 +64,12 @@ public class BootRunIntegrationTests {
 		FileSystemUtils.copyRecursively(new File("src/test/java/com/example"), output);
 		BuildResult result = this.gradleBuild.build("bootRun");
 		assertThat(result.task(":bootRun").getOutcome()).isEqualTo(TaskOutcome.SUCCESS);
-		assertThat(result.getOutput()).contains("1. " + urlOf("src/main/resources"));
-		assertThat(result.getOutput()).contains("2. " + urlOf("build/classes/main"));
-		assertThat(result.getOutput()).doesNotContain(urlOf("build/resources/main"));
+		assertThat(result.getOutput())
+				.contains("1. " + canonicalPathOf("src/main/resources"));
+		assertThat(result.getOutput())
+				.contains("2. " + canonicalPathOf("build/classes/main"));
+		assertThat(result.getOutput())
+				.doesNotContain(canonicalPathOf("build/resources/main"));
 	}
 
 	@Test
@@ -84,9 +90,8 @@ public class BootRunIntegrationTests {
 				.contains("JVM arguments = [-Dcom.foo=bar, -Dcom.bar=baz]");
 	}
 
-	private String urlOf(String path) throws IOException {
-		return new File(this.gradleBuild.getProjectDir().getCanonicalFile(), path).toURI()
-				.toURL().toString();
+	private String canonicalPathOf(String path) throws IOException {
+		return new File(this.gradleBuild.getProjectDir(), path).getCanonicalPath();
 	}
 
 }
