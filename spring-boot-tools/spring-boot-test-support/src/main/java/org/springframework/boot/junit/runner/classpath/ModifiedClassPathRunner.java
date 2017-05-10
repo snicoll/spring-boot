@@ -18,7 +18,7 @@ package org.springframework.boot.junit.runner.classpath;
 
 import java.io.File;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
+import java.lang.management.ManagementFactory;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -28,6 +28,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
+import java.util.stream.Stream;
 
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
 import org.eclipse.aether.DefaultRepositorySystemSession;
@@ -102,39 +103,47 @@ public class ModifiedClassPathRunner extends BlockJUnit4ClassRunner {
 
 	private URL[] extractUrls(ClassLoader classLoader) throws Exception {
 		List<URL> extractedUrls = new ArrayList<URL>();
-		for (URL url : doExtractUrls(classLoader)) {
+		doExtractUrls(classLoader).forEach((URL url) -> {
 			if (isSurefireBooterJar(url)) {
 				extractedUrls.addAll(extractUrlsFromManifestClassPath(url));
 			}
 			else {
 				extractedUrls.add(url);
 			}
-		}
+		});
 		return extractedUrls.toArray(new URL[extractedUrls.size()]);
 	}
 
-	private URL[] doExtractUrls(ClassLoader classLoader) throws Exception {
+	private Stream<URL> doExtractUrls(ClassLoader classLoader) throws Exception {
 		if (classLoader instanceof URLClassLoader) {
-			return ((URLClassLoader) classLoader).getURLs();
+			return Stream.of(((URLClassLoader) classLoader).getURLs());
 		}
-		Field ucpField = classLoader.getClass().getDeclaredField("ucp");
-		ucpField.setAccessible(true);
-		Object ucp = ucpField.get(classLoader);
-		Field pathField = ucp.getClass().getDeclaredField("path");
-		pathField.setAccessible(true);
-		@SuppressWarnings("unchecked")
-		List<URL> path = (List<URL>) pathField.get(ucp);
-		return path.toArray(new URL[path.size()]);
+		return Stream.of(ManagementFactory.getRuntimeMXBean().getClassPath()
+				.split(File.pathSeparator)).map(this::toURL);
+	}
+
+	private URL toURL(String entry) {
+		try {
+			return new File(entry).toURI().toURL();
+		}
+		catch (Exception ex) {
+			throw new IllegalArgumentException(ex);
+		}
 	}
 
 	private boolean isSurefireBooterJar(URL url) {
 		return url.getPath().contains("surefirebooter");
 	}
 
-	private List<URL> extractUrlsFromManifestClassPath(URL booterJar) throws Exception {
+	private List<URL> extractUrlsFromManifestClassPath(URL booterJar) {
 		List<URL> urls = new ArrayList<URL>();
-		for (String entry : getClassPath(booterJar)) {
-			urls.add(new URL(entry));
+		try {
+			for (String entry : getClassPath(booterJar)) {
+				urls.add(new URL(entry));
+			}
+		}
+		catch (Exception ex) {
+			throw new RuntimeException(ex);
 		}
 		return urls;
 	}
