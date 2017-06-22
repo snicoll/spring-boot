@@ -19,9 +19,6 @@ package org.springframework.boot.autoconfigure.jdbc;
 import javax.sql.DataSource;
 import javax.sql.XADataSource;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import org.springframework.beans.factory.BeanFactoryUtils;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -34,11 +31,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.SpringBootCondition;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceInitializerPostProcessor.Registrar;
 import org.springframework.boot.autoconfigure.jdbc.metadata.DataSourcePoolMetadataProvidersConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Condition;
 import org.springframework.context.annotation.ConditionContext;
 import org.springframework.context.annotation.Conditional;
@@ -60,18 +54,8 @@ import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 @Configuration
 @ConditionalOnClass({ DataSource.class, EmbeddedDatabaseType.class })
 @EnableConfigurationProperties(DataSourceProperties.class)
-@Import({ Registrar.class, DataSourcePoolMetadataProvidersConfiguration.class })
+@Import(DataSourcePoolMetadataProvidersConfiguration.class)
 public class DataSourceAutoConfiguration {
-
-	private static final Log logger = LogFactory
-			.getLog(DataSourceAutoConfiguration.class);
-
-	@Bean
-	@ConditionalOnMissingBean
-	public DataSourceInitializer dataSourceInitializer(DataSourceProperties properties,
-			ApplicationContext applicationContext) {
-		return new DataSourceInitializer(properties, applicationContext);
-	}
 
 	/**
 	 * Determines if the {@code dataSource} being used by Spring was created from
@@ -94,7 +78,8 @@ public class DataSourceAutoConfiguration {
 	@Configuration
 	@Conditional(EmbeddedDatabaseCondition.class)
 	@ConditionalOnMissingBean({ DataSource.class, XADataSource.class })
-	@Import(EmbeddedDataSourceConfiguration.class)
+	@Import({ EmbeddedDataSourceConfiguration.class,
+			DataSourceInitializationConfiguration.class })
 	protected static class EmbeddedDatabaseConfiguration {
 
 	}
@@ -104,7 +89,8 @@ public class DataSourceAutoConfiguration {
 	@ConditionalOnMissingBean({ DataSource.class, XADataSource.class })
 	@Import({ DataSourceConfiguration.Hikari.class, DataSourceConfiguration.Tomcat.class,
 			DataSourceConfiguration.Dbcp2.class, DataSourceConfiguration.Generic.class,
-			DataSourceJmxConfiguration.class })
+			DataSourceJmxConfiguration.class,
+			DataSourceInitializationConfiguration.class })
 	protected static class PooledDataSourceConfiguration {
 
 	}

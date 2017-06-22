@@ -33,6 +33,7 @@ import org.junit.rules.ExpectedException;
 
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
+import org.springframework.boot.context.config.ResourceNotFoundException;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.util.TestPropertyValues;
@@ -48,18 +49,19 @@ import org.springframework.core.io.support.ResourcePatternUtils;
 import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.init.UncategorizedScriptException;
 import org.springframework.util.ClassUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
 /**
- * Tests for {@link DataSourceInitializer}.
+ * Tests for {@link DataSourceInitializerInvoker}.
  *
  * @author Dave Syer
  * @author Stephane Nicoll
  */
-public class DataSourceInitializerTests {
+public class DataSourceInitializerInvokerTests {
 
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();
@@ -84,7 +86,7 @@ public class DataSourceInitializerTests {
 
 	@Test
 	public void testDefaultDataSourceDoesNotExists() throws Exception {
-		this.context.register(DataSourceInitializer.class,
+		this.context.register(DataSourceInitializerInvoker.class,
 				PropertyPlaceholderAutoConfiguration.class, DataSourceProperties.class);
 		this.context.refresh();
 		assertThat(this.context.getBeanNamesForType(DataSource.class).length)
@@ -95,7 +97,7 @@ public class DataSourceInitializerTests {
 	public void testTwoDataSources() throws Exception {
 		TestPropertyValues.of("datasource.one.url=jdbc:hsqldb:mem:/one",
 				"datasource.two.url=jdbc:hsqldb:mem:/two").applyTo(this.context);
-		this.context.register(TwoDataSources.class, DataSourceInitializer.class,
+		this.context.register(TwoDataSources.class, DataSourceInitializerInvoker.class,
 				PropertyPlaceholderAutoConfiguration.class, DataSourceProperties.class);
 		this.context.refresh();
 		assertThat(this.context.getBeanNamesForType(DataSource.class).length)
@@ -195,7 +197,6 @@ public class DataSourceInitializerTests {
 				PropertyPlaceholderAutoConfiguration.class);
 		this.context.refresh();
 		DataSource dataSource = this.context.getBean(DataSource.class);
-		this.context.publishEvent(new DataSourceInitializedEvent(dataSource));
 		assertThat(dataSource).isInstanceOf(HikariDataSource.class);
 		assertThat(dataSource).isNotNull();
 		JdbcOperations template = new JdbcTemplate(dataSource);
@@ -227,7 +228,7 @@ public class DataSourceInitializerTests {
 			fail("User does not exist");
 		}
 		catch (Exception ex) {
-			assertThat(ex).isInstanceOf(BeanCreationException.class);
+			assertThat(ex).isInstanceOf(UncategorizedScriptException.class);
 		}
 	}
 
@@ -248,7 +249,7 @@ public class DataSourceInitializerTests {
 			fail("User does not exist");
 		}
 		catch (Exception ex) {
-			assertThat(ex).isInstanceOf(BeanCreationException.class);
+			assertThat(ex).isInstanceOf(UncategorizedScriptException.class);
 		}
 	}
 
@@ -300,7 +301,7 @@ public class DataSourceInitializerTests {
 				"spring.datasource.data:classpath:does/not/exist.sql")
 				.applyTo(this.context);
 
-		this.thrown.expect(BeanCreationException.class);
+		this.thrown.expect(ResourceNotFoundException.class);
 		this.thrown.expectMessage("does/not/exist.sql");
 		this.thrown.expectMessage("spring.datasource.data");
 		this.context.refresh();
