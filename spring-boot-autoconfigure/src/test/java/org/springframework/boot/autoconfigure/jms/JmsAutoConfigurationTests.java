@@ -68,7 +68,7 @@ public class JmsAutoConfigurationTests {
 
 	@Test
 	public void testDefaultJmsConfiguration() {
-		this.context.load(TestConfiguration.class);
+		this.context.config(TestConfiguration.class).load();
 		ActiveMQConnectionFactory connectionFactory = this.context
 				.getBean(ActiveMQConnectionFactory.class);
 		JmsTemplate jmsTemplate = this.context.getBean(JmsTemplate.class);
@@ -83,21 +83,21 @@ public class JmsAutoConfigurationTests {
 
 	@Test
 	public void testConnectionFactoryBackOff() {
-		this.context.load(TestConfiguration2.class);
+		this.context.config(TestConfiguration2.class).load();
 		assertThat(this.context.getBean(ActiveMQConnectionFactory.class).getBrokerURL())
 				.isEqualTo("foobar");
 	}
 
 	@Test
 	public void testJmsTemplateBackOff() {
-		this.context.load(TestConfiguration3.class);
+		this.context.config(TestConfiguration3.class).load();
 		JmsTemplate jmsTemplate = this.context.getBean(JmsTemplate.class);
 		assertThat(jmsTemplate.getPriority()).isEqualTo(999);
 	}
 
 	@Test
 	public void testJmsMessagingTemplateBackOff() {
-		this.context.load(TestConfiguration5.class);
+		this.context.config(TestConfiguration5.class).load();
 		JmsMessagingTemplate messagingTemplate = this.context
 				.getBean(JmsMessagingTemplate.class);
 		assertThat(messagingTemplate.getDefaultDestinationName()).isEqualTo("fooBar");
@@ -119,7 +119,7 @@ public class JmsAutoConfigurationTests {
 
 	@Test
 	public void testEnableJmsCreateDefaultContainerFactory() {
-		this.context.load(EnableJmsConfiguration.class);
+		this.context.config(EnableJmsConfiguration.class).load();
 		JmsListenerContainerFactory<?> jmsListenerContainerFactory = this.context.getBean(
 				"jmsListenerContainerFactory", JmsListenerContainerFactory.class);
 		assertThat(jmsListenerContainerFactory.getClass())
@@ -138,11 +138,11 @@ public class JmsAutoConfigurationTests {
 
 	@Test
 	public void testJmsListenerContainerFactoryWithCustomSettings() {
-		this.context.load(EnableJmsConfiguration.class,
+		this.context.config(EnableJmsConfiguration.class).env(
 				"spring.jms.listener.autoStartup=false",
 				"spring.jms.listener.acknowledgeMode=client",
 				"spring.jms.listener.concurrency=2",
-				"spring.jms.listener.maxConcurrency=10");
+				"spring.jms.listener.maxConcurrency=10").load();
 		JmsListenerContainerFactory<?> jmsListenerContainerFactory = this.context.getBean(
 				"jmsListenerContainerFactory", JmsListenerContainerFactory.class);
 		assertThat(jmsListenerContainerFactory.getClass())
@@ -169,7 +169,7 @@ public class JmsAutoConfigurationTests {
 		assertThat(listenerContainer.isSessionTransacted()).isFalse();
 		assertThat(new DirectFieldAccessor(listenerContainer)
 				.getPropertyValue("transactionManager"))
-						.isSameAs(this.context.getBean(JtaTransactionManager.class));
+				.isSameAs(this.context.getBean(JtaTransactionManager.class));
 	}
 
 	@Test
@@ -189,7 +189,7 @@ public class JmsAutoConfigurationTests {
 
 	@Test
 	public void testDefaultContainerFactoryNoTransactionManager() {
-		this.context.load(EnableJmsConfiguration.class);
+		this.context.config(EnableJmsConfiguration.class).load();
 		JmsListenerContainerFactory<?> jmsListenerContainerFactory = this.context.getBean(
 				"jmsListenerContainerFactory", JmsListenerContainerFactory.class);
 		assertThat(jmsListenerContainerFactory.getClass())
@@ -218,7 +218,7 @@ public class JmsAutoConfigurationTests {
 	@Test
 	public void testCustomContainerFactoryWithConfigurer() {
 		this.context.config(TestConfiguration9.class, EnableJmsConfiguration.class)
-				.load("spring.jms.listener.autoStartup=false");
+				.env("spring.jms.listener.autoStartup=false").load();
 		assertThat(this.context.containsBean("jmsListenerContainerFactory")).isTrue();
 		JmsListenerContainerFactory<?> jmsListenerContainerFactory = this.context.getBean(
 				"customListenerContainerFactory", JmsListenerContainerFactory.class);
@@ -233,7 +233,7 @@ public class JmsAutoConfigurationTests {
 
 	@Test
 	public void testJmsTemplateWithMessageConverter() {
-		this.context.load(MessageConvertersConfiguration.class);
+		this.context.config(MessageConvertersConfiguration.class).load();
 		JmsTemplate jmsTemplate = this.context.getBean(JmsTemplate.class);
 		assertThat(jmsTemplate.getMessageConverter())
 				.isSameAs(this.context.getBean("myMessageConverter"));
@@ -241,7 +241,7 @@ public class JmsAutoConfigurationTests {
 
 	@Test
 	public void testJmsTemplateWithDestinationResolver() {
-		this.context.load(DestinationResolversConfiguration.class);
+		this.context.config(DestinationResolversConfiguration.class).load();
 		JmsTemplate jmsTemplate = this.context.getBean(JmsTemplate.class);
 		assertThat(jmsTemplate.getDestinationResolver())
 				.isSameAs(this.context.getBean("myDestinationResolver"));
@@ -249,12 +249,12 @@ public class JmsAutoConfigurationTests {
 
 	@Test
 	public void testJmsTemplateFullCustomization() {
-		this.context.load(MessageConvertersConfiguration.class,
+		this.context.config(MessageConvertersConfiguration.class).env(
 				"spring.jms.template.default-destination=testQueue",
 				"spring.jms.template.delivery-delay=500",
 				"spring.jms.template.delivery-mode=non-persistent",
 				"spring.jms.template.priority=6", "spring.jms.template.time-to-live=6000",
-				"spring.jms.template.receive-timeout=2000");
+				"spring.jms.template.receive-timeout=2000").load();
 		JmsTemplate jmsTemplate = this.context.getBean(JmsTemplate.class);
 		assertThat(jmsTemplate.getMessageConverter())
 				.isSameAs(this.context.getBean("myMessageConverter"));
@@ -270,21 +270,22 @@ public class JmsAutoConfigurationTests {
 
 	@Test
 	public void testPubSubDisabledByDefault() {
-		this.context.load(TestConfiguration.class);
+		this.context.config(TestConfiguration.class).load();
 		JmsTemplate jmsTemplate = this.context.getBean(JmsTemplate.class);
 		assertThat(jmsTemplate.isPubSubDomain()).isFalse();
 	}
 
 	@Test
 	public void testJmsTemplatePostProcessedSoThatPubSubIsTrue() {
-		this.context.load(TestConfiguration4.class);
+		this.context.config(TestConfiguration4.class).load();
 		JmsTemplate jmsTemplate = this.context.getBean(JmsTemplate.class);
 		assertThat(jmsTemplate.isPubSubDomain()).isTrue();
 	}
 
 	@Test
 	public void testPubSubDomainActive() {
-		this.context.load(TestConfiguration.class, "spring.jms.pubSubDomain:true");
+		this.context.config(TestConfiguration.class).env("spring.jms.pubSubDomain:true")
+				.load();
 		JmsTemplate jmsTemplate = this.context.getBean(JmsTemplate.class);
 		DefaultMessageListenerContainer defaultMessageListenerContainer = this.context
 				.getBean(DefaultJmsListenerContainerFactory.class)
@@ -295,7 +296,8 @@ public class JmsAutoConfigurationTests {
 
 	@Test
 	public void testPubSubDomainOverride() {
-		this.context.load(TestConfiguration.class, "spring.jms.pubSubDomain:false");
+		this.context.config(TestConfiguration.class).env("spring.jms.pubSubDomain:false")
+				.load();
 		JmsTemplate jmsTemplate = this.context.getBean(JmsTemplate.class);
 		ActiveMQConnectionFactory connectionFactory = this.context
 				.getBean(ActiveMQConnectionFactory.class);
@@ -307,7 +309,8 @@ public class JmsAutoConfigurationTests {
 
 	@Test
 	public void testActiveMQOverriddenStandalone() {
-		this.context.load(TestConfiguration.class, "spring.activemq.inMemory:false");
+		this.context.config(TestConfiguration.class).env("spring.activemq.inMemory:false")
+				.load();
 		JmsTemplate jmsTemplate = this.context.getBean(JmsTemplate.class);
 		ActiveMQConnectionFactory connectionFactory = this.context
 				.getBean(ActiveMQConnectionFactory.class);
@@ -320,8 +323,8 @@ public class JmsAutoConfigurationTests {
 
 	@Test
 	public void testActiveMQOverriddenRemoteHost() {
-		this.context.load(TestConfiguration.class,
-				"spring.activemq.brokerUrl:tcp://remote-host:10000");
+		this.context.config(TestConfiguration.class)
+				.env("spring.activemq.brokerUrl:tcp://remote-host:10000").load();
 		JmsTemplate jmsTemplate = this.context.getBean(JmsTemplate.class);
 		ActiveMQConnectionFactory connectionFactory = this.context
 				.getBean(ActiveMQConnectionFactory.class);
@@ -334,7 +337,8 @@ public class JmsAutoConfigurationTests {
 
 	@Test
 	public void testActiveMQOverriddenPool() {
-		this.context.load(TestConfiguration.class, "spring.activemq.pool.enabled:true");
+		this.context.config(TestConfiguration.class)
+				.env("spring.activemq.pool.enabled:true").load();
 		JmsTemplate jmsTemplate = this.context.getBean(JmsTemplate.class);
 		PooledConnectionFactory pool = this.context
 				.getBean(PooledConnectionFactory.class);
@@ -348,8 +352,9 @@ public class JmsAutoConfigurationTests {
 
 	@Test
 	public void testActiveMQOverriddenPoolAndStandalone() {
-		this.context.load(TestConfiguration.class, "spring.activemq.pool.enabled:true",
-				"spring.activemq.inMemory:false");
+		this.context.config(TestConfiguration.class)
+				.env("spring.activemq.pool.enabled:true",
+						"spring.activemq.inMemory:false").load();
 		JmsTemplate jmsTemplate = this.context.getBean(JmsTemplate.class);
 		PooledConnectionFactory pool = this.context
 				.getBean(PooledConnectionFactory.class);
@@ -363,8 +368,9 @@ public class JmsAutoConfigurationTests {
 
 	@Test
 	public void testActiveMQOverriddenPoolAndRemoteServer() {
-		this.context.load(TestConfiguration.class, "spring.activemq.pool.enabled:true",
-				"spring.activemq.brokerUrl:tcp://remote-host:10000");
+		this.context.config(TestConfiguration.class)
+				.env("spring.activemq.pool.enabled:true",
+						"spring.activemq.brokerUrl:tcp://remote-host:10000").load();
 		JmsTemplate jmsTemplate = this.context.getBean(JmsTemplate.class);
 		PooledConnectionFactory pool = this.context
 				.getBean(PooledConnectionFactory.class);
@@ -378,7 +384,7 @@ public class JmsAutoConfigurationTests {
 
 	@Test
 	public void enableJmsAutomatically() throws Exception {
-		this.context.load(NoEnableJmsConfiguration.class);
+		this.context.config(NoEnableJmsConfiguration.class).load();
 		this.context.getBean(JmsListenerConfigUtils.JMS_LISTENER_ANNOTATION_PROCESSOR_BEAN_NAME);
 		this.context.getBean(JmsListenerConfigUtils.JMS_LISTENER_ENDPOINT_REGISTRY_BEAN_NAME);
 	}

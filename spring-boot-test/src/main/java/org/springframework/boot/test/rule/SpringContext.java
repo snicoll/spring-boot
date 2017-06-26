@@ -43,6 +43,12 @@ import org.springframework.util.ObjectUtils;
  */
 public class SpringContext implements TestRule {
 
+	private boolean initialized;
+
+	private boolean configured;
+
+	private boolean loaded;
+
 	private List<String> env = new ArrayList<>();
 
 	private LinkedList<Class<?>> autoConfigurations = new LinkedList<>();
@@ -52,6 +58,7 @@ public class SpringContext implements TestRule {
 	private final Deque<ConfigurableApplicationContext> contexts = new ArrayDeque<>();
 
 	public SpringContext env(String... environment) {
+		triggerConfigurationInvoked();
 		if (!ObjectUtils.isEmpty(environment)) {
 			this.env.addAll(Arrays.asList(environment));
 		}
@@ -59,6 +66,7 @@ public class SpringContext implements TestRule {
 	}
 
 	public SpringContext autoConfig(Class<?>... autoConfigurations) {
+		triggerConfigurationInvoked();
 		if (!ObjectUtils.isEmpty(autoConfigurations)) {
 			this.autoConfigurations.addAll(Arrays.asList(autoConfigurations));
 		}
@@ -66,11 +74,13 @@ public class SpringContext implements TestRule {
 	}
 
 	public SpringContext autoConfigFirst(Class<?> autoConfiguration) {
+		triggerConfigurationInvoked();
 		this.autoConfigurations.addFirst(autoConfiguration);
 		return this;
 	}
 
 	public SpringContext config(Class<?>... configs) {
+		triggerConfigurationInvoked();
 		if (!ObjectUtils.isEmpty(configs)) {
 			this.userConfigurations.addAll(Arrays.asList(configs));
 		}
@@ -78,6 +88,7 @@ public class SpringContext implements TestRule {
 	}
 
 	public ConfigurableApplicationContext load() {
+		this.loaded = true;
 		AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext();
 		if (!ObjectUtils.isEmpty(this.env)) {
 			TestPropertyValues.of(this.env.toArray(new String[this.env.size()]))
@@ -94,14 +105,6 @@ public class SpringContext implements TestRule {
 		ctx.refresh();
 		this.contexts.push(ctx);
 		return ctx;
-	}
-
-	public ConfigurableApplicationContext load(Class<?> config, String... environment) {
-		return config(config).env(environment).load();
-	}
-
-	public ConfigurableApplicationContext load(String... environment) {
-		return env(environment).load();
 	}
 
 	public <T> T getBean(Class<T> type) {
@@ -124,15 +127,6 @@ public class SpringContext implements TestRule {
 		return getApplicationContext().containsBean(beanName);
 	}
 
-	public ConfigurableApplicationContext getApplicationContext() {
-		if (!this.contexts.isEmpty()) {
-			return this.contexts.peek();
-
-		}
-		throw new AssertionError("The ApplicationContext has not be started, "
-				+ "make sure the test is calling one of the 'load' methods");
-	}
-
 	public void close() {
 		ConfigurableApplicationContext context = this.contexts.poll();
 		if (context != null) {
@@ -140,9 +134,23 @@ public class SpringContext implements TestRule {
 		}
 	}
 
-	public void closeAll() {
-		for (ConfigurableApplicationContext context : this.contexts) {
-			context.close();
+	private ConfigurableApplicationContext getApplicationContext() {
+		if (!this.contexts.isEmpty()) {
+			return this.contexts.peek();
+
+		}
+		if (this.loaded) {
+			throw new IllegalStateException("The ApplicationContext has been closed already");
+		}
+		else {
+			throw new IllegalStateException("The ApplicationContext has not be started, "
+					+ "make sure the test is calling one of the 'load' methods");
+		}
+	}
+
+	private void triggerConfigurationInvoked() {
+		if (this.initialized) {
+			this.configured = true;
 		}
 	}
 
@@ -152,6 +160,7 @@ public class SpringContext implements TestRule {
 			@Override
 			public void evaluate() throws Throwable {
 				try {
+					SpringContext.this.initialized = true;
 					base.evaluate();
 				}
 				finally {
@@ -160,6 +169,19 @@ public class SpringContext implements TestRule {
 
 			}
 		};
+	}
+
+	private void closeAll() {
+		if (this.configured && !this.loaded) {
+			throw new IllegalStateException("SpringContext was configured in the test "
+					+ "but load() was not invoked. Did you forget to actually load the "
+					+ "context?");
+		}
+		for (ConfigurableApplicationContext context : this.contexts) {
+			if (context.isActive()) {
+				context.close();
+			}
+		}
 	}
 
 }
