@@ -21,6 +21,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.ConfigurableEnvironment;
@@ -28,66 +29,65 @@ import org.springframework.core.env.ConfigurableEnvironment;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Tests for {@link SpringContext}.
+ * Tests for {@link ContextLoader}.
  *
  * @author Stephane Nicoll
  */
-public class SpringContextTests {
+public class ContextLoaderTests {
 
 	@Rule
 	public final ExpectedException thrown = ExpectedException.none();
 
-	private final SpringContext context = new SpringContext();
+	private final ContextLoader contextLoader = new ContextLoader();
+
+	private ConfigurableApplicationContext context;
 
 	@After
 	public void closeContext() {
-		this.context.closeAll();
-	}
-
-	@Test
-	public void getBeanWithNoContext() {
-		this.thrown.expectMessage(
-				"make sure the test is calling one of the 'load' methods");
-		this.context.getBean("foo");
+		if (this.context != null) {
+			this.context.close();
+		}
 	}
 
 	@Test
 	public void configurationIsProcessedInOrder() {
-		this.context.config(ConfigA.class, AutoConfigA.class).load();
+		this.context = this.contextLoader.config(ConfigA.class, AutoConfigA.class).load();
 		assertThat(this.context.getBean("a")).isEqualTo("autoconfig-a");
 	}
 
 	@Test
 	public void useConfigurationIsProcessedFirst() {
-		this.context.autoConfig(AutoConfigA.class)
+		this.context = this.contextLoader.autoConfig(AutoConfigA.class)
 				.config(ConfigA.class).load();
 		assertThat(this.context.getBean("a")).isEqualTo("autoconfig-a");
 	}
 
 	@Test
 	public void autoConfigureFirstIsAppliedProperly() {
-		this.context.autoConfig(ConfigA.class)
+		this.context = this.contextLoader.autoConfig(ConfigA.class)
 				.autoConfigFirst(AutoConfigA.class).load();
 		assertThat(this.context.getBean("a")).isEqualTo("a");
 	}
 
 	@Test
 	public void configurationIsAdditive() {
-		this.context.config(AutoConfigA.class).config(AutoConfigB.class).load();
+		this.context = this.contextLoader.config(AutoConfigA.class)
+				.config(AutoConfigB.class).load();
 		assertThat(this.context.containsBean("a")).isTrue();
 		assertThat(this.context.containsBean("b")).isTrue();
 	}
 
 	@Test
 	public void autoConfigurationIsAdditive() {
-		this.context.autoConfig(AutoConfigA.class).autoConfig(AutoConfigB.class).load();
+		this.context = this.contextLoader.autoConfig(AutoConfigA.class)
+				.autoConfig(AutoConfigB.class).load();
 		assertThat(this.context.containsBean("a")).isTrue();
 		assertThat(this.context.containsBean("b")).isTrue();
 	}
 
 	@Test
 	public void envIsAdditive() {
-		this.context.env("test.foo=1").env("test.bar=2").load();
+		this.context = this.contextLoader.env("test.foo=1").env("test.bar=2").load();
 		ConfigurableEnvironment environment = this.context.getBean(
 				ConfigurableEnvironment.class);
 		assertThat(environment.getProperty("test.foo", Integer.class)).isEqualTo(1);
@@ -96,21 +96,10 @@ public class SpringContextTests {
 
 	@Test
 	public void envOverridesExistingKey() {
-		this.context.env("test.foo=1").env("test.foo=2").load("test.foo=3");
+		this.context = this.contextLoader.env("test.foo=1").env("test.foo=2").load();
 		assertThat(this.context.getBean(ConfigurableEnvironment.class)
-				.getProperty("test.foo", Integer.class)).isEqualTo(3);
+				.getProperty("test.foo", Integer.class)).isEqualTo(2);
 	}
-
-	@Test
-	public void closeContextDisposeIt() {
-		this.context.load(ConfigA.class);
-		assertThat(this.context.containsBean("a")).isTrue();
-		this.context.close();
-		this.thrown.expectMessage(
-				"make sure the test is calling one of the 'load' methods");
-		this.context.containsBean("a");
-	}
-
 
 	@Configuration
 	static class ConfigA {

@@ -23,7 +23,6 @@ import java.util.Deque;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.junit.rules.TestRule;
@@ -41,7 +40,7 @@ import org.springframework.util.ObjectUtils;
  *
  * @author Stephane Nicoll
  */
-public class SpringContext implements TestRule {
+public class ContextLoader implements TestRule {
 
 	private List<String> env = new ArrayList<>();
 
@@ -51,26 +50,26 @@ public class SpringContext implements TestRule {
 
 	private final Deque<ConfigurableApplicationContext> contexts = new ArrayDeque<>();
 
-	public SpringContext env(String... environment) {
+	public ContextLoader env(String... environment) {
 		if (!ObjectUtils.isEmpty(environment)) {
 			this.env.addAll(Arrays.asList(environment));
 		}
 		return this;
 	}
 
-	public SpringContext autoConfig(Class<?>... autoConfigurations) {
+	public ContextLoader autoConfig(Class<?>... autoConfigurations) {
 		if (!ObjectUtils.isEmpty(autoConfigurations)) {
 			this.autoConfigurations.addAll(Arrays.asList(autoConfigurations));
 		}
 		return this;
 	}
 
-	public SpringContext autoConfigFirst(Class<?> autoConfiguration) {
+	public ContextLoader autoConfigFirst(Class<?> autoConfiguration) {
 		this.autoConfigurations.addFirst(autoConfiguration);
 		return this;
 	}
 
-	public SpringContext config(Class<?>... configs) {
+	public ContextLoader config(Class<?>... configs) {
 		if (!ObjectUtils.isEmpty(configs)) {
 			this.userConfigurations.addAll(Arrays.asList(configs));
 		}
@@ -96,56 +95,6 @@ public class SpringContext implements TestRule {
 		return ctx;
 	}
 
-	public ConfigurableApplicationContext load(Class<?> config, String... environment) {
-		return config(config).env(environment).load();
-	}
-
-	public ConfigurableApplicationContext load(String... environment) {
-		return env(environment).load();
-	}
-
-	public <T> T getBean(Class<T> type) {
-		return getApplicationContext().getBean(type);
-	}
-
-	public Object getBean(String beanName) {
-		return getApplicationContext().getBean(beanName);
-	}
-
-	public <T> T getBean(String beanName, Class<T> type) {
-		return getApplicationContext().getBean(beanName, type);
-	}
-
-	public <T> Map<String, T> getBeansOfType(Class<T> target) {
-		return getApplicationContext().getBeansOfType(target);
-	}
-
-	public boolean containsBean(String beanName) {
-		return getApplicationContext().containsBean(beanName);
-	}
-
-	public ConfigurableApplicationContext getApplicationContext() {
-		if (!this.contexts.isEmpty()) {
-			return this.contexts.peek();
-
-		}
-		throw new AssertionError("The ApplicationContext has not be started, "
-				+ "make sure the test is calling one of the 'load' methods");
-	}
-
-	public void close() {
-		ConfigurableApplicationContext context = this.contexts.poll();
-		if (context != null) {
-			context.close();
-		}
-	}
-
-	public void closeAll() {
-		for (ConfigurableApplicationContext context : this.contexts) {
-			context.close();
-		}
-	}
-
 	@Override
 	public Statement apply(Statement base, Description description) {
 		return new Statement() {
@@ -160,6 +109,12 @@ public class SpringContext implements TestRule {
 
 			}
 		};
+	}
+
+	private void closeAll() {
+		for (ConfigurableApplicationContext context : this.contexts) {
+			context.close();
+		}
 	}
 
 }
