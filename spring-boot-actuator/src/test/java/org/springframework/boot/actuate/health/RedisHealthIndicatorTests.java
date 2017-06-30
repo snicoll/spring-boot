@@ -22,11 +22,14 @@ import java.util.Properties;
 
 import org.junit.After;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import org.springframework.boot.actuate.autoconfigure.EndpointAutoConfiguration;
 import org.springframework.boot.actuate.autoconfigure.HealthIndicatorAutoConfiguration;
 import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
+import org.springframework.boot.testsupport.runner.classpath.ClassPathExclusions;
+import org.springframework.boot.testsupport.runner.classpath.ModifiedClassPathRunner;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.data.redis.connection.ClusterInfo;
@@ -47,6 +50,8 @@ import static org.mockito.Mockito.verify;
  * @author Christian Dupuis
  * @author Richard Santana
  */
+@RunWith(ModifiedClassPathRunner.class)
+@ClassPathExclusions({ "reactor-core*.jar", "lettuce-core*" })
 public class RedisHealthIndicatorTests {
 
 	private AnnotationConfigApplicationContext context;

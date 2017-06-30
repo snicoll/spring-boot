@@ -22,6 +22,7 @@ import javax.sql.DataSource;
 
 import io.searchbox.client.JestClient;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.neo4j.ogm.session.SessionFactory;
 
 import org.springframework.boot.actuate.health.ApplicationHealthIndicator;
@@ -58,6 +59,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.context.ContextConsumer;
 import org.springframework.boot.test.context.ContextLoader;
+import org.springframework.boot.testsupport.runner.classpath.ClassPathExclusions;
+import org.springframework.boot.testsupport.runner.classpath.ModifiedClassPathRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.cassandra.core.CassandraOperations;
@@ -77,6 +80,8 @@ import static org.mockito.Mockito.mock;
  * @author Eddú Meléndez
  * @author Eric Spiegelberg
  */
+@RunWith(ModifiedClassPathRunner.class)
+@ClassPathExclusions({ "reactor-core*.jar", "lettuce-core*" })
 public class HealthIndicatorAutoConfigurationTests {
 
 	public final ContextLoader contextLoader = new ContextLoader().autoConfig(
