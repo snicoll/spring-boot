@@ -1,0 +1,128 @@
+/*
+ * Copyright 2012-2017 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.springframework.boot.actuate.endpoint.webflux;
+
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.BeanFactoryUtils;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.boot.actuate.endpoint.Endpoint;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.core.env.Environment;
+
+/**
+ * A registry for all {@link WebFluxEndpoint} beans, and a factory for a set of generic ones
+ * wrapping existing {@link Endpoint} instances that are not already exposed as WebFlux
+ * endpoints.
+ *
+ * @author Dave Syer
+ */
+public class WebFluxEndpoints implements ApplicationContextAware, InitializingBean {
+
+	private ApplicationContext applicationContext;
+
+	private final Set<WebFluxEndpoint> endpoints = new HashSet<>();
+
+	private Set<Class<?>> customTypes;
+
+	@Override
+	public void setApplicationContext(ApplicationContext applicationContext)
+			throws BeansException {
+		this.applicationContext = applicationContext;
+	}
+
+	@Override
+	public void afterPropertiesSet() throws Exception {
+		Collection<WebFluxEndpoint> existing = BeanFactoryUtils
+				.beansOfTypeIncludingAncestors(this.applicationContext, WebFluxEndpoint.class)
+				.values();
+		this.endpoints.addAll(existing);
+		this.customTypes = findEndpointClasses(existing);
+
+
+		/*  This would expose regular endpoints as reactive endpoints
+		@SuppressWarnings("rawtypes")
+		Collection<Endpoint> delegates = BeanFactoryUtils
+				.beansOfTypeIncludingAncestors(this.applicationContext, Endpoint.class)
+				.values();
+		for (Endpoint<?> endpoint : delegates) {
+			if (isGenericEndpoint(endpoint.getClass()) && endpoint.isEnabled()) {
+				EndpointWebFluxAdapter adapter = new EndpointWebFluxAdapter(endpoint);
+				String path = determinePath(endpoint,
+						this.applicationContext.getEnvironment());
+				if (path != null) {
+					adapter.setPath(path);
+				}
+				this.endpoints.add(adapter);
+			}
+		}*/
+	}
+
+	private Set<Class<?>> findEndpointClasses(Collection<WebFluxEndpoint> existing) {
+		Set<Class<?>> types = new HashSet<>();
+		for (WebFluxEndpoint endpoint : existing) {
+			Class<?> type = endpoint.getEndpointType();
+			if (type != null) {
+				types.add(type);
+			}
+		}
+		return types;
+	}
+
+	public Set<WebFluxEndpoint> getEndpoints() {
+		return this.endpoints;
+	}
+
+	/**
+	 * Return the endpoints of the specified type.
+	 * @param <E> the Class type of the endpoints to be returned
+	 * @param type the endpoint type
+	 * @return the endpoints
+	 */
+	@SuppressWarnings("unchecked")
+	public <E extends WebFluxEndpoint> Set<E> getEndpoints(Class<E> type) {
+		Set<E> result = new HashSet<>(this.endpoints.size());
+		for (WebFluxEndpoint candidate : this.endpoints) {
+			if (type.isInstance(candidate)) {
+				result.add((E) candidate);
+			}
+		}
+		return Collections.unmodifiableSet(result);
+	}
+
+	private boolean isGenericEndpoint(Class<?> type) {
+		return !this.customTypes.contains(type)
+				&& !WebFluxEndpoint.class.isAssignableFrom(type);
+	}
+
+	private String determinePath(Endpoint<?> endpoint, Environment environment) {
+		ConfigurationProperties configurationProperties = AnnotationUtils
+				.findAnnotation(endpoint.getClass(), ConfigurationProperties.class);
+		if (configurationProperties != null) {
+			return environment.getProperty(configurationProperties.prefix() + ".path");
+		}
+		return null;
+	}
+
+}

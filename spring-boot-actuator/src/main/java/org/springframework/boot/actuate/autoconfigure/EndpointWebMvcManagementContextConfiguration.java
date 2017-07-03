@@ -20,10 +20,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import javax.servlet.Servlet;
+
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.actuate.audit.AuditEventRepository;
 import org.springframework.boot.actuate.condition.ConditionalOnEnabledEndpoint;
-import org.springframework.boot.actuate.endpoint.Endpoint;
 import org.springframework.boot.actuate.endpoint.EnvironmentEndpoint;
 import org.springframework.boot.actuate.endpoint.HealthEndpoint;
 import org.springframework.boot.actuate.endpoint.LoggersEndpoint;
@@ -45,6 +46,7 @@ import org.springframework.boot.actuate.endpoint.mvc.ShutdownMvcEndpoint;
 import org.springframework.boot.autoconfigure.condition.ConditionMessage;
 import org.springframework.boot.autoconfigure.condition.ConditionOutcome;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.SpringBootCondition;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -56,6 +58,7 @@ import org.springframework.core.type.AnnotatedTypeMetadata;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.servlet.DispatcherServlet;
 
 /**
  * Configuration to expose {@link Endpoint} instances over Spring MVC.
@@ -67,6 +70,7 @@ import org.springframework.web.cors.CorsConfiguration;
  * @since 1.3.0
  */
 @ManagementContextConfiguration
+@ConditionalOnClass({ Servlet.class, DispatcherServlet.class })
 @EnableConfigurationProperties({ HealthMvcEndpointProperties.class,
 		EndpointCorsProperties.class })
 public class EndpointWebMvcManagementContextConfiguration {

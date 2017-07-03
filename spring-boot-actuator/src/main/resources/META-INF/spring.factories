@@ -3,6 +3,7 @@ org.springframework.boot.actuate.autoconfigure.AuditAutoConfiguration,\
 org.springframework.boot.actuate.autoconfigure.CacheStatisticsAutoConfiguration,\
 org.springframework.boot.actuate.autoconfigure.EndpointAutoConfiguration,\
 org.springframework.boot.actuate.autoconfigure.EndpointMBeanExportAutoConfiguration,\
+org.springframework.boot.actuate.autoconfigure.EndpointWebFluxAutoConfiguration,\
 org.springframework.boot.actuate.autoconfigure.EndpointWebMvcAutoConfiguration,\
 org.springframework.boot.actuate.autoconfigure.HealthIndicatorAutoConfiguration,\
 org.springframework.boot.actuate.autoconfigure.InfoContributorAutoConfiguration,\
@@ -14,10 +15,12 @@ org.springframework.boot.actuate.autoconfigure.MetricsDropwizardAutoConfiguratio
 org.springframework.boot.actuate.autoconfigure.MetricsChannelAutoConfiguration,\
 org.springframework.boot.actuate.autoconfigure.MetricExportAutoConfiguration,\
 org.springframework.boot.actuate.autoconfigure.PublicMetricsAutoConfiguration,\
+org.springframework.boot.actuate.autoconfigure.ReactiveEndpointAutoConfiguration,\
 org.springframework.boot.actuate.autoconfigure.TraceRepositoryAutoConfiguration,\
 org.springframework.boot.actuate.autoconfigure.TraceWebFilterAutoConfiguration,\
 org.springframework.boot.actuate.cloudfoundry.CloudFoundryActuatorAutoConfiguration
 
 org.springframework.boot.actuate.autoconfigure.ManagementContextConfiguration=\
+org.springframework.boot.actuate.autoconfigure.EndpointWebFluxManagementContextConfiguration,\
 org.springframework.boot.actuate.autoconfigure.EndpointWebMvcManagementContextConfiguration,\
 org.springframework.boot.actuate.autoconfigure.EndpointWebMvcHypermediaManagementContextConfiguration

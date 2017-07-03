@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.PostConstruct;
+import javax.servlet.Servlet;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -75,6 +76,7 @@ import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.http.server.ServletServerHttpRequest;
 import org.springframework.util.TypeUtils;
 import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.servlet.DispatcherServlet;
 import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
@@ -90,7 +92,7 @@ import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
  * @since 1.3.0
  */
 @ManagementContextConfiguration
-@ConditionalOnClass(Link.class)
+@ConditionalOnClass({ Servlet.class, DispatcherServlet.class, Link.class })
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 @ConditionalOnBean(HttpMessageConverters.class)
 @Conditional(EndpointHypermediaEnabledCondition.class)

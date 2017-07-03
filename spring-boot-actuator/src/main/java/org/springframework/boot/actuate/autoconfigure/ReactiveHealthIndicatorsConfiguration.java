@@ -24,6 +24,7 @@ import org.springframework.boot.actuate.health.ApplicationHealthIndicator;
 import org.springframework.boot.actuate.health.HealthIndicatorReactiveAdapter;
 import org.springframework.boot.actuate.health.ReactiveHealthIndicator;
 import org.springframework.boot.actuate.health.ReactiveRedisHealthIndicator;
+import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -37,6 +38,7 @@ import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
  * @author Stephane Nicoll
  */
 @Configuration
+@AutoConfigureBefore(ReactiveEndpointAutoConfiguration.class)
 @ConditionalOnClass(Flux.class)
 class ReactiveHealthIndicatorsConfiguration {
 
