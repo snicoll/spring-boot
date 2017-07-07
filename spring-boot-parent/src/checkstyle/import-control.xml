@@ -3,6 +3,21 @@
 <import-control pkg="org.springframework.boot">
 	<allow pkg=".*" regex="true" />
 
+	<subpackage name="endpoint">
+		<disallow pkg="org.springframework.http" />
+		<disallow pkg="org.springframework.web" />
+		<subpackage name="web">
+			<subpackage name="mvc">
+				<allow pkg="org.springframework.http" />
+				<allow pkg="org.springframework.web" />
+			</subpackage>
+			<subpackage name="reactive">
+				<allow pkg="org.springframework.http" />
+				<allow pkg="org.springframework.web.reactive" />
+			</subpackage>
+		</subpackage>
+	</subpackage>
+
 	<!-- Logging -->
 	<subpackage name="logging">
 		<disallow pkg="org.springframework.context" />
