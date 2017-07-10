@@ -31,11 +31,11 @@ import org.springframework.boot.endpoint.EndpointInfo;
 import org.springframework.boot.endpoint.ReadOperation;
 import org.springframework.boot.endpoint.WriteOperation;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jmx.export.annotation.ManagedOperation;
 import org.springframework.jmx.export.annotation.ManagedOperationParameter;
 import org.springframework.jmx.export.annotation.ManagedOperationParameters;
-import org.springframework.jmx.export.annotation.ManagedResource;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -86,27 +86,40 @@ public class JmxEndpointDiscovererTests {
 		load(TestJmxEndpoint.class, d -> {
 			Map<String, EndpointInfo<JmxEndpointOperationInfo>> endpoints = discover(d);
 			assertThat(endpoints).containsOnlyKeys("test");
-			EndpointInfo<JmxEndpointOperationInfo> endpoint = endpoints.get("test");
-			Map<String, JmxEndpointOperationInfo> operationByName = mapOperations(
-					endpoint.getOperations());
-			assertThat(operationByName).containsOnlyKeys(
-					"getAll", "getSomething", "update");
-			JmxEndpointOperationInfo getAll = operationByName.get("getAll");
-			assertThat(getAll.getDescription()).isEqualTo("Get all the things");
-			assertThat(getAll.getGetOutputType()).isEqualTo(Object.class);
-			assertThat(getAll.getParameters()).isEmpty();
-			JmxEndpointOperationInfo getSomething = operationByName.get("getSomething");
-			assertThat(getSomething.getDescription()).isEqualTo("Get something based on a timeUnit");
-			assertThat(getSomething.getGetOutputType()).isEqualTo(String.class);
-			assertThat(getSomething.getParameters()).hasSize(1);
-			hasNamedParameter(getSomething, 0, "unitMs", Long.class, "Number of milliseconds");
-			JmxEndpointOperationInfo update = operationByName.get("update");
-			assertThat(update.getDescription()).isEqualTo("Update something based on bar");
-			assertThat(update.getGetOutputType()).isEqualTo(Void.TYPE);
-			assertThat(update.getParameters()).hasSize(1);
-			hasNamedParameter(update, 0, "bar", String.class, "Test argument");
+			assertJmxTestEndpoint(endpoints.get("test"));
 		});
 
+	}
+
+	@Test
+	public void jmxEndpointOverridesStandardEndpoint() {
+		load(OverriddenOperationJmxEndpointConfiguration.class, d -> {
+			Map<String, EndpointInfo<JmxEndpointOperationInfo>> endpoints = discover(d);
+			assertThat(endpoints).containsOnlyKeys("test");
+			assertJmxTestEndpoint(endpoints.get("test"));
+		});
+
+	}
+
+	private void assertJmxTestEndpoint(EndpointInfo<JmxEndpointOperationInfo> endpoint) {
+		Map<String, JmxEndpointOperationInfo> operationByName = mapOperations(
+				endpoint.getOperations());
+		assertThat(operationByName).containsOnlyKeys(
+				"getAll", "getSomething", "update");
+		JmxEndpointOperationInfo getAll = operationByName.get("getAll");
+		assertThat(getAll.getDescription()).isEqualTo("Get all the things");
+		assertThat(getAll.getGetOutputType()).isEqualTo(Object.class);
+		assertThat(getAll.getParameters()).isEmpty();
+		JmxEndpointOperationInfo getSomething = operationByName.get("getSomething");
+		assertThat(getSomething.getDescription()).isEqualTo("Get something based on a timeUnit");
+		assertThat(getSomething.getGetOutputType()).isEqualTo(String.class);
+		assertThat(getSomething.getParameters()).hasSize(1);
+		hasNamedParameter(getSomething, 0, "unitMs", Long.class, "Number of milliseconds");
+		JmxEndpointOperationInfo update = operationByName.get("update");
+		assertThat(update.getDescription()).isEqualTo("Update something based on bar");
+		assertThat(update.getGetOutputType()).isEqualTo(Void.TYPE);
+		assertThat(update.getParameters()).hasSize(1);
+		hasNamedParameter(update, 0, "bar", String.class, "Test argument");
 	}
 
 	private void hasParameter(JmxEndpointOperationInfo operation, int index,
@@ -174,7 +187,6 @@ public class JmxEndpointDiscovererTests {
 	}
 
 	@JmxEndpoint(id = "test")
-	@ManagedResource("A test JMX endpoint")
 	private static class TestJmxEndpoint {
 
 		@ManagedOperation(description = "Get all the things")
@@ -187,7 +199,7 @@ public class JmxEndpointDiscovererTests {
 		@ManagedOperation(description = "Get something based on a timeUnit")
 		@ManagedOperationParameters({
 				@ManagedOperationParameter(name = "unitMs", description = "Number of milliseconds") })
-		public String getSomething(long timeUnit) {
+		public String getSomething(Long timeUnit) {
 			return null;
 		}
 
@@ -203,6 +215,21 @@ public class JmxEndpointDiscovererTests {
 
 	@Configuration
 	static class EmptyConfiguration {
+
+	}
+
+	@Configuration
+	static class OverriddenOperationJmxEndpointConfiguration {
+
+		@Bean
+		public TestEndpoint testEndpoint() {
+			return new TestEndpoint();
+		}
+
+		@Bean
+		public TestJmxEndpoint testJmxEndpoint() {
+			return new TestJmxEndpoint();
+		}
 
 	}
 

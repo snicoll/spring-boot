@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.springframework.boot.endpoint.AbstractEndpointDiscoverer;
@@ -34,6 +35,10 @@ import org.springframework.boot.endpoint.EndpointInfo;
 import org.springframework.boot.endpoint.EndpointOperationInfo;
 import org.springframework.boot.endpoint.EndpointOperationType;
 import org.springframework.context.ApplicationContext;
+import org.springframework.jmx.export.annotation.AnnotationJmxAttributeSource;
+import org.springframework.jmx.export.metadata.ManagedOperation;
+import org.springframework.jmx.export.metadata.ManagedOperationParameter;
+import org.springframework.util.StringUtils;
 
 /**
  * Discovers the {@link JmxEndpoint jmx endpoints} in an {@link ApplicationContext}. Jmx
@@ -45,6 +50,8 @@ import org.springframework.context.ApplicationContext;
  */
 public class JmxEndpointDiscoverer
 		extends AbstractEndpointDiscoverer<JmxEndpointOperationInfo> {
+
+	private static final AnnotationJmxAttributeSource jmxAttributeSource = new AnnotationJmxAttributeSource();
 
 	private final EndpointDiscoverer endpointDiscoverer;
 
@@ -120,14 +127,47 @@ public class JmxEndpointDiscoverer
 			String beanName, Method method, EndpointOperationType type) {
 		String operationName = method.getName();
 		Class<?> outputType = mapParameterType(method.getReturnType());
-		String description = "Invoke " + operationName + " for endpoint " + endpointId;
-		List<JmxEndpointOperationParameterInfo> parameters = new ArrayList<>();
-		for (Parameter parameter : method.getParameters()) {
-			parameters.add(new JmxEndpointOperationParameterInfo(parameter.getName(),
-					mapParameterType(parameter.getType()), null));
-		}
+		String description = getDescription(method, ()
+				-> "Invoke " + operationName + " for endpoint " + endpointId);
+		List<JmxEndpointOperationParameterInfo> parameters = getParameters(method);
 		return new JmxEndpointOperationInfo(beanName, method, type, operationName,
 				outputType, description, parameters);
+	}
+
+	private static String getDescription(Method method, Supplier<String> fallback) {
+		ManagedOperation managedOperation = jmxAttributeSource.getManagedOperation(method);
+		if (managedOperation != null
+				&& StringUtils.hasText(managedOperation.getDescription())) {
+			return managedOperation.getDescription();
+		}
+		return fallback.get();
+	}
+
+	private static List<JmxEndpointOperationParameterInfo> getParameters(Method method) {
+		List<JmxEndpointOperationParameterInfo> parameters = new ArrayList<>();
+		Parameter[] methodParameters = method.getParameters();
+		if (methodParameters.length == 0) {
+			return parameters;
+		}
+		ManagedOperationParameter[] managedOperationParameters = jmxAttributeSource
+				.getManagedOperationParameters(method);
+		if (managedOperationParameters.length > 0) {
+			for (int i = 0; i < managedOperationParameters.length; i++) {
+				ManagedOperationParameter mBeanParameter = managedOperationParameters[i];
+				Parameter methodParameter = methodParameters[i];
+				parameters.add(new JmxEndpointOperationParameterInfo(
+						mBeanParameter.getName(),
+						mapParameterType(methodParameter.getType()),
+						mBeanParameter.getDescription()));
+			}
+		}
+		else {
+			for (Parameter parameter : methodParameters) {
+				parameters.add(new JmxEndpointOperationParameterInfo(parameter.getName(),
+						mapParameterType(parameter.getType()), null));
+			}
+		}
+		return parameters;
 	}
 
 	private static Class<?> mapParameterType(Class<?> parameter) {
