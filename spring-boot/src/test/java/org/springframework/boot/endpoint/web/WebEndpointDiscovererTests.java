@@ -40,6 +40,7 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.core.convert.support.DefaultConversionService;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -204,7 +205,8 @@ public class WebEndpointDiscovererTests {
 				configuration);
 		try {
 			consumer.accept(new WebEndpointDiscoverer(new EndpointDiscoverer(context),
-					basePath, Arrays.asList("application/json"),
+					DefaultConversionService.getSharedInstance(), basePath,
+					Arrays.asList("application/json"),
 					Arrays.asList("application/json")));
 		}
 		finally {

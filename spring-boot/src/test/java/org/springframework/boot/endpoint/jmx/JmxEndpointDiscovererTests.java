@@ -34,6 +34,7 @@ import org.springframework.boot.endpoint.WriteOperation;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.jmx.export.annotation.ManagedOperation;
 import org.springframework.jmx.export.annotation.ManagedOperationParameter;
 import org.springframework.jmx.export.annotation.ManagedOperationParameters;
@@ -60,7 +61,8 @@ public class JmxEndpointDiscovererTests {
 	@Test
 	public void standardEndpointIsDiscovered() {
 		load(TestEndpoint.class, discoverer -> {
-			Map<String, EndpointInfo<JmxEndpointOperation>> endpoints = discover(discoverer);
+			Map<String, EndpointInfo<JmxEndpointOperation>> endpoints = discover(
+					discoverer);
 			assertThat(endpoints).containsOnlyKeys("test");
 			Map<String, JmxEndpointOperation> operationByName = mapOperations(
 					endpoints.get("test").getOperations());
@@ -91,7 +93,8 @@ public class JmxEndpointDiscovererTests {
 	@Test
 	public void jmxOnlyEndpointIsDiscovered() {
 		load(TestJmxEndpoint.class, discoverer -> {
-			Map<String, EndpointInfo<JmxEndpointOperation>> endpoints = discover(discoverer);
+			Map<String, EndpointInfo<JmxEndpointOperation>> endpoints = discover(
+					discoverer);
 			assertThat(endpoints).containsOnlyKeys("test");
 			assertJmxTestEndpoint(endpoints.get("test"));
 		});
@@ -101,7 +104,8 @@ public class JmxEndpointDiscovererTests {
 	@Test
 	public void jmxEndpointOverridesStandardEndpoint() {
 		load(OverriddenOperationJmxEndpointConfiguration.class, discoverer -> {
-			Map<String, EndpointInfo<JmxEndpointOperation>> endpoints = discover(discoverer);
+			Map<String, EndpointInfo<JmxEndpointOperation>> endpoints = discover(
+					discoverer);
 			assertThat(endpoints).containsOnlyKeys("test");
 			assertJmxTestEndpoint(endpoints.get("test"));
 		});
@@ -111,12 +115,13 @@ public class JmxEndpointDiscovererTests {
 	@Test
 	public void jmxEndpointAddsExtraOperation() {
 		load(AdditionalOperationJmxEndpointConfiguration.class, discoverer -> {
-			Map<String, EndpointInfo<JmxEndpointOperation>> endpoints = discover(discoverer);
+			Map<String, EndpointInfo<JmxEndpointOperation>> endpoints = discover(
+					discoverer);
 			assertThat(endpoints).containsOnlyKeys("test");
 			Map<String, JmxEndpointOperation> operationByName = mapOperations(
 					endpoints.get("test").getOperations());
-			assertThat(operationByName).containsOnlyKeys(
-					"getAll", "getSomething", "update", "getAnother");
+			assertThat(operationByName).containsOnlyKeys("getAll", "getSomething",
+					"update", "getAnother");
 			JmxEndpointOperation getAll = operationByName.get("getAnother");
 			assertThat(getAll.getDescription()).isEqualTo("Get another thing");
 			assertThat(getAll.getOutputType()).isEqualTo(Object.class);
@@ -146,7 +151,8 @@ public class JmxEndpointDiscovererTests {
 	public void discoveryFailsWhenEndpointHasTwoOperationsWithTheSameName() {
 		load(ClashingOperationsEndpoint.class, discoverer -> {
 			this.thrown.expect(IllegalStateException.class);
-			this.thrown.expectMessage("Found two operations named 'getAll' for endpoint with id 'test'");
+			this.thrown.expectMessage(
+					"Found two operations named 'getAll' for endpoint with id 'test'");
 			discoverer.discoverEndpoints();
 		});
 	}
@@ -155,7 +161,8 @@ public class JmxEndpointDiscovererTests {
 	public void discoveryFailsWhenJmxEndpointHasClashingOperations() {
 		load(ClashingOperationsJmxEndpoint.class, (discoverer) -> {
 			this.thrown.expect(IllegalStateException.class);
-			this.thrown.expectMessage("Found two operations named 'getAll' for endpoint with id 'test'");
+			this.thrown.expectMessage(
+					"Found two operations named 'getAll' for endpoint with id 'test'");
 			discoverer.discoverEndpoints();
 		});
 	}
@@ -164,7 +171,8 @@ public class JmxEndpointDiscovererTests {
 	public void discoveryFailsWhenJmxEndpointOverridesWithClashingOperations() {
 		load(AdditionalClashingOperationsConfiguration.class, (discoverer) -> {
 			this.thrown.expect(IllegalStateException.class);
-			this.thrown.expectMessage("Found two operations named 'getAll' for endpoint with id 'test'");
+			this.thrown.expectMessage(
+					"Found two operations named 'getAll' for endpoint with id 'test'");
 			discoverer.discoverEndpoints();
 		});
 	}
@@ -233,7 +241,8 @@ public class JmxEndpointDiscovererTests {
 		try (AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(
 				configuration)) {
 			EndpointDiscoverer endpointDiscoverer = new EndpointDiscoverer(context);
-			consumer.accept(new JmxEndpointDiscoverer(endpointDiscoverer));
+			consumer.accept(new JmxEndpointDiscoverer(endpointDiscoverer,
+					DefaultConversionService.getSharedInstance()));
 		}
 	}
 

@@ -32,6 +32,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
@@ -132,8 +133,8 @@ public abstract class AbstractWebEndpointIntegrationTests<T extends Configurable
 		public WebEndpointDiscoverer webEndpointDiscoverer(
 				ApplicationContext applicationContext) {
 			return new WebEndpointDiscoverer(new EndpointDiscoverer(applicationContext),
-					"endpoints", Arrays.asList("application/json"),
-					Arrays.asList("application/json"));
+					DefaultConversionService.getSharedInstance(), "endpoints",
+					Arrays.asList("application/json"), Arrays.asList("application/json"));
 		}
 
 	}
