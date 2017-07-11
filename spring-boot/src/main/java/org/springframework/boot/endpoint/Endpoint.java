@@ -41,8 +41,8 @@ public @interface Endpoint {
 	String id();
 
 	/**
-	 * Determine if the endpoint is enabled by default.
-	 * @return if the endpoint is enabled by default
+	 * Whether or not the endpoint is enabled by default.
+	 * @return {@code true} if the endpoint is enabled by default, otherwise {@code false}
 	 */
 	boolean enabledByDefault() default true;
 

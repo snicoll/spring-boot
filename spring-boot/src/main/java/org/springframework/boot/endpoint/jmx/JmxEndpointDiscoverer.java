@@ -134,7 +134,8 @@ public class JmxEndpointDiscoverer {
 				operation) -> operations.put(operation.getOperationName(), operation);
 		baseEndpoint.getOperations().forEach(operationConsumer);
 		overridingEndpoint.getOperations().forEach(operationConsumer);
-		return new EndpointInfo<>(baseEndpoint.getId(), operations.values());
+		return new EndpointInfo<>(baseEndpoint.getId(),
+				overridingEndpoint.isEnabledByDefault(), operations.values());
 	}
 
 	private static class JmxEndpointOperationFactory

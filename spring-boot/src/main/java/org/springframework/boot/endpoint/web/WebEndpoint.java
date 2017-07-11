@@ -41,4 +41,10 @@ public @interface WebEndpoint {
 	 */
 	String id();
 
+	/**
+	 * Whether or not the endpoint is enabled by default.
+	 * @return {@code true} if the endpoint is enabled by default, otherwise {@code false}
+	 */
+	boolean enabledByDefault() default true;
+
 }

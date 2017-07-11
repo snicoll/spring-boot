@@ -29,16 +29,20 @@ public class EndpointInfo<T extends EndpointOperation> {
 
 	private final String id;
 
+	private final boolean enabledByDefault;
+
 	private final Collection<T> operations;
 
 	/**
 	 * Creates a new {@code EndpointInfo} describing an endpoint with the given {@code id}
 	 * and {@code operations}.
 	 * @param id the id of the endpoint
+	 * @param enabledByDefault whether or not the endpoint is enabled by default
 	 * @param operations the operations of the endpoint
 	 */
-	public EndpointInfo(String id, Collection<T> operations) {
+	public EndpointInfo(String id, boolean enabledByDefault, Collection<T> operations) {
 		this.id = id;
+		this.enabledByDefault = enabledByDefault;
 		this.operations = operations;
 	}
 
@@ -48,6 +52,14 @@ public class EndpointInfo<T extends EndpointOperation> {
 	 */
 	public String getId() {
 		return this.id;
+	}
+
+	/**
+	 * Returns whether or not this endpoint is enabled by default.
+	 * @return {@code true} if it is enabled by default, otherwise {@code false}
+	 */
+	public boolean isEnabledByDefault() {
+		return this.enabledByDefault;
 	}
 
 	/**
