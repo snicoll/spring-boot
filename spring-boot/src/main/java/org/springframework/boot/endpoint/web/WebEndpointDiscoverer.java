@@ -161,7 +161,7 @@ public class WebEndpointDiscoverer {
 		baseEndpoint.getOperations().forEach(operationConsumer);
 		overridingEndpoint.getOperations().forEach(operationConsumer);
 		return new EndpointInfo<WebEndpointOperation>(baseEndpoint.getId(),
-				operations.values());
+				overridingEndpoint.isEnabledByDefault(), operations.values());
 	}
 
 	private static final class WebEndpointOperationFactory
