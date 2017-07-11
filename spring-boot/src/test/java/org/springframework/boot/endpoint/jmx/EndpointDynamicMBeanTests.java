@@ -43,6 +43,7 @@ import org.springframework.boot.endpoint.EndpointDiscoverer;
 import org.springframework.boot.endpoint.ReadOperation;
 import org.springframework.boot.endpoint.WriteOperation;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.core.convert.support.DefaultConversionService;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -53,8 +54,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 public class EndpointDynamicMBeanTests {
 
-	private final JmxEndpointMBeanFactory jmxEndpointMBeanFactory =
-			new JmxEndpointMBeanFactory(r -> (r != null ? r.toString().toUpperCase() : null));
+	private final JmxEndpointMBeanFactory jmxEndpointMBeanFactory = new JmxEndpointMBeanFactory(
+			r -> (r != null ? r.toString().toUpperCase() : null));
 
 	private MBeanServer server;
 
@@ -87,8 +88,8 @@ public class EndpointDynamicMBeanTests {
 
 				// update
 				Object updateResponse = this.server.invoke(objectName, "update",
-						new Object[] { "one", "1" }, new String[] {
-								String.class.getName(), String.class.getName() });
+						new Object[] { "one", "1" },
+						new String[] { String.class.getName(), String.class.getName() });
 				assertThat(updateResponse).isNull();
 
 				// getOne validation after update
@@ -125,9 +126,10 @@ public class EndpointDynamicMBeanTests {
 		load(FooEndpoint.class, discoverer -> {
 			ObjectName objectName = registerEndpoint(discoverer);
 			try {
-				this.server.invoke(objectName, "doesNotExist",
-						new Object[0], new String[0]);
-				throw new AssertionError("Should have failed to invoke unknown operation");
+				this.server.invoke(objectName, "doesNotExist", new Object[0],
+						new String[0]);
+				throw new AssertionError(
+						"Should have failed to invoke unknown operation");
 			}
 			catch (ReflectionException ex) {
 				assertThat(ex.getCause()).isInstanceOf(IllegalArgumentException.class);
@@ -192,8 +194,8 @@ public class EndpointDynamicMBeanTests {
 				AttributeList attributes = new AttributeList();
 				attributes.add(new Attribute("foo", 1));
 				attributes.add(new Attribute("bar", 42));
-				AttributeList attributesSet = this.server.setAttributes(
-						objectName, attributes);
+				AttributeList attributesSet = this.server.setAttributes(objectName,
+						attributes);
 				assertThat(attributesSet).isNotNull();
 				assertThat(attributesSet).isEmpty();
 			}
@@ -232,15 +234,14 @@ public class EndpointDynamicMBeanTests {
 		}
 	}
 
-
 	private void load(Class<?> configuration, Consumer<JmxEndpointDiscoverer> consumer) {
 		try (AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(
 				configuration)) {
 			EndpointDiscoverer endpointDiscoverer = new EndpointDiscoverer(context);
-			consumer.accept(new JmxEndpointDiscoverer(endpointDiscoverer));
+			consumer.accept(new JmxEndpointDiscoverer(endpointDiscoverer,
+					DefaultConversionService.getSharedInstance()));
 		}
 	}
-
 
 	@Endpoint(id = "foo")
 	static class FooEndpoint {
