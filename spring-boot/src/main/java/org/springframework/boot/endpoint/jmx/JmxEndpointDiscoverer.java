@@ -59,12 +59,24 @@ public class JmxEndpointDiscoverer {
 
 	private final EndpointDiscoverer endpointDiscoverer;
 
+	/**
+	 * Creates a new {@link JmxEndpointDiscoverer} that will discover {@link JmxEndpoint
+	 * jmx endpoints} using the given {@code endpointDiscoverer}.
+	 *
+	 * @param endpointDiscoverer the endpoint discoverer
+	 * @param conversionService the conversion service used to convert arguments when an
+	 * operation is invoked
+	 */
 	public JmxEndpointDiscoverer(EndpointDiscoverer endpointDiscoverer,
 			ConversionService conversionService) {
 		this.endpointDiscoverer = endpointDiscoverer;
 		this.operationFactory = new JmxEndpointOperationFactory(conversionService);
 	}
 
+	/**
+	 * Perform endpoint discovery.
+	 * @return the discovered endpoints
+	 */
 	public Collection<EndpointInfo<JmxEndpointOperation>> discoverEndpoints() {
 		Collection<EndpointInfo<JmxEndpointOperation>> baseEndpoints = discoverEndpoints(
 				Endpoint.class);
