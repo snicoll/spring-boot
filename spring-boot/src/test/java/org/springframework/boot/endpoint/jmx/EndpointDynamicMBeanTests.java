@@ -22,14 +22,21 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.function.Consumer;
 
+import javax.management.Attribute;
+import javax.management.AttributeList;
+import javax.management.AttributeNotFoundException;
+import javax.management.InstanceNotFoundException;
+import javax.management.MBeanException;
 import javax.management.MBeanServer;
 import javax.management.MBeanServerFactory;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
+import javax.management.ReflectionException;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import reactor.core.publisher.Mono;
 
 import org.springframework.boot.endpoint.Endpoint;
 import org.springframework.boot.endpoint.EndpointDiscoverer;
@@ -64,12 +71,9 @@ public class EndpointDynamicMBeanTests {
 	}
 
 	@Test
-	public void createSimpleEndpoint() {
+	public void invokeSimpleEndpoint() {
 		load(FooEndpoint.class, discoverer -> {
-			Collection<EndpointDynamicMBean> mBeans = this.jmxEndpointMBeanFactory
-					.createMBeans(discoverer.discoverEndpoints());
-			assertThat(mBeans).hasSize(1);
-			ObjectName objectName = register(mBeans.iterator().next());
+			ObjectName objectName = registerEndpoint(discoverer);
 			try {
 				// getAll
 				Object allResponse = this.server.invoke(objectName, "getAll",
@@ -94,10 +98,116 @@ public class EndpointDynamicMBeanTests {
 
 			}
 			catch (Exception ex) {
-				throw new AssertionError("Failed to invoke getAll method", ex);
+				throw new AssertionError("Failed to invoke method on FooEndpoint", ex);
+			}
+		});
+	}
+
+	@Test
+	public void invokeReactiveOperation() {
+		load(ReactiveEndpoint.class, discoverer -> {
+			ObjectName objectName = registerEndpoint(discoverer);
+			try {
+				Object allResponse = this.server.invoke(objectName, "getInfo",
+						new Object[0], new String[0]);
+				assertThat(allResponse).isInstanceOf(String.class);
+				assertThat(allResponse).isEqualTo("HELLO WORLD");
+			}
+			catch (Exception ex) {
+				throw new AssertionError("Failed to invoke getInfo method", ex);
+			}
+		});
+
+	}
+
+	@Test
+	public void invokeUnknownOperation() {
+		load(FooEndpoint.class, discoverer -> {
+			ObjectName objectName = registerEndpoint(discoverer);
+			try {
+				this.server.invoke(objectName, "doesNotExist",
+						new Object[0], new String[0]);
+				throw new AssertionError("Should have failed to invoke unknown operation");
+			}
+			catch (ReflectionException ex) {
+				assertThat(ex.getCause()).isInstanceOf(IllegalArgumentException.class);
+				assertThat(ex.getCause().getMessage()).contains("doesNotExist", "foo");
+			}
+			catch (MBeanException | InstanceNotFoundException ex) {
+				throw new IllegalStateException(ex);
 			}
 
 		});
+	}
+
+	@Test
+	public void dynamicMBeanCannotReadAttribute() {
+		load(FooEndpoint.class, discoverer -> {
+			ObjectName objectName = registerEndpoint(discoverer);
+			try {
+				this.server.getAttribute(objectName, "foo");
+				throw new AssertionError("Should have failed to read attribute foo");
+			}
+			catch (Exception ex) {
+				assertThat(ex).isInstanceOf(AttributeNotFoundException.class);
+			}
+		});
+	}
+
+	@Test
+	public void dynamicMBeanCannotWriteAttribute() {
+		load(FooEndpoint.class, discoverer -> {
+			ObjectName objectName = registerEndpoint(discoverer);
+			try {
+				this.server.setAttribute(objectName, new Attribute("foo", "bar"));
+				throw new AssertionError("Should have failed to write attribute foo");
+			}
+			catch (Exception ex) {
+				assertThat(ex).isInstanceOf(AttributeNotFoundException.class);
+			}
+		});
+	}
+
+	@Test
+	public void dynamicMBeanCannotReadAttributes() {
+		load(FooEndpoint.class, discoverer -> {
+			ObjectName objectName = registerEndpoint(discoverer);
+			try {
+				AttributeList attributes = this.server.getAttributes(objectName,
+						new String[] { "foo", "bar" });
+				assertThat(attributes).isNotNull();
+				assertThat(attributes).isEmpty();
+			}
+			catch (Exception ex) {
+				throw new AssertionError("Failed to invoke getAttributes", ex);
+			}
+		});
+	}
+
+	@Test
+	public void dynamicMBeanCannotWriteAttributes() {
+		load(FooEndpoint.class, discoverer -> {
+			ObjectName objectName = registerEndpoint(discoverer);
+			try {
+				AttributeList attributes = new AttributeList();
+				attributes.add(new Attribute("foo", 1));
+				attributes.add(new Attribute("bar", 42));
+				AttributeList attributesSet = this.server.setAttributes(
+						objectName, attributes);
+				assertThat(attributesSet).isNotNull();
+				assertThat(attributesSet).isEmpty();
+			}
+			catch (Exception ex) {
+				throw new AssertionError("Failed to invoke setAttributes", ex);
+			}
+		});
+	}
+
+	private ObjectName registerEndpoint(JmxEndpointDiscoverer discoverer) {
+		Collection<EndpointDynamicMBean> mBeans = this.jmxEndpointMBeanFactory
+				.createMBeans(discoverer.discoverEndpoints());
+		assertThat(mBeans).hasSize(1);
+		return register(mBeans.iterator().next());
 	}
 
 	private ObjectName register(Object mbean) {
@@ -155,6 +265,16 @@ public class EndpointDynamicMBeanTests {
 		@WriteOperation
 		public void update(String name, String value) {
 			this.all.put(name, new Foo(value));
+		}
+
+	}
+
+	@Endpoint(id = "reactive")
+	static class ReactiveEndpoint {
+
+		@ReadOperation
+		public Mono<String> getInfo() {
+			return Mono.defer(() -> Mono.just("Hello World"));
 		}
 
 	}
