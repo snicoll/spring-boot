@@ -19,7 +19,6 @@ package org.springframework.boot.endpoint;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -81,7 +80,9 @@ public class EndpointDiscoverer {
 						}
 					});
 			EndpointInfo<T> endpointInfo = new EndpointInfo<T>(
-					endpointAttributes.getString("id"), operationMethods.values());
+					endpointAttributes.getString("id"),
+					endpointAttributes.getBoolean("enabledByDefault"),
+					operationMethods.values());
 			EndpointInfo<T> previous = endpointsById.putIfAbsent(endpointInfo.getId(),
 					endpointInfo);
 			if (previous != null) {
@@ -90,7 +91,7 @@ public class EndpointDiscoverer {
 								+ endpointInfo + " and " + previous);
 			}
 		}
-		return Collections.unmodifiableCollection(endpointsById.values());
+		return endpointsById.values();
 	}
 
 	private <T extends EndpointOperation> T createReadOperationIfPossible(String beanName,

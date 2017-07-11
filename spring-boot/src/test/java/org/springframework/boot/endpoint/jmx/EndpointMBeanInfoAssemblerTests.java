@@ -46,7 +46,7 @@ public class EndpointMBeanInfoAssemblerTests {
 		JmxEndpointOperation operation = new JmxEndpointOperation(
 				EndpointOperationType.READ, new DummyOperationInvoker(), "getAll",
 				Object.class, "Test operation", Collections.emptyList());
-		EndpointInfo<JmxEndpointOperation> endpoint = new EndpointInfo<>("test",
+		EndpointInfo<JmxEndpointOperation> endpoint = new EndpointInfo<>("test", true,
 				Collections.singletonList(operation));
 		EndpointMBeanInfo endpointMBeanInfo = this.mBeanInfoAssembler
 				.createEndpointMBeanInfo(endpoint);
@@ -76,7 +76,7 @@ public class EndpointMBeanInfoAssemblerTests {
 				Object.class, "Update operation",
 				Collections.singletonList(new JmxEndpointOperationParameterInfo("test",
 						String.class, "Test argument")));
-		EndpointInfo<JmxEndpointOperation> endpoint = new EndpointInfo<>("another",
+		EndpointInfo<JmxEndpointOperation> endpoint = new EndpointInfo<>("another", true,
 				Collections.singletonList(operation));
 		EndpointMBeanInfo endpointMBeanInfo = this.mBeanInfoAssembler
 				.createEndpointMBeanInfo(endpoint);
