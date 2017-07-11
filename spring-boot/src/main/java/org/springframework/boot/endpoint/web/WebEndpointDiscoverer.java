@@ -58,7 +58,7 @@ public class WebEndpointDiscoverer {
 
 	/**
 	 * Creates a new {@link WebEndpointDiscoverer} that will discover {@link WebEndpoint
-	 * web endpoints} in the given {@code applicationContext}.
+	 * web endpoints} using the given {@code endpointDiscoverer}.
 	 *
 	 * @param endpointDiscoverer the endpoint discoverer
 	 * @param conversionService the conversion service used to convert arguments when an
@@ -76,6 +76,10 @@ public class WebEndpointDiscoverer {
 				basePath, consumedMediaTypes, producedMediaTypes);
 	}
 
+	/**
+	 * Perform endpoint discovery.
+	 * @return the discovered endpoints
+	 */
 	public Collection<EndpointInfo<WebEndpointOperation>> discoverEndpoints() {
 		Collection<EndpointInfo<WebEndpointOperation>> baseEndpoints = this.endpointDiscoverer
 				.discoverEndpoints(Endpoint.class, this.operationFactory);
