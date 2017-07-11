@@ -36,6 +36,7 @@ import org.springframework.boot.endpoint.EndpointOperationType;
 import org.springframework.boot.endpoint.ReflectiveOperationInvoker;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.annotation.AnnotationAttributes;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.jmx.export.annotation.AnnotationJmxAttributeSource;
 import org.springframework.jmx.export.metadata.ManagedOperation;
 import org.springframework.jmx.export.metadata.ManagedOperationParameter;
@@ -52,19 +53,23 @@ import org.springframework.util.StringUtils;
  */
 public class JmxEndpointDiscoverer {
 
-	private final JmxEndpointOperationFactory operationFactory = new JmxEndpointOperationFactory();
-
 	private static final AnnotationJmxAttributeSource jmxAttributeSource = new AnnotationJmxAttributeSource();
+
+	private final JmxEndpointOperationFactory operationFactory;
 
 	private final EndpointDiscoverer endpointDiscoverer;
 
-	protected JmxEndpointDiscoverer(EndpointDiscoverer endpointDiscoverer) {
+	public JmxEndpointDiscoverer(EndpointDiscoverer endpointDiscoverer,
+			ConversionService conversionService) {
 		this.endpointDiscoverer = endpointDiscoverer;
+		this.operationFactory = new JmxEndpointOperationFactory(conversionService);
 	}
 
 	public Collection<EndpointInfo<JmxEndpointOperation>> discoverEndpoints() {
-		Collection<EndpointInfo<JmxEndpointOperation>> baseEndpoints = discoverEndpoints(Endpoint.class);
-		Collection<EndpointInfo<JmxEndpointOperation>> overridingEndpoints = discoverEndpoints(JmxEndpoint.class);
+		Collection<EndpointInfo<JmxEndpointOperation>> baseEndpoints = discoverEndpoints(
+				Endpoint.class);
+		Collection<EndpointInfo<JmxEndpointOperation>> overridingEndpoints = discoverEndpoints(
+				JmxEndpoint.class);
 		return merge(baseEndpoints, overridingEndpoints);
 	}
 
@@ -75,8 +80,8 @@ public class JmxEndpointDiscoverer {
 		for (EndpointInfo<JmxEndpointOperation> endpoint : endpoints) {
 			Map<String, JmxEndpointOperation> operations = new HashMap<>();
 			for (JmxEndpointOperation operation : endpoint.getOperations()) {
-				JmxEndpointOperation existing = operations.put(
-						operation.getOperationName(), operation);
+				JmxEndpointOperation existing = operations
+						.put(operation.getOperationName(), operation);
 				if (existing != null) {
 					throw new IllegalStateException(String.format(
 							"Found two operations named '%s' for endpoint with id '%s'",
@@ -123,6 +128,12 @@ public class JmxEndpointDiscoverer {
 	private static class JmxEndpointOperationFactory
 			implements EndpointOperationFactory<JmxEndpointOperation> {
 
+		private final ConversionService conversionService;
+
+		JmxEndpointOperationFactory(ConversionService conversionService) {
+			this.conversionService = conversionService;
+		}
+
 		@Override
 		public JmxEndpointOperation createOperation(
 				AnnotationAttributes endpointAttributes,
@@ -134,8 +145,9 @@ public class JmxEndpointDiscoverer {
 					+ " for endpoint " + endpointAttributes.getString("id"));
 			List<JmxEndpointOperationParameterInfo> parameters = getParameters(method);
 			return new JmxEndpointOperation(type,
-					new ReflectiveOperationInvoker(target, method), operationName,
-					outputType, description, parameters);
+					new ReflectiveOperationInvoker(this.conversionService, target,
+							method),
+					operationName, outputType, description, parameters);
 		}
 
 		private static String getDescription(Method method, Supplier<String> fallback) {

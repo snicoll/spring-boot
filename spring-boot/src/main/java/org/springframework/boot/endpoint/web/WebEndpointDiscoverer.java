@@ -39,6 +39,7 @@ import org.springframework.boot.endpoint.ReflectiveOperationInvoker;
 import org.springframework.boot.endpoint.Selector;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.annotation.AnnotationAttributes;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.util.ClassUtils;
 
 /**
@@ -60,16 +61,19 @@ public class WebEndpointDiscoverer {
 	 * web endpoints} in the given {@code applicationContext}.
 	 *
 	 * @param endpointDiscoverer the endpoint discoverer
+	 * @param conversionService the conversion service used to convert arguments when an
+	 * operation is invoked
 	 * @param basePath the path to prepend to the path of each discovered operation
 	 * @param consumedMediaTypes the media types consumed by web endpoint operations
 	 * @param producedMediaTypes the media types produced by web endpoint operations
 	 */
-	public WebEndpointDiscoverer(EndpointDiscoverer endpointDiscoverer, String basePath,
+	public WebEndpointDiscoverer(EndpointDiscoverer endpointDiscoverer,
+			ConversionService conversionService, String basePath,
 			Collection<String> consumedMediaTypes,
 			Collection<String> producedMediaTypes) {
 		this.endpointDiscoverer = endpointDiscoverer;
-		this.operationFactory = new WebEndpointOperationFactory(basePath,
-				consumedMediaTypes, producedMediaTypes);
+		this.operationFactory = new WebEndpointOperationFactory(conversionService,
+				basePath, consumedMediaTypes, producedMediaTypes);
 	}
 
 	public Collection<EndpointInfo<WebEndpointOperation>> discoverEndpoints() {
@@ -163,15 +167,18 @@ public class WebEndpointDiscoverer {
 				"org.reactivestreams.Publisher",
 				WebEndpointOperationFactory.class.getClassLoader());
 
+		private final ConversionService conversionService;
+
 		private final String basePath;
 
 		private final Collection<String> consumedMediaTypes;
 
 		private final Collection<String> producedMediaTypes;
 
-		private WebEndpointOperationFactory(String basePath,
-				Collection<String> consumedMediaTypes,
+		private WebEndpointOperationFactory(ConversionService conversionService,
+				String basePath, Collection<String> consumedMediaTypes,
 				Collection<String> producedMediaTypes) {
+			this.conversionService = conversionService;
 			this.basePath = normalizeBasePath(basePath);
 			this.consumedMediaTypes = consumedMediaTypes;
 			this.producedMediaTypes = producedMediaTypes;
@@ -197,7 +204,8 @@ public class WebEndpointDiscoverer {
 					determineHttpMethod(type), determineConsumedMediaTypes(method),
 					this.producedMediaTypes);
 			WebEndpointOperation operation = new WebEndpointOperation(type,
-					new ReflectiveOperationInvoker(target, method),
+					new ReflectiveOperationInvoker(this.conversionService, target,
+							method),
 					determineBlocking(method), requestPredicate);
 			return operation;
 		}
