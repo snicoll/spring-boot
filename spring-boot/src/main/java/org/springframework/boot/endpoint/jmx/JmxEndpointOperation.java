@@ -69,7 +69,7 @@ public class JmxEndpointOperation extends EndpointOperation {
 	}
 
 	/**
-	 * Returns the type of the output of the operation
+	 * Returns the type of the output of the operation.
 	 * @return the output type
 	 */
 	public Class<?> getOutputType() {
@@ -77,7 +77,7 @@ public class JmxEndpointOperation extends EndpointOperation {
 	}
 
 	/**
-	 * Returns the description of the operation
+	 * Returns the description of the operation.
 	 * @return the operation description
 	 */
 	public String getDescription() {
@@ -85,7 +85,7 @@ public class JmxEndpointOperation extends EndpointOperation {
 	}
 
 	/**
-	 * Returns the parameters of the operation
+	 * Returns the parameters of the operation.
 	 * @return the operation parameters
 	 */
 	public List<JmxEndpointOperationParameterInfo> getParameters() {

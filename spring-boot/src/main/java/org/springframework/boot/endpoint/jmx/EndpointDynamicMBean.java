@@ -81,7 +81,9 @@ public class EndpointDynamicMBean implements DynamicMBean {
 			}
 			return this.operationResponseConverter.apply(result);
 		}
-		return null; // TODO?
+		throw new ReflectionException(new IllegalArgumentException(String.format(
+				"Endpoint with id '%s' has no operation named %s",
+				this.endpointInfo.getEndpointId(), actionName)));
 	}
 
 	@Override

@@ -75,7 +75,6 @@ class EndpointMBeanInfoAssembler {
 			EndpointInfo<JmxEndpointOperation> endpointInfo) {
 		Map<String, OperationInfos> operationInfos = new HashMap<>();
 		endpointInfo.getOperations().forEach((operationInfo) -> {
-			// TODO two methods with the same name may exist
 			String name = operationInfo.getOperationName();
 			ModelMBeanOperationInfo mBeanOperationInfo = new ModelMBeanOperationInfo(
 					operationInfo.getOperationName(), operationInfo.getDescription(),

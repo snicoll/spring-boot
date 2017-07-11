@@ -142,6 +142,33 @@ public class JmxEndpointDiscovererTests {
 		});
 	}
 
+	@Test
+	public void discoveryFailsWhenEndpointHasTwoOperationsWithTheSameName() {
+		load(ClashingOperationsEndpoint.class, discoverer -> {
+			this.thrown.expect(IllegalStateException.class);
+			this.thrown.expectMessage("Found two operations named 'getAll' for endpoint with id 'test'");
+			discoverer.discoverEndpoints();
+		});
+	}
+
+	@Test
+	public void discoveryFailsWhenJmxEndpointHasClashingOperations() {
+		load(ClashingOperationsJmxEndpoint.class, (discoverer) -> {
+			this.thrown.expect(IllegalStateException.class);
+			this.thrown.expectMessage("Found two operations named 'getAll' for endpoint with id 'test'");
+			discoverer.discoverEndpoints();
+		});
+	}
+
+	@Test
+	public void discoveryFailsWhenJmxEndpointOverridesWithClashingOperations() {
+		load(AdditionalClashingOperationsConfiguration.class, (discoverer) -> {
+			this.thrown.expect(IllegalStateException.class);
+			this.thrown.expectMessage("Found two operations named 'getAll' for endpoint with id 'test'");
+			discoverer.discoverEndpoints();
+		});
+	}
+
 	private void assertJmxTestEndpoint(EndpointInfo<JmxEndpointOperation> endpoint) {
 		Map<String, JmxEndpointOperation> operationByName = mapOperations(
 				endpoint.getOperations());
@@ -269,6 +296,36 @@ public class JmxEndpointDiscovererTests {
 
 	}
 
+	@Endpoint(id = "test")
+	static class ClashingOperationsEndpoint {
+
+		@ReadOperation
+		public Object getAll() {
+			return null;
+		}
+
+		@ReadOperation
+		public Object getAll(String param) {
+			return null;
+		}
+
+	}
+
+	@JmxEndpoint(id = "test")
+	static class ClashingOperationsJmxEndpoint {
+
+		@ReadOperation
+		public Object getAll() {
+			return null;
+		}
+
+		@ReadOperation
+		public Object getAll(String param) {
+			return null;
+		}
+
+	}
+
 	@Configuration
 	static class EmptyConfiguration {
 
@@ -300,6 +357,21 @@ public class JmxEndpointDiscovererTests {
 		@Bean
 		public AdditionalOperationJmxEndpoint additionalOperationJmxEndpoint() {
 			return new AdditionalOperationJmxEndpoint();
+		}
+
+	}
+
+	@Configuration
+	static class AdditionalClashingOperationsConfiguration {
+
+		@Bean
+		public TestEndpoint testEndpoint() {
+			return new TestEndpoint();
+		}
+
+		@Bean
+		public ClashingOperationsJmxEndpoint clashingOperationsJmxEndpoint() {
+			return new ClashingOperationsJmxEndpoint();
 		}
 
 	}
