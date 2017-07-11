@@ -18,8 +18,14 @@ package org.springframework.boot.endpoint.web;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import org.assertj.core.api.Condition;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -62,8 +68,11 @@ public class WebEndpointDiscovererTests {
 			assertThat(endpoints).hasSize(1);
 			EndpointInfo<WebEndpointOperation> endpoint = endpoints.iterator().next();
 			assertThat(endpoint.getId()).isEqualTo("test");
-			Collection<WebEndpointOperation> operations = endpoint.getOperations();
-			assertThat(operations).hasSize(3);
+			assertThat(requestPredicates(endpoint)).has(requestPredicates(
+					path("/application/test").httpMethod(WebEndpointHttpMethod.GET),
+					path("/application/test").httpMethod(WebEndpointHttpMethod.POST),
+					path("/application/test/{id}")
+							.httpMethod(WebEndpointHttpMethod.GET)));
 		});
 	}
 
@@ -75,8 +84,11 @@ public class WebEndpointDiscovererTests {
 			assertThat(endpoints).hasSize(1);
 			EndpointInfo<WebEndpointOperation> endpoint = endpoints.iterator().next();
 			assertThat(endpoint.getId()).isEqualTo("test");
-			Collection<WebEndpointOperation> operations = endpoint.getOperations();
-			assertThat(operations).hasSize(3);
+			assertThat(requestPredicates(endpoint)).has(requestPredicates(
+					path("/application/test").httpMethod(WebEndpointHttpMethod.GET),
+					path("/application/test").httpMethod(WebEndpointHttpMethod.POST),
+					path("/application/test/{id}")
+							.httpMethod(WebEndpointHttpMethod.GET)));
 		});
 	}
 
@@ -88,8 +100,8 @@ public class WebEndpointDiscovererTests {
 			assertThat(endpoints).hasSize(1);
 			EndpointInfo<WebEndpointOperation> endpoint = endpoints.iterator().next();
 			assertThat(endpoint.getId()).isEqualTo("test");
-			Collection<WebEndpointOperation> operations = endpoint.getOperations();
-			assertThat(operations).hasSize(1);
+			assertThat(requestPredicates(endpoint)).has(requestPredicates(
+					path("/application/test").httpMethod(WebEndpointHttpMethod.GET)));
 		});
 	}
 
@@ -101,8 +113,10 @@ public class WebEndpointDiscovererTests {
 			assertThat(endpoints).hasSize(1);
 			EndpointInfo<WebEndpointOperation> endpoint = endpoints.iterator().next();
 			assertThat(endpoint.getId()).isEqualTo("test");
-			Collection<WebEndpointOperation> operations = endpoint.getOperations();
-			assertThat(operations).hasSize(2);
+			assertThat(requestPredicates(endpoint)).has(requestPredicates(
+					path("/application/test").httpMethod(WebEndpointHttpMethod.GET),
+					path("/application/test/{id}")
+							.httpMethod(WebEndpointHttpMethod.GET)));
 		});
 	}
 
@@ -154,17 +168,74 @@ public class WebEndpointDiscovererTests {
 		});
 	}
 
+	@Test
+	public void anEmptyBasePathExposesEndpointsAtTheRoot() {
+		load("", TestEndpointConfiguration.class, (discoverer) -> {
+			Collection<EndpointInfo<WebEndpointOperation>> endpoints = discoverer
+					.discoverEndpoints();
+			assertThat(endpoints).hasSize(1);
+			EndpointInfo<WebEndpointOperation> endpoint = endpoints.iterator().next();
+			assertThat(endpoint.getId()).isEqualTo("test");
+			assertThat(requestPredicates(endpoint)).has(requestPredicates(
+					path("/test").httpMethod(WebEndpointHttpMethod.GET)));
+		});
+	}
+
+	@Test
+	public void singleSlashBasePathExposesEndpointsAtTheRoot() {
+		load("/", TestEndpointConfiguration.class, (discoverer) -> {
+			Collection<EndpointInfo<WebEndpointOperation>> endpoints = discoverer
+					.discoverEndpoints();
+			assertThat(endpoints).hasSize(1);
+			EndpointInfo<WebEndpointOperation> endpoint = endpoints.iterator().next();
+			assertThat(endpoint.getId()).isEqualTo("test");
+			assertThat(requestPredicates(endpoint)).has(requestPredicates(
+					path("/test").httpMethod(WebEndpointHttpMethod.GET)));
+		});
+	}
+
 	private void load(Class<?> configuration, Consumer<WebEndpointDiscoverer> consumer) {
+		this.load("application", configuration, consumer);
+	}
+
+	private void load(String basePath, Class<?> configuration,
+			Consumer<WebEndpointDiscoverer> consumer) {
 		AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(
 				configuration);
 		try {
 			consumer.accept(new WebEndpointDiscoverer(new EndpointDiscoverer(context),
-					Arrays.asList("application/json"),
+					basePath, Arrays.asList("application/json"),
 					Arrays.asList("application/json")));
 		}
 		finally {
 			context.close();
 		}
+	}
+
+	private List<OperationRequestPredicate> requestPredicates(
+			EndpointInfo<WebEndpointOperation> endpoint) {
+		return endpoint.getOperations().stream()
+				.map(operation -> operation.getRequestPredicate())
+				.collect(Collectors.toList());
+	}
+
+	private Condition<List<? extends OperationRequestPredicate>> requestPredicates(
+			RequestPredicateMatcher... matchers) {
+		return new Condition<List<? extends OperationRequestPredicate>>(predicates -> {
+			if (predicates.size() != matchers.length) {
+				return false;
+			}
+			Map<OperationRequestPredicate, Long> matchCounts = new HashMap<>();
+			for (OperationRequestPredicate predicate : predicates) {
+				matchCounts.put(predicate, Stream.of(matchers)
+						.filter(matcher -> matcher.matches(predicate)).count());
+			}
+			return !matchCounts.values().stream().anyMatch(count -> count != 1);
+		}, Arrays.toString(matchers));
+	}
+
+	private RequestPredicateMatcher path(String path) {
+		return new RequestPredicateMatcher(path);
 	}
 
 	@Configuration
@@ -367,6 +438,35 @@ public class WebEndpointDiscovererTests {
 		@Bean
 		public ClashingSelectorsWebEndpoint clashingSelectorsWebEndpoint() {
 			return new ClashingSelectorsWebEndpoint();
+		}
+
+	}
+
+	private static final class RequestPredicateMatcher {
+
+		private final String path;
+
+		private WebEndpointHttpMethod httpMethod;
+
+		private RequestPredicateMatcher(String path) {
+			this.path = path;
+		}
+
+		private RequestPredicateMatcher httpMethod(WebEndpointHttpMethod httpMethod) {
+			this.httpMethod = httpMethod;
+			return this;
+		}
+
+		private boolean matches(OperationRequestPredicate predicate) {
+			return (this.path == null || this.path.equals(predicate.getPath()))
+					&& (this.httpMethod == null
+							|| this.httpMethod == predicate.getHttpMethod());
+		}
+
+		@Override
+		public String toString() {
+			return "Request predicate with path = '" + this.path + "', httpMethod = '"
+					+ this.httpMethod + "'";
 		}
 
 	}
