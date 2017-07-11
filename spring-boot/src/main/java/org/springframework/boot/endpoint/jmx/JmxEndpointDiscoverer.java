@@ -16,6 +16,7 @@
 
 package org.springframework.boot.endpoint.jmx;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
@@ -62,11 +63,28 @@ public class JmxEndpointDiscoverer {
 	}
 
 	public Collection<EndpointInfo<JmxEndpointOperation>> discoverEndpoints() {
-		Collection<EndpointInfo<JmxEndpointOperation>> baseEndpoints = this.endpointDiscoverer
-				.discoverEndpoints(Endpoint.class, this.operationFactory);
-		Collection<EndpointInfo<JmxEndpointOperation>> overridingEndpoints = this.endpointDiscoverer
-				.discoverEndpoints(JmxEndpoint.class, this.operationFactory);
+		Collection<EndpointInfo<JmxEndpointOperation>> baseEndpoints = discoverEndpoints(Endpoint.class);
+		Collection<EndpointInfo<JmxEndpointOperation>> overridingEndpoints = discoverEndpoints(JmxEndpoint.class);
 		return merge(baseEndpoints, overridingEndpoints);
+	}
+
+	private Collection<EndpointInfo<JmxEndpointOperation>> discoverEndpoints(
+			Class<? extends Annotation> endpointType) {
+		Collection<EndpointInfo<JmxEndpointOperation>> endpoints = this.endpointDiscoverer
+				.discoverEndpoints(endpointType, this.operationFactory);
+		for (EndpointInfo<JmxEndpointOperation> endpoint : endpoints) {
+			Map<String, JmxEndpointOperation> operations = new HashMap<>();
+			for (JmxEndpointOperation operation : endpoint.getOperations()) {
+				JmxEndpointOperation existing = operations.put(
+						operation.getOperationName(), operation);
+				if (existing != null) {
+					throw new IllegalStateException(String.format(
+							"Found two operations named '%s' for endpoint with id '%s'",
+							operation.getOperationName(), endpoint.getId()));
+				}
+			}
+		}
+		return endpoints;
 	}
 
 	private Collection<EndpointInfo<JmxEndpointOperation>> merge(
@@ -100,19 +118,6 @@ public class JmxEndpointDiscoverer {
 		baseEndpoint.getOperations().forEach(operationConsumer);
 		overridingEndpoint.getOperations().forEach(operationConsumer);
 		return new EndpointInfo<>(baseEndpoint.getId(), operations.values());
-	}
-
-	private static Class<?> mapParameterType(Class<?> parameter) {
-		if (parameter.isEnum()) {
-			return String.class;
-		}
-		if (parameter.getName().startsWith("java.")) {
-			return parameter;
-		}
-		if (parameter.equals(Void.TYPE)) {
-			return parameter;
-		}
-		return Object.class;
 	}
 
 	private static class JmxEndpointOperationFactory
@@ -170,6 +175,19 @@ public class JmxEndpointDiscoverer {
 				}
 			}
 			return parameters;
+		}
+
+		private static Class<?> mapParameterType(Class<?> parameter) {
+			if (parameter.isEnum()) {
+				return String.class;
+			}
+			if (parameter.getName().startsWith("java.")) {
+				return parameter;
+			}
+			if (parameter.equals(Void.TYPE)) {
+				return parameter;
+			}
+			return Object.class;
 		}
 
 	}
