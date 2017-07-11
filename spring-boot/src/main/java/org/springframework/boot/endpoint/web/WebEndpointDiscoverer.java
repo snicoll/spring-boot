@@ -60,15 +60,16 @@ public class WebEndpointDiscoverer {
 	 * web endpoints} in the given {@code applicationContext}.
 	 *
 	 * @param endpointDiscoverer the endpoint discoverer
+	 * @param basePath the path to prepend to the path of each discovered operation
 	 * @param consumedMediaTypes the media types consumed by web endpoint operations
 	 * @param producedMediaTypes the media types produced by web endpoint operations
 	 */
-	public WebEndpointDiscoverer(EndpointDiscoverer endpointDiscoverer,
+	public WebEndpointDiscoverer(EndpointDiscoverer endpointDiscoverer, String basePath,
 			Collection<String> consumedMediaTypes,
 			Collection<String> producedMediaTypes) {
 		this.endpointDiscoverer = endpointDiscoverer;
-		this.operationFactory = new WebEndpointOperationFactory(consumedMediaTypes,
-				producedMediaTypes);
+		this.operationFactory = new WebEndpointOperationFactory(basePath,
+				consumedMediaTypes, producedMediaTypes);
 	}
 
 	public Collection<EndpointInfo<WebEndpointOperation>> discoverEndpoints() {
@@ -162,14 +163,28 @@ public class WebEndpointDiscoverer {
 				"org.reactivestreams.Publisher",
 				WebEndpointOperationFactory.class.getClassLoader());
 
+		private final String basePath;
+
 		private final Collection<String> consumedMediaTypes;
 
 		private final Collection<String> producedMediaTypes;
 
-		private WebEndpointOperationFactory(Collection<String> consumedMediaTypes,
+		private WebEndpointOperationFactory(String basePath,
+				Collection<String> consumedMediaTypes,
 				Collection<String> producedMediaTypes) {
+			this.basePath = normalizeBasePath(basePath);
 			this.consumedMediaTypes = consumedMediaTypes;
 			this.producedMediaTypes = producedMediaTypes;
+		}
+
+		private static String normalizeBasePath(String basePath) {
+			if (!basePath.startsWith("/")) {
+				basePath = "/" + basePath;
+			}
+			if (!basePath.endsWith("/")) {
+				basePath = basePath + "/";
+			}
+			return basePath;
 		}
 
 		@Override
@@ -188,7 +203,7 @@ public class WebEndpointDiscoverer {
 		}
 
 		private String determinePath(String endpointId, Method operationMethod) {
-			StringBuilder path = new StringBuilder("/" + endpointId);
+			StringBuilder path = new StringBuilder(this.basePath + endpointId);
 			Stream.of(operationMethod.getParameters()).filter((parameter) -> {
 				return parameter.getAnnotation(Selector.class) != null;
 			}).map((parameter) -> "/{" + parameter.getName() + "}").forEach(path::append);

@@ -98,8 +98,11 @@ public abstract class AbstractWebEndpointIntegrationTests<T extends Configurable
 		T context = createApplicationContext(BaseConfiguration.class,
 				this.exporterConfiguration);
 		try {
-			consumer.accept(context, WebTestClient.bindToServer()
-					.baseUrl("http://localhost:" + getPort(context)).build());
+			consumer.accept(context,
+					WebTestClient.bindToServer()
+							.baseUrl(
+									"http://localhost:" + getPort(context) + "/endpoints")
+							.build());
 		}
 		finally {
 			context.close();
@@ -129,7 +132,8 @@ public abstract class AbstractWebEndpointIntegrationTests<T extends Configurable
 		public WebEndpointDiscoverer webEndpointDiscoverer(
 				ApplicationContext applicationContext) {
 			return new WebEndpointDiscoverer(new EndpointDiscoverer(applicationContext),
-					Arrays.asList("application/json"), Arrays.asList("application/json"));
+					"endpoints", Arrays.asList("application/json"),
+					Arrays.asList("application/json"));
 		}
 
 	}
