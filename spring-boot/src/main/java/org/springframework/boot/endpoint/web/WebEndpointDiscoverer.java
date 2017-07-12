@@ -20,10 +20,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -48,7 +45,8 @@ import org.springframework.util.ClassUtils;
  * @author Stephane Nicoll
  * @since 2.0.0
  */
-public class WebEndpointDiscoverer extends EndpointDiscoverer<WebEndpointOperation> {
+public class WebEndpointDiscoverer
+		extends EndpointDiscoverer<WebEndpointOperation, OperationRequestPredicate> {
 
 	/**
 	 * Creates a new {@link WebEndpointDiscoverer} that will discover {@link Endpoint
@@ -66,47 +64,38 @@ public class WebEndpointDiscoverer extends EndpointDiscoverer<WebEndpointOperati
 			Collection<String> consumedMediaTypes,
 			Collection<String> producedMediaTypes) {
 		super(applicationContext, new WebEndpointOperationFactory(conversionService,
-				basePath, consumedMediaTypes, producedMediaTypes));
+				basePath, consumedMediaTypes, producedMediaTypes),
+				WebEndpointOperation::getRequestPredicate);
 	}
 
 	@Override
 	public Collection<EndpointInfo<WebEndpointOperation>> discoverEndpoints() {
-		Collection<EndpointInfo<WebEndpointOperation>> endpoints = doDiscoverEndpoints(
-				WebEndpointExtension.class, WebEndpointExtensionInfo::new);
+		Collection<EndpointInfoDescriptor<WebEndpointOperation, OperationRequestPredicate>> endpoints = discoverEndpointsWithExtension(
+				WebEndpointExtension.class);
 		verifyThatOperationsHaveDistinctPredicates(endpoints);
-		return endpoints;
+		return endpoints.stream().map(EndpointInfoDescriptor::getEndpointInfo)
+				.collect(Collectors.toList());
 	}
 
-	private static void verifyThatOperationsHaveDistinctPredicates(
-			Collection<EndpointInfo<WebEndpointOperation>> endpoints) {
-		Map<OperationRequestPredicate, List<WebEndpointOperation>> operations = new HashMap<>();
-		endpoints.forEach((endpoint) -> {
-			endpoint.getOperations().forEach((operation) -> {
-				operations.merge(operation.getRequestPredicate(),
-						Collections.singletonList(operation),
-						(existingOperations, newOperations) -> {
-					List<WebEndpointOperation> combined = new ArrayList<>(
-							existingOperations);
-					combined.addAll(newOperations);
-					return combined;
+	private void verifyThatOperationsHaveDistinctPredicates(
+			Collection<EndpointInfoDescriptor<WebEndpointOperation, OperationRequestPredicate>>  endpointDescriptors) {
+		List<List<WebEndpointOperation>> clashes = new ArrayList<>();
+		endpointDescriptors.forEach(descriptor -> {
+			clashes.addAll(descriptor.findDuplicateOperations().values());
+		});
+		if (!clashes.isEmpty()) {
+			StringBuilder message = new StringBuilder();
+			message.append(String.format(
+					"Found multiple web operations with matching request predicates:%n"));
+			clashes.forEach((clash) -> {
+				message.append("    ").append(clash.get(0).getRequestPredicate())
+						.append(String.format(":%n"));
+				clash.forEach((operation) -> {
+					message.append("        ").append(String.format("%s%n", operation));
 				});
 			});
-		});
-		List<List<WebEndpointOperation>> clashes = operations.values().stream().filter(
-				(operationsWithSamePredicate) -> operationsWithSamePredicate.size() > 1)
-				.collect(Collectors.toList());
-		if (clashes.isEmpty()) {
-			return;
+			throw new IllegalStateException(message.toString());
 		}
-		StringBuilder message = new StringBuilder(
-				"Found multiple web operations with matching request predicates:");
-		clashes.forEach((clash) -> {
-			message.append("    ").append(clash.get(0).getRequestPredicate()).append(":");
-			clash.forEach((operation) -> {
-				message.append("        ").append(operation);
-			});
-		});
-		throw new IllegalStateException(message.toString());
 	}
 
 	private static final class WebEndpointOperationFactory
@@ -185,36 +174,6 @@ public class WebEndpointDiscoverer extends EndpointDiscoverer<WebEndpointOperati
 		private boolean determineBlocking(Method method) {
 			return !REACTIVE_STREAMS_PRESENT
 					|| !Publisher.class.isAssignableFrom(method.getReturnType());
-		}
-
-	}
-
-	private static class WebEndpointExtensionInfo
-			extends EndpointExtensionInfo<WebEndpointOperation> {
-
-		WebEndpointExtensionInfo(Class<?> endpointType, Class<?> endpointExtensionType,
-				Collection<WebEndpointOperation> operations) {
-			super(endpointType, endpointExtensionType, operations);
-		}
-
-		@Override
-		public EndpointInfo<WebEndpointOperation> merge(
-				EndpointInfo<WebEndpointOperation> existing) {
-			// Before merging, validate endpoint:
-			verifyThatOperationsHaveDistinctPredicates(
-					Collections.singletonList(existing));
-			// Then validate ourselves, wih a hack
-			verifyThatOperationsHaveDistinctPredicates(
-					Collections.singletonList(new EndpointInfo<>(existing.getId(),
-							existing.isEnabledByDefault(), getOperations())));
-
-			Map<OperationRequestPredicate, WebEndpointOperation> operations = new HashMap<>();
-			Consumer<WebEndpointOperation> operationConsumer = (operation) -> operations
-					.put(operation.getRequestPredicate(), operation);
-			existing.getOperations().forEach(operationConsumer);
-			getOperations().forEach(operationConsumer);
-			return new EndpointInfo<>(existing.getId(), existing.isEnabledByDefault(),
-					operations.values());
 		}
 
 	}

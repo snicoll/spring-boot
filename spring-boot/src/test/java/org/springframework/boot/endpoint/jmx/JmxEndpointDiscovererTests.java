@@ -152,8 +152,8 @@ public class JmxEndpointDiscovererTests {
 	public void discoveryFailsWhenEndpointHasTwoOperationsWithTheSameName() {
 		load(ClashingOperationsEndpoint.class, discoverer -> {
 			this.thrown.expect(IllegalStateException.class);
-			this.thrown.expectMessage(
-					"Found two operations named 'getAll' for endpoint with id 'test'");
+			this.thrown.expectMessage("Found multiple JMX operations with the same name");
+			this.thrown.expectMessage("getAll");
 			discoverer.discoverEndpoints();
 		});
 	}
@@ -162,8 +162,8 @@ public class JmxEndpointDiscovererTests {
 	public void discoveryFailsWhenExtensionHasTwoOperationsWithTheSameName() {
 		load(AdditionalClashingOperationsConfiguration.class, (discoverer) -> {
 			this.thrown.expect(IllegalStateException.class);
-			this.thrown.expectMessage(
-					"Found two operations named 'getAll' for endpoint with id 'test'");
+			this.thrown.expectMessage("Found multiple JMX operations with the same name");
+			this.thrown.expectMessage("getAll");
 			discoverer.discoverEndpoints();
 		});
 	}
