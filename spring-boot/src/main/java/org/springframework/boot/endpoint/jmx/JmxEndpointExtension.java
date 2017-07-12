@@ -25,7 +25,7 @@ import java.lang.annotation.Target;
 import org.springframework.boot.endpoint.Endpoint;
 
 /**
- * Identifies a type as being a jmx endpoint.
+ * Identifies a type as being a JMX-specific extension of an {@link Endpoint}.
  *
  * @author Stephane Nicoll
  * @since 2.0.0

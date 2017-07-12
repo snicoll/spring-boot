@@ -42,7 +42,7 @@ import org.springframework.util.ClassUtils;
 
 /**
  * Discovers the {@link Endpoint endpoints} in an {@link ApplicationContext} with
- * {@link WebEndpointExtension jmx extensions} additions and overrides applied on them.
+ * {@link WebEndpointExtension web extensions} applied to them.
  *
  * @author Andy Wilkinson
  * @author Stephane Nicoll
@@ -51,10 +51,9 @@ import org.springframework.util.ClassUtils;
 public class WebEndpointDiscoverer extends EndpointDiscoverer<WebEndpointOperation> {
 
 	/**
-	 * Creates a new {@link WebEndpointDiscoverer} that will discover
-	 * {@link Endpoint endpoints} and {@link WebEndpointExtension web extensions} using
-	 * the given {@link ApplicationContext}.
-	 * *
+	 * Creates a new {@link WebEndpointDiscoverer} that will discover {@link Endpoint
+	 * endpoints} and {@link WebEndpointExtension web extensions} using the given
+	 * {@link ApplicationContext}.
 	 * @param applicationContext the application context
 	 * @param conversionService the conversion service used to convert arguments when an
 	 * operation is invoked
@@ -84,7 +83,8 @@ public class WebEndpointDiscoverer extends EndpointDiscoverer<WebEndpointOperati
 		endpoints.forEach((endpoint) -> {
 			endpoint.getOperations().forEach((operation) -> {
 				operations.merge(operation.getRequestPredicate(),
-						Collections.singletonList(operation), (existingOperations, newOperations) -> {
+						Collections.singletonList(operation),
+						(existingOperations, newOperations) -> {
 					List<WebEndpointOperation> combined = new ArrayList<>(
 							existingOperations);
 					combined.addAll(newOperations);
@@ -108,7 +108,6 @@ public class WebEndpointDiscoverer extends EndpointDiscoverer<WebEndpointOperati
 		});
 		throw new IllegalStateException(message.toString());
 	}
-
 
 	private static final class WebEndpointOperationFactory
 			implements EndpointOperationFactory<WebEndpointOperation> {
@@ -145,14 +144,12 @@ public class WebEndpointDiscoverer extends EndpointDiscoverer<WebEndpointOperati
 		}
 
 		@Override
-		public WebEndpointOperation createOperation(
-				String endpointId,
+		public WebEndpointOperation createOperation(String endpointId,
 				AnnotationAttributes operationAttributes, Object target, Method method,
 				EndpointOperationType type) {
 			OperationRequestPredicate requestPredicate = new OperationRequestPredicate(
-					determinePath(endpointId, method),
-					determineHttpMethod(type), determineConsumedMediaTypes(method),
-					this.producedMediaTypes);
+					determinePath(endpointId, method), determineHttpMethod(type),
+					determineConsumedMediaTypes(method), this.producedMediaTypes);
 			return new WebEndpointOperation(type,
 					new ReflectiveOperationInvoker(this.conversionService, target,
 							method),
@@ -186,37 +183,40 @@ public class WebEndpointDiscoverer extends EndpointDiscoverer<WebEndpointOperati
 		}
 
 		private boolean determineBlocking(Method method) {
-			return !REACTIVE_STREAMS_PRESENT ||
-					!Publisher.class.isAssignableFrom(method.getReturnType());
+			return !REACTIVE_STREAMS_PRESENT
+					|| !Publisher.class.isAssignableFrom(method.getReturnType());
 		}
 
 	}
 
-	private static class WebEndpointExtensionInfo extends EndpointExtensionInfo<WebEndpointOperation> {
+	private static class WebEndpointExtensionInfo
+			extends EndpointExtensionInfo<WebEndpointOperation> {
 
-		WebEndpointExtensionInfo(Class<?> endpointType,
-				Class<?> endpointExtensionType,
+		WebEndpointExtensionInfo(Class<?> endpointType, Class<?> endpointExtensionType,
 				Collection<WebEndpointOperation> operations) {
 			super(endpointType, endpointExtensionType, operations);
 		}
 
 		@Override
-		public EndpointInfo<WebEndpointOperation> merge(EndpointInfo<WebEndpointOperation> existing) {
+		public EndpointInfo<WebEndpointOperation> merge(
+				EndpointInfo<WebEndpointOperation> existing) {
 			// Before merging, validate endpoint:
-			verifyThatOperationsHaveDistinctPredicates(Collections.singletonList(existing));
+			verifyThatOperationsHaveDistinctPredicates(
+					Collections.singletonList(existing));
 			// Then validate ourselves, wih a hack
-			verifyThatOperationsHaveDistinctPredicates(Collections.singletonList(
-					new EndpointInfo<>(existing.getId(), existing.isEnabledByDefault(),
-							getOperations())));
+			verifyThatOperationsHaveDistinctPredicates(
+					Collections.singletonList(new EndpointInfo<>(existing.getId(),
+							existing.isEnabledByDefault(), getOperations())));
 
 			Map<OperationRequestPredicate, WebEndpointOperation> operations = new HashMap<>();
 			Consumer<WebEndpointOperation> operationConsumer = (operation) -> operations
 					.put(operation.getRequestPredicate(), operation);
 			existing.getOperations().forEach(operationConsumer);
 			getOperations().forEach(operationConsumer);
-			return new EndpointInfo<>(existing.getId(),
-					existing.isEnabledByDefault(), operations.values());
+			return new EndpointInfo<>(existing.getId(), existing.isEnabledByDefault(),
+					operations.values());
 		}
+
 	}
 
 }

@@ -294,6 +294,7 @@ public class EndpointDynamicMBeanTests {
 		public String toString() {
 			return this.name;
 		}
+
 	}
 
 }

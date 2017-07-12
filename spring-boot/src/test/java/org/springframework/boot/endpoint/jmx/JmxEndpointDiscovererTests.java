@@ -99,7 +99,6 @@ public class JmxEndpointDiscovererTests {
 			this.thrown.expectMessage(TestEndpoint.class.getName());
 			discoverer.discoverEndpoints();
 		});
-
 	}
 
 	@Test
@@ -110,7 +109,6 @@ public class JmxEndpointDiscovererTests {
 			assertThat(endpoints).containsOnlyKeys("test");
 			assertJmxTestEndpoint(endpoints.get("test"));
 		});
-
 	}
 
 	@Test
@@ -394,6 +392,7 @@ public class JmxEndpointDiscovererTests {
 		public TestJmxEndpoint testExtensionTwo() {
 			return new TestJmxEndpoint();
 		}
+
 	}
 
 	@Configuration
@@ -408,6 +407,7 @@ public class JmxEndpointDiscovererTests {
 		public TestEndpoint testEndpointOne() {
 			return new TestEndpoint();
 		}
+
 	}
 
 }
