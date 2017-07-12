@@ -28,6 +28,7 @@ import org.springframework.boot.endpoint.AnnotationEndpointDiscoverer;
 import org.springframework.boot.endpoint.Endpoint;
 import org.springframework.boot.endpoint.EndpointInfo;
 import org.springframework.boot.endpoint.EndpointOperationType;
+import org.springframework.boot.endpoint.EndpointType;
 import org.springframework.boot.endpoint.ReflectiveOperationInvoker;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.annotation.AnnotationAttributes;
@@ -68,7 +69,7 @@ public class JmxAnnotationEndpointDiscoverer
 	@Override
 	public Collection<EndpointInfo<JmxEndpointOperation>> discoverEndpoints() {
 		Collection<EndpointInfoDescriptor<JmxEndpointOperation, String>> endpointDescriptors = discoverEndpointsWithExtension(
-				JmxEndpointExtension.class);
+				JmxEndpointExtension.class, EndpointType.JMX);
 		verifyThatOperationsHaveDistinctName(endpointDescriptors);
 		return endpointDescriptors.stream().map(EndpointInfoDescriptor::getEndpointInfo)
 				.collect(Collectors.toList());

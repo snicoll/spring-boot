@@ -41,6 +41,13 @@ public @interface Endpoint {
 	String id();
 
 	/**
+	 * Defines the endpoint {@link EndpointType types} that should be exposed. By default,
+	 * all types are exposed.
+	 * @return the endpoint types to expose
+	 */
+	EndpointType[] types() default {};
+
+	/**
 	 * Whether or not the endpoint is enabled by default.
 	 * @return {@code true} if the endpoint is enabled by default, otherwise {@code false}
 	 */

@@ -28,6 +28,7 @@ import org.junit.rules.ExpectedException;
 
 import org.springframework.boot.endpoint.Endpoint;
 import org.springframework.boot.endpoint.EndpointInfo;
+import org.springframework.boot.endpoint.EndpointType;
 import org.springframework.boot.endpoint.ReadOperation;
 import org.springframework.boot.endpoint.WriteOperation;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -90,11 +91,20 @@ public class JmxAnnotationEndpointDiscovererTests {
 	}
 
 	@Test
+	public void onlyJmxEndpointsAreDiscovered() {
+		load(MultipleEndpointsConfiguration.class, discoverer -> {
+			Map<String, EndpointInfo<JmxEndpointOperation>> endpoints = discover(
+					discoverer);
+			assertThat(endpoints).containsOnlyKeys("test", "jmx");
+		});
+	}
+
+	@Test
 	public void jmxExtensionMustHaveEndpoint() {
-		load(TestJmxEndpoint.class, discoverer -> {
+		load(TestJmxEndpointExtension.class, discoverer -> {
 			this.thrown.expect(IllegalStateException.class);
 			this.thrown.expectMessage("Invalid extension");
-			this.thrown.expectMessage(TestJmxEndpoint.class.getName());
+			this.thrown.expectMessage(TestJmxEndpointExtension.class.getName());
 			this.thrown.expectMessage("no endpoint found");
 			this.thrown.expectMessage(TestEndpoint.class.getName());
 			discoverer.discoverEndpoints();
@@ -134,7 +144,7 @@ public class JmxAnnotationEndpointDiscovererTests {
 			this.thrown.expect(IllegalStateException.class);
 			this.thrown.expectMessage("Found two extensions for the same endpoint");
 			this.thrown.expectMessage(TestEndpoint.class.getName());
-			this.thrown.expectMessage(TestJmxEndpoint.class.getName());
+			this.thrown.expectMessage(TestJmxEndpointExtension.class.getName());
 			discoverer.discoverEndpoints();
 		});
 	}
@@ -164,6 +174,17 @@ public class JmxAnnotationEndpointDiscovererTests {
 			this.thrown.expect(IllegalStateException.class);
 			this.thrown.expectMessage("Found multiple JMX operations with the same name");
 			this.thrown.expectMessage("getAll");
+			discoverer.discoverEndpoints();
+		});
+	}
+
+	@Test
+	public void discoveryFailsWhenExtensionIsNotCompatibleWithTheEndpointType() {
+		load(InvalidJmxExtensionConfiguration.class, discoverer -> {
+			this.thrown.expect(IllegalStateException.class);
+			this.thrown.expectMessage("Invalid extension");
+			this.thrown.expectMessage(NonJmxJmxEndpointExtension.class.getName());
+			this.thrown.expectMessage(NonJmxEndpoint.class.getName());
 			discoverer.discoverEndpoints();
 		});
 	}
@@ -257,8 +278,18 @@ public class JmxAnnotationEndpointDiscovererTests {
 
 	}
 
-	@JmxEndpointExtension(endpoint = TestEndpoint.class)
+	@Endpoint(id = "jmx", types = EndpointType.JMX)
 	private static class TestJmxEndpoint {
+
+		@ReadOperation
+		public Object getAll() {
+			return null;
+		}
+
+	}
+
+	@JmxEndpointExtension(endpoint = TestEndpoint.class)
+	private static class TestJmxEndpointExtension {
 
 		@ManagedOperation(description = "Get all the things")
 		@ReadOperation
@@ -286,7 +317,7 @@ public class JmxAnnotationEndpointDiscovererTests {
 	}
 
 	@JmxEndpointExtension(endpoint = TestEndpoint.class)
-	private static class AdditionalOperationJmxEndpoint {
+	private static class AdditionalOperationJmxEndpointExtension {
 
 		@ManagedOperation(description = "Get another thing")
 		@ReadOperation
@@ -312,7 +343,7 @@ public class JmxAnnotationEndpointDiscovererTests {
 	}
 
 	@JmxEndpointExtension(endpoint = TestEndpoint.class)
-	static class ClashingOperationsJmxEndpoint {
+	static class ClashingOperationsJmxEndpointExtension {
 
 		@ReadOperation
 		public Object getAll() {
@@ -326,8 +357,48 @@ public class JmxAnnotationEndpointDiscovererTests {
 
 	}
 
+	@Endpoint(id = "nonjmx", types = EndpointType.WEB)
+	private static class NonJmxEndpoint {
+
+		@ReadOperation
+		public Object getData() {
+			return null;
+		}
+
+	}
+
+	@JmxEndpointExtension(endpoint = NonJmxEndpoint.class)
+	private static class NonJmxJmxEndpointExtension {
+
+		@ReadOperation
+		public Object getSomething() {
+			return null;
+		}
+
+	}
+
 	@Configuration
 	static class EmptyConfiguration {
+
+	}
+
+	@Configuration
+	static class MultipleEndpointsConfiguration {
+
+		@Bean
+		public TestEndpoint testEndpoint() {
+			return new TestEndpoint();
+		}
+
+		@Bean
+		public TestJmxEndpoint testJmxEndpoint() {
+			return new TestJmxEndpoint();
+		}
+
+		@Bean
+		public NonJmxEndpoint nonJmxEndpoint() {
+			return new NonJmxEndpoint();
+		}
 
 	}
 
@@ -340,8 +411,8 @@ public class JmxAnnotationEndpointDiscovererTests {
 		}
 
 		@Bean
-		public TestJmxEndpoint testJmxEndpoint() {
-			return new TestJmxEndpoint();
+		public TestJmxEndpointExtension testJmxEndpointExtension() {
+			return new TestJmxEndpointExtension();
 		}
 
 	}
@@ -355,8 +426,8 @@ public class JmxAnnotationEndpointDiscovererTests {
 		}
 
 		@Bean
-		public AdditionalOperationJmxEndpoint additionalOperationJmxEndpoint() {
-			return new AdditionalOperationJmxEndpoint();
+		public AdditionalOperationJmxEndpointExtension additionalOperationJmxEndpointExtension() {
+			return new AdditionalOperationJmxEndpointExtension();
 		}
 
 	}
@@ -370,8 +441,8 @@ public class JmxAnnotationEndpointDiscovererTests {
 		}
 
 		@Bean
-		public ClashingOperationsJmxEndpoint clashingOperationsJmxEndpoint() {
-			return new ClashingOperationsJmxEndpoint();
+		public ClashingOperationsJmxEndpointExtension clashingOperationsJmxEndpointExtension() {
+			return new ClashingOperationsJmxEndpointExtension();
 		}
 
 	}
@@ -385,13 +456,13 @@ public class JmxAnnotationEndpointDiscovererTests {
 		}
 
 		@Bean
-		public TestJmxEndpoint testExtensionOne() {
-			return new TestJmxEndpoint();
+		public TestJmxEndpointExtension testExtensionOne() {
+			return new TestJmxEndpointExtension();
 		}
 
 		@Bean
-		public TestJmxEndpoint testExtensionTwo() {
-			return new TestJmxEndpoint();
+		public TestJmxEndpointExtension testExtensionTwo() {
+			return new TestJmxEndpointExtension();
 		}
 
 	}
@@ -407,6 +478,21 @@ public class JmxAnnotationEndpointDiscovererTests {
 		@Bean
 		public TestEndpoint testEndpointOne() {
 			return new TestEndpoint();
+		}
+
+	}
+
+	@Configuration
+	static class InvalidJmxExtensionConfiguration {
+
+		@Bean
+		public NonJmxEndpoint nonJmxEndpoint() {
+			return new NonJmxEndpoint();
+		}
+
+		@Bean
+		public NonJmxJmxEndpointExtension nonJmxJmxEndpointExtension() {
+			return new NonJmxJmxEndpointExtension();
 		}
 
 	}
