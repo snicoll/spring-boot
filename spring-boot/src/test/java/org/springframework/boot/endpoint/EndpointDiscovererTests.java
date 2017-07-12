@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -166,15 +167,18 @@ public class EndpointDiscovererTests {
 	}
 
 	private static class TestEndpointDiscoverer
-			extends EndpointDiscoverer<TestEndpointOperation> {
+			extends EndpointDiscoverer<TestEndpointOperation, Method> {
 
 		TestEndpointDiscoverer(ApplicationContext applicationContext) {
-			super(applicationContext, endpointOperationFactory());
+			super(applicationContext, endpointOperationFactory(),
+					TestEndpointOperation::getOperationMethod);
 		}
 
 		@Override
 		public Collection<EndpointInfo<TestEndpointOperation>> discoverEndpoints() {
-			return doDiscoverEndpoints(null, null);
+			return discoverEndpointsWithExtension(null).stream()
+					.map(EndpointInfoDescriptor::getEndpointInfo)
+					.collect(Collectors.toList());
 		}
 
 		private static EndpointOperationFactory<TestEndpointOperation> endpointOperationFactory() {
