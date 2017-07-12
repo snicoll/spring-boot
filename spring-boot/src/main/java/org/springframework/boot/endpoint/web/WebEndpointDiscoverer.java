@@ -63,8 +63,9 @@ public class WebEndpointDiscoverer
 			ConversionService conversionService, String basePath,
 			Collection<String> consumedMediaTypes,
 			Collection<String> producedMediaTypes) {
-		super(applicationContext, new WebEndpointOperationFactory(conversionService,
-				basePath, consumedMediaTypes, producedMediaTypes),
+		super(applicationContext,
+				new WebEndpointOperationFactory(conversionService, basePath,
+						consumedMediaTypes, producedMediaTypes),
 				WebEndpointOperation::getRequestPredicate);
 	}
 
@@ -78,7 +79,7 @@ public class WebEndpointDiscoverer
 	}
 
 	private void verifyThatOperationsHaveDistinctPredicates(
-			Collection<EndpointInfoDescriptor<WebEndpointOperation, OperationRequestPredicate>>  endpointDescriptors) {
+			Collection<EndpointInfoDescriptor<WebEndpointOperation, OperationRequestPredicate>> endpointDescriptors) {
 		List<List<WebEndpointOperation>> clashes = new ArrayList<>();
 		endpointDescriptors.forEach(descriptor -> {
 			clashes.addAll(descriptor.findDuplicateOperations().values());

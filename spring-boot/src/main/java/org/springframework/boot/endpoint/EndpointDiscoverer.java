@@ -91,7 +91,8 @@ public abstract class EndpointDiscoverer<T extends EndpointOperation, K> {
 		if (extension != null) {
 			endpointOperations.putAll(indexOperations(endpoint.getId(),
 					extension.getEndpointExtensionType(), extension.getOperations()));
-			return new EndpointInfoDescriptor<>(mergeEndpoint(endpoint, extension), endpointOperations);
+			return new EndpointInfoDescriptor<>(mergeEndpoint(endpoint, extension),
+					endpointOperations);
 		}
 		else {
 			return new EndpointInfoDescriptor<>(endpoint, endpointOperations);
@@ -108,7 +109,6 @@ public abstract class EndpointDiscoverer<T extends EndpointOperation, K> {
 		return new EndpointInfo<>(endpoint.getId(), endpoint.isEnabledByDefault(),
 				operations.values());
 	}
-
 
 	private Map<OperationKey<K>, List<T>> indexOperations(String endpointId,
 			Class<?> target, Collection<T> operations) {
@@ -171,9 +171,8 @@ public abstract class EndpointDiscoverer<T extends EndpointOperation, K> {
 			}
 			Map<Method, T> operationMethods = discoverOperations(endpoint.getId(),
 					beanName, beanType);
-			EndpointExtensionInfo<T> extension = new EndpointExtensionInfo<>(
-					endpointType, beanType, operationMethods.values());
-
+			EndpointExtensionInfo<T> extension = new EndpointExtensionInfo<>(beanType,
+					operationMethods.values());
 			EndpointExtensionInfo<T> previous = extensionsByEndpoint
 					.putIfAbsent(endpointType, extension);
 			if (previous != null) {
@@ -252,33 +251,26 @@ public abstract class EndpointDiscoverer<T extends EndpointOperation, K> {
 	}
 
 	/**
-	 * Describes a tech specific extension of an endpoint.
+	 * Describes a tech-specific extension of an endpoint.
 	 * @param <T> the type of the operation
 	 */
 	private static class EndpointExtensionInfo<T extends EndpointOperation> {
-
-		private final Class<?> endpointType;
 
 		private final Class<?> endpointExtensionType;
 
 		private final Collection<T> operations;
 
-		protected EndpointExtensionInfo(Class<?> endpointType,
-				Class<?> endpointExtensionType, Collection<T> operations) {
-			this.endpointType = endpointType;
+		private EndpointExtensionInfo(Class<?> endpointExtensionType,
+				Collection<T> operations) {
 			this.endpointExtensionType = endpointExtensionType;
 			this.operations = operations;
 		}
 
-		protected Class<?> getEndpointType() {
-			return this.endpointType;
-		}
-
-		protected Class<?> getEndpointExtensionType() {
+		private Class<?> getEndpointExtensionType() {
 			return this.endpointExtensionType;
 		}
 
-		protected Collection<T> getOperations() {
+		private Collection<T> getOperations() {
 			return this.operations;
 		}
 
