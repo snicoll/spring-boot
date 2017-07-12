@@ -17,8 +17,9 @@
 package org.springframework.boot.endpoint.web;
 
 /**
- * A {@code WebEndpointResponse} can be returned by an operation on a {@link WebEndpoint}
- * to provide additional, web-specific information such as the HTTP status code.
+ * A {@code WebEndpointResponse} can be returned by an operation on a
+ * {@link WebEndpointExtension} to provide additional, web-specific information such as
+ * the HTTP status code.
  *
  * @param <T> the type of the response body
  * @author Stephane Nicoll

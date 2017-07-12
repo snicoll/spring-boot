@@ -26,7 +26,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import org.springframework.boot.endpoint.EndpointDiscoverer.EndpointOperationFactory;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -45,32 +45,18 @@ public class EndpointDiscovererTests {
 	@Rule
 	public final ExpectedException thrown = ExpectedException.none();
 
-	private final EndpointOperationFactory<TestEndpointOperation> endpointOperationFactory = new EndpointOperationFactory<TestEndpointOperation>() {
-
-		@Override
-		public TestEndpointOperation createOperation(
-				AnnotationAttributes endpointAttributes,
-				AnnotationAttributes operationAttributes, Object target,
-				Method operationMethod, EndpointOperationType operationType) {
-			return new TestEndpointOperation(operationType, null, operationMethod);
-		}
-
-	};
-
 	@Test
 	public void discoverWorksWhenThereAreNoEndpoints() {
-		load(EmptyConfiguration.class, (context) -> {
-			assertThat(new EndpointDiscoverer(context).discoverEndpoints(Endpoint.class,
-					this.endpointOperationFactory)).isEmpty();
-		});
+		load(EmptyConfiguration.class, (context) ->
+			assertThat(new TestEndpointDiscoverer(context).discoverEndpoints().isEmpty())
+		);
 	}
 
 	@Test
 	public void endpointIsDiscovered() {
 		load(TestEndpointConfiguration.class, (context) -> {
-			Collection<EndpointInfo<TestEndpointOperation>> endpoints = new EndpointDiscoverer(
-					context).discoverEndpoints(Endpoint.class,
-							this.endpointOperationFactory);
+			Collection<EndpointInfo<TestEndpointOperation>> endpoints = new TestEndpointDiscoverer(
+					context).discoverEndpoints();
 			assertThat(endpoints).hasSize(1);
 			EndpointInfo<TestEndpointOperation> endpoint = endpoints.iterator().next();
 			assertThat(endpoint.getId()).isEqualTo("test");
@@ -94,8 +80,7 @@ public class EndpointDiscovererTests {
 		load(ClashingEndpointConfiguration.class, (context) -> {
 			this.thrown.expect(IllegalStateException.class);
 			this.thrown.expectMessage("Found two endpoints with the id 'test': ");
-			new EndpointDiscoverer(context).discoverEndpoints(Endpoint.class,
-					this.endpointOperationFactory);
+			new TestEndpointDiscoverer(context).discoverEndpoints();
 		});
 	}
 
@@ -176,6 +161,33 @@ public class EndpointDiscovererTests {
 
 		private Method getOperationMethod() {
 			return this.operationMethod;
+		}
+
+	}
+
+	private static class TestEndpointDiscoverer
+			extends EndpointDiscoverer<TestEndpointOperation> {
+
+		TestEndpointDiscoverer(ApplicationContext applicationContext) {
+			super(applicationContext, endpointOperationFactory());
+		}
+
+		@Override
+		public Collection<EndpointInfo<TestEndpointOperation>> discoverEndpoints() {
+			return discoverGenericEndpoints().values();
+		}
+
+		private static EndpointOperationFactory<TestEndpointOperation> endpointOperationFactory() {
+			return new EndpointOperationFactory<TestEndpointOperation>() {
+
+				@Override
+				public TestEndpointOperation createOperation(
+						String endpointId,
+						AnnotationAttributes operationAttributes, Object target,
+						Method operationMethod, EndpointOperationType operationType) {
+					return new TestEndpointOperation(operationType, null, operationMethod);
+				}
+			};
 		}
 
 	}
