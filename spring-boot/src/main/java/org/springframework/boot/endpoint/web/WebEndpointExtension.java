@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.boot.endpoint.jmx;
+package org.springframework.boot.endpoint.web;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -22,28 +22,25 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.springframework.boot.endpoint.Endpoint;
+
 /**
- * Identifies a type as being a jmx endpoint.
+ * Identifies a type has being a web extension of an {@link Endpoint}.
  *
+ * @author Andy Wilkinson
  * @author Stephane Nicoll
  * @since 2.0.0
- * @see JmxEndpointDiscoverer
+ * @see WebEndpointDiscoverer
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-public @interface JmxEndpoint {
+public @interface WebEndpointExtension {
 
 	/**
-	 * Identifier of the endpoint.
-	 * @return the id of the endpoint
+	 * The {@link Endpoint endpoint} class to which this Web extension relates.
+	 * @return the endpoint class
 	 */
-	String id();
-
-	/**
-	 * Whether or not the endpoint is enabled by default.
-	 * @return {@code true} if the endpoint is enabled by default, otherwise {@code false}
-	 */
-	boolean enabledByDefault() default true;
+	Class<?> endpoint();
 
 }

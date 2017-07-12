@@ -18,7 +18,6 @@ package org.springframework.boot.endpoint.web;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -32,7 +31,6 @@ import org.reactivestreams.Publisher;
 
 import org.springframework.boot.endpoint.Endpoint;
 import org.springframework.boot.endpoint.EndpointDiscoverer;
-import org.springframework.boot.endpoint.EndpointDiscoverer.EndpointOperationFactory;
 import org.springframework.boot.endpoint.EndpointInfo;
 import org.springframework.boot.endpoint.EndpointOperationType;
 import org.springframework.boot.endpoint.ReflectiveOperationInvoker;
@@ -43,60 +41,50 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.util.ClassUtils;
 
 /**
- * Discovers the {@link WebEndpoint web endpoints} in an {@link ApplicationContext}. Web
- * endpoints include all {@link Endpoint standard endpoints} and any {@link WebEndpoint
- * web-specific} additions and overrides.
+ * Discovers the {@link Endpoint endpoints} in an {@link ApplicationContext} with
+ * {@link WebEndpointExtension jmx extensions} additions and overrides applied on them.
  *
  * @author Andy Wilkinson
+ * @author Stephane Nicoll
  * @since 2.0.0
  */
-public class WebEndpointDiscoverer {
-
-	private final EndpointDiscoverer endpointDiscoverer;
-
-	private final WebEndpointOperationFactory operationFactory;
+public class WebEndpointDiscoverer extends EndpointDiscoverer<WebEndpointOperation> {
 
 	/**
-	 * Creates a new {@link WebEndpointDiscoverer} that will discover {@link WebEndpoint
-	 * web endpoints} using the given {@code endpointDiscoverer}.
-	 *
-	 * @param endpointDiscoverer the endpoint discoverer
+	 * Creates a new {@link WebEndpointDiscoverer} that will discover
+	 * {@link Endpoint endpoints} and {@link WebEndpointExtension web extensions} using
+	 * the given {@link ApplicationContext}.
+	 * *
+	 * @param applicationContext the application context
 	 * @param conversionService the conversion service used to convert arguments when an
 	 * operation is invoked
 	 * @param basePath the path to prepend to the path of each discovered operation
 	 * @param consumedMediaTypes the media types consumed by web endpoint operations
 	 * @param producedMediaTypes the media types produced by web endpoint operations
 	 */
-	public WebEndpointDiscoverer(EndpointDiscoverer endpointDiscoverer,
+	public WebEndpointDiscoverer(ApplicationContext applicationContext,
 			ConversionService conversionService, String basePath,
 			Collection<String> consumedMediaTypes,
 			Collection<String> producedMediaTypes) {
-		this.endpointDiscoverer = endpointDiscoverer;
-		this.operationFactory = new WebEndpointOperationFactory(conversionService,
-				basePath, consumedMediaTypes, producedMediaTypes);
+		super(applicationContext, new WebEndpointOperationFactory(conversionService,
+				basePath, consumedMediaTypes, producedMediaTypes));
 	}
 
-	/**
-	 * Perform endpoint discovery.
-	 * @return the discovered endpoints
-	 */
+	@Override
 	public Collection<EndpointInfo<WebEndpointOperation>> discoverEndpoints() {
-		Collection<EndpointInfo<WebEndpointOperation>> baseEndpoints = this.endpointDiscoverer
-				.discoverEndpoints(Endpoint.class, this.operationFactory);
-		verifyThatOperationsHaveDistinctPredicates(baseEndpoints);
-		Collection<EndpointInfo<WebEndpointOperation>> overridingEndpoints = this.endpointDiscoverer
-				.discoverEndpoints(WebEndpoint.class, this.operationFactory);
-		verifyThatOperationsHaveDistinctPredicates(overridingEndpoints);
-		return merge(baseEndpoints, overridingEndpoints);
+		Collection<EndpointInfo<WebEndpointOperation>> endpoints = doDiscoverEndpoints(
+				WebEndpointExtension.class, WebEndpointExtensionInfo::new);
+		verifyThatOperationsHaveDistinctPredicates(endpoints);
+		return endpoints;
 	}
 
-	private void verifyThatOperationsHaveDistinctPredicates(
+	private static void verifyThatOperationsHaveDistinctPredicates(
 			Collection<EndpointInfo<WebEndpointOperation>> endpoints) {
 		Map<OperationRequestPredicate, List<WebEndpointOperation>> operations = new HashMap<>();
 		endpoints.forEach((endpoint) -> {
 			endpoint.getOperations().forEach((operation) -> {
 				operations.merge(operation.getRequestPredicate(),
-						Arrays.asList(operation), (existingOperations, newOperations) -> {
+						Collections.singletonList(operation), (existingOperations, newOperations) -> {
 					List<WebEndpointOperation> combined = new ArrayList<>(
 							existingOperations);
 					combined.addAll(newOperations);
@@ -113,56 +101,14 @@ public class WebEndpointDiscoverer {
 		StringBuilder message = new StringBuilder(
 				"Found multiple web operations with matching request predicates:");
 		clashes.forEach((clash) -> {
-			message.append("    " + clash.get(0).getRequestPredicate() + ":");
+			message.append("    ").append(clash.get(0).getRequestPredicate()).append(":");
 			clash.forEach((operation) -> {
-				message.append("        " + operation);
+				message.append("        ").append(operation);
 			});
 		});
 		throw new IllegalStateException(message.toString());
 	}
 
-	/**
-	 * Merges two lists of {@link EndpointInfo EndpointInfos} into one. When a base
-	 * endpoint has the same id as an overriding endpoint, an operation on the overriding
-	 * endpoint will override an operation on the base endpoint with the same type.
-	 * @param baseEndpoints the base endpoints
-	 * @param overridingEndpoints the overriding endpoints
-	 * @return the merged list of endpoints
-	 */
-	private Collection<EndpointInfo<WebEndpointOperation>> merge(
-			Collection<EndpointInfo<WebEndpointOperation>> baseEndpoints,
-			Collection<EndpointInfo<WebEndpointOperation>> overridingEndpoints) {
-		Map<String, EndpointInfo<WebEndpointOperation>> endpointsById = new HashMap<>();
-		for (EndpointInfo<WebEndpointOperation> baseEndpoint : baseEndpoints) {
-			endpointsById.put(baseEndpoint.getId(), baseEndpoint);
-		}
-		for (EndpointInfo<WebEndpointOperation> webEndpoint : overridingEndpoints) {
-			endpointsById.merge(webEndpoint.getId(), webEndpoint, this::merge);
-		}
-		return Collections.unmodifiableCollection(endpointsById.values());
-	}
-
-	/**
-	 * Merges two {@link EndpointInfo EndpointInfos} into a single {@code EndpointInfo}.
-	 * When the two endpoints have an operation with the same
-	 * {@link OperationRequestPredicate request predicate}, the operation on the
-	 * {@code baseEndpoint} is overridden by the operation on the
-	 * {@code overridingEndpoint}.
-	 * @param baseEndpoint the base endpoint
-	 * @param overridingEndpoint the overriding endpoint
-	 * @return the merged endpoint
-	 */
-	private EndpointInfo<WebEndpointOperation> merge(
-			EndpointInfo<WebEndpointOperation> baseEndpoint,
-			EndpointInfo<WebEndpointOperation> overridingEndpoint) {
-		Map<OperationRequestPredicate, WebEndpointOperation> operations = new HashMap<>();
-		Consumer<WebEndpointOperation> operationConsumer = (operation) -> operations
-				.put(operation.getRequestPredicate(), operation);
-		baseEndpoint.getOperations().forEach(operationConsumer);
-		overridingEndpoint.getOperations().forEach(operationConsumer);
-		return new EndpointInfo<WebEndpointOperation>(baseEndpoint.getId(),
-				overridingEndpoint.isEnabledByDefault(), operations.values());
-	}
 
 	private static final class WebEndpointOperationFactory
 			implements EndpointOperationFactory<WebEndpointOperation> {
@@ -200,18 +146,17 @@ public class WebEndpointDiscoverer {
 
 		@Override
 		public WebEndpointOperation createOperation(
-				AnnotationAttributes endpointAttributes,
+				String endpointId,
 				AnnotationAttributes operationAttributes, Object target, Method method,
 				EndpointOperationType type) {
 			OperationRequestPredicate requestPredicate = new OperationRequestPredicate(
-					determinePath(endpointAttributes.getString("id"), method),
+					determinePath(endpointId, method),
 					determineHttpMethod(type), determineConsumedMediaTypes(method),
 					this.producedMediaTypes);
-			WebEndpointOperation operation = new WebEndpointOperation(type,
+			return new WebEndpointOperation(type,
 					new ReflectiveOperationInvoker(this.conversionService, target,
 							method),
 					determineBlocking(method), requestPredicate);
-			return operation;
 		}
 
 		private String determinePath(String endpointId, Method operationMethod) {
@@ -241,14 +186,37 @@ public class WebEndpointDiscoverer {
 		}
 
 		private boolean determineBlocking(Method method) {
-			if (REACTIVE_STREAMS_PRESENT) {
-				return !Publisher.class.isAssignableFrom(method.getReturnType());
-			}
-			else {
-				return true;
-			}
+			return !REACTIVE_STREAMS_PRESENT ||
+					!Publisher.class.isAssignableFrom(method.getReturnType());
 		}
 
+	}
+
+	private static class WebEndpointExtensionInfo extends EndpointExtensionInfo<WebEndpointOperation> {
+
+		WebEndpointExtensionInfo(Class<?> endpointType,
+				Class<?> endpointExtensionType,
+				Collection<WebEndpointOperation> operations) {
+			super(endpointType, endpointExtensionType, operations);
+		}
+
+		@Override
+		public EndpointInfo<WebEndpointOperation> merge(EndpointInfo<WebEndpointOperation> existing) {
+			// Before merging, validate endpoint:
+			verifyThatOperationsHaveDistinctPredicates(Collections.singletonList(existing));
+			// Then validate ourselves, wih a hack
+			verifyThatOperationsHaveDistinctPredicates(Collections.singletonList(
+					new EndpointInfo<>(existing.getId(), existing.isEnabledByDefault(),
+							getOperations())));
+
+			Map<OperationRequestPredicate, WebEndpointOperation> operations = new HashMap<>();
+			Consumer<WebEndpointOperation> operationConsumer = (operation) -> operations
+					.put(operation.getRequestPredicate(), operation);
+			existing.getOperations().forEach(operationConsumer);
+			getOperations().forEach(operationConsumer);
+			return new EndpointInfo<>(existing.getId(),
+					existing.isEnabledByDefault(), operations.values());
+		}
 	}
 
 }
