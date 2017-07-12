@@ -21,25 +21,19 @@ import java.lang.management.ThreadInfo;
 import java.util.Arrays;
 import java.util.List;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.endpoint.Endpoint;
+import org.springframework.boot.endpoint.ReadOperation;
 
 /**
  * {@link Endpoint} to expose thread info.
  *
  * @author Dave Syer
  */
-@ConfigurationProperties(prefix = "endpoints.dump")
-public class DumpEndpoint extends AbstractEndpoint<List<ThreadInfo>> {
+@Endpoint(id = "threaddump")
+public class ThreadDumpEndpoint {
 
-	/**
-	 * Create a new {@link DumpEndpoint} instance.
-	 */
-	public DumpEndpoint() {
-		super("dump");
-	}
-
-	@Override
-	public List<ThreadInfo> invoke() {
+	@ReadOperation
+	public List<ThreadInfo> getThreadDump() {
 		return Arrays
 				.asList(ManagementFactory.getThreadMXBean().dumpAllThreads(true, true));
 	}

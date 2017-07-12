@@ -20,23 +20,10 @@ import java.util.Collections;
 import java.util.List;
 
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.actuate.audit.AuditEventRepository;
 import org.springframework.boot.actuate.condition.ConditionalOnEnabledEndpoint;
-import org.springframework.boot.actuate.endpoint.Endpoint;
-import org.springframework.boot.actuate.endpoint.EnvironmentEndpoint;
 import org.springframework.boot.actuate.endpoint.HealthEndpoint;
-import org.springframework.boot.actuate.endpoint.LoggersEndpoint;
-import org.springframework.boot.actuate.endpoint.MetricsEndpoint;
-import org.springframework.boot.actuate.endpoint.ShutdownEndpoint;
-import org.springframework.boot.actuate.endpoint.mvc.AuditEventsMvcEndpoint;
-import org.springframework.boot.actuate.endpoint.mvc.EnvironmentMvcEndpoint;
-import org.springframework.boot.actuate.endpoint.mvc.HealthMvcEndpoint;
-import org.springframework.boot.actuate.endpoint.mvc.HeapdumpMvcEndpoint;
-import org.springframework.boot.actuate.endpoint.mvc.LogFileMvcEndpoint;
-import org.springframework.boot.actuate.endpoint.mvc.LoggersMvcEndpoint;
-import org.springframework.boot.actuate.endpoint.mvc.MetricsMvcEndpoint;
-import org.springframework.boot.actuate.endpoint.mvc.ShutdownMvcEndpoint;
 import org.springframework.boot.actuate.endpoint.mvc.WebEndpointHandlerMappingCustomizer;
+import org.springframework.boot.actuate.endpoint.web.HealthWebEndpointExtension;
 import org.springframework.boot.autoconfigure.condition.ConditionMessage;
 import org.springframework.boot.autoconfigure.condition.ConditionOutcome;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -48,7 +35,6 @@ import org.springframework.boot.endpoint.web.WebEndpointDiscoverer;
 import org.springframework.boot.endpoint.web.mvc.WebEndpointHandlerMapping;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ConditionContext;
-import org.springframework.context.annotation.Conditional;
 import org.springframework.core.env.Environment;
 import org.springframework.core.type.AnnotatedTypeMetadata;
 import org.springframework.util.CollectionUtils;
@@ -130,29 +116,23 @@ public class EndpointWebMvcManagementContextConfiguration {
 		return configuration;
 	}
 
-	@Bean
-	@ConditionalOnBean(EnvironmentEndpoint.class)
-	@ConditionalOnEnabledEndpoint("env")
-	public EnvironmentMvcEndpoint environmentMvcEndpoint(EnvironmentEndpoint delegate) {
-		return new EnvironmentMvcEndpoint(delegate);
-	}
+	// TODO Port to new infrastructure
 
-	@Bean
-	@ConditionalOnMissingBean
-	@ConditionalOnEnabledEndpoint("heapdump")
-	public HeapdumpMvcEndpoint heapdumpMvcEndpoint() {
-		return new HeapdumpMvcEndpoint();
-	}
+	// @Bean
+	// @ConditionalOnMissingBean
+	// @ConditionalOnEnabledEndpoint("heapdump")
+	// public HeapdumpEndpoint heapdumpMvcEndpoint() {
+	// return new HeapdumpEndpoint();
+	// }
 
 	@Bean
 	@ConditionalOnBean(HealthEndpoint.class)
 	@ConditionalOnMissingBean
 	@ConditionalOnEnabledEndpoint("health")
-	public HealthMvcEndpoint healthMvcEndpoint(HealthEndpoint delegate,
+	public HealthWebEndpointExtension healthWebEndpointExtension(HealthEndpoint delegate,
 			ManagementServerProperties managementServerProperties) {
-		HealthMvcEndpoint healthMvcEndpoint = new HealthMvcEndpoint(delegate,
-				this.managementServerProperties.getSecurity().isEnabled(),
-				managementServerProperties.getSecurity().getRoles());
+		HealthWebEndpointExtension healthMvcEndpoint = new HealthWebEndpointExtension(
+				delegate);
 		if (this.healthMvcEndpointProperties.getMapping() != null) {
 			healthMvcEndpoint
 					.addStatusMapping(this.healthMvcEndpointProperties.getMapping());
@@ -160,41 +140,22 @@ public class EndpointWebMvcManagementContextConfiguration {
 		return healthMvcEndpoint;
 	}
 
-	@Bean
-	@ConditionalOnBean(LoggersEndpoint.class)
-	@ConditionalOnEnabledEndpoint("loggers")
-	public LoggersMvcEndpoint loggersMvcEndpoint(LoggersEndpoint delegate) {
-		return new LoggersMvcEndpoint(delegate);
-	}
+	// TODO Port to new infrastructure
 
-	@Bean
-	@ConditionalOnBean(MetricsEndpoint.class)
-	@ConditionalOnEnabledEndpoint("metrics")
-	public MetricsMvcEndpoint metricsMvcEndpoint(MetricsEndpoint delegate) {
-		return new MetricsMvcEndpoint(delegate);
-	}
-
-	@Bean
-	@ConditionalOnEnabledEndpoint("logfile")
-	@Conditional(LogFileCondition.class)
-	public LogFileMvcEndpoint logfileMvcEndpoint() {
-		return new LogFileMvcEndpoint();
-	}
-
-	@Bean
-	@ConditionalOnBean(ShutdownEndpoint.class)
-	@ConditionalOnEnabledEndpoint(value = "shutdown", enabledByDefault = false)
-	public ShutdownMvcEndpoint shutdownMvcEndpoint(ShutdownEndpoint delegate) {
-		return new ShutdownMvcEndpoint(delegate);
-	}
-
-	@Bean
-	@ConditionalOnBean(AuditEventRepository.class)
-	@ConditionalOnEnabledEndpoint("auditevents")
-	public AuditEventsMvcEndpoint auditEventMvcEndpoint(
-			AuditEventRepository auditEventRepository) {
-		return new AuditEventsMvcEndpoint(auditEventRepository);
-	}
+	// @Bean
+	// @ConditionalOnEnabledEndpoint("logfile")
+	// @Conditional(LogFileCondition.class)
+	// public LogFileMvcEndpoint logfileMvcEndpoint() {
+	// return new LogFileMvcEndpoint();
+	// }
+	//
+	// @Bean
+	// @ConditionalOnBean(AuditEventRepository.class)
+	// @ConditionalOnEnabledEndpoint("auditevents")
+	// public AuditEventsMvcEndpoint auditEventMvcEndpoint(
+	// AuditEventRepository auditEventRepository) {
+	// return new AuditEventsMvcEndpoint(auditEventRepository);
+	// }
 
 	private static class LogFileCondition extends SpringBootCondition {
 

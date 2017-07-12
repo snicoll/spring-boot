@@ -29,9 +29,9 @@ import org.apache.commons.logging.LogFactory;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.logging.LogFile;
+import org.springframework.core.env.Environment;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -47,19 +47,21 @@ import org.springframework.web.servlet.resource.ResourceHttpRequestHandler;
  * @since 1.3.0
  */
 @ConfigurationProperties(prefix = "endpoints.logfile")
-public class LogFileMvcEndpoint extends AbstractNamedMvcEndpoint {
+public class LogFileMvcEndpoint {
 
 	private static final Log logger = LogFactory.getLog(LogFileMvcEndpoint.class);
+
+	private final Environment environment;
+
+	public LogFileMvcEndpoint(Environment environment) {
+		this.environment = environment;
+	}
 
 	/**
 	 * External Logfile to be accessed. Can be used if the logfile is written by output
 	 * redirect and not by the logging-system itself.
 	 */
 	private File externalFile;
-
-	public LogFileMvcEndpoint() {
-		super("logfile", "/logfile", true);
-	}
 
 	public File getExternalFile() {
 		return this.externalFile;
@@ -72,10 +74,6 @@ public class LogFileMvcEndpoint extends AbstractNamedMvcEndpoint {
 	@RequestMapping(method = { RequestMethod.GET, RequestMethod.HEAD })
 	public void invoke(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
-		if (!isEnabled()) {
-			response.setStatus(HttpStatus.NOT_FOUND.value());
-			return;
-		}
 		Resource resource = getLogFileResource();
 		if (resource != null && !resource.exists()) {
 			if (logger.isDebugEnabled()) {
@@ -91,7 +89,7 @@ public class LogFileMvcEndpoint extends AbstractNamedMvcEndpoint {
 		if (this.externalFile != null) {
 			return new FileSystemResource(this.externalFile);
 		}
-		LogFile logFile = LogFile.get(getEnvironment());
+		LogFile logFile = LogFile.get(this.environment);
 		if (logFile == null) {
 			logger.debug("Missing 'logging.file' or 'logging.path' properties");
 			return null;

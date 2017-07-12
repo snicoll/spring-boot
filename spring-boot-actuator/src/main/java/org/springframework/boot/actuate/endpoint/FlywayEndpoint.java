@@ -27,8 +27,8 @@ import org.flywaydb.core.api.MigrationInfo;
 import org.flywaydb.core.api.MigrationState;
 import org.flywaydb.core.api.MigrationType;
 
-import org.springframework.boot.actuate.endpoint.FlywayEndpoint.FlywayReport;
-import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.endpoint.Endpoint;
+import org.springframework.boot.endpoint.ReadOperation;
 import org.springframework.util.Assert;
 
 /**
@@ -39,8 +39,8 @@ import org.springframework.util.Assert;
  * @author Andy Wilkinson
  * @since 1.3.0
  */
-@ConfigurationProperties(prefix = "endpoints.flyway")
-public class FlywayEndpoint extends AbstractEndpoint<List<FlywayReport>> {
+@Endpoint(id = "flyway")
+public class FlywayEndpoint {
 
 	private final Map<String, Flyway> flyways;
 
@@ -49,13 +49,12 @@ public class FlywayEndpoint extends AbstractEndpoint<List<FlywayReport>> {
 	}
 
 	public FlywayEndpoint(Map<String, Flyway> flyways) {
-		super("flyway");
 		Assert.notEmpty(flyways, "Flyways must be specified");
 		this.flyways = flyways;
 	}
 
-	@Override
-	public List<FlywayReport> invoke() {
+	@ReadOperation
+	public List<FlywayReport> getFlywayReports() {
 		List<FlywayReport> reports = new ArrayList<>();
 		for (Map.Entry<String, Flyway> entry : this.flyways.entrySet()) {
 			List<FlywayMigration> migrations = new ArrayList<>();

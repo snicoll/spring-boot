@@ -25,9 +25,9 @@ import org.springframework.boot.actuate.endpoint.HealthEndpoint;
 import org.springframework.boot.actuate.endpoint.mvc.AbstractEndpointHandlerMappingTests;
 import org.springframework.boot.actuate.endpoint.mvc.EndpointMvcAdapter;
 import org.springframework.boot.actuate.endpoint.mvc.HalJsonMvcEndpoint;
-import org.springframework.boot.actuate.endpoint.mvc.HealthMvcEndpoint;
 import org.springframework.boot.actuate.endpoint.mvc.ManagementServletContext;
 import org.springframework.boot.actuate.endpoint.mvc.NamedMvcEndpoint;
+import org.springframework.boot.actuate.endpoint.web.HealthWebEndpointExtension;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.boot.actuate.health.OrderedHealthAggregator;
 import org.springframework.context.support.StaticApplicationContext;
@@ -130,7 +130,7 @@ public class CloudFoundryEndpointHandlerMappingTests
 
 	}
 
-	private static class TestHealthMvcEndpoint extends HealthMvcEndpoint {
+	private static class TestHealthMvcEndpoint extends HealthWebEndpointExtension {
 
 		TestHealthMvcEndpoint(HealthEndpoint delegate) {
 			super(delegate);

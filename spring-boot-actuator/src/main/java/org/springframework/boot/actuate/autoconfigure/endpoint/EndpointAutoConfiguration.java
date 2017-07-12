@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.boot.actuate.autoconfigure;
+package org.springframework.boot.actuate.autoconfigure.endpoint;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -29,8 +29,6 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.actuate.endpoint.AutoConfigurationReportEndpoint;
 import org.springframework.boot.actuate.endpoint.BeansEndpoint;
 import org.springframework.boot.actuate.endpoint.ConfigurationPropertiesReportEndpoint;
-import org.springframework.boot.actuate.endpoint.DumpEndpoint;
-import org.springframework.boot.actuate.endpoint.Endpoint;
 import org.springframework.boot.actuate.endpoint.EndpointProperties;
 import org.springframework.boot.actuate.endpoint.EnvironmentEndpoint;
 import org.springframework.boot.actuate.endpoint.FlywayEndpoint;
@@ -42,6 +40,7 @@ import org.springframework.boot.actuate.endpoint.MetricsEndpoint;
 import org.springframework.boot.actuate.endpoint.PublicMetrics;
 import org.springframework.boot.actuate.endpoint.RequestMappingEndpoint;
 import org.springframework.boot.actuate.endpoint.ShutdownEndpoint;
+import org.springframework.boot.actuate.endpoint.ThreadDumpEndpoint;
 import org.springframework.boot.actuate.endpoint.TraceEndpoint;
 import org.springframework.boot.actuate.health.HealthAggregator;
 import org.springframework.boot.actuate.health.HealthIndicator;
@@ -59,10 +58,12 @@ import org.springframework.boot.autoconfigure.condition.SearchStrategy;
 import org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.endpoint.Endpoint;
 import org.springframework.boot.logging.LoggingSystem;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
+import org.springframework.core.env.Environment;
 import org.springframework.web.servlet.handler.AbstractHandlerMethodMapping;
 
 /**
@@ -107,8 +108,8 @@ public class EndpointAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public EnvironmentEndpoint environmentEndpoint() {
-		return new EnvironmentEndpoint();
+	public EnvironmentEndpoint environmentEndpoint(Environment environment) {
+		return new EnvironmentEndpoint(environment);
 	}
 
 	@Bean
@@ -162,15 +163,16 @@ public class EndpointAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public DumpEndpoint dumpEndpoint() {
-		return new DumpEndpoint();
+	public ThreadDumpEndpoint dumpEndpoint() {
+		return new ThreadDumpEndpoint();
 	}
 
 	@Bean
 	@ConditionalOnBean(ConditionEvaluationReport.class)
 	@ConditionalOnMissingBean(search = SearchStrategy.CURRENT)
-	public AutoConfigurationReportEndpoint autoConfigurationReportEndpoint() {
-		return new AutoConfigurationReportEndpoint();
+	public AutoConfigurationReportEndpoint autoConfigurationReportEndpoint(
+			ConditionEvaluationReport conditionEvaluationReport) {
+		return new AutoConfigurationReportEndpoint(conditionEvaluationReport);
 	}
 
 	@Bean

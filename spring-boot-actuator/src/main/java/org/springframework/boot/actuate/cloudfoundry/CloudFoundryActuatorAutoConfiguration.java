@@ -17,10 +17,8 @@
 package org.springframework.boot.actuate.cloudfoundry;
 
 import org.springframework.boot.actuate.autoconfigure.endpoint.infrastructure.EndpointServletWebAutoConfiguration;
-import org.springframework.boot.actuate.endpoint.mvc.MvcEndpoints;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnCloudPlatform;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -38,9 +36,12 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
  * @author Madhura Bhave
  * @since 1.5.0
  */
+
+// TODO Port to new infrastructure
+
 @Configuration
 @ConditionalOnProperty(prefix = "management.cloudfoundry", name = "enabled", matchIfMissing = true)
-@ConditionalOnBean(MvcEndpoints.class)
+// @ConditionalOnBean(MvcEndpoints.class)
 @AutoConfigureAfter(EndpointServletWebAutoConfiguration.class)
 @ConditionalOnCloudPlatform(CloudPlatform.CLOUD_FOUNDRY)
 public class CloudFoundryActuatorAutoConfiguration {

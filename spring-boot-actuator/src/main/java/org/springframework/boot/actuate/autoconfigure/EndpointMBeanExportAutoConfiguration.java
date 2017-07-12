@@ -23,10 +23,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.actuate.audit.AuditEventRepository;
 import org.springframework.boot.actuate.autoconfigure.EndpointMBeanExportAutoConfiguration.JmxEnabledCondition;
+import org.springframework.boot.actuate.autoconfigure.endpoint.EndpointAutoConfiguration;
 import org.springframework.boot.actuate.condition.ConditionalOnEnabledEndpoint;
-import org.springframework.boot.actuate.endpoint.Endpoint;
 import org.springframework.boot.actuate.endpoint.jmx.AuditEventsJmxEndpoint;
-import org.springframework.boot.actuate.endpoint.jmx.EndpointMBeanExporter;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionMessage;
@@ -41,7 +40,6 @@ import org.springframework.context.annotation.ConditionContext;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.type.AnnotatedTypeMetadata;
-import org.springframework.util.StringUtils;
 
 /**
  * {@link EnableAutoConfiguration Auto-configuration} to enable JMX export for
@@ -57,6 +55,8 @@ import org.springframework.util.StringUtils;
 @EnableConfigurationProperties(EndpointMBeanExportProperties.class)
 public class EndpointMBeanExportAutoConfiguration {
 
+	// TODO Port to new infrastructure
+
 	private final EndpointMBeanExportProperties properties;
 
 	private final ObjectMapper objectMapper;
@@ -67,19 +67,19 @@ public class EndpointMBeanExportAutoConfiguration {
 		this.objectMapper = objectMapper.getIfAvailable();
 	}
 
-	@Bean
-	public EndpointMBeanExporter endpointMBeanExporter(MBeanServer server) {
-		EndpointMBeanExporter mbeanExporter = new EndpointMBeanExporter(
-				this.objectMapper);
-		String domain = this.properties.getDomain();
-		if (StringUtils.hasText(domain)) {
-			mbeanExporter.setDomain(domain);
-		}
-		mbeanExporter.setServer(server);
-		mbeanExporter.setEnsureUniqueRuntimeObjectNames(this.properties.isUniqueNames());
-		mbeanExporter.setObjectNameStaticProperties(this.properties.getStaticNames());
-		return mbeanExporter;
-	}
+	// @Bean
+	// public EndpointMBeanExporter endpointMBeanExporter(MBeanServer server) {
+	// EndpointMBeanExporter mbeanExporter = new EndpointMBeanExporter(
+	// this.objectMapper);
+	// String domain = this.properties.getDomain();
+	// if (StringUtils.hasText(domain)) {
+	// mbeanExporter.setDomain(domain);
+	// }
+	// mbeanExporter.setServer(server);
+	// mbeanExporter.setEnsureUniqueRuntimeObjectNames(this.properties.isUniqueNames());
+	// mbeanExporter.setObjectNameStaticProperties(this.properties.getStaticNames());
+	// return mbeanExporter;
+	// }
 
 	@Bean
 	@ConditionalOnMissingBean(MBeanServer.class)

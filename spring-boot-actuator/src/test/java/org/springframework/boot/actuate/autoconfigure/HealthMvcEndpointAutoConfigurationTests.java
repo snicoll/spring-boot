@@ -24,9 +24,10 @@ import javax.servlet.http.HttpServletRequest;
 import org.junit.After;
 import org.junit.Test;
 
+import org.springframework.boot.actuate.autoconfigure.endpoint.EndpointAutoConfiguration;
 import org.springframework.boot.actuate.autoconfigure.endpoint.infrastructure.EndpointServletWebAutoConfiguration;
 import org.springframework.boot.actuate.endpoint.HealthEndpoint;
-import org.springframework.boot.actuate.endpoint.mvc.HealthMvcEndpoint;
+import org.springframework.boot.actuate.endpoint.web.HealthWebEndpointExtension;
 import org.springframework.boot.actuate.health.AbstractHealthIndicator;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.Health.Builder;
@@ -47,7 +48,7 @@ import org.springframework.web.context.support.AnnotationConfigWebApplicationCon
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Tests for {@link EndpointServletWebAutoConfiguration} of the {@link HealthMvcEndpoint}.
+ * Tests for {@link EndpointServletWebAutoConfiguration} of the {@link HealthWebEndpointExtension}.
  *
  * @author Dave Syer
  * @author Andy Wilkinson
@@ -70,7 +71,7 @@ public class HealthMvcEndpointAutoConfigurationTests {
 		this.context.register(TestConfiguration.class);
 		this.context.refresh();
 		MockHttpServletRequest request = new MockHttpServletRequest();
-		Health health = (Health) this.context.getBean(HealthMvcEndpoint.class)
+		Health health = (Health) this.context.getBean(HealthWebEndpointExtension.class)
 				.invoke(request, null);
 		assertThat(health.getStatus()).isEqualTo(Status.UP);
 		assertThat(health.getDetails().get("foo")).isNull();
@@ -83,7 +84,7 @@ public class HealthMvcEndpointAutoConfigurationTests {
 		this.context.register(TestConfiguration.class);
 		TestPropertyValues.of("management.security.enabled=false").applyTo(this.context);
 		this.context.refresh();
-		Health health = (Health) this.context.getBean(HealthMvcEndpoint.class)
+		Health health = (Health) this.context.getBean(HealthWebEndpointExtension.class)
 				.invoke(null, null);
 		assertThat(health.getStatus()).isEqualTo(Status.UP);
 		Health map = (Health) health.getDetails().get("test");
@@ -98,7 +99,7 @@ public class HealthMvcEndpointAutoConfigurationTests {
 		this.context.register(TestConfiguration.class);
 		TestPropertyValues.of("management.security.roles[0]=super").applyTo(this.context);
 		this.context.refresh();
-		HealthMvcEndpoint health = this.context.getBean(HealthMvcEndpoint.class);
+		HealthWebEndpointExtension health = this.context.getBean(HealthWebEndpointExtension.class);
 		assertThat(ReflectionTestUtils.getField(health, "roles"))
 				.isEqualTo(Arrays.asList("super"));
 	}
@@ -111,7 +112,7 @@ public class HealthMvcEndpointAutoConfigurationTests {
 				TestHealthMvcEndpointConfiguration.class);
 		this.context.refresh();
 		MockHttpServletRequest request = new MockHttpServletRequest();
-		Health health = (Health) this.context.getBean(HealthMvcEndpoint.class)
+		Health health = (Health) this.context.getBean(HealthWebEndpointExtension.class)
 				.invoke(request, null);
 		assertThat(health.getDetails()).isNotEmpty();
 	}
@@ -138,13 +139,13 @@ public class HealthMvcEndpointAutoConfigurationTests {
 	static class TestHealthMvcEndpointConfiguration {
 
 		@Bean
-		public HealthMvcEndpoint endpoint(HealthEndpoint endpoint) {
+		public HealthWebEndpointExtension endpoint(HealthEndpoint endpoint) {
 			return new TestHealthMvcEndpoint(endpoint);
 		}
 
 	}
 
-	static class TestHealthMvcEndpoint extends HealthMvcEndpoint {
+	static class TestHealthMvcEndpoint extends HealthWebEndpointExtension {
 
 		TestHealthMvcEndpoint(HealthEndpoint delegate) {
 			super(delegate);

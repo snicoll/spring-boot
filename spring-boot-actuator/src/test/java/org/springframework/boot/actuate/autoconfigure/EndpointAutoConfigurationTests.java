@@ -30,9 +30,10 @@ import org.flywaydb.core.Flyway;
 import org.junit.After;
 import org.junit.Test;
 
+import org.springframework.boot.actuate.autoconfigure.endpoint.EndpointAutoConfiguration;
 import org.springframework.boot.actuate.endpoint.AutoConfigurationReportEndpoint;
 import org.springframework.boot.actuate.endpoint.BeansEndpoint;
-import org.springframework.boot.actuate.endpoint.DumpEndpoint;
+import org.springframework.boot.actuate.endpoint.ThreadDumpEndpoint;
 import org.springframework.boot.actuate.endpoint.EnvironmentEndpoint;
 import org.springframework.boot.actuate.endpoint.FlywayEndpoint;
 import org.springframework.boot.actuate.endpoint.HealthEndpoint;
@@ -98,7 +99,7 @@ public class EndpointAutoConfigurationTests {
 	public void endpoints() throws Exception {
 		load(CustomLoggingConfig.class, EndpointAutoConfiguration.class);
 		assertThat(this.context.getBean(BeansEndpoint.class)).isNotNull();
-		assertThat(this.context.getBean(DumpEndpoint.class)).isNotNull();
+		assertThat(this.context.getBean(ThreadDumpEndpoint.class)).isNotNull();
 		assertThat(this.context.getBean(EnvironmentEndpoint.class)).isNotNull();
 		assertThat(this.context.getBean(HealthEndpoint.class)).isNotNull();
 		assertThat(this.context.getBean(InfoEndpoint.class)).isNotNull();

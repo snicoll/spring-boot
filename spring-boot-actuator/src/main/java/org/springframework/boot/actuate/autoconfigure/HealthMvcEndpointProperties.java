@@ -19,12 +19,11 @@ package org.springframework.boot.actuate.autoconfigure;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.springframework.boot.actuate.endpoint.mvc.HealthMvcEndpoint;
+import org.springframework.boot.actuate.endpoint.web.HealthWebEndpointExtension;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.http.HttpStatus;
 
 /**
- * Configuration properties for the {@link HealthMvcEndpoint}.
+ * Configuration properties for the {@link HealthWebEndpointExtension}.
  *
  * @author Christian Dupuis
  * @since 1.1.0
@@ -36,13 +35,13 @@ public class HealthMvcEndpointProperties {
 	 * Mapping of health statuses to HttpStatus codes. By default, registered health
 	 * statuses map to sensible defaults (i.e. UP maps to 200).
 	 */
-	private Map<String, HttpStatus> mapping = new HashMap<>();
+	private Map<String, Integer> mapping = new HashMap<>();
 
-	public Map<String, HttpStatus> getMapping() {
+	public Map<String, Integer> getMapping() {
 		return this.mapping;
 	}
 
-	public void setMapping(Map<String, HttpStatus> mapping) {
+	public void setMapping(Map<String, Integer> mapping) {
 		this.mapping = mapping;
 	}
 

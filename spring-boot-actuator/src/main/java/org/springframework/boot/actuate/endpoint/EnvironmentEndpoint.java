@@ -20,7 +20,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.endpoint.Endpoint;
+import org.springframework.boot.endpoint.ReadOperation;
+import org.springframework.boot.endpoint.Selector;
 import org.springframework.core.env.CompositePropertySource;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.EnumerablePropertySource;
@@ -31,6 +33,8 @@ import org.springframework.core.env.PropertySource;
 import org.springframework.core.env.PropertySources;
 import org.springframework.core.env.PropertySourcesPropertyResolver;
 import org.springframework.core.env.StandardEnvironment;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 /**
  * {@link Endpoint} to expose {@link ConfigurableEnvironment environment} information.
@@ -40,26 +44,25 @@ import org.springframework.core.env.StandardEnvironment;
  * @author Christian Dupuis
  * @author Madhura Bhave
  */
-@ConfigurationProperties(prefix = "endpoints.env")
-public class EnvironmentEndpoint extends AbstractEndpoint<Map<String, Object>> {
+@Endpoint(id = "env")
+public class EnvironmentEndpoint {
 
 	private final Sanitizer sanitizer = new Sanitizer();
 
-	/**
-	 * Create a new {@link EnvironmentEndpoint} instance.
-	 */
-	public EnvironmentEndpoint() {
-		super("env");
+	private final Environment environment;
+
+	public EnvironmentEndpoint(Environment environment) {
+		this.environment = environment;
 	}
 
 	public void setKeysToSanitize(String... keysToSanitize) {
 		this.sanitizer.setKeysToSanitize(keysToSanitize);
 	}
 
-	@Override
-	public Map<String, Object> invoke() {
+	@ReadOperation
+	public Map<String, Object> getEnvironment() {
 		Map<String, Object> result = new LinkedHashMap<>();
-		result.put("profiles", getEnvironment().getActiveProfiles());
+		result.put("profiles", this.environment.getActiveProfiles());
 		PropertyResolver resolver = getResolver();
 		for (Entry<String, PropertySource<?>> entry : getPropertySourcesAsMap()
 				.entrySet()) {
@@ -81,6 +84,10 @@ public class EnvironmentEndpoint extends AbstractEndpoint<Map<String, Object>> {
 		return result;
 	}
 
+	public Object getEnvironmentEntry(@Selector String name) {
+		return new NamePatternEnvironmentFilter(this.environment).getResults(name);
+	}
+
 	public PropertyResolver getResolver() {
 		PlaceholderSanitizingPropertyResolver resolver = new PlaceholderSanitizingPropertyResolver(
 				getPropertySources(), this.sanitizer);
@@ -98,9 +105,8 @@ public class EnvironmentEndpoint extends AbstractEndpoint<Map<String, Object>> {
 
 	private MutablePropertySources getPropertySources() {
 		MutablePropertySources sources;
-		Environment environment = getEnvironment();
-		if (environment != null && environment instanceof ConfigurableEnvironment) {
-			sources = ((ConfigurableEnvironment) environment).getPropertySources();
+		if (this.environment instanceof ConfigurableEnvironment) {
+			sources = ((ConfigurableEnvironment) this.environment).getPropertySources();
 		}
 		else {
 			sources = new StandardEnvironment().getPropertySources();
@@ -162,6 +168,68 @@ public class EnvironmentEndpoint extends AbstractEndpoint<Map<String, Object>> {
 		protected String getPropertyAsRawString(String key) {
 			String value = super.getPropertyAsRawString(key);
 			return (String) this.sanitizer.sanitize(key, value);
+		}
+
+	}
+
+	/**
+	 * {@link NamePatternFilter} for the Environment source.
+	 */
+	private class NamePatternEnvironmentFilter extends NamePatternFilter<Environment> {
+
+		NamePatternEnvironmentFilter(Environment source) {
+			super(source);
+		}
+
+		@Override
+		protected void getNames(Environment source, NameCallback callback) {
+			if (source instanceof ConfigurableEnvironment) {
+				getNames(((ConfigurableEnvironment) source).getPropertySources(),
+						callback);
+			}
+		}
+
+		private void getNames(PropertySources propertySources, NameCallback callback) {
+			for (PropertySource<?> propertySource : propertySources) {
+				if (propertySource instanceof EnumerablePropertySource) {
+					EnumerablePropertySource<?> source = (EnumerablePropertySource<?>) propertySource;
+					for (String name : source.getPropertyNames()) {
+						callback.addName(name);
+					}
+				}
+			}
+		}
+
+		@Override
+		protected Object getOptionalValue(Environment source, String name) {
+			Object result = EnvironmentEndpoint.this.environment.getProperty(name,
+					Object.class);
+			if (result != null) {
+				result = sanitize(name, result);
+			}
+			return result;
+		}
+
+		@Override
+		protected Object getValue(Environment source, String name) {
+			Object result = source.getProperty(name, Object.class);
+			if (result == null) {
+				throw new NoSuchPropertyException("No such property: " + name);
+			}
+			return sanitize(name, result);
+		}
+
+	}
+
+	/**
+	 * Exception thrown when the specified property cannot be found.
+	 */
+	@SuppressWarnings("serial")
+	@ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "No such property")
+	public static class NoSuchPropertyException extends RuntimeException {
+
+		public NoSuchPropertyException(String string) {
+			super(string);
 		}
 
 	}

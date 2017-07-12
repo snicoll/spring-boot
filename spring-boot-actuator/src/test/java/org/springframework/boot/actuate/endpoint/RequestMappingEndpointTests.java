@@ -93,7 +93,7 @@ public class RequestMappingEndpointTests {
 	public void beanMethodMappings() {
 		StaticApplicationContext context = new StaticApplicationContext();
 		EndpointHandlerMapping mapping = new EndpointHandlerMapping(
-				Arrays.asList(new EndpointMvcAdapter(new DumpEndpoint())));
+				Arrays.asList(new EndpointMvcAdapter(new ThreadDumpEndpoint())));
 		mapping.setApplicationContext(new StaticApplicationContext());
 		mapping.afterPropertiesSet();
 		context.getDefaultListableBeanFactory().registerSingleton("mapping", mapping);
@@ -110,7 +110,7 @@ public class RequestMappingEndpointTests {
 	@Test
 	public void concreteMethodMappings() {
 		EndpointHandlerMapping mapping = new EndpointHandlerMapping(
-				Arrays.asList(new EndpointMvcAdapter(new DumpEndpoint())));
+				Arrays.asList(new EndpointMvcAdapter(new ThreadDumpEndpoint())));
 		mapping.setApplicationContext(new StaticApplicationContext());
 		mapping.afterPropertiesSet();
 		this.endpoint.setMethodMappings(

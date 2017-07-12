@@ -16,7 +16,6 @@
 
 package org.springframework.boot.actuate.autoconfigure;
 
-import org.springframework.boot.actuate.endpoint.mvc.MvcEndpoints;
 import org.springframework.context.ApplicationContext;
 
 /**
@@ -38,18 +37,20 @@ public class ManagementContextResolver {
 		this.applicationContext = applicationContext;
 	}
 
-	/**
-	 * Return all {@link MvcEndpoints} from the management context.
-	 * @return {@link MvcEndpoints} from the management context
-	 */
-	public MvcEndpoints getMvcEndpoints() {
-		try {
-			return getApplicationContext().getBean(MvcEndpoints.class);
-		}
-		catch (Exception ex) {
-			return null;
-		}
-	}
+	// TODO Port to new infrastructure
+
+	// /**
+	// * Return all {@link MvcEndpoints} from the management context.
+	// * @return {@link MvcEndpoints} from the management context
+	// */
+	// public MvcEndpoints getMvcEndpoints() {
+	// try {
+	// return getApplicationContext().getBean(MvcEndpoints.class);
+	// }
+	// catch (Exception ex) {
+	// return null;
+	// }
+	// }
 
 	/**
 	 * Return the management {@link ApplicationContext}.

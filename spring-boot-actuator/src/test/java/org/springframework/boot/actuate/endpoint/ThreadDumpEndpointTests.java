@@ -28,14 +28,14 @@ import org.springframework.context.annotation.Configuration;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Tests for {@link DumpEndpoint}.
+ * Tests for {@link ThreadDumpEndpoint}.
  *
  * @author Phillip Webb
  */
-public class DumpEndpointTests extends AbstractEndpointTests<DumpEndpoint> {
+public class ThreadDumpEndpointTests extends AbstractEndpointTests<ThreadDumpEndpoint> {
 
-	public DumpEndpointTests() {
-		super(Config.class, DumpEndpoint.class, "dump", true, "endpoints.dump");
+	public ThreadDumpEndpointTests() {
+		super(Config.class, ThreadDumpEndpoint.class, "dump", true, "endpoints.dump");
 	}
 
 	@Test
@@ -49,8 +49,8 @@ public class DumpEndpointTests extends AbstractEndpointTests<DumpEndpoint> {
 	public static class Config {
 
 		@Bean
-		public DumpEndpoint endpoint() {
-			return new DumpEndpoint();
+		public ThreadDumpEndpoint endpoint() {
+			return new ThreadDumpEndpoint();
 		}
 
 	}

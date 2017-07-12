@@ -27,6 +27,7 @@ import org.junit.runner.RunWith;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.autoconfigure.endpoint.infrastructure.EndpointServletWebAutoConfiguration;
+import org.springframework.boot.actuate.endpoint.HeapdumpEndpoint;
 import org.springframework.boot.autoconfigure.http.HttpMessageConvertersAutoConfiguration;
 import org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration;
 import org.springframework.boot.autoconfigure.web.servlet.WebMvcAutoConfiguration;
@@ -44,7 +45,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Tests for {@link HeapdumpMvcEndpoint} OPTIONS call with security.
+ * Tests for {@link HeapdumpEndpoint} OPTIONS call with security.
  *
  * @author Phillip Webb
  */
@@ -62,7 +63,7 @@ public class HeapdumpMvcEndpointSecureOptionsTests {
 
 	@Before
 	public void setup() {
-		this.context.getBean(HeapdumpMvcEndpoint.class).setEnabled(true);
+		this.context.getBean(HeapdumpEndpoint.class).setEnabled(true);
 		this.mvc = MockMvcBuilders.webAppContextSetup(this.context).build();
 	}
 
@@ -83,13 +84,13 @@ public class HeapdumpMvcEndpointSecureOptionsTests {
 	public static class TestConfiguration {
 
 		@Bean
-		public HeapdumpMvcEndpoint endpoint() {
+		public HeapdumpEndpoint endpoint() {
 			return new TestHeapdumpMvcEndpoint();
 		}
 
 	}
 
-	private static class TestHeapdumpMvcEndpoint extends HeapdumpMvcEndpoint {
+	private static class TestHeapdumpMvcEndpoint extends HeapdumpEndpoint {
 
 		private boolean available;
 

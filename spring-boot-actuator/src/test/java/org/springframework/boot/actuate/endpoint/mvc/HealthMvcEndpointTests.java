@@ -28,6 +28,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import org.springframework.boot.actuate.endpoint.HealthEndpoint;
+import org.springframework.boot.actuate.endpoint.web.HealthWebEndpointExtension;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.Status;
 import org.springframework.http.HttpStatus;
@@ -43,7 +44,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
 /**
- * Tests for {@link HealthMvcEndpoint}.
+ * Tests for {@link HealthWebEndpointExtension}.
  *
  * @author Christian Dupuis
  * @author Dave Syer
@@ -60,7 +61,7 @@ public class HealthMvcEndpointTests {
 
 	private HealthEndpoint endpoint = null;
 
-	private HealthMvcEndpoint mvc = null;
+	private HealthWebEndpointExtension mvc = null;
 
 	private HttpServletRequest defaultUser = createAuthenticationRequest("ROLE_ACTUATOR");
 
@@ -76,7 +77,7 @@ public class HealthMvcEndpointTests {
 	public void init() {
 		this.endpoint = mock(HealthEndpoint.class);
 		given(this.endpoint.isEnabled()).willReturn(true);
-		this.mvc = new HealthMvcEndpoint(this.endpoint);
+		this.mvc = new HealthWebEndpointExtension(this.endpoint);
 	}
 
 	@Test
@@ -138,7 +139,7 @@ public class HealthMvcEndpointTests {
 
 	@Test
 	public void managementSecurityDisabledShouldExposeDetails() throws Exception {
-		this.mvc = new HealthMvcEndpoint(this.endpoint, false);
+		this.mvc = new HealthWebEndpointExtension(this.endpoint, false);
 		given(this.endpoint.invoke())
 				.willReturn(new Health.Builder().up().withDetail("foo", "bar").build());
 		Object result = this.mvc.invoke(this.defaultUser, null);
@@ -159,7 +160,7 @@ public class HealthMvcEndpointTests {
 
 	@Test
 	public void rightAuthorityPresentShouldExposeDetails() throws Exception {
-		this.mvc = new HealthMvcEndpoint(this.endpoint, true, SECURITY_ROLES);
+		this.mvc = new HealthWebEndpointExtension(this.endpoint, true, SECURITY_ROLES);
 		Authentication principal = mock(Authentication.class);
 		Set<SimpleGrantedAuthority> authorities = Collections
 				.singleton(new SimpleGrantedAuthority("HERO"));
@@ -174,7 +175,7 @@ public class HealthMvcEndpointTests {
 
 	@Test
 	public void customRolePresentShouldExposeDetails() {
-		this.mvc = new HealthMvcEndpoint(this.endpoint, true, SECURITY_ROLES);
+		this.mvc = new HealthWebEndpointExtension(this.endpoint, true, SECURITY_ROLES);
 		given(this.endpoint.invoke())
 				.willReturn(new Health.Builder().up().withDetail("foo", "bar").build());
 		Object result = this.mvc.invoke(this.hero, null);
@@ -185,7 +186,7 @@ public class HealthMvcEndpointTests {
 
 	@Test
 	public void customRoleShouldNotExposeDetailsForDefaultRole() {
-		this.mvc = new HealthMvcEndpoint(this.endpoint, true, SECURITY_ROLES);
+		this.mvc = new HealthWebEndpointExtension(this.endpoint, true, SECURITY_ROLES);
 		given(this.endpoint.invoke())
 				.willReturn(new Health.Builder().up().withDetail("foo", "bar").build());
 		Object result = this.mvc.invoke(this.defaultUser, null);
@@ -197,7 +198,7 @@ public class HealthMvcEndpointTests {
 	@Test
 	public void customRoleFromListShouldExposeDetails() {
 		// gh-8314
-		this.mvc = new HealthMvcEndpoint(this.endpoint, true,
+		this.mvc = new HealthWebEndpointExtension(this.endpoint, true,
 				Arrays.asList("HERO", "USER"));
 		given(this.endpoint.invoke())
 				.willReturn(new Health.Builder().up().withDetail("foo", "bar").build());
@@ -210,7 +211,7 @@ public class HealthMvcEndpointTests {
 	@Test
 	public void customRoleFromListShouldNotExposeDetailsForDefaultRole() {
 		// gh-8314
-		this.mvc = new HealthMvcEndpoint(this.endpoint, true,
+		this.mvc = new HealthWebEndpointExtension(this.endpoint, true,
 				Arrays.asList("HERO", "USER"));
 		given(this.endpoint.invoke())
 				.willReturn(new Health.Builder().up().withDetail("foo", "bar").build());

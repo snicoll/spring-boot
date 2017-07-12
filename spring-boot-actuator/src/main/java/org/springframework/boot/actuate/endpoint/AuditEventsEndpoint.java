@@ -14,32 +14,14 @@
  * limitations under the License.
  */
 
-package org.springframework.boot.actuate.endpoint.mvc;
-
-import org.springframework.boot.actuate.endpoint.Endpoint;
-import org.springframework.web.bind.annotation.ResponseBody;
+package org.springframework.boot.actuate.endpoint;
 
 /**
- * Adapter class to expose {@link Endpoint}s as {@link MvcEndpoint}s.
+ * {@link Endpoint} to expose audit events.
  *
- * @author Dave Syer
  * @author Andy Wilkinson
+ * @since 2.0.0
  */
-public class EndpointMvcAdapter extends AbstractEndpointMvcAdapter<Endpoint<?>> {
-
-	/**
-	 * Create a new {@link EndpointMvcAdapter}.
-	 * @param delegate the underlying {@link Endpoint} to adapt.
-	 */
-	public EndpointMvcAdapter(Endpoint<?> delegate) {
-		super(delegate);
-	}
-
-	@Override
-	@ActuatorGetMapping
-	@ResponseBody
-	public Object invoke() {
-		return super.invoke();
-	}
+public class AuditEventsEndpoint {
 
 }

@@ -16,17 +16,7 @@
 
 package org.springframework.boot.actuate.autoconfigure;
 
-import java.util.List;
-
-import org.springframework.boot.actuate.endpoint.mvc.MvcEndpoint;
-import org.springframework.boot.actuate.endpoint.mvc.MvcEndpoints;
-import org.springframework.boot.actuate.endpoint.mvc.NamedMvcEndpoint;
 import org.springframework.hateoas.ResourceSupport;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.util.StringUtils;
-
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 
 /**
  * Adds endpoint links to {@link ResourceSupport}.
@@ -36,49 +26,51 @@ import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
  */
 class LinksEnhancer {
 
-	private final String rootPath;
+	// TODO Port to new infrastructure
 
-	private final MvcEndpoints endpoints;
-
-	LinksEnhancer(String rootPath, MvcEndpoints endpoints) {
-		this.rootPath = rootPath;
-		this.endpoints = endpoints;
-	}
-
-	public void addEndpointLinks(ResourceSupport resource, String self) {
-		if (!resource.hasLink("self")) {
-			resource.add(linkTo(LinksEnhancer.class).slash(this.rootPath + self)
-					.withSelfRel());
-		}
-		MultiValueMap<String, String> added = new LinkedMultiValueMap<>();
-		for (MvcEndpoint endpoint : this.endpoints.getEndpoints()) {
-			if (!endpoint.getPath().equals(self)) {
-				String rel = getRel(endpoint);
-				List<String> paths = added.get(rel);
-				if (paths == null || !paths.contains(endpoint.getPath())) {
-					addEndpointLink(resource, endpoint, rel);
-					added.add(rel, endpoint.getPath());
-				}
-			}
-		}
-	}
-
-	private String getRel(MvcEndpoint endpoint) {
-		if (endpoint instanceof NamedMvcEndpoint) {
-			return ((NamedMvcEndpoint) endpoint).getName();
-		}
-		String path = endpoint.getPath();
-		return (path.startsWith("/") ? path.substring(1) : path);
-	}
-
-	private void addEndpointLink(ResourceSupport resource, MvcEndpoint endpoint,
-			String rel) {
-		Class<?> type = endpoint.getEndpointType();
-		type = (type == null ? Object.class : type);
-		if (StringUtils.hasText(rel)) {
-			String href = this.rootPath + endpoint.getPath();
-			resource.add(linkTo(type).slash(href).withRel(rel));
-		}
-	}
+	// private final String rootPath;
+	//
+	// private final MvcEndpoints endpoints;
+	//
+	// LinksEnhancer(String rootPath, MvcEndpoints endpoints) {
+	// this.rootPath = rootPath;
+	// this.endpoints = endpoints;
+	// }
+	//
+	// public void addEndpointLinks(ResourceSupport resource, String self) {
+	// if (!resource.hasLink("self")) {
+	// resource.add(linkTo(LinksEnhancer.class).slash(this.rootPath + self)
+	// .withSelfRel());
+	// }
+	// MultiValueMap<String, String> added = new LinkedMultiValueMap<>();
+	// for (MvcEndpoint endpoint : this.endpoints.getEndpoints()) {
+	// if (!endpoint.getPath().equals(self)) {
+	// String rel = getRel(endpoint);
+	// List<String> paths = added.get(rel);
+	// if (paths == null || !paths.contains(endpoint.getPath())) {
+	// addEndpointLink(resource, endpoint, rel);
+	// added.add(rel, endpoint.getPath());
+	// }
+	// }
+	// }
+	// }
+	//
+	// private String getRel(MvcEndpoint endpoint) {
+	// if (endpoint instanceof NamedMvcEndpoint) {
+	// return ((NamedMvcEndpoint) endpoint).getName();
+	// }
+	// String path = endpoint.getPath();
+	// return (path.startsWith("/") ? path.substring(1) : path);
+	// }
+	//
+	// private void addEndpointLink(ResourceSupport resource, MvcEndpoint endpoint,
+	// String rel) {
+	// Class<?> type = endpoint.getEndpointType();
+	// type = (type == null ? Object.class : type);
+	// if (StringUtils.hasText(rel)) {
+	// String href = this.rootPath + endpoint.getPath();
+	// resource.add(linkTo(type).slash(href).withRel(rel));
+	// }
+	// }
 
 }

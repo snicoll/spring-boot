@@ -45,13 +45,12 @@ import org.springframework.web.util.UrlPathHelper;
  */
 @ConfigurationProperties(prefix = "endpoints.jolokia", ignoreUnknownFields = false)
 @HypermediaDisabled
-public class JolokiaMvcEndpoint extends AbstractNamedMvcEndpoint implements
-		InitializingBean, ApplicationContextAware, ServletContextAware, DisposableBean {
+public class JolokiaMvcEndpoint implements InitializingBean, ApplicationContextAware,
+		ServletContextAware, DisposableBean {
 
 	private final ServletWrappingController controller = new ServletWrappingController();
 
 	public JolokiaMvcEndpoint() {
-		super("jolokia", "/jolokia", true);
 		this.controller.setServletClass(AgentServlet.class);
 		this.controller.setServletName("jolokia");
 	}
@@ -84,7 +83,9 @@ public class JolokiaMvcEndpoint extends AbstractNamedMvcEndpoint implements
 	@RequestMapping("/**")
 	public ModelAndView handle(HttpServletRequest request, HttpServletResponse response)
 			throws Exception {
-		return this.controller.handleRequest(new PathStripper(request, getPath()),
+		return this.controller.handleRequest(new PathStripper(request, "path"), // TODO
+																				// Fix the
+																				// path
 				response);
 	}
 

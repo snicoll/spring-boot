@@ -1,7 +1,6 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
 org.springframework.boot.actuate.autoconfigure.AuditAutoConfiguration,\
 org.springframework.boot.actuate.autoconfigure.CacheStatisticsAutoConfiguration,\
-org.springframework.boot.actuate.autoconfigure.EndpointAutoConfiguration,\
 org.springframework.boot.actuate.autoconfigure.EndpointMBeanExportAutoConfiguration,\
 org.springframework.boot.actuate.autoconfigure.HealthIndicatorAutoConfiguration,\
 org.springframework.boot.actuate.autoconfigure.InfoContributorAutoConfiguration,\
@@ -14,6 +13,7 @@ org.springframework.boot.actuate.autoconfigure.MetricExportAutoConfiguration,\
 org.springframework.boot.actuate.autoconfigure.PublicMetricsAutoConfiguration,\
 org.springframework.boot.actuate.autoconfigure.TraceRepositoryAutoConfiguration,\
 org.springframework.boot.actuate.autoconfigure.TraceWebFilterAutoConfiguration,\
+org.springframework.boot.actuate.autoconfigure.endpoint.EndpointAutoConfiguration,\
 org.springframework.boot.actuate.autoconfigure.endpoint.infrastructure.EndpointInfrastructureAutoConfiguration,\
 org.springframework.boot.actuate.autoconfigure.endpoint.infrastructure.EndpointServletWebAutoConfiguration,\
 org.springframework.boot.actuate.cloudfoundry.CloudFoundryActuatorAutoConfiguration

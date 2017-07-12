@@ -41,13 +41,14 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import org.springframework.boot.actuate.autoconfigure.endpoint.EndpointAutoConfiguration;
 import org.springframework.boot.actuate.autoconfigure.endpoint.infrastructure.EndpointServletWebAutoConfiguration;
 import org.springframework.boot.actuate.endpoint.Endpoint;
 import org.springframework.boot.actuate.endpoint.mvc.EndpointHandlerMapping;
 import org.springframework.boot.actuate.endpoint.mvc.WebEndpointHandlerMappingCustomizer;
+import org.springframework.boot.actuate.endpoint.web.HealthWebEndpointExtension;
 import org.springframework.boot.actuate.endpoint.mvc.EnvironmentMvcEndpoint;
 import org.springframework.boot.actuate.endpoint.mvc.HalJsonMvcEndpoint;
-import org.springframework.boot.actuate.endpoint.mvc.HealthMvcEndpoint;
 import org.springframework.boot.actuate.endpoint.mvc.LoggersMvcEndpoint;
 import org.springframework.boot.actuate.endpoint.mvc.MetricsMvcEndpoint;
 import org.springframework.boot.actuate.endpoint.mvc.MvcEndpoint;
@@ -463,12 +464,12 @@ public class EndpointServletWebAutoConfigurationTests {
 
 	@Test
 	public void healthEndpointDisabled() throws Exception {
-		endpointDisabled("health", HealthMvcEndpoint.class);
+		endpointDisabled("health", HealthWebEndpointExtension.class);
 	}
 
 	@Test
 	public void healthEndpointEnabledOverride() throws Exception {
-		endpointEnabledOverride("health", HealthMvcEndpoint.class);
+		endpointEnabledOverride("health", HealthWebEndpointExtension.class);
 	}
 
 	@Test

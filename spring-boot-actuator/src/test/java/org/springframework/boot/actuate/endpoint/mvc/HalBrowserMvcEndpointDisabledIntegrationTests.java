@@ -24,6 +24,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.actuate.autoconfigure.MinimalActuatorHypermediaApplication;
+import org.springframework.boot.actuate.endpoint.HeapdumpEndpoint;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
@@ -84,7 +85,7 @@ public class HalBrowserMvcEndpointDisabledIntegrationTests {
 	public void endpointsDoNotHaveLinks() throws Exception {
 		for (MvcEndpoint endpoint : this.mvcEndpoints.getEndpoints()) {
 			String path = endpoint.getPath();
-			if ("".equals(path) || endpoint instanceof HeapdumpMvcEndpoint) {
+			if ("".equals(path) || endpoint instanceof HeapdumpEndpoint) {
 				continue;
 			}
 			path = "/application" + (path.length() > 0 ? path : "/");

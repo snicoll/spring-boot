@@ -17,9 +17,6 @@
 package org.springframework.boot.actuate.endpoint.mvc;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.hateoas.ResourceSupport;
-import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.ResponseBody;
 
 /**
  * {@link MvcEndpoint} to expose HAL-formatted JSON.
@@ -30,31 +27,31 @@ import org.springframework.web.bind.annotation.ResponseBody;
  * @since 1.3.0
  */
 @ConfigurationProperties(prefix = "endpoints.actuator")
-public class HalJsonMvcEndpoint extends AbstractNamedMvcEndpoint {
+public class HalJsonMvcEndpoint {
 
-	private final ManagementServletContext managementServletContext;
-
-	public HalJsonMvcEndpoint(ManagementServletContext managementServletContext) {
-		super("actuator", getDefaultPath(managementServletContext), false);
-		this.managementServletContext = managementServletContext;
-	}
-
-	private static String getDefaultPath(
-			ManagementServletContext managementServletContext) {
-		if (StringUtils.hasText(managementServletContext.getContextPath())) {
-			return "";
-		}
-		return "/application";
-	}
-
-	@ActuatorGetMapping
-	@ResponseBody
-	public ResourceSupport links() {
-		return new ResourceSupport();
-	}
-
-	protected final ManagementServletContext getManagementServletContext() {
-		return this.managementServletContext;
-	}
+	// private final ManagementServletContext managementServletContext;
+	//
+	// public HalJsonMvcEndpoint(ManagementServletContext managementServletContext) {
+	// super("actuator", getDefaultPath(managementServletContext), false);
+	// this.managementServletContext = managementServletContext;
+	// }
+	//
+	// private static String getDefaultPath(
+	// ManagementServletContext managementServletContext) {
+	// if (StringUtils.hasText(managementServletContext.getContextPath())) {
+	// return "";
+	// }
+	// return "/application";
+	// }
+	//
+	// @ActuatorGetMapping
+	// @ResponseBody
+	// public ResourceSupport links() {
+	// return new ResourceSupport();
+	// }
+	//
+	// protected final ManagementServletContext getManagementServletContext() {
+	// return this.managementServletContext;
+	// }
 
 }

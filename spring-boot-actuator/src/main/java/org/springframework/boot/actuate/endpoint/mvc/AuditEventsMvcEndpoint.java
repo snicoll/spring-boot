@@ -16,18 +16,8 @@
 
 package org.springframework.boot.actuate.endpoint.mvc;
 
-import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.Map;
-
 import org.springframework.boot.actuate.audit.AuditEvent;
-import org.springframework.boot.actuate.audit.AuditEventRepository;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.ResponseEntity;
-import org.springframework.util.Assert;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 
 /**
  * {@link MvcEndpoint} to expose {@link AuditEvent}s.
@@ -37,28 +27,28 @@ import org.springframework.web.bind.annotation.ResponseBody;
  * @since 1.5.0
  */
 @ConfigurationProperties(prefix = "endpoints.auditevents")
-public class AuditEventsMvcEndpoint extends AbstractNamedMvcEndpoint {
+public class AuditEventsMvcEndpoint {
 
-	private final AuditEventRepository auditEventRepository;
-
-	public AuditEventsMvcEndpoint(AuditEventRepository auditEventRepository) {
-		super("auditevents", "/auditevents", true);
-		Assert.notNull(auditEventRepository, "AuditEventRepository must not be null");
-		this.auditEventRepository = auditEventRepository;
-	}
-
-	@ActuatorGetMapping
-	@ResponseBody
-	public ResponseEntity<?> findByPrincipalAndAfterAndType(
-			@RequestParam(required = false) String principal,
-			@RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ssZ") Date after,
-			@RequestParam(required = false) String type) {
-		if (!isEnabled()) {
-			return DISABLED_RESPONSE;
-		}
-		Map<Object, Object> result = new LinkedHashMap<>();
-		result.put("events", this.auditEventRepository.find(principal, after, type));
-		return ResponseEntity.ok(result);
-	}
+	// private final AuditEventRepository auditEventRepository;
+	//
+	// public AuditEventsMvcEndpoint(AuditEventRepository auditEventRepository) {
+	// super("auditevents", "/auditevents", true);
+	// Assert.notNull(auditEventRepository, "AuditEventRepository must not be null");
+	// this.auditEventRepository = auditEventRepository;
+	// }
+	//
+	// @ActuatorGetMapping
+	// @ResponseBody
+	// public ResponseEntity<?> findByPrincipalAndAfterAndType(
+	// @RequestParam(required = false) String principal,
+	// @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ssZ") Date after,
+	// @RequestParam(required = false) String type) {
+	// if (!isEnabled()) {
+	// return DISABLED_RESPONSE;
+	// }
+	// Map<Object, Object> result = new LinkedHashMap<>();
+	// result.put("events", this.auditEventRepository.find(principal, after, type));
+	// return ResponseEntity.ok(result);
+	// }
 
 }

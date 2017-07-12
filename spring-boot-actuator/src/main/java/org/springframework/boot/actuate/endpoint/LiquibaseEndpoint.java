@@ -29,8 +29,8 @@ import liquibase.database.DatabaseFactory;
 import liquibase.database.jvm.JdbcConnection;
 import liquibase.integration.spring.SpringLiquibase;
 
-import org.springframework.boot.actuate.endpoint.LiquibaseEndpoint.LiquibaseReport;
-import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.endpoint.Endpoint;
+import org.springframework.boot.endpoint.ReadOperation;
 import org.springframework.util.Assert;
 
 /**
@@ -39,8 +39,8 @@ import org.springframework.util.Assert;
  * @author Eddú Meléndez
  * @since 1.3.0
  */
-@ConfigurationProperties(prefix = "endpoints.liquibase")
-public class LiquibaseEndpoint extends AbstractEndpoint<List<LiquibaseReport>> {
+@Endpoint(id = "liquibase")
+public class LiquibaseEndpoint {
 
 	private final Map<String, SpringLiquibase> liquibases;
 
@@ -49,13 +49,12 @@ public class LiquibaseEndpoint extends AbstractEndpoint<List<LiquibaseReport>> {
 	}
 
 	public LiquibaseEndpoint(Map<String, SpringLiquibase> liquibases) {
-		super("liquibase");
 		Assert.notEmpty(liquibases, "Liquibases must be specified");
 		this.liquibases = liquibases;
 	}
 
-	@Override
-	public List<LiquibaseReport> invoke() {
+	@ReadOperation
+	public List<LiquibaseReport> getLiquibaseReports() {
 		List<LiquibaseReport> reports = new ArrayList<>();
 		DatabaseFactory factory = DatabaseFactory.getInstance();
 		StandardChangeLogHistoryService service = new StandardChangeLogHistoryService();

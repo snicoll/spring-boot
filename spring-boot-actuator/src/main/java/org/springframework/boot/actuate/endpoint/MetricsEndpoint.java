@@ -24,17 +24,21 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.boot.actuate.metrics.Metric;
-import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.endpoint.Endpoint;
+import org.springframework.boot.endpoint.ReadOperation;
+import org.springframework.boot.endpoint.Selector;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
+import org.springframework.http.HttpStatus;
 import org.springframework.util.Assert;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 /**
  * {@link Endpoint} to expose a collection of {@link PublicMetrics}.
  *
  * @author Dave Syer
  */
-@ConfigurationProperties(prefix = "endpoints.metrics")
-public class MetricsEndpoint extends AbstractEndpoint<Map<String, Object>> {
+@Endpoint(id = "metrics")
+public class MetricsEndpoint {
 
 	private final List<PublicMetrics> publicMetrics;
 
@@ -52,7 +56,6 @@ public class MetricsEndpoint extends AbstractEndpoint<Map<String, Object>> {
 	 * {@link AnnotationAwareOrderComparator}.
 	 */
 	public MetricsEndpoint(Collection<PublicMetrics> publicMetrics) {
-		super("metrics");
 		Assert.notNull(publicMetrics, "PublicMetrics must not be null");
 		this.publicMetrics = new ArrayList<>(publicMetrics);
 		AnnotationAwareOrderComparator.sort(this.publicMetrics);
@@ -67,8 +70,8 @@ public class MetricsEndpoint extends AbstractEndpoint<Map<String, Object>> {
 		this.publicMetrics.remove(metrics);
 	}
 
-	@Override
-	public Map<String, Object> invoke() {
+	@ReadOperation
+	public Map<String, Object> getMetrics() {
 		Map<String, Object> result = new LinkedHashMap<>();
 		List<PublicMetrics> metrics = new ArrayList<>(this.publicMetrics);
 		for (PublicMetrics publicMetric : metrics) {
@@ -82,6 +85,61 @@ public class MetricsEndpoint extends AbstractEndpoint<Map<String, Object>> {
 			}
 		}
 		return result;
+	}
+
+	@ReadOperation
+	public Object getSelectedMetrics(@Selector String name) {
+		return new NamePatternMapFilter(getMetrics()).getResults(name);
+	}
+
+	/**
+	 * {@link NamePatternFilter} for the Map source.
+	 */
+	private class NamePatternMapFilter extends NamePatternFilter<Map<String, ?>> {
+
+		NamePatternMapFilter(Map<String, ?> source) {
+			super(source);
+		}
+
+		@Override
+		protected void getNames(Map<String, ?> source, NameCallback callback) {
+			for (String name : source.keySet()) {
+				try {
+					callback.addName(name);
+				}
+				catch (NoSuchMetricException ex) {
+					// Metric with null value. Continue.
+				}
+			}
+		}
+
+		@Override
+		protected Object getOptionalValue(Map<String, ?> source, String name) {
+			return source.get(name);
+		}
+
+		@Override
+		protected Object getValue(Map<String, ?> source, String name) {
+			Object value = getOptionalValue(source, name);
+			if (value == null) {
+				throw new NoSuchMetricException("No such metric: " + name);
+			}
+			return value;
+		}
+
+	}
+
+	/**
+	 * Exception thrown when the specified metric cannot be found.
+	 */
+	@SuppressWarnings("serial")
+	@ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "No such metric")
+	public static class NoSuchMetricException extends RuntimeException {
+
+		public NoSuchMetricException(String string) {
+			super(string);
+		}
+
 	}
 
 }
