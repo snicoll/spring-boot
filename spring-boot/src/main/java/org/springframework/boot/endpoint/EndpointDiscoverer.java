@@ -20,6 +20,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -60,14 +61,13 @@ public abstract class EndpointDiscoverer<T extends EndpointOperation> {
 	 * @param extensionFactory the factory to use the extension
 	 * @return the list of {@link EndpointInfo EndpointInfos} that describes the
 	 * discovered endpoints
-	 * @see #discoverGenericEndpoints()
 	 */
-	public Collection<EndpointInfo<T>> doDiscoverEndpoints(
+	protected Collection<EndpointInfo<T>> doDiscoverEndpoints(
 			Class<? extends Annotation> extensionType,
 			EndpointExtensionFactory<T> extensionFactory) {
 		Map<Class<?>, EndpointInfo<T>> endpoints = discoverGenericEndpoints();
-		Map<Class<?>, EndpointExtensionInfo<T>> extensions = discoverExtensions(
-				endpoints, extensionType, extensionFactory);
+		Map<Class<?>, EndpointExtensionInfo<T>> extensions = discoverExtensions(endpoints,
+				extensionType, extensionFactory);
 		Collection<EndpointInfo<T>> result = new ArrayList<>();
 		endpoints.forEach((endpointType, endpointInfo) -> {
 			EndpointExtensionInfo<T> extension = extensions.remove(endpointType);
@@ -82,13 +82,7 @@ public abstract class EndpointDiscoverer<T extends EndpointOperation> {
 		return result;
 	}
 
-	/**
-	 * Discover endpoints with no handling of an extension.
-	 * @return the list of generic {@link EndpointInfo EndpointInfos} that describes the
-	 * discovered endpoints
-	 * @see #doDiscoverEndpoints(Class, EndpointExtensionFactory)
-	 */
-	protected Map<Class<?>, EndpointInfo<T>> discoverGenericEndpoints() {
+	private Map<Class<?>, EndpointInfo<T>> discoverGenericEndpoints() {
 		String[] endpointBeanNames = this.applicationContext
 				.getBeanNamesForAnnotation(Endpoint.class);
 		Map<String, EndpointInfo<T>> endpointsById = new HashMap<>();
@@ -101,8 +95,7 @@ public abstract class EndpointDiscoverer<T extends EndpointOperation> {
 			Map<Method, T> operationMethods = discoverOperations(endpointId, beanName,
 					beanType);
 
-			EndpointInfo<T> endpointInfo = new EndpointInfo<>(
-					endpointId,
+			EndpointInfo<T> endpointInfo = new EndpointInfo<>(endpointId,
 					endpointAttributes.getBoolean("enabledByDefault"),
 					operationMethods.values());
 
@@ -118,10 +111,13 @@ public abstract class EndpointDiscoverer<T extends EndpointOperation> {
 		return endpointsByClass;
 	}
 
-	protected Map<Class<?>, EndpointExtensionInfo<T>> discoverExtensions(
+	private Map<Class<?>, EndpointExtensionInfo<T>> discoverExtensions(
 			Map<Class<?>, EndpointInfo<T>> endpoints,
 			Class<? extends Annotation> extensionType,
 			EndpointExtensionFactory<T> extensionFactory) {
+		if (extensionType == null || extensionFactory == null) {
+			return Collections.emptyMap();
+		}
 		String[] extensionBeanNames = this.applicationContext
 				.getBeanNamesForAnnotation(extensionType);
 		Map<Class<?>, EndpointExtensionInfo<T>> extensionsByEndpoint = new HashMap<>();
@@ -138,15 +134,17 @@ public abstract class EndpointDiscoverer<T extends EndpointOperation> {
 			}
 			Map<Method, T> operationMethods = discoverOperations(endpoint.getId(),
 					beanName, beanType);
-			EndpointExtensionInfo<T> extension = extensionFactory.createExtension(
-					endpointType, beanType, operationMethods.values());
+			EndpointExtensionInfo<T> extension = extensionFactory
+					.createExtension(endpointType, beanType, operationMethods.values());
 
-			EndpointExtensionInfo<T> previous = extensionsByEndpoint.putIfAbsent(endpointType,
-					extension);
+			EndpointExtensionInfo<T> previous = extensionsByEndpoint
+					.putIfAbsent(endpointType, extension);
 			if (previous != null) {
 				throw new IllegalStateException(
-						"Found two extensions for the same endpoint '" + endpointType.getName() + "': "
-								+ extension.getEndpointExtensionType().getName() + " and " + previous.getEndpointExtensionType().getName());
+						"Found two extensions for the same endpoint '"
+								+ endpointType.getName() + "': "
+								+ extension.getEndpointExtensionType().getName() + " and "
+								+ previous.getEndpointExtensionType().getName());
 			}
 		}
 		return extensionsByEndpoint;
@@ -156,8 +154,8 @@ public abstract class EndpointDiscoverer<T extends EndpointOperation> {
 			Class<?> beanType) {
 		return MethodIntrospector.selectMethods(beanType,
 				(MethodIntrospector.MetadataLookup<T>) (method) -> {
-					T readOperation = createReadOperationIfPossible(endpointId,
-							beanName, method);
+					T readOperation = createReadOperationIfPossible(endpointId, beanName,
+							method);
 					if (readOperation != null) {
 						return readOperation;
 					}
@@ -180,8 +178,8 @@ public abstract class EndpointDiscoverer<T extends EndpointOperation> {
 				WriteOperation.class, EndpointOperationType.WRITE);
 	}
 
-	private T createOperationIfPossible(String endpointId, String beanName,
-			Method method, Class<? extends Annotation> operationAnnotation,
+	private T createOperationIfPossible(String endpointId, String beanName, Method method,
+			Class<? extends Annotation> operationAnnotation,
 			EndpointOperationType operationType) {
 		AnnotationAttributes operationAttributes = AnnotatedElementUtils
 				.getMergedAnnotationAttributes(method, operationAnnotation);
@@ -191,7 +189,6 @@ public abstract class EndpointDiscoverer<T extends EndpointOperation> {
 		return this.operationFactory.createOperation(endpointId, operationAttributes,
 				this.applicationContext.getBean(beanName), method, operationType);
 	}
-
 
 	/**
 	 * An {@code EndpointOperationFactory} creates an {@link EndpointOperation} for an
@@ -229,8 +226,8 @@ public abstract class EndpointDiscoverer<T extends EndpointOperation> {
 
 		private final Collection<T> operations;
 
-		protected EndpointExtensionInfo(Class<?> endpointType, Class<?> endpointExtensionType,
-				Collection<T> operations) {
+		protected EndpointExtensionInfo(Class<?> endpointType,
+				Class<?> endpointExtensionType, Collection<T> operations) {
 			this.endpointType = endpointType;
 			this.endpointExtensionType = endpointExtensionType;
 			this.operations = operations;
@@ -253,23 +250,26 @@ public abstract class EndpointDiscoverer<T extends EndpointOperation> {
 	}
 
 	/**
-	 * Creates an {@link EndpointExtensionInfo} for a given extension.
+	 * Creates an
+	 * {@link org.springframework.boot.endpoint.EndpointDiscoverer.EndpointExtensionInfo}
+	 * for a given extension.
 	 * @param <T> the type of the operation
 	 */
+	@FunctionalInterface
 	protected interface EndpointExtensionFactory<T extends EndpointOperation> {
 
 		/**
-		 * Create an {@link EndpointExtensionInfo} for an extension of an endpoint.
+		 * Create an
+		 * {@link org.springframework.boot.endpoint.EndpointDiscoverer.EndpointExtensionInfo}
+		 * for an extension of an endpoint.
 		 * @param endpointType the type of the endpoint
 		 * @param endpointExtensionType the type of the extension
 		 * @param operations the discovered operations on the extension
-		 * @return an {@link EndpointExtensionInfo} describing the extension
+		 * @return the extensionInfo
 		 */
 		EndpointExtensionInfo<T> createExtension(Class<?> endpointType,
 				Class<?> endpointExtensionType, Collection<T> operations);
 
 	}
-
-
 
 }

@@ -25,7 +25,7 @@ import java.lang.annotation.Target;
 import org.springframework.boot.endpoint.Endpoint;
 
 /**
- * Identifies a type has being a web extension of an {@link Endpoint}.
+ * Identifies a type as being a Web-specific extension of an {@link Endpoint}.
  *
  * @author Andy Wilkinson
  * @author Stephane Nicoll

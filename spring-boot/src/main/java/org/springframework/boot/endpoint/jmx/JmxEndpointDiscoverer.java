@@ -41,7 +41,7 @@ import org.springframework.util.StringUtils;
 
 /**
  * Discovers the {@link Endpoint endpoints} in an {@link ApplicationContext} with
- * {@link JmxEndpointExtension jmx extensions} additions and overrides applied on them.
+ * {@link JmxEndpointExtension JMX extensions} applied to them.
  *
  * @author Stephane Nicoll
  * @author Andy Wilkinson
@@ -52,9 +52,9 @@ public class JmxEndpointDiscoverer extends EndpointDiscoverer<JmxEndpointOperati
 	private static final AnnotationJmxAttributeSource jmxAttributeSource = new AnnotationJmxAttributeSource();
 
 	/**
-	 * Creates a new {@link JmxEndpointDiscoverer} that will discover
-	 * {@link Endpoint endpoints} and {@link JmxEndpointExtension jmx extensions} using
-	 * the given {@link ApplicationContext}.
+	 * Creates a new {@link JmxEndpointDiscoverer} that will discover {@link Endpoint
+	 * endpoints} and {@link JmxEndpointExtension jmx extensions} using the given
+	 * {@link ApplicationContext}.
 	 *
 	 * @param applicationContext the application context
 	 * @param conversionService the conversion service used to convert arguments when an
@@ -101,14 +101,13 @@ public class JmxEndpointDiscoverer extends EndpointDiscoverer<JmxEndpointOperati
 		}
 
 		@Override
-		public JmxEndpointOperation createOperation(
-				String endpointId,
+		public JmxEndpointOperation createOperation(String endpointId,
 				AnnotationAttributes operationAttributes, Object target, Method method,
 				EndpointOperationType type) {
 			String operationName = method.getName();
 			Class<?> outputType = mapParameterType(method.getReturnType());
-			String description = getDescription(method, () -> "Invoke " + operationName
-					+ " for endpoint " + endpointId);
+			String description = getDescription(method,
+					() -> "Invoke " + operationName + " for endpoint " + endpointId);
 			List<JmxEndpointOperationParameterInfo> parameters = getParameters(method);
 			return new JmxEndpointOperation(type,
 					new ReflectiveOperationInvoker(this.conversionService, target,
@@ -173,8 +172,7 @@ public class JmxEndpointDiscoverer extends EndpointDiscoverer<JmxEndpointOperati
 	private static class JmxEndpointExtensionInfo
 			extends EndpointExtensionInfo<JmxEndpointOperation> {
 
-		JmxEndpointExtensionInfo(Class<?> endpointType,
-				Class<?> endpointExtensionType,
+		JmxEndpointExtensionInfo(Class<?> endpointType, Class<?> endpointExtensionType,
 				Collection<JmxEndpointOperation> operations) {
 			super(endpointType, endpointExtensionType, operations);
 		}
@@ -192,9 +190,10 @@ public class JmxEndpointDiscoverer extends EndpointDiscoverer<JmxEndpointOperati
 					operation) -> operations.put(operation.getOperationName(), operation);
 			existing.getOperations().forEach(operationConsumer);
 			getOperations().forEach(operationConsumer);
-			return new EndpointInfo<>(existing.getId(),
-					existing.isEnabledByDefault(), operations.values());
+			return new EndpointInfo<>(existing.getId(), existing.isEnabledByDefault(),
+					operations.values());
 		}
+
 	}
 
 }
