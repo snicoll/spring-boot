@@ -37,12 +37,12 @@ import org.springframework.util.ReflectionUtils;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Tests for {@link EndpointDiscoverer}.
+ * Tests for {@link AnnotationEndpointDiscoverer}.
  *
  * @author Andy Wilkinson
  * @author Stephane Nicoll
  */
-public class EndpointDiscovererTests {
+public class AnnotationEndpointDiscovererTests {
 
 	@Rule
 	public final ExpectedException thrown = ExpectedException.none();
@@ -50,13 +50,13 @@ public class EndpointDiscovererTests {
 	@Test
 	public void discoverWorksWhenThereAreNoEndpoints() {
 		load(EmptyConfiguration.class, (context) -> assertThat(
-				new TestEndpointDiscoverer(context).discoverEndpoints().isEmpty()));
+				new TestAnnotationEndpointDiscoverer(context).discoverEndpoints().isEmpty()));
 	}
 
 	@Test
 	public void endpointIsDiscovered() {
 		load(TestEndpointConfiguration.class, (context) -> {
-			Collection<EndpointInfo<TestEndpointOperation>> endpoints = new TestEndpointDiscoverer(
+			Collection<EndpointInfo<TestEndpointOperation>> endpoints = new TestAnnotationEndpointDiscoverer(
 					context).discoverEndpoints();
 			assertThat(endpoints).hasSize(1);
 			EndpointInfo<TestEndpointOperation> endpoint = endpoints.iterator().next();
@@ -81,7 +81,7 @@ public class EndpointDiscovererTests {
 		load(ClashingEndpointConfiguration.class, (context) -> {
 			this.thrown.expect(IllegalStateException.class);
 			this.thrown.expectMessage("Found two endpoints with the id 'test': ");
-			new TestEndpointDiscoverer(context).discoverEndpoints();
+			new TestAnnotationEndpointDiscoverer(context).discoverEndpoints();
 		});
 	}
 
@@ -166,10 +166,10 @@ public class EndpointDiscovererTests {
 
 	}
 
-	private static class TestEndpointDiscoverer
-			extends EndpointDiscoverer<TestEndpointOperation, Method> {
+	private static class TestAnnotationEndpointDiscoverer
+			extends AnnotationEndpointDiscoverer<TestEndpointOperation, Method> {
 
-		TestEndpointDiscoverer(ApplicationContext applicationContext) {
+		TestAnnotationEndpointDiscoverer(ApplicationContext applicationContext) {
 			super(applicationContext, endpointOperationFactory(),
 					TestEndpointOperation::getOperationMethod);
 		}

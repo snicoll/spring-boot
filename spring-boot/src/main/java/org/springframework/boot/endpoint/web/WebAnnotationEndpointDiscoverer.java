@@ -26,8 +26,8 @@ import java.util.stream.Stream;
 
 import org.reactivestreams.Publisher;
 
+import org.springframework.boot.endpoint.AnnotationEndpointDiscoverer;
 import org.springframework.boot.endpoint.Endpoint;
-import org.springframework.boot.endpoint.EndpointDiscoverer;
 import org.springframework.boot.endpoint.EndpointInfo;
 import org.springframework.boot.endpoint.EndpointOperationType;
 import org.springframework.boot.endpoint.ReflectiveOperationInvoker;
@@ -45,13 +45,13 @@ import org.springframework.util.ClassUtils;
  * @author Stephane Nicoll
  * @since 2.0.0
  */
-public class WebEndpointDiscoverer
-		extends EndpointDiscoverer<WebEndpointOperation, OperationRequestPredicate> {
+public class WebAnnotationEndpointDiscoverer
+		extends AnnotationEndpointDiscoverer<WebEndpointOperation, OperationRequestPredicate> {
 
 	/**
-	 * Creates a new {@link WebEndpointDiscoverer} that will discover {@link Endpoint
-	 * endpoints} and {@link WebEndpointExtension web extensions} using the given
-	 * {@link ApplicationContext}.
+	 * Creates a new {@link WebAnnotationEndpointDiscoverer} that will discover
+	 * {@link Endpoint endpoints} and {@link WebEndpointExtension web extensions} using
+	 * the given {@link ApplicationContext}.
 	 * @param applicationContext the application context
 	 * @param conversionService the conversion service used to convert arguments when an
 	 * operation is invoked
@@ -59,7 +59,7 @@ public class WebEndpointDiscoverer
 	 * @param consumedMediaTypes the media types consumed by web endpoint operations
 	 * @param producedMediaTypes the media types produced by web endpoint operations
 	 */
-	public WebEndpointDiscoverer(ApplicationContext applicationContext,
+	public WebAnnotationEndpointDiscoverer(ApplicationContext applicationContext,
 			ConversionService conversionService, String basePath,
 			Collection<String> consumedMediaTypes,
 			Collection<String> producedMediaTypes) {

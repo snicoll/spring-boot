@@ -41,11 +41,11 @@ import org.springframework.jmx.export.annotation.ManagedOperationParameters;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Tests for {@link JmxEndpointDiscoverer}.
+ * Tests for {@link JmxAnnotationEndpointDiscoverer}.
  *
  * @author Stephane Nicoll
  */
-public class JmxEndpointDiscovererTests {
+public class JmxAnnotationEndpointDiscovererTests {
 
 	@Rule
 	public final ExpectedException thrown = ExpectedException.none();
@@ -211,7 +211,7 @@ public class JmxEndpointDiscovererTests {
 	}
 
 	private Map<String, EndpointInfo<JmxEndpointOperation>> discover(
-			JmxEndpointDiscoverer discoverer) {
+			JmxAnnotationEndpointDiscoverer discoverer) {
 		Map<String, EndpointInfo<JmxEndpointOperation>> endpointsById = new HashMap<>();
 		discoverer.discoverEndpoints().forEach((endpoint) -> {
 			endpointsById.put(endpoint.getId(), endpoint);
@@ -228,10 +228,11 @@ public class JmxEndpointDiscovererTests {
 		return operationByName;
 	}
 
-	private void load(Class<?> configuration, Consumer<JmxEndpointDiscoverer> consumer) {
+	private void load(Class<?> configuration,
+			Consumer<JmxAnnotationEndpointDiscoverer> consumer) {
 		try (AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(
 				configuration)) {
-			consumer.accept(new JmxEndpointDiscoverer(context,
+			consumer.accept(new JmxAnnotationEndpointDiscoverer(context,
 					DefaultConversionService.getSharedInstance()));
 		}
 	}

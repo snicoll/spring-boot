@@ -204,7 +204,7 @@ public class EndpointDynamicMBeanTests {
 		});
 	}
 
-	private ObjectName registerEndpoint(JmxEndpointDiscoverer discoverer) {
+	private ObjectName registerEndpoint(JmxAnnotationEndpointDiscoverer discoverer) {
 		Collection<EndpointDynamicMBean> mBeans = this.jmxEndpointMBeanFactory
 				.createMBeans(discoverer.discoverEndpoints());
 		assertThat(mBeans).hasSize(1);
@@ -233,10 +233,11 @@ public class EndpointDynamicMBeanTests {
 		}
 	}
 
-	private void load(Class<?> configuration, Consumer<JmxEndpointDiscoverer> consumer) {
+	private void load(Class<?> configuration,
+			Consumer<JmxAnnotationEndpointDiscoverer> consumer) {
 		try (AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(
 				configuration)) {
-			consumer.accept(new JmxEndpointDiscoverer(context,
+			consumer.accept(new JmxAnnotationEndpointDiscoverer(context,
 					DefaultConversionService.getSharedInstance()));
 		}
 	}

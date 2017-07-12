@@ -28,7 +28,7 @@ import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.servlet.ServletContainer;
 
 import org.springframework.boot.endpoint.web.AbstractWebEndpointIntegrationTests;
-import org.springframework.boot.endpoint.web.WebEndpointDiscoverer;
+import org.springframework.boot.endpoint.web.WebAnnotationEndpointDiscoverer;
 import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
 import org.springframework.boot.web.servlet.ServletRegistrationBean;
 import org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext;
@@ -74,7 +74,8 @@ public class JerseyWebEndpointIntegrationTests extends
 		}
 
 		@Bean
-		public ResourceConfig resourceConfig(WebEndpointDiscoverer endpointDiscoverer) {
+		public ResourceConfig resourceConfig(
+				WebAnnotationEndpointDiscoverer endpointDiscoverer) {
 			ResourceConfig resourceConfig = new ResourceConfig();
 			Collection<Resource> resources = new JerseyEndpointResourceFactory()
 					.createEndpointResources(endpointDiscoverer.discoverEndpoints());
