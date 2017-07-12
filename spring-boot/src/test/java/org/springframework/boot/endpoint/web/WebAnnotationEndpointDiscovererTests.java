@@ -32,6 +32,7 @@ import org.junit.rules.ExpectedException;
 
 import org.springframework.boot.endpoint.Endpoint;
 import org.springframework.boot.endpoint.EndpointInfo;
+import org.springframework.boot.endpoint.EndpointType;
 import org.springframework.boot.endpoint.ReadOperation;
 import org.springframework.boot.endpoint.Selector;
 import org.springframework.boot.endpoint.WriteOperation;
@@ -70,6 +71,17 @@ public class WebAnnotationEndpointDiscovererTests {
 			this.thrown.expectMessage("no endpoint found");
 			this.thrown.expectMessage(TestEndpoint.class.getName());
 			discoverer.discoverEndpoints();
+		});
+	}
+
+	@Test
+	public void onlyWebEndpointsAreDiscovered() {
+		load(MultipleEndpointsConfiguration.class, discoverer -> {
+			Collection<EndpointInfo<WebEndpointOperation>> endpoints = discoverer
+					.discoverEndpoints();
+			assertThat(endpoints).hasSize(1);
+			EndpointInfo<WebEndpointOperation> endpoint = endpoints.iterator().next();
+			assertThat(endpoint.getId()).isEqualTo("test");
 		});
 	}
 
@@ -127,6 +139,17 @@ public class WebAnnotationEndpointDiscovererTests {
 			this.thrown.expect(IllegalStateException.class);
 			this.thrown.expectMessage(
 					"Found multiple web operations with matching request predicates:");
+			discoverer.discoverEndpoints();
+		});
+	}
+
+	@Test
+	public void discoveryFailsWhenExtensionIsNotCompatibleWithTheEndpointType() {
+		load(InvalidWebExtensionConfiguration.class, discoverer -> {
+			this.thrown.expect(IllegalStateException.class);
+			this.thrown.expectMessage("Invalid extension");
+			this.thrown.expectMessage(NonWebWebEndpointExtension.class.getName());
+			this.thrown.expectMessage(NonWebEndpoint.class.getName());
 			discoverer.discoverEndpoints();
 		});
 	}
@@ -317,6 +340,42 @@ public class WebAnnotationEndpointDiscovererTests {
 
 	}
 
+	@Endpoint(id = "nonweb", types = EndpointType.JMX)
+	static class NonWebEndpoint {
+
+		@ReadOperation
+		public Object getData() {
+			return null;
+		}
+
+	}
+
+	@WebEndpointExtension(endpoint = NonWebEndpoint.class)
+	static class NonWebWebEndpointExtension {
+
+		@ReadOperation
+		public Object getSomething(@Selector String name) {
+			return null;
+		}
+
+	}
+
+
+	@Configuration
+	static class MultipleEndpointsConfiguration {
+
+		@Bean
+		public TestEndpoint testEndpoint() {
+			return new TestEndpoint();
+		}
+
+		@Bean
+		public NonWebEndpoint nonWebEndpoint() {
+			return new NonWebEndpoint();
+		}
+
+	}
+
 	@Configuration
 	static class TestWebEndpointExtensionConfiguration {
 
@@ -425,6 +484,21 @@ public class WebAnnotationEndpointDiscovererTests {
 		@Bean
 		public ClashingSelectorsWebEndpointExtension clashingSelectorsExtension() {
 			return new ClashingSelectorsWebEndpointExtension();
+		}
+
+	}
+
+	@Configuration
+	static class InvalidWebExtensionConfiguration {
+
+		@Bean
+		public NonWebEndpoint nonWebEndpoint() {
+			return new NonWebEndpoint();
+		}
+
+		@Bean
+		public NonWebWebEndpointExtension nonWebWebEndpointExtension() {
+			return new NonWebWebEndpointExtension();
 		}
 
 	}

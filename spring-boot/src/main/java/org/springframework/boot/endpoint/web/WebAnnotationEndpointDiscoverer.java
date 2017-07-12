@@ -30,6 +30,7 @@ import org.springframework.boot.endpoint.AnnotationEndpointDiscoverer;
 import org.springframework.boot.endpoint.Endpoint;
 import org.springframework.boot.endpoint.EndpointInfo;
 import org.springframework.boot.endpoint.EndpointOperationType;
+import org.springframework.boot.endpoint.EndpointType;
 import org.springframework.boot.endpoint.ReflectiveOperationInvoker;
 import org.springframework.boot.endpoint.Selector;
 import org.springframework.context.ApplicationContext;
@@ -72,7 +73,7 @@ public class WebAnnotationEndpointDiscoverer
 	@Override
 	public Collection<EndpointInfo<WebEndpointOperation>> discoverEndpoints() {
 		Collection<EndpointInfoDescriptor<WebEndpointOperation, OperationRequestPredicate>> endpoints = discoverEndpointsWithExtension(
-				WebEndpointExtension.class);
+				WebEndpointExtension.class, EndpointType.WEB);
 		verifyThatOperationsHaveDistinctPredicates(endpoints);
 		return endpoints.stream().map(EndpointInfoDescriptor::getEndpointInfo)
 				.collect(Collectors.toList());
