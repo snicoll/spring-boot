@@ -130,9 +130,9 @@ public abstract class AbstractWebEndpointIntegrationTests<T extends Configurable
 		}
 
 		@Bean
-		public WebEndpointDiscoverer webEndpointDiscoverer(
+		public WebAnnotationEndpointDiscoverer webEndpointDiscoverer(
 				ApplicationContext applicationContext) {
-			return new WebEndpointDiscoverer(applicationContext,
+			return new WebAnnotationEndpointDiscoverer(applicationContext,
 					DefaultConversionService.getSharedInstance(), "endpoints",
 					Arrays.asList("application/json"), Arrays.asList("application/json"));
 		}

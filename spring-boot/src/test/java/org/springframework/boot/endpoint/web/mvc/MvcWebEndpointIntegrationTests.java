@@ -17,7 +17,7 @@
 package org.springframework.boot.endpoint.web.mvc;
 
 import org.springframework.boot.endpoint.web.AbstractWebEndpointIntegrationTests;
-import org.springframework.boot.endpoint.web.WebEndpointDiscoverer;
+import org.springframework.boot.endpoint.web.WebAnnotationEndpointDiscoverer;
 import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
 import org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -64,7 +64,7 @@ public class MvcWebEndpointIntegrationTests extends
 
 		@Bean
 		public WebEndpointHandlerMapping webEndpointHandlerMapping(
-				WebEndpointDiscoverer webEndpointDiscoverer) {
+				WebAnnotationEndpointDiscoverer webEndpointDiscoverer) {
 			return new WebEndpointHandlerMapping(
 					webEndpointDiscoverer.discoverEndpoints());
 		}

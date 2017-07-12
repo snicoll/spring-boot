@@ -44,12 +44,12 @@ import org.springframework.core.convert.support.DefaultConversionService;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Tests for {@link WebEndpointDiscoverer}.
+ * Tests for {@link WebAnnotationEndpointDiscoverer}.
  *
  * @author Andy Wilkinson
  * @author Stephane Nicoll
  */
-public class WebEndpointDiscovererTests {
+public class WebAnnotationEndpointDiscovererTests {
 
 	@Rule
 	public final ExpectedException thrown = ExpectedException.none();
@@ -167,16 +167,17 @@ public class WebEndpointDiscovererTests {
 		});
 	}
 
-	private void load(Class<?> configuration, Consumer<WebEndpointDiscoverer> consumer) {
+	private void load(Class<?> configuration,
+			Consumer<WebAnnotationEndpointDiscoverer> consumer) {
 		this.load("application", configuration, consumer);
 	}
 
 	private void load(String basePath, Class<?> configuration,
-			Consumer<WebEndpointDiscoverer> consumer) {
+			Consumer<WebAnnotationEndpointDiscoverer> consumer) {
 		AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(
 				configuration);
 		try {
-			consumer.accept(new WebEndpointDiscoverer(context,
+			consumer.accept(new WebAnnotationEndpointDiscoverer(context,
 					DefaultConversionService.getSharedInstance(), basePath,
 					Arrays.asList("application/json"),
 					Arrays.asList("application/json")));
