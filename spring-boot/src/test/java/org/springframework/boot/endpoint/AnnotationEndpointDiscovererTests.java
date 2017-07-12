@@ -176,7 +176,7 @@ public class AnnotationEndpointDiscovererTests {
 
 		@Override
 		public Collection<EndpointInfo<TestEndpointOperation>> discoverEndpoints() {
-			return discoverEndpointsWithExtension(null).stream()
+			return discoverEndpointsWithExtension(null, null).stream()
 					.map(EndpointInfoDescriptor::getEndpointInfo)
 					.collect(Collectors.toList());
 		}

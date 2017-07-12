@@ -19,6 +19,7 @@ package org.springframework.boot.endpoint;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -32,6 +33,7 @@ import org.springframework.core.MethodIntrospector;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.ObjectUtils;
 
 /**
  * A base {@link EndpointDiscoverer} implementation that discover endpoint beans in an
@@ -63,18 +65,19 @@ public abstract class AnnotationEndpointDiscoverer<T extends EndpointOperation, 
 	/**
 	 * Perform endpoint discovery, including discovery and merging of extensions.
 	 * @param extensionType the annotation type of the extension
+	 * @param endpointType the {@link EndpointType} that should be considered
 	 * @return the list of {@link EndpointInfo EndpointInfos} that describes the
-	 * discovered endpoints
+	 * discovered endpoints matching the specified {@link EndpointType}
 	 */
 	protected Collection<EndpointInfoDescriptor<T, K>> discoverEndpointsWithExtension(
-			Class<? extends Annotation> extensionType) {
-		Map<Class<?>, EndpointInfo<T>> endpoints = discoverGenericEndpoints();
+			Class<? extends Annotation> extensionType, EndpointType endpointType) {
+		Map<Class<?>, EndpointInfo<T>> endpoints = discoverGenericEndpoints(endpointType);
 		Map<Class<?>, EndpointExtensionInfo<T>> extensions = discoverExtensions(endpoints,
-				extensionType);
+				extensionType, endpointType);
 		Collection<EndpointInfoDescriptor<T, K>> result = new ArrayList<>();
-		endpoints.forEach((endpointType, endpointInfo) -> {
-			EndpointExtensionInfo<T> extension = extensions.remove(endpointType);
-			result.add(createDescriptor(endpointType, endpointInfo, extension));
+		endpoints.forEach((endpointClass, endpointInfo) -> {
+			EndpointExtensionInfo<T> extension = extensions.remove(endpointClass);
+			result.add(createDescriptor(endpointClass, endpointInfo, extension));
 		});
 		return result;
 	}
@@ -115,7 +118,8 @@ public abstract class AnnotationEndpointDiscoverer<T extends EndpointOperation, 
 		return operationByKey;
 	}
 
-	private Map<Class<?>, EndpointInfo<T>> discoverGenericEndpoints() {
+	private Map<Class<?>, EndpointInfo<T>> discoverGenericEndpoints(
+			EndpointType endpointType) {
 		String[] endpointBeanNames = this.applicationContext
 				.getBeanNamesForAnnotation(Endpoint.class);
 		Map<String, EndpointInfo<T>> endpointsById = new HashMap<>();
@@ -125,28 +129,31 @@ public abstract class AnnotationEndpointDiscoverer<T extends EndpointOperation, 
 			AnnotationAttributes endpointAttributes = AnnotatedElementUtils
 					.getMergedAnnotationAttributes(beanType, Endpoint.class);
 			String endpointId = endpointAttributes.getString("id");
-			Map<Method, T> operationMethods = discoverOperations(endpointId, beanName,
-					beanType);
+			if (matchEndpointType(endpointAttributes, endpointType)) {
+				Map<Method, T> operationMethods = discoverOperations(endpointId, beanName,
+						beanType);
 
-			EndpointInfo<T> endpointInfo = new EndpointInfo<>(endpointId,
-					endpointAttributes.getBoolean("enabledByDefault"),
-					operationMethods.values());
+				EndpointInfo<T> endpointInfo = new EndpointInfo<>(endpointId,
+						endpointAttributes.getBoolean("enabledByDefault"),
+						operationMethods.values());
 
-			EndpointInfo<T> previous = endpointsById.putIfAbsent(endpointInfo.getId(),
-					endpointInfo);
-			if (previous != null) {
-				throw new IllegalStateException(
-						"Found two endpoints with the id '" + endpointInfo.getId() + "': "
-								+ endpointInfo + " and " + previous);
+				EndpointInfo<T> previous = endpointsById.putIfAbsent(endpointInfo.getId(),
+						endpointInfo);
+				if (previous != null) {
+					throw new IllegalStateException(
+							"Found two endpoints with the id '" + endpointInfo.getId()
+									+ "': " + endpointInfo + " and " + previous);
+				}
+				endpointsByClass.put(beanType, endpointInfo);
 			}
-			endpointsByClass.put(beanType, endpointInfo);
 		}
 		return endpointsByClass;
 	}
 
 	private Map<Class<?>, EndpointExtensionInfo<T>> discoverExtensions(
 			Map<Class<?>, EndpointInfo<T>> endpoints,
-			Class<? extends Annotation> extensionType) {
+			Class<? extends Annotation> extensionType,
+			EndpointType endpointType) {
 		if (extensionType == null) {
 			return Collections.emptyMap();
 		}
@@ -155,30 +162,50 @@ public abstract class AnnotationEndpointDiscoverer<T extends EndpointOperation, 
 		Map<Class<?>, EndpointExtensionInfo<T>> extensionsByEndpoint = new HashMap<>();
 		for (String beanName : extensionBeanNames) {
 			Class<?> beanType = this.applicationContext.getType(beanName);
-			AnnotationAttributes endpointAttributes = AnnotatedElementUtils
+			AnnotationAttributes extensionAttributes = AnnotatedElementUtils
 					.getMergedAnnotationAttributes(beanType, extensionType);
-			Class<?> endpointType = (Class<?>) endpointAttributes.get("endpoint");
-			EndpointInfo<T> endpoint = endpoints.get(endpointType);
+			Class<?> endpointClass = (Class<?>) extensionAttributes.get("endpoint");
+			AnnotationAttributes endpointAttributes = AnnotatedElementUtils
+					.getMergedAnnotationAttributes(endpointClass, Endpoint.class);
+			if (!matchEndpointType(endpointAttributes, endpointType)) {
+				throw new IllegalStateException(String.format("Invalid extension %s': "
+								+ "endpoint '%s' does not support such extension",
+						beanType.getName(), endpointClass.getName()));
+			}
+			EndpointInfo<T> endpoint = endpoints.get(endpointClass);
 			if (endpoint == null) {
 				throw new IllegalStateException(String.format(
 						"Invalid extension '%s': no endpoint found with type '%s'",
-						beanType.getName(), endpointType.getName()));
+						beanType.getName(), endpointClass.getName()));
 			}
 			Map<Method, T> operationMethods = discoverOperations(endpoint.getId(),
 					beanName, beanType);
 			EndpointExtensionInfo<T> extension = new EndpointExtensionInfo<>(beanType,
 					operationMethods.values());
 			EndpointExtensionInfo<T> previous = extensionsByEndpoint
-					.putIfAbsent(endpointType, extension);
+					.putIfAbsent(endpointClass, extension);
 			if (previous != null) {
 				throw new IllegalStateException(
 						"Found two extensions for the same endpoint '"
-								+ endpointType.getName() + "': "
+								+ endpointClass.getName() + "': "
 								+ extension.getEndpointExtensionType().getName() + " and "
 								+ previous.getEndpointExtensionType().getName());
 			}
 		}
 		return extensionsByEndpoint;
+	}
+
+	private boolean matchEndpointType(AnnotationAttributes endpointAttributes,
+			EndpointType endpointType) {
+		if (endpointType == null) {
+			return true;
+		}
+		Object types = endpointAttributes.get("types");
+		if (ObjectUtils.isEmpty(types)) {
+			return true;
+		}
+		return Arrays.stream((EndpointType[]) types)
+				.anyMatch(t -> t.equals(endpointType));
 	}
 
 	private Map<Method, T> discoverOperations(String endpointId, String beanName,
