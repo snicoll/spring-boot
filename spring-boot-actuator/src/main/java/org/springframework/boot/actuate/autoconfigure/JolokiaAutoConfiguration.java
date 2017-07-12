@@ -23,7 +23,6 @@ import org.jolokia.http.AgentServlet;
 import org.springframework.boot.actuate.autoconfigure.JolokiaAutoConfiguration.JolokiaCondition;
 import org.springframework.boot.actuate.endpoint.mvc.JolokiaMvcEndpoint;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
-import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionMessage;
 import org.springframework.boot.autoconfigure.condition.ConditionOutcome;
@@ -65,7 +64,6 @@ import org.springframework.web.servlet.mvc.ServletWrappingController;
 @ConditionalOnWebApplication(type = Type.SERVLET)
 @ConditionalOnClass({ AgentServlet.class, ServletWrappingController.class })
 @Conditional(JolokiaCondition.class)
-@AutoConfigureBefore(ManagementWebSecurityAutoConfiguration.class)
 @AutoConfigureAfter(ServletWebServerFactoryAutoConfiguration.class)
 @EnableConfigurationProperties(JolokiaProperties.class)
 public class JolokiaAutoConfiguration {

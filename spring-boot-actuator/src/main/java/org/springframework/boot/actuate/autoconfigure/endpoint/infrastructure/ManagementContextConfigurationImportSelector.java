@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.boot.actuate.autoconfigure;
+package org.springframework.boot.actuate.autoconfigure.endpoint.infrastructure;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.BeanClassLoaderAware;
+import org.springframework.boot.actuate.autoconfigure.ManagementContextConfiguration;
 import org.springframework.context.annotation.DeferredImportSelector;
 import org.springframework.core.OrderComparator;
 import org.springframework.core.Ordered;
@@ -43,7 +44,7 @@ import org.springframework.core.type.classreading.SimpleMetadataReaderFactory;
  * @see ManagementContextConfiguration
  */
 @Order(Ordered.LOWEST_PRECEDENCE)
-class ManagementContextConfigurationsImportSelector
+public class ManagementContextConfigurationImportSelector
 		implements DeferredImportSelector, BeanClassLoaderAware {
 
 	private ClassLoader classLoader;

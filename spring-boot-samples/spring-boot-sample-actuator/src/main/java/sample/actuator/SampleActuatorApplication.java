@@ -21,6 +21,8 @@ import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.endpoint.Endpoint;
+import org.springframework.boot.endpoint.ReadOperation;
 import org.springframework.context.annotation.Bean;
 
 @SpringBootApplication
@@ -39,6 +41,21 @@ public class SampleActuatorApplication {
 				return Health.up().withDetail("hello", "world").build();
 			}
 		};
+	}
+
+	@Bean
+	public MyEndpoint myEndpoint() {
+		return new MyEndpoint();
+	}
+
+	@Endpoint(id = "my")
+	static class MyEndpoint {
+
+		@ReadOperation
+		public String read() {
+			return "Hello, world!";
+		}
+
 	}
 
 }

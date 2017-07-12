@@ -25,6 +25,7 @@ import org.junit.After;
 import org.junit.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.actuate.autoconfigure.endpoint.infrastructure.EndpointServletWebAutoConfiguration;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.autoconfigure.http.HttpMessageConvertersAutoConfiguration;
@@ -89,7 +90,7 @@ public class ManagementWebSecurityAutoConfigurationTests {
 				ManagementWebSecurityAutoConfiguration.class,
 				JacksonAutoConfiguration.class,
 				HttpMessageConvertersAutoConfiguration.class,
-				EndpointAutoConfiguration.class, EndpointWebMvcAutoConfiguration.class,
+				EndpointAutoConfiguration.class, EndpointServletWebAutoConfiguration.class,
 				PropertyPlaceholderAutoConfiguration.class, AuditAutoConfiguration.class);
 		TestPropertyValues.of("security.basic.enabled:false").applyTo(this.context);
 		this.context.refresh();
@@ -196,7 +197,7 @@ public class ManagementWebSecurityAutoConfigurationTests {
 				ManagementWebSecurityAutoConfiguration.class,
 				JacksonAutoConfiguration.class,
 				HttpMessageConvertersAutoConfiguration.class,
-				EndpointAutoConfiguration.class, EndpointWebMvcAutoConfiguration.class,
+				EndpointAutoConfiguration.class, EndpointServletWebAutoConfiguration.class,
 				WebMvcAutoConfiguration.class, PropertyPlaceholderAutoConfiguration.class,
 				AuditAutoConfiguration.class);
 		this.context.refresh();
@@ -258,7 +259,7 @@ public class ManagementWebSecurityAutoConfigurationTests {
 	@ImportAutoConfiguration({ SecurityAutoConfiguration.class,
 			WebMvcAutoConfiguration.class, ManagementWebSecurityAutoConfiguration.class,
 			JacksonAutoConfiguration.class, HttpMessageConvertersAutoConfiguration.class,
-			EndpointAutoConfiguration.class, EndpointWebMvcAutoConfiguration.class,
+			EndpointAutoConfiguration.class, EndpointServletWebAutoConfiguration.class,
 			PropertyPlaceholderAutoConfiguration.class, AuditAutoConfiguration.class,
 			FallbackWebSecurityAutoConfiguration.class })
 	static class WebConfiguration {

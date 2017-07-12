@@ -24,9 +24,9 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import org.springframework.boot.actuate.autoconfigure.EndpointAutoConfiguration;
-import org.springframework.boot.actuate.autoconfigure.EndpointWebMvcAutoConfiguration;
 import org.springframework.boot.actuate.autoconfigure.EndpointWebMvcManagementContextConfiguration;
 import org.springframework.boot.actuate.autoconfigure.ManagementWebSecurityAutoConfiguration;
+import org.springframework.boot.actuate.autoconfigure.endpoint.infrastructure.EndpointServletWebAutoConfiguration;
 import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.autoconfigure.http.HttpMessageConvertersAutoConfiguration;
 import org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration;
@@ -68,7 +68,7 @@ public class CloudFoundryActuatorAutoConfigurationTests {
 				ManagementWebSecurityAutoConfiguration.class,
 				JacksonAutoConfiguration.class,
 				HttpMessageConvertersAutoConfiguration.class,
-				EndpointAutoConfiguration.class, EndpointWebMvcAutoConfiguration.class,
+				EndpointAutoConfiguration.class, EndpointServletWebAutoConfiguration.class,
 				PropertyPlaceholderAutoConfiguration.class,
 				RestTemplateAutoConfiguration.class,
 				EndpointWebMvcManagementContextConfiguration.class,

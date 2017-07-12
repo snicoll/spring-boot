@@ -21,8 +21,8 @@ import org.junit.Test;
 
 import org.springframework.boot.actuate.autoconfigure.AuditAutoConfiguration;
 import org.springframework.boot.actuate.autoconfigure.EndpointAutoConfiguration;
-import org.springframework.boot.actuate.autoconfigure.EndpointWebMvcAutoConfiguration;
 import org.springframework.boot.actuate.autoconfigure.ManagementWebSecurityAutoConfiguration;
+import org.springframework.boot.actuate.autoconfigure.endpoint.infrastructure.EndpointServletWebAutoConfiguration;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.autoconfigure.data.rest.RepositoryRestMvcAutoConfiguration;
@@ -228,7 +228,7 @@ public class MvcEndpointIntegrationTests {
 
 	@ImportAutoConfiguration({ JacksonAutoConfiguration.class,
 			HttpMessageConvertersAutoConfiguration.class, EndpointAutoConfiguration.class,
-			EndpointWebMvcAutoConfiguration.class, AuditAutoConfiguration.class,
+			EndpointServletWebAutoConfiguration.class, AuditAutoConfiguration.class,
 			PropertyPlaceholderAutoConfiguration.class, WebMvcAutoConfiguration.class,
 			AuditAutoConfiguration.class })
 	static class DefaultConfiguration {

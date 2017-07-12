@@ -35,9 +35,10 @@ import org.junit.runner.RunWith;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.actuate.autoconfigure.endpoint.infrastructure.EndpointServletWebAutoConfiguration;
 import org.springframework.boot.actuate.endpoint.Endpoint;
 import org.springframework.boot.actuate.endpoint.mvc.EndpointHandlerMapping;
-import org.springframework.boot.actuate.endpoint.mvc.EndpointHandlerMappingCustomizer;
+import org.springframework.boot.actuate.endpoint.mvc.WebEndpointHandlerMappingCustomizer;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
@@ -103,7 +104,7 @@ public class EndpointMvcIntegrationTests {
 	@Configuration
 	@MinimalWebConfiguration
 	@Import({ JacksonAutoConfiguration.class, EndpointAutoConfiguration.class,
-			EndpointWebMvcAutoConfiguration.class, AuditAutoConfiguration.class })
+			EndpointServletWebAutoConfiguration.class, AuditAutoConfiguration.class })
 	@RestController
 	protected static class Application {
 
@@ -133,8 +134,8 @@ public class EndpointMvcIntegrationTests {
 		}
 
 		@Bean
-		public EndpointHandlerMappingCustomizer mappingCustomizer() {
-			return new EndpointHandlerMappingCustomizer() {
+		public WebEndpointHandlerMappingCustomizer mappingCustomizer() {
+			return new WebEndpointHandlerMappingCustomizer() {
 
 				@Override
 				public void customize(EndpointHandlerMapping mapping) {

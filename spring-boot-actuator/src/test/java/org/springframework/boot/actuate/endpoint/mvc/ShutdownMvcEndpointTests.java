@@ -27,7 +27,7 @@ import org.mockito.stubbing.Answer;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.actuate.autoconfigure.EndpointWebMvcAutoConfiguration;
+import org.springframework.boot.actuate.autoconfigure.endpoint.infrastructure.EndpointServletWebAutoConfiguration;
 import org.springframework.boot.actuate.endpoint.ShutdownEndpoint;
 import org.springframework.boot.autoconfigure.http.HttpMessageConvertersAutoConfiguration;
 import org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration;
@@ -95,7 +95,7 @@ public class ShutdownMvcEndpointTests {
 	@Configuration
 	@Import({ JacksonAutoConfiguration.class,
 			HttpMessageConvertersAutoConfiguration.class,
-			EndpointWebMvcAutoConfiguration.class, WebMvcAutoConfiguration.class })
+			EndpointServletWebAutoConfiguration.class, WebMvcAutoConfiguration.class })
 	public static class TestConfiguration {
 
 		@Bean

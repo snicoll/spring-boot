@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.boot.actuate.autoconfigure;
+package org.springframework.boot.actuate.autoconfigure.endpoint.infrastructure;
 
 import java.lang.reflect.Modifier;
 
@@ -23,14 +23,14 @@ import javax.servlet.Servlet;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.springframework.beans.BeansException;
 import org.springframework.beans.FatalBeanException;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.RootBeanDefinition;
-import org.springframework.boot.actuate.endpoint.Endpoint;
+import org.springframework.boot.actuate.autoconfigure.EndpointWebMvcChildContextConfiguration;
+import org.springframework.boot.actuate.autoconfigure.ManagementServerProperties;
 import org.springframework.boot.actuate.endpoint.mvc.ManagementServletContext;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -51,12 +51,12 @@ import org.springframework.boot.autoconfigure.web.servlet.ServletWebServerFactor
 import org.springframework.boot.autoconfigure.web.servlet.WebMvcAutoConfiguration;
 import org.springframework.boot.context.event.ApplicationFailedEvent;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.endpoint.Endpoint;
 import org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext;
 import org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext;
 import org.springframework.boot.web.servlet.filter.ApplicationContextHeaderFilter;
 import org.springframework.boot.web.servlet.server.ServletWebServerFactory;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -75,11 +75,12 @@ import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.DispatcherServlet;
 
 /**
- * {@link EnableAutoConfiguration Auto-configuration} to enable Spring MVC to handle
- * {@link Endpoint} requests. If the {@link ManagementServerProperties} specifies a
- * different port to {@link ServerProperties} a new child context is created, otherwise it
- * is assumed that endpoint requests will be mapped and handled via an already registered
- * {@link DispatcherServlet}.
+ * {@link EnableAutoConfiguration Auto-configuration} to enable Servlet-based (Spring MVC
+ * or Jersey) handling of {@link Endpoint} requests. If the
+ * {@link ManagementServerProperties} specifies a different port to
+ * {@link ServerProperties} a new child context is created, otherwise it is assumed that
+ * endpoint requests will be mapped and handled via an already registered
+ * {@link DispatcherServlet} or Jersey filter or servlet.
  *
  * @author Dave Syer
  * @author Phillip Webb
@@ -91,30 +92,23 @@ import org.springframework.web.servlet.DispatcherServlet;
  * @author Madhura Bhave
  */
 @Configuration
-@ConditionalOnClass({ Servlet.class, DispatcherServlet.class })
+@ConditionalOnClass(Servlet.class)
 @ConditionalOnWebApplication(type = Type.SERVLET)
 @EnableConfigurationProperties(ManagementServerProperties.class)
 @AutoConfigureAfter({ PropertyPlaceholderAutoConfiguration.class,
 		ServletWebServerFactoryAutoConfiguration.class, WebMvcAutoConfiguration.class,
 		RepositoryRestMvcAutoConfiguration.class, HypermediaAutoConfiguration.class,
-		HttpMessageConvertersAutoConfiguration.class })
-public class EndpointWebMvcAutoConfiguration
-		implements ApplicationContextAware, SmartInitializingSingleton {
+		HttpMessageConvertersAutoConfiguration.class,
+		EndpointInfrastructureAutoConfiguration.class })
+public class EndpointServletWebAutoConfiguration implements SmartInitializingSingleton {
 
 	private static final Log logger = LogFactory
-			.getLog(EndpointWebMvcAutoConfiguration.class);
+			.getLog(EndpointServletWebAutoConfiguration.class);
 
-	private ApplicationContext applicationContext;
+	private final ApplicationContext applicationContext;
 
-	@Override
-	public void setApplicationContext(ApplicationContext applicationContext)
-			throws BeansException {
+	public EndpointServletWebAutoConfiguration(ApplicationContext applicationContext) {
 		this.applicationContext = applicationContext;
-	}
-
-	@Bean
-	public ManagementContextResolver managementContextResolver() {
-		return new ManagementContextResolver(this.applicationContext);
 	}
 
 	@Bean
@@ -132,12 +126,12 @@ public class EndpointWebMvcAutoConfiguration
 
 	@Override
 	public void afterSingletonsInstantiated() {
-		ManagementServerPort managementPort = ManagementServerPort.DIFFERENT;
+		ManagementPortType managementPort = ManagementPortType.DIFFERENT;
 		Environment environment = this.applicationContext.getEnvironment();
 		if (this.applicationContext instanceof WebApplicationContext) {
-			managementPort = ManagementServerPort.get(environment);
+			managementPort = ManagementPortType.get(environment);
 		}
-		if (managementPort == ManagementServerPort.DIFFERENT) {
+		if (managementPort == ManagementPortType.DIFFERENT) {
 			if (this.applicationContext instanceof ServletWebServerApplicationContext
 					&& ((ServletWebServerApplicationContext) this.applicationContext)
 							.getWebServer() != null) {
@@ -149,7 +143,7 @@ public class EndpointWebMvcAutoConfiguration
 						+ "through JMX)");
 			}
 		}
-		if (managementPort == ManagementServerPort.SAME) {
+		if (managementPort == ManagementPortType.SAME) {
 			if (environment.getProperty("management.ssl.enabled", Boolean.class, false)) {
 				throw new IllegalStateException(
 						"Management-specific SSL cannot be configured as the management "
@@ -176,7 +170,6 @@ public class EndpointWebMvcAutoConfiguration
 		CloseManagementContextListener.addIfPossible(this.applicationContext,
 				childContext);
 		childContext.refresh();
-		managementContextResolver().setApplicationContext(childContext);
 	}
 
 	private void registerServletWebServerFactory(
@@ -247,8 +240,8 @@ public class EndpointWebMvcAutoConfiguration
 	}
 
 	@Configuration
-	@Conditional(OnManagementMvcCondition.class)
-	@Import(ManagementContextConfigurationsImportSelector.class)
+	@Conditional(OnManagementServletWebCondition.class)
+	@Import(ManagementContextConfigurationImportSelector.class)
 	protected static class EndpointWebMvcConfiguration {
 
 	}
@@ -309,7 +302,7 @@ public class EndpointWebMvcAutoConfiguration
 
 	}
 
-	private static class OnManagementMvcCondition extends SpringBootCondition
+	private static class OnManagementServletWebCondition extends SpringBootCondition
 			implements ConfigurationCondition {
 
 		@Override
@@ -321,39 +314,17 @@ public class EndpointWebMvcAutoConfiguration
 		public ConditionOutcome getMatchOutcome(ConditionContext context,
 				AnnotatedTypeMetadata metadata) {
 			ConditionMessage.Builder message = ConditionMessage
-					.forCondition("Management Server MVC");
+					.forCondition("Management Servlet Web");
 			if (!(context.getResourceLoader() instanceof WebApplicationContext)) {
 				return ConditionOutcome
 						.noMatch(message.because("non WebApplicationContext"));
 			}
-			ManagementServerPort port = ManagementServerPort
+			ManagementPortType port = ManagementPortType
 					.get(context.getEnvironment());
-			if (port == ManagementServerPort.SAME) {
+			if (port == ManagementPortType.SAME) {
 				return ConditionOutcome.match(message.because("port is same"));
 			}
 			return ConditionOutcome.noMatch(message.because("port is not same"));
-		}
-
-	}
-
-	protected enum ManagementServerPort {
-
-		DISABLE, SAME, DIFFERENT;
-
-		public static ManagementServerPort get(Environment environment) {
-			Integer serverPort = getPortProperty(environment, "server.");
-			Integer managementPort = getPortProperty(environment, "management.");
-			if (managementPort != null && managementPort < 0) {
-				return DISABLE;
-			}
-			return ((managementPort == null)
-					|| (serverPort == null && managementPort.equals(8080))
-					|| (managementPort != 0 && managementPort.equals(serverPort)) ? SAME
-							: DIFFERENT);
-		}
-
-		private static Integer getPortProperty(Environment environment, String prefix) {
-			return environment.getProperty(prefix + "port", Integer.class);
 		}
 
 	}

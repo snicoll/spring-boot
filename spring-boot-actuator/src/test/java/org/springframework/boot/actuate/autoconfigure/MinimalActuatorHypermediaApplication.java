@@ -22,6 +22,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.springframework.boot.actuate.autoconfigure.endpoint.infrastructure.EndpointServletWebAutoConfiguration;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.autoconfigure.hateoas.HypermediaAutoConfiguration;
@@ -47,7 +48,7 @@ import org.springframework.context.annotation.Configuration;
 		DispatcherServletAutoConfiguration.class, JacksonAutoConfiguration.class,
 		HttpMessageConvertersAutoConfiguration.class, WebMvcAutoConfiguration.class,
 		HypermediaAutoConfiguration.class, EndpointAutoConfiguration.class,
-		EndpointWebMvcAutoConfiguration.class, ErrorMvcAutoConfiguration.class,
+		EndpointServletWebAutoConfiguration.class, ErrorMvcAutoConfiguration.class,
 		PropertyPlaceholderAutoConfiguration.class, AuditAutoConfiguration.class })
 public @interface MinimalActuatorHypermediaApplication {
 

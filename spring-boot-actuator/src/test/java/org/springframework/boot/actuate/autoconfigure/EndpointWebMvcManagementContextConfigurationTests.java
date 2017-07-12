@@ -22,6 +22,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.springframework.boot.actuate.autoconfigure.endpoint.infrastructure.EndpointServletWebAutoConfiguration;
 import org.springframework.boot.actuate.endpoint.mvc.EndpointHandlerMapping;
 import org.springframework.boot.actuate.endpoint.mvc.MvcEndpointSecurityInterceptor;
 import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
@@ -53,7 +54,7 @@ public class EndpointWebMvcManagementContextConfigurationTests {
 		this.context.register(SecurityAutoConfiguration.class,
 				WebMvcAutoConfiguration.class, JacksonAutoConfiguration.class,
 				HttpMessageConvertersAutoConfiguration.class,
-				EndpointAutoConfiguration.class, EndpointWebMvcAutoConfiguration.class,
+				EndpointAutoConfiguration.class, EndpointServletWebAutoConfiguration.class,
 				PropertyPlaceholderAutoConfiguration.class,
 				RestTemplateAutoConfiguration.class,
 				EndpointWebMvcManagementContextConfiguration.class);

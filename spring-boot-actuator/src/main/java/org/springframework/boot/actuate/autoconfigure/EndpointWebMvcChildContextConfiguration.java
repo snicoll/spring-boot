@@ -32,10 +32,9 @@ import org.springframework.beans.factory.BeanFactoryUtils;
 import org.springframework.beans.factory.HierarchicalBeanFactory;
 import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.actuate.endpoint.mvc.EndpointHandlerMapping;
+import org.springframework.boot.actuate.autoconfigure.endpoint.infrastructure.EndpointServletWebAutoConfiguration;
+import org.springframework.boot.actuate.autoconfigure.endpoint.infrastructure.ManagementContextConfigurationImportSelector;
 import org.springframework.boot.actuate.endpoint.mvc.ManagementErrorEndpoint;
-import org.springframework.boot.actuate.endpoint.mvc.MvcEndpoint;
-import org.springframework.boot.actuate.endpoint.mvc.MvcEndpoints;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.SearchStrategy;
@@ -44,6 +43,7 @@ import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.autoconfigure.web.servlet.DefaultServletWebServerFactoryCustomizer;
 import org.springframework.boot.autoconfigure.web.servlet.DispatcherServletAutoConfiguration;
 import org.springframework.boot.autoconfigure.web.servlet.error.ErrorAttributes;
+import org.springframework.boot.endpoint.web.mvc.WebEndpointHandlerMapping;
 import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
 import org.springframework.boot.web.embedded.undertow.UndertowServletWebServerFactory;
 import org.springframework.boot.web.server.ErrorPage;
@@ -67,18 +67,18 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 /**
- * Configuration triggered from {@link EndpointWebMvcAutoConfiguration} when a new
+ * Configuration triggered from {@link EndpointServletWebAutoConfiguration} when a new
  * {@link WebServer} running on a different port is required.
  *
  * @author Dave Syer
  * @author Stephane Nicoll
  * @author Andy Wilkinson
  * @author Eddú Meléndez
- * @see EndpointWebMvcAutoConfiguration
+ * @see EndpointServletWebAutoConfiguration
  */
 @Configuration
 @EnableWebMvc
-@Import(ManagementContextConfigurationsImportSelector.class)
+@Import(ManagementContextConfigurationImportSelector.class)
 public class EndpointWebMvcChildContextConfiguration {
 
 	@Bean(name = DispatcherServletAutoConfiguration.DEFAULT_DISPATCHER_SERVLET_BEAN_NAME)
@@ -135,14 +135,14 @@ public class EndpointWebMvcChildContextConfiguration {
 	}
 
 	/**
-	 * Configuration to add {@link HandlerMapping} for {@link MvcEndpoint}s.
+	 * Configuration to add {@link HandlerMapping} for web endpoints exposed using Spring
+	 * MVC.
 	 */
 	@Configuration
 	protected static class EndpointHandlerMappingConfiguration {
 
 		@Autowired
-		public void handlerMapping(MvcEndpoints endpoints,
-				ListableBeanFactory beanFactory, EndpointHandlerMapping mapping) {
+		public void handlerMapping(WebEndpointHandlerMapping mapping) {
 			// In a child context we definitely want to see the parent endpoints
 			mapping.setDetectHandlerMethodsInAncestorContexts(true);
 		}

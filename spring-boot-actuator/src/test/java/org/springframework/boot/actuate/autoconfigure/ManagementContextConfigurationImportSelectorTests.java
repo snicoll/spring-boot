@@ -21,17 +21,18 @@ import java.util.List;
 
 import org.junit.Test;
 
+import org.springframework.boot.actuate.autoconfigure.endpoint.infrastructure.ManagementContextConfigurationImportSelector;
 import org.springframework.core.annotation.Order;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Tests for {@link ManagementContextConfigurationsImportSelector}.
+ * Tests for {@link ManagementContextConfigurationImportSelector}.
  *
  * @author Phillip Webb
  * @author Andy Wilkinson
  */
-public class ManagementContextConfigurationsImportSelectorTests {
+public class ManagementContextConfigurationImportSelectorTests {
 
 	@Test
 	public void selectImportsShouldOrderResult() throws Exception {
@@ -42,7 +43,7 @@ public class ManagementContextConfigurationsImportSelectorTests {
 	}
 
 	private static class TestManagementContextConfigurationsImportSelector
-			extends ManagementContextConfigurationsImportSelector {
+			extends ManagementContextConfigurationImportSelector {
 
 		@Override
 		protected List<String> loadFactoryNames() {

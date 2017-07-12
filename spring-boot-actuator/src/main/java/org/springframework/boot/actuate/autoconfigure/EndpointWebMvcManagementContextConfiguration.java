@@ -18,7 +18,6 @@ package org.springframework.boot.actuate.autoconfigure;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.actuate.audit.AuditEventRepository;
@@ -30,24 +29,23 @@ import org.springframework.boot.actuate.endpoint.LoggersEndpoint;
 import org.springframework.boot.actuate.endpoint.MetricsEndpoint;
 import org.springframework.boot.actuate.endpoint.ShutdownEndpoint;
 import org.springframework.boot.actuate.endpoint.mvc.AuditEventsMvcEndpoint;
-import org.springframework.boot.actuate.endpoint.mvc.EndpointHandlerMapping;
-import org.springframework.boot.actuate.endpoint.mvc.EndpointHandlerMappingCustomizer;
 import org.springframework.boot.actuate.endpoint.mvc.EnvironmentMvcEndpoint;
 import org.springframework.boot.actuate.endpoint.mvc.HealthMvcEndpoint;
 import org.springframework.boot.actuate.endpoint.mvc.HeapdumpMvcEndpoint;
 import org.springframework.boot.actuate.endpoint.mvc.LogFileMvcEndpoint;
 import org.springframework.boot.actuate.endpoint.mvc.LoggersMvcEndpoint;
 import org.springframework.boot.actuate.endpoint.mvc.MetricsMvcEndpoint;
-import org.springframework.boot.actuate.endpoint.mvc.MvcEndpoint;
-import org.springframework.boot.actuate.endpoint.mvc.MvcEndpointSecurityInterceptor;
-import org.springframework.boot.actuate.endpoint.mvc.MvcEndpoints;
 import org.springframework.boot.actuate.endpoint.mvc.ShutdownMvcEndpoint;
+import org.springframework.boot.actuate.endpoint.mvc.WebEndpointHandlerMappingCustomizer;
 import org.springframework.boot.autoconfigure.condition.ConditionMessage;
 import org.springframework.boot.autoconfigure.condition.ConditionOutcome;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.SpringBootCondition;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.endpoint.web.WebEndpointDiscoverer;
+import org.springframework.boot.endpoint.web.mvc.WebEndpointHandlerMapping;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ConditionContext;
 import org.springframework.context.annotation.Conditional;
@@ -56,6 +54,7 @@ import org.springframework.core.type.AnnotatedTypeMetadata;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.servlet.DispatcherServlet;
 
 /**
  * Configuration to expose {@link Endpoint} instances over Spring MVC.
@@ -69,6 +68,7 @@ import org.springframework.web.cors.CorsConfiguration;
 @ManagementContextConfiguration
 @EnableConfigurationProperties({ HealthMvcEndpointProperties.class,
 		EndpointCorsProperties.class })
+@ConditionalOnClass(DispatcherServlet.class)
 public class EndpointWebMvcManagementContextConfiguration {
 
 	private final HealthMvcEndpointProperties healthMvcEndpointProperties;
@@ -77,39 +77,33 @@ public class EndpointWebMvcManagementContextConfiguration {
 
 	private final EndpointCorsProperties corsProperties;
 
-	private final List<EndpointHandlerMappingCustomizer> mappingCustomizers;
+	private final List<WebEndpointHandlerMappingCustomizer> mappingCustomizers;
 
 	public EndpointWebMvcManagementContextConfiguration(
 			HealthMvcEndpointProperties healthMvcEndpointProperties,
 			ManagementServerProperties managementServerProperties,
 			EndpointCorsProperties corsProperties,
-			ObjectProvider<List<EndpointHandlerMappingCustomizer>> mappingCustomizers) {
+			ObjectProvider<List<WebEndpointHandlerMappingCustomizer>> mappingCustomizers) {
 		this.healthMvcEndpointProperties = healthMvcEndpointProperties;
 		this.managementServerProperties = managementServerProperties;
 		this.corsProperties = corsProperties;
-		List<EndpointHandlerMappingCustomizer> providedCustomizers = mappingCustomizers
+		List<WebEndpointHandlerMappingCustomizer> providedCustomizers = mappingCustomizers
 				.getIfAvailable();
 		this.mappingCustomizers = providedCustomizers == null
-				? Collections.<EndpointHandlerMappingCustomizer>emptyList()
+				? Collections.<WebEndpointHandlerMappingCustomizer>emptyList()
 				: providedCustomizers;
 	}
 
 	@Bean
 	@ConditionalOnMissingBean
-	public EndpointHandlerMapping endpointHandlerMapping() {
-		Set<MvcEndpoint> endpoints = mvcEndpoints().getEndpoints();
-		CorsConfiguration corsConfiguration = getCorsConfiguration(this.corsProperties);
-		EndpointHandlerMapping mapping = new EndpointHandlerMapping(endpoints,
-				corsConfiguration);
-		mapping.setPrefix(this.managementServerProperties.getContextPath());
-		MvcEndpointSecurityInterceptor securityInterceptor = new MvcEndpointSecurityInterceptor(
-				this.managementServerProperties.getSecurity().isEnabled(),
-				this.managementServerProperties.getSecurity().getRoles());
-		mapping.setSecurityInterceptor(securityInterceptor);
-		for (EndpointHandlerMappingCustomizer customizer : this.mappingCustomizers) {
-			customizer.customize(mapping);
+	public WebEndpointHandlerMapping webEndpointHandlerMapping(
+			WebEndpointDiscoverer discoverer) {
+		WebEndpointHandlerMapping handlerMapping = new WebEndpointHandlerMapping(
+				discoverer.discoverEndpoints());
+		for (WebEndpointHandlerMappingCustomizer customizer : this.mappingCustomizers) {
+			customizer.customize(handlerMapping);
 		}
-		return mapping;
+		return handlerMapping;
 	}
 
 	private CorsConfiguration getCorsConfiguration(EndpointCorsProperties properties) {
@@ -134,12 +128,6 @@ public class EndpointWebMvcManagementContextConfiguration {
 			configuration.setAllowCredentials(properties.getAllowCredentials());
 		}
 		return configuration;
-	}
-
-	@Bean
-	@ConditionalOnMissingBean
-	public MvcEndpoints mvcEndpoints() {
-		return new MvcEndpoints();
 	}
 
 	@Bean

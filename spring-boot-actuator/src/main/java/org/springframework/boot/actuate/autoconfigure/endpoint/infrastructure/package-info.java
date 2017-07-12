@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,21 +14,8 @@
  * limitations under the License.
  */
 
-package org.springframework.boot.actuate.endpoint.mvc;
-
 /**
- * Callback for customizing the {@link EndpointHandlerMapping} at configuration time.
- *
- * @author Dave Syer
- * @since 1.2.0
+ * {@link org.springframework.boot.autoconfigure.EnableAutoConfiguration
+ * Auto-configuration} for the Actuator's endpoint infrastructure.
  */
-@FunctionalInterface
-public interface EndpointHandlerMappingCustomizer {
-
-	/**
-	 * Customize the specified {@link EndpointHandlerMapping}.
-	 * @param mapping the {@link EndpointHandlerMapping} to customize
-	 */
-	void customize(EndpointHandlerMapping mapping);
-
-}
+package org.springframework.boot.actuate.autoconfigure.endpoint.infrastructure;

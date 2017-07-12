@@ -25,6 +25,7 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
+import org.springframework.boot.actuate.autoconfigure.endpoint.infrastructure.EndpointServletWebAutoConfiguration;
 import org.springframework.boot.actuate.endpoint.AutoConfigurationReportEndpoint;
 import org.springframework.boot.actuate.endpoint.BeansEndpoint;
 import org.springframework.boot.actuate.endpoint.ConfigurationPropertiesReportEndpoint;
@@ -144,7 +145,7 @@ public class MvcEndpointPathConfigurationTests {
 	@Configuration
 	@ImportAutoConfiguration({ EndpointAutoConfiguration.class,
 			HttpMessageConvertersAutoConfiguration.class, AuditAutoConfiguration.class,
-			EndpointWebMvcAutoConfiguration.class, JolokiaAutoConfiguration.class })
+			EndpointServletWebAutoConfiguration.class, JolokiaAutoConfiguration.class })
 
 	protected static class TestConfiguration {
 

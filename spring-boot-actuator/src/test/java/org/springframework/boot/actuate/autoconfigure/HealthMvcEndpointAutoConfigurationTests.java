@@ -24,6 +24,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.junit.After;
 import org.junit.Test;
 
+import org.springframework.boot.actuate.autoconfigure.endpoint.infrastructure.EndpointServletWebAutoConfiguration;
 import org.springframework.boot.actuate.endpoint.HealthEndpoint;
 import org.springframework.boot.actuate.endpoint.mvc.HealthMvcEndpoint;
 import org.springframework.boot.actuate.health.AbstractHealthIndicator;
@@ -46,7 +47,7 @@ import org.springframework.web.context.support.AnnotationConfigWebApplicationCon
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Tests for {@link EndpointWebMvcAutoConfiguration} of the {@link HealthMvcEndpoint}.
+ * Tests for {@link EndpointServletWebAutoConfiguration} of the {@link HealthMvcEndpoint}.
  *
  * @author Dave Syer
  * @author Andy Wilkinson
@@ -119,7 +120,7 @@ public class HealthMvcEndpointAutoConfigurationTests {
 	@ImportAutoConfiguration({ SecurityAutoConfiguration.class,
 			JacksonAutoConfiguration.class, WebMvcAutoConfiguration.class,
 			HttpMessageConvertersAutoConfiguration.class, AuditAutoConfiguration.class,
-			EndpointAutoConfiguration.class, EndpointWebMvcAutoConfiguration.class })
+			EndpointAutoConfiguration.class, EndpointServletWebAutoConfiguration.class })
 	static class TestConfiguration {
 
 		@Bean
@@ -133,7 +134,7 @@ public class HealthMvcEndpointAutoConfigurationTests {
 	@ImportAutoConfiguration({ SecurityAutoConfiguration.class,
 			JacksonAutoConfiguration.class, WebMvcAutoConfiguration.class,
 			HttpMessageConvertersAutoConfiguration.class, AuditAutoConfiguration.class,
-			EndpointAutoConfiguration.class, EndpointWebMvcAutoConfiguration.class })
+			EndpointAutoConfiguration.class, EndpointServletWebAutoConfiguration.class })
 	static class TestHealthMvcEndpointConfiguration {
 
 		@Bean
