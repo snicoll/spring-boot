@@ -63,10 +63,10 @@ public class WebEndpointDiscovererTests {
 
 	@Test
 	public void webExtensionMustHaveEndpoint() {
-		load(TestWebEndpointConfiguration.class, (discoverer) -> {
+		load(TestWebEndpointExtensionConfiguration.class, (discoverer) -> {
 			this.thrown.expect(IllegalStateException.class);
 			this.thrown.expectMessage("Invalid extension");
-			this.thrown.expectMessage(TestWebEndpoint.class.getName());
+			this.thrown.expectMessage(TestWebEndpointExtension.class.getName());
 			this.thrown.expectMessage("no endpoint found");
 			this.thrown.expectMessage(TestEndpoint.class.getName());
 			discoverer.discoverEndpoints();
@@ -74,8 +74,8 @@ public class WebEndpointDiscovererTests {
 	}
 
 	@Test
-	public void oneOperationIsDiscoveredWhenWebEndpointOverridesOperation() {
-		load(OverriddenOperationWebEndpointConfiguration.class, (discoverer) -> {
+	public void oneOperationIsDiscoveredWhenExtensionOverridesOperation() {
+		load(OverriddenOperationWebEndpointExtensionConfiguration.class, (discoverer) -> {
 			Collection<EndpointInfo<WebEndpointOperation>> endpoints = discoverer
 					.discoverEndpoints();
 			assertThat(endpoints).hasSize(1);
@@ -87,7 +87,7 @@ public class WebEndpointDiscovererTests {
 	}
 
 	@Test
-	public void twoOperationsAreDiscoveredWhenWebEndpointAddsOperation() {
+	public void twoOperationsAreDiscoveredWhenExtensionAddsOperation() {
 		load(AdditionalOperationWebEndpointConfiguration.class, (discoverer) -> {
 			Collection<EndpointInfo<WebEndpointOperation>> endpoints = discoverer
 					.discoverEndpoints();
@@ -107,7 +107,7 @@ public class WebEndpointDiscovererTests {
 			this.thrown.expect(IllegalStateException.class);
 			this.thrown.expectMessage("Found two extensions for the same endpoint");
 			this.thrown.expectMessage(TestEndpoint.class.getName());
-			this.thrown.expectMessage(TestWebEndpoint.class.getName());
+			this.thrown.expectMessage(TestWebEndpointExtension.class.getName());
 			discoverer.discoverEndpoints();
 		});
 	}
@@ -133,7 +133,7 @@ public class WebEndpointDiscovererTests {
 
 	@Test
 	public void twoOperationsOnSameEndpointClashWhenSelectorsHaveDifferentNames() {
-		load(ClashingSelectorsWebEndpointConfiguration.class, (discoverer) -> {
+		load(ClashingSelectorsWebEndpointExtensionConfiguration.class, (discoverer) -> {
 			this.thrown.expect(IllegalStateException.class);
 			this.thrown.expectMessage(
 					"Found multiple web operations with matching request predicates:");
@@ -218,7 +218,7 @@ public class WebEndpointDiscovererTests {
 	}
 
 	@WebEndpointExtension(endpoint = TestEndpoint.class)
-	static class TestWebEndpoint {
+	static class TestWebEndpointExtension {
 
 		@ReadOperation
 		public Object getAll() {
@@ -252,7 +252,7 @@ public class WebEndpointDiscovererTests {
 	}
 
 	@WebEndpointExtension(endpoint = TestEndpoint.class)
-	static class OverriddenOperationWebEndpoint {
+	static class OverriddenOperationWebEndpointExtension {
 
 		@ReadOperation
 		public Object getAll() {
@@ -262,7 +262,7 @@ public class WebEndpointDiscovererTests {
 	}
 
 	@WebEndpointExtension(endpoint = TestEndpoint.class)
-	static class AdditionalOperationWebEndpoint {
+	static class AdditionalOperationWebEndpointExtension {
 
 		@ReadOperation
 		public Object getOne(@Selector String id) {
@@ -287,7 +287,7 @@ public class WebEndpointDiscovererTests {
 	}
 
 	@WebEndpointExtension(endpoint = TestEndpoint.class)
-	static class ClashingOperationsWebEndpoint {
+	static class ClashingOperationsWebEndpointExtension {
 
 		@ReadOperation
 		public Object getAll() {
@@ -302,7 +302,7 @@ public class WebEndpointDiscovererTests {
 	}
 
 	@WebEndpointExtension(endpoint = TestEndpoint.class)
-	static class ClashingSelectorsWebEndpoint {
+	static class ClashingSelectorsWebEndpointExtension {
 
 		@ReadOperation
 		public Object readOne(@Selector String oneA, @Selector String oneB) {
@@ -317,11 +317,11 @@ public class WebEndpointDiscovererTests {
 	}
 
 	@Configuration
-	static class TestWebEndpointConfiguration {
+	static class TestWebEndpointExtensionConfiguration {
 
 		@Bean
-		public TestWebEndpoint testEndpoint() {
-			return new TestWebEndpoint();
+		public TestWebEndpointExtension endpointExtension() {
+			return new TestWebEndpointExtension();
 		}
 
 	}
@@ -330,29 +330,29 @@ public class WebEndpointDiscovererTests {
 	static class ClashingOperationsEndpointConfiguration {
 
 		@Bean
-		public ClashingOperationsEndpoint testEndpoint() {
+		public ClashingOperationsEndpoint clashingOperationsEndpoint() {
 			return new ClashingOperationsEndpoint();
 		}
 
 	}
 
 	@Configuration
-	static class ClashingOperationsWebEndpointConfiguration {
+	static class ClashingOperationsWebEndpointExtensionConfiguration {
 
 		@Bean
-		public ClashingOperationsWebEndpoint testEndpoint() {
-			return new ClashingOperationsWebEndpoint();
+		public ClashingOperationsWebEndpointExtension clashingOperationsExtension() {
+			return new ClashingOperationsWebEndpointExtension();
 		}
 
 	}
 
 	@Configuration
 	@Import(TestEndpointConfiguration.class)
-	static class OverriddenOperationWebEndpointConfiguration {
+	static class OverriddenOperationWebEndpointExtensionConfiguration {
 
 		@Bean
-		public OverriddenOperationWebEndpoint overriddenOperationWebEndpoint() {
-			return new OverriddenOperationWebEndpoint();
+		public OverriddenOperationWebEndpointExtension overriddenOperationExtension() {
+			return new OverriddenOperationWebEndpointExtension();
 		}
 
 	}
@@ -362,8 +362,8 @@ public class WebEndpointDiscovererTests {
 	static class AdditionalOperationWebEndpointConfiguration {
 
 		@Bean
-		public AdditionalOperationWebEndpoint additionalOperationWebEndpoint() {
-			return new AdditionalOperationWebEndpoint();
+		public AdditionalOperationWebEndpointExtension additionalOperationExtension() {
+			return new AdditionalOperationWebEndpointExtension();
 		}
 
 	}
@@ -387,14 +387,15 @@ public class WebEndpointDiscovererTests {
 		}
 
 		@Bean
-		public TestWebEndpoint testExtensionOne() {
-			return new TestWebEndpoint();
+		public TestWebEndpointExtension testExtensionOne() {
+			return new TestWebEndpointExtension();
 		}
 
 		@Bean
-		public TestWebEndpoint testExtensionTwo() {
-			return new TestWebEndpoint();
+		public TestWebEndpointExtension testExtensionTwo() {
+			return new TestWebEndpointExtension();
 		}
+
 	}
 
 	@Configuration
@@ -409,10 +410,11 @@ public class WebEndpointDiscovererTests {
 		public TestEndpoint testEndpointOne() {
 			return new TestEndpoint();
 		}
+
 	}
 
 	@Configuration
-	static class ClashingSelectorsWebEndpointConfiguration {
+	static class ClashingSelectorsWebEndpointExtensionConfiguration {
 
 		@Bean
 		public TestEndpoint testEndpoint() {
@@ -420,8 +422,8 @@ public class WebEndpointDiscovererTests {
 		}
 
 		@Bean
-		public ClashingSelectorsWebEndpoint clashingSelectorsWebEndpoint() {
-			return new ClashingSelectorsWebEndpoint();
+		public ClashingSelectorsWebEndpointExtension clashingSelectorsExtension() {
+			return new ClashingSelectorsWebEndpointExtension();
 		}
 
 	}

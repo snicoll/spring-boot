@@ -39,6 +39,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Tests for {@link EndpointDiscoverer}.
  *
  * @author Andy Wilkinson
+ * @author Stephane Nicoll
  */
 public class EndpointDiscovererTests {
 
@@ -47,9 +48,8 @@ public class EndpointDiscovererTests {
 
 	@Test
 	public void discoverWorksWhenThereAreNoEndpoints() {
-		load(EmptyConfiguration.class, (context) ->
-			assertThat(new TestEndpointDiscoverer(context).discoverEndpoints().isEmpty())
-		);
+		load(EmptyConfiguration.class, (context) -> assertThat(
+				new TestEndpointDiscoverer(context).discoverEndpoints().isEmpty()));
 	}
 
 	@Test
@@ -174,18 +174,18 @@ public class EndpointDiscovererTests {
 
 		@Override
 		public Collection<EndpointInfo<TestEndpointOperation>> discoverEndpoints() {
-			return discoverGenericEndpoints().values();
+			return doDiscoverEndpoints(null, null);
 		}
 
 		private static EndpointOperationFactory<TestEndpointOperation> endpointOperationFactory() {
 			return new EndpointOperationFactory<TestEndpointOperation>() {
 
 				@Override
-				public TestEndpointOperation createOperation(
-						String endpointId,
+				public TestEndpointOperation createOperation(String endpointId,
 						AnnotationAttributes operationAttributes, Object target,
 						Method operationMethod, EndpointOperationType operationType) {
-					return new TestEndpointOperation(operationType, null, operationMethod);
+					return new TestEndpointOperation(operationType, null,
+							operationMethod);
 				}
 			};
 		}
