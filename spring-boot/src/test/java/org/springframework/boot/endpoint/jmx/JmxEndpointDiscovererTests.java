@@ -27,7 +27,6 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import org.springframework.boot.endpoint.Endpoint;
-import org.springframework.boot.endpoint.EndpointDiscoverer;
 import org.springframework.boot.endpoint.EndpointInfo;
 import org.springframework.boot.endpoint.ReadOperation;
 import org.springframework.boot.endpoint.WriteOperation;
@@ -91,12 +90,14 @@ public class JmxEndpointDiscovererTests {
 	}
 
 	@Test
-	public void jmxOnlyEndpointIsDiscovered() {
+	public void jmxExtensionMustHaveEndpoint() {
 		load(TestJmxEndpoint.class, discoverer -> {
-			Map<String, EndpointInfo<JmxEndpointOperation>> endpoints = discover(
-					discoverer);
-			assertThat(endpoints).containsOnlyKeys("test");
-			assertJmxTestEndpoint(endpoints.get("test"));
+			this.thrown.expect(IllegalStateException.class);
+			this.thrown.expectMessage("Invalid extension");
+			this.thrown.expectMessage(TestJmxEndpoint.class.getName());
+			this.thrown.expectMessage("no endpoint found");
+			this.thrown.expectMessage(TestEndpoint.class.getName());
+			discoverer.discoverEndpoints();
 		});
 
 	}
@@ -130,10 +131,12 @@ public class JmxEndpointDiscovererTests {
 	}
 
 	@Test
-	public void discoveryFailsWhenTwoWebEndpointsHaveTheSameId() {
+	public void discoveryFailsWhenTwoExtensionsHaveTheSameEndpointType() {
 		load(ClashingJmxEndpointConfiguration.class, discoverer -> {
 			this.thrown.expect(IllegalStateException.class);
-			this.thrown.expectMessage("Found two endpoints with the id 'test': ");
+			this.thrown.expectMessage("Found two extensions for the same endpoint");
+			this.thrown.expectMessage(TestEndpoint.class.getName());
+			this.thrown.expectMessage(TestJmxEndpoint.class.getName());
 			discoverer.discoverEndpoints();
 		});
 	}
@@ -158,17 +161,7 @@ public class JmxEndpointDiscovererTests {
 	}
 
 	@Test
-	public void discoveryFailsWhenJmxEndpointHasClashingOperations() {
-		load(ClashingOperationsJmxEndpoint.class, (discoverer) -> {
-			this.thrown.expect(IllegalStateException.class);
-			this.thrown.expectMessage(
-					"Found two operations named 'getAll' for endpoint with id 'test'");
-			discoverer.discoverEndpoints();
-		});
-	}
-
-	@Test
-	public void discoveryFailsWhenJmxEndpointOverridesWithClashingOperations() {
+	public void discoveryFailsWhenExtensionHasTwoOperationsWithTheSameName() {
 		load(AdditionalClashingOperationsConfiguration.class, (discoverer) -> {
 			this.thrown.expect(IllegalStateException.class);
 			this.thrown.expectMessage(
@@ -240,8 +233,7 @@ public class JmxEndpointDiscovererTests {
 	private void load(Class<?> configuration, Consumer<JmxEndpointDiscoverer> consumer) {
 		try (AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(
 				configuration)) {
-			EndpointDiscoverer endpointDiscoverer = new EndpointDiscoverer(context);
-			consumer.accept(new JmxEndpointDiscoverer(endpointDiscoverer,
+			consumer.accept(new JmxEndpointDiscoverer(context,
 					DefaultConversionService.getSharedInstance()));
 		}
 	}
@@ -266,7 +258,7 @@ public class JmxEndpointDiscovererTests {
 
 	}
 
-	@JmxEndpoint(id = "test")
+	@JmxEndpointExtension(endpoint = TestEndpoint.class)
 	private static class TestJmxEndpoint {
 
 		@ManagedOperation(description = "Get all the things")
@@ -294,7 +286,7 @@ public class JmxEndpointDiscovererTests {
 
 	}
 
-	@JmxEndpoint(id = "test")
+	@JmxEndpointExtension(endpoint = TestEndpoint.class)
 	private static class AdditionalOperationJmxEndpoint {
 
 		@ManagedOperation(description = "Get another thing")
@@ -320,7 +312,7 @@ public class JmxEndpointDiscovererTests {
 
 	}
 
-	@JmxEndpoint(id = "test")
+	@JmxEndpointExtension(endpoint = TestEndpoint.class)
 	static class ClashingOperationsJmxEndpoint {
 
 		@ReadOperation
@@ -389,12 +381,17 @@ public class JmxEndpointDiscovererTests {
 	static class ClashingJmxEndpointConfiguration {
 
 		@Bean
-		public TestJmxEndpoint testEndpointTwo() {
+		public TestEndpoint testEndpoint() {
+			return new TestEndpoint();
+		}
+
+		@Bean
+		public TestJmxEndpoint testExtensionOne() {
 			return new TestJmxEndpoint();
 		}
 
 		@Bean
-		public TestJmxEndpoint testEndpointOne() {
+		public TestJmxEndpoint testExtensionTwo() {
 			return new TestJmxEndpoint();
 		}
 	}

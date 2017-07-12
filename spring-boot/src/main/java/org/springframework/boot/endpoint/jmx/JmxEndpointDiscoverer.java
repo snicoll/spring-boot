@@ -16,12 +16,10 @@
 
 package org.springframework.boot.endpoint.jmx;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,7 +28,6 @@ import java.util.function.Supplier;
 
 import org.springframework.boot.endpoint.Endpoint;
 import org.springframework.boot.endpoint.EndpointDiscoverer;
-import org.springframework.boot.endpoint.EndpointDiscoverer.EndpointOperationFactory;
 import org.springframework.boot.endpoint.EndpointInfo;
 import org.springframework.boot.endpoint.EndpointOperationType;
 import org.springframework.boot.endpoint.ReflectiveOperationInvoker;
@@ -43,99 +40,55 @@ import org.springframework.jmx.export.metadata.ManagedOperationParameter;
 import org.springframework.util.StringUtils;
 
 /**
- * Discovers the {@link JmxEndpoint jmx endpoints} in an {@link ApplicationContext}. Jmx
- * endpoints include all {@link Endpoint standard endpoints} and any {@link JmxEndpoint
- * jmx-specific} additions and overrides.
+ * Discovers the {@link Endpoint endpoints} in an {@link ApplicationContext} with
+ * {@link JmxEndpointExtension jmx extensions} additions and overrides applied on them.
  *
  * @author Stephane Nicoll
  * @author Andy Wilkinson
  * @since 2.0.0
  */
-public class JmxEndpointDiscoverer {
+public class JmxEndpointDiscoverer extends EndpointDiscoverer<JmxEndpointOperation> {
 
 	private static final AnnotationJmxAttributeSource jmxAttributeSource = new AnnotationJmxAttributeSource();
 
-	private final JmxEndpointOperationFactory operationFactory;
-
-	private final EndpointDiscoverer endpointDiscoverer;
-
 	/**
-	 * Creates a new {@link JmxEndpointDiscoverer} that will discover {@link JmxEndpoint
-	 * jmx endpoints} using the given {@code endpointDiscoverer}.
+	 * Creates a new {@link JmxEndpointDiscoverer} that will discover
+	 * {@link Endpoint endpoints} and {@link JmxEndpointExtension jmx extensions} using
+	 * the given {@link ApplicationContext}.
 	 *
-	 * @param endpointDiscoverer the endpoint discoverer
+	 * @param applicationContext the application context
 	 * @param conversionService the conversion service used to convert arguments when an
 	 * operation is invoked
 	 */
-	public JmxEndpointDiscoverer(EndpointDiscoverer endpointDiscoverer,
+	public JmxEndpointDiscoverer(ApplicationContext applicationContext,
 			ConversionService conversionService) {
-		this.endpointDiscoverer = endpointDiscoverer;
-		this.operationFactory = new JmxEndpointOperationFactory(conversionService);
+		super(applicationContext, new JmxEndpointOperationFactory(conversionService));
 	}
 
-	/**
-	 * Perform endpoint discovery.
-	 * @return the discovered endpoints
-	 */
+	@Override
 	public Collection<EndpointInfo<JmxEndpointOperation>> discoverEndpoints() {
-		Collection<EndpointInfo<JmxEndpointOperation>> baseEndpoints = discoverEndpoints(
-				Endpoint.class);
-		Collection<EndpointInfo<JmxEndpointOperation>> overridingEndpoints = discoverEndpoints(
-				JmxEndpoint.class);
-		return merge(baseEndpoints, overridingEndpoints);
-	}
-
-	private Collection<EndpointInfo<JmxEndpointOperation>> discoverEndpoints(
-			Class<? extends Annotation> endpointType) {
-		Collection<EndpointInfo<JmxEndpointOperation>> endpoints = this.endpointDiscoverer
-				.discoverEndpoints(endpointType, this.operationFactory);
-		for (EndpointInfo<JmxEndpointOperation> endpoint : endpoints) {
-			Map<String, JmxEndpointOperation> operations = new HashMap<>();
-			for (JmxEndpointOperation operation : endpoint.getOperations()) {
-				JmxEndpointOperation existing = operations
-						.put(operation.getOperationName(), operation);
-				if (existing != null) {
-					throw new IllegalStateException(String.format(
-							"Found two operations named '%s' for endpoint with id '%s'",
-							operation.getOperationName(), endpoint.getId()));
-				}
-			}
-		}
+		Collection<EndpointInfo<JmxEndpointOperation>> endpoints = doDiscoverEndpoints(
+				JmxEndpointExtension.class, JmxEndpointExtensionInfo::new);
+		endpoints.forEach(this::validate);
 		return endpoints;
 	}
 
-	private Collection<EndpointInfo<JmxEndpointOperation>> merge(
-			Collection<EndpointInfo<JmxEndpointOperation>> baseEndpoints,
-			Collection<EndpointInfo<JmxEndpointOperation>> overridingEndpoints) {
-		Map<String, EndpointInfo<JmxEndpointOperation>> endpointsById = new HashMap<>();
-		for (EndpointInfo<JmxEndpointOperation> standardEndpoint : baseEndpoints) {
-			endpointsById.put(standardEndpoint.getId(), standardEndpoint);
-		}
-		for (EndpointInfo<JmxEndpointOperation> webEndpoint : overridingEndpoints) {
-			endpointsById.merge(webEndpoint.getId(), webEndpoint, this::merge);
-		}
-		return Collections.unmodifiableCollection(endpointsById.values());
+	private void validate(EndpointInfo<JmxEndpointOperation> endpoint) {
+		validateOperations(endpoint.getId(), endpoint.getOperations());
 	}
 
-	/**
-	 * Merges two {@link EndpointInfo EndpointInfos} into a single {@code EndpointInfo}.
-	 * When the two endpoints have an operation with the same name, the operation on the
-	 * {@code baseEndpoint} is overridden by the operation on the
-	 * {@code overridingEndpoint}.
-	 * @param baseEndpoint the base endpoint
-	 * @param overridingEndpoint the overriding endpoint
-	 * @return the merged endpoint
-	 */
-	private EndpointInfo<JmxEndpointOperation> merge(
-			EndpointInfo<JmxEndpointOperation> baseEndpoint,
-			EndpointInfo<JmxEndpointOperation> overridingEndpoint) {
-		Map<String, JmxEndpointOperation> operations = new HashMap<>();
-		Consumer<? super JmxEndpointOperation> operationConsumer = (
-				operation) -> operations.put(operation.getOperationName(), operation);
-		baseEndpoint.getOperations().forEach(operationConsumer);
-		overridingEndpoint.getOperations().forEach(operationConsumer);
-		return new EndpointInfo<>(baseEndpoint.getId(),
-				overridingEndpoint.isEnabledByDefault(), operations.values());
+	private static void validateOperations(String endpointId,
+			Collection<JmxEndpointOperation> operations) {
+		Map<String, JmxEndpointOperation> operationByName = new HashMap<>();
+		for (JmxEndpointOperation operation : operations) {
+			JmxEndpointOperation existing = operationByName
+					.put(operation.getOperationName(), operation);
+			if (existing != null) {
+				throw new IllegalStateException(String.format(
+						"Found two operations named '%s' for endpoint with id '%s'",
+						operation.getOperationName(), endpointId));
+			}
+		}
 	}
 
 	private static class JmxEndpointOperationFactory
@@ -149,13 +102,13 @@ public class JmxEndpointDiscoverer {
 
 		@Override
 		public JmxEndpointOperation createOperation(
-				AnnotationAttributes endpointAttributes,
+				String endpointId,
 				AnnotationAttributes operationAttributes, Object target, Method method,
 				EndpointOperationType type) {
 			String operationName = method.getName();
 			Class<?> outputType = mapParameterType(method.getReturnType());
 			String description = getDescription(method, () -> "Invoke " + operationName
-					+ " for endpoint " + endpointAttributes.getString("id"));
+					+ " for endpoint " + endpointId);
 			List<JmxEndpointOperationParameterInfo> parameters = getParameters(method);
 			return new JmxEndpointOperation(type,
 					new ReflectiveOperationInvoker(this.conversionService, target,
@@ -215,6 +168,33 @@ public class JmxEndpointDiscoverer {
 			return Object.class;
 		}
 
+	}
+
+	private static class JmxEndpointExtensionInfo
+			extends EndpointExtensionInfo<JmxEndpointOperation> {
+
+		JmxEndpointExtensionInfo(Class<?> endpointType,
+				Class<?> endpointExtensionType,
+				Collection<JmxEndpointOperation> operations) {
+			super(endpointType, endpointExtensionType, operations);
+		}
+
+		@Override
+		public EndpointInfo<JmxEndpointOperation> merge(
+				EndpointInfo<JmxEndpointOperation> existing) {
+			// Before merging, validate endpoint:
+			validateOperations(existing.getId(), existing.getOperations());
+			// Then validate ourselves
+			validateOperations(existing.getId(), getOperations());
+
+			Map<String, JmxEndpointOperation> operations = new HashMap<>();
+			Consumer<? super JmxEndpointOperation> operationConsumer = (
+					operation) -> operations.put(operation.getOperationName(), operation);
+			existing.getOperations().forEach(operationConsumer);
+			getOperations().forEach(operationConsumer);
+			return new EndpointInfo<>(existing.getId(),
+					existing.isEnabledByDefault(), operations.values());
+		}
 	}
 
 }

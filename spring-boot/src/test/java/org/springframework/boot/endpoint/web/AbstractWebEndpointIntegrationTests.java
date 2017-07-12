@@ -24,7 +24,7 @@ import java.util.function.Consumer;
 
 import org.junit.Test;
 
-import org.springframework.boot.endpoint.EndpointDiscoverer;
+import org.springframework.boot.endpoint.Endpoint;
 import org.springframework.boot.endpoint.ReadOperation;
 import org.springframework.boot.endpoint.Selector;
 import org.springframework.boot.endpoint.WriteOperation;
@@ -132,14 +132,14 @@ public abstract class AbstractWebEndpointIntegrationTests<T extends Configurable
 		@Bean
 		public WebEndpointDiscoverer webEndpointDiscoverer(
 				ApplicationContext applicationContext) {
-			return new WebEndpointDiscoverer(new EndpointDiscoverer(applicationContext),
+			return new WebEndpointDiscoverer(applicationContext,
 					DefaultConversionService.getSharedInstance(), "endpoints",
 					Arrays.asList("application/json"), Arrays.asList("application/json"));
 		}
 
 	}
 
-	@WebEndpoint(id = "test")
+	@Endpoint(id = "test")
 	static class TestWebEndpoint {
 
 		private final EndpointDelegate endpointDelegate;

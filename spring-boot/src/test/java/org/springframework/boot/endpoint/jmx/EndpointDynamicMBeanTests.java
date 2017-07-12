@@ -39,7 +39,6 @@ import org.junit.Test;
 import reactor.core.publisher.Mono;
 
 import org.springframework.boot.endpoint.Endpoint;
-import org.springframework.boot.endpoint.EndpointDiscoverer;
 import org.springframework.boot.endpoint.ReadOperation;
 import org.springframework.boot.endpoint.WriteOperation;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -237,8 +236,7 @@ public class EndpointDynamicMBeanTests {
 	private void load(Class<?> configuration, Consumer<JmxEndpointDiscoverer> consumer) {
 		try (AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(
 				configuration)) {
-			EndpointDiscoverer endpointDiscoverer = new EndpointDiscoverer(context);
-			consumer.accept(new JmxEndpointDiscoverer(endpointDiscoverer,
+			consumer.accept(new JmxEndpointDiscoverer(context,
 					DefaultConversionService.getSharedInstance()));
 		}
 	}

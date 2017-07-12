@@ -31,7 +31,6 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import org.springframework.boot.endpoint.Endpoint;
-import org.springframework.boot.endpoint.EndpointDiscoverer;
 import org.springframework.boot.endpoint.EndpointInfo;
 import org.springframework.boot.endpoint.ReadOperation;
 import org.springframework.boot.endpoint.Selector;
@@ -48,6 +47,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Tests for {@link WebEndpointDiscoverer}.
  *
  * @author Andy Wilkinson
+ * @author Stephane Nicoll
  */
 public class WebEndpointDiscovererTests {
 
@@ -62,34 +62,14 @@ public class WebEndpointDiscovererTests {
 	}
 
 	@Test
-	public void standardEndpointIsDiscovered() {
+	public void webExtensionMustHaveEndpoint() {
 		load(TestWebEndpointConfiguration.class, (discoverer) -> {
-			Collection<EndpointInfo<WebEndpointOperation>> endpoints = discoverer
-					.discoverEndpoints();
-			assertThat(endpoints).hasSize(1);
-			EndpointInfo<WebEndpointOperation> endpoint = endpoints.iterator().next();
-			assertThat(endpoint.getId()).isEqualTo("test");
-			assertThat(requestPredicates(endpoint)).has(requestPredicates(
-					path("/application/test").httpMethod(WebEndpointHttpMethod.GET),
-					path("/application/test").httpMethod(WebEndpointHttpMethod.POST),
-					path("/application/test/{id}")
-							.httpMethod(WebEndpointHttpMethod.GET)));
-		});
-	}
-
-	@Test
-	public void webOnlyEndpointIsDiscovered() {
-		load(TestWebEndpointConfiguration.class, (discoverer) -> {
-			Collection<EndpointInfo<WebEndpointOperation>> endpoints = discoverer
-					.discoverEndpoints();
-			assertThat(endpoints).hasSize(1);
-			EndpointInfo<WebEndpointOperation> endpoint = endpoints.iterator().next();
-			assertThat(endpoint.getId()).isEqualTo("test");
-			assertThat(requestPredicates(endpoint)).has(requestPredicates(
-					path("/application/test").httpMethod(WebEndpointHttpMethod.GET),
-					path("/application/test").httpMethod(WebEndpointHttpMethod.POST),
-					path("/application/test/{id}")
-							.httpMethod(WebEndpointHttpMethod.GET)));
+			this.thrown.expect(IllegalStateException.class);
+			this.thrown.expectMessage("Invalid extension");
+			this.thrown.expectMessage(TestWebEndpoint.class.getName());
+			this.thrown.expectMessage("no endpoint found");
+			this.thrown.expectMessage(TestEndpoint.class.getName());
+			discoverer.discoverEndpoints();
 		});
 	}
 
@@ -122,10 +102,12 @@ public class WebEndpointDiscovererTests {
 	}
 
 	@Test
-	public void discoveryFailsWhenTwoWebEndpointsHaveTheSameId() {
+	public void discoveryFailsWhenTwoExtensionsHaveTheSameEndpointType() {
 		load(ClashingWebEndpointConfiguration.class, (discoverer) -> {
 			this.thrown.expect(IllegalStateException.class);
-			this.thrown.expectMessage("Found two endpoints with the id 'test': ");
+			this.thrown.expectMessage("Found two extensions for the same endpoint");
+			this.thrown.expectMessage(TestEndpoint.class.getName());
+			this.thrown.expectMessage(TestWebEndpoint.class.getName());
 			discoverer.discoverEndpoints();
 		});
 	}
@@ -140,18 +122,8 @@ public class WebEndpointDiscovererTests {
 	}
 
 	@Test
-	public void discoveryFailsWhenStandardEndpointHasClashingOperations() {
+	public void discoveryFailsWhenEndpointHasClashingOperations() {
 		load(ClashingOperationsEndpointConfiguration.class, (discoverer) -> {
-			this.thrown.expect(IllegalStateException.class);
-			this.thrown.expectMessage(
-					"Found multiple web operations with matching request predicates:");
-			discoverer.discoverEndpoints();
-		});
-	}
-
-	@Test
-	public void discoveryFailsWhenWebEndpointHasClashingOperations() {
-		load(ClashingOperationsWebEndpointConfiguration.class, (discoverer) -> {
 			this.thrown.expect(IllegalStateException.class);
 			this.thrown.expectMessage(
 					"Found multiple web operations with matching request predicates:");
@@ -204,7 +176,7 @@ public class WebEndpointDiscovererTests {
 		AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(
 				configuration);
 		try {
-			consumer.accept(new WebEndpointDiscoverer(new EndpointDiscoverer(context),
+			consumer.accept(new WebEndpointDiscoverer(context,
 					DefaultConversionService.getSharedInstance(), basePath,
 					Arrays.asList("application/json"),
 					Arrays.asList("application/json")));
@@ -245,7 +217,7 @@ public class WebEndpointDiscovererTests {
 
 	}
 
-	@WebEndpoint(id = "test")
+	@WebEndpointExtension(endpoint = TestEndpoint.class)
 	static class TestWebEndpoint {
 
 		@ReadOperation
@@ -279,7 +251,7 @@ public class WebEndpointDiscovererTests {
 
 	}
 
-	@WebEndpoint(id = "test")
+	@WebEndpointExtension(endpoint = TestEndpoint.class)
 	static class OverriddenOperationWebEndpoint {
 
 		@ReadOperation
@@ -289,7 +261,7 @@ public class WebEndpointDiscovererTests {
 
 	}
 
-	@WebEndpoint(id = "test")
+	@WebEndpointExtension(endpoint = TestEndpoint.class)
 	static class AdditionalOperationWebEndpoint {
 
 		@ReadOperation
@@ -314,7 +286,7 @@ public class WebEndpointDiscovererTests {
 
 	}
 
-	@WebEndpoint(id = "test")
+	@WebEndpointExtension(endpoint = TestEndpoint.class)
 	static class ClashingOperationsWebEndpoint {
 
 		@ReadOperation
@@ -329,7 +301,7 @@ public class WebEndpointDiscovererTests {
 
 	}
 
-	@WebEndpoint(id = "test")
+	@WebEndpointExtension(endpoint = TestEndpoint.class)
 	static class ClashingSelectorsWebEndpoint {
 
 		@ReadOperation
@@ -410,12 +382,17 @@ public class WebEndpointDiscovererTests {
 	static class ClashingWebEndpointConfiguration {
 
 		@Bean
-		public TestWebEndpoint testEndpointTwo() {
+		public TestEndpoint testEndpoint() {
+			return new TestEndpoint();
+		}
+
+		@Bean
+		public TestWebEndpoint testExtensionOne() {
 			return new TestWebEndpoint();
 		}
 
 		@Bean
-		public TestWebEndpoint testEndpointOne() {
+		public TestWebEndpoint testExtensionTwo() {
 			return new TestWebEndpoint();
 		}
 	}
@@ -436,6 +413,11 @@ public class WebEndpointDiscovererTests {
 
 	@Configuration
 	static class ClashingSelectorsWebEndpointConfiguration {
+
+		@Bean
+		public TestEndpoint testEndpoint() {
+			return new TestEndpoint();
+		}
 
 		@Bean
 		public ClashingSelectorsWebEndpoint clashingSelectorsWebEndpoint() {
