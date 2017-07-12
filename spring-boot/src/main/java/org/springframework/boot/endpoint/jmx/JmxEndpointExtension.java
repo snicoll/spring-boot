@@ -29,7 +29,7 @@ import org.springframework.boot.endpoint.Endpoint;
  *
  * @author Stephane Nicoll
  * @since 2.0.0
- * @see JmxEndpointDiscoverer
+ * @see Endpoint
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)

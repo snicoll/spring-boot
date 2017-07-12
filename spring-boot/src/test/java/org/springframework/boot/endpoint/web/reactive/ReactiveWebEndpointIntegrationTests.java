@@ -17,7 +17,7 @@
 package org.springframework.boot.endpoint.web.reactive;
 
 import org.springframework.boot.endpoint.web.AbstractWebEndpointIntegrationTests;
-import org.springframework.boot.endpoint.web.WebEndpointDiscoverer;
+import org.springframework.boot.endpoint.web.WebAnnotationEndpointDiscoverer;
 import org.springframework.boot.web.embedded.netty.NettyReactiveWebServerFactory;
 import org.springframework.boot.web.reactive.context.ReactiveWebServerApplicationContext;
 import org.springframework.context.ApplicationContext;
@@ -68,7 +68,7 @@ public class ReactiveWebEndpointIntegrationTests
 
 		@Bean
 		public RouterFunction<ServerResponse> endpointsRouter(
-				WebEndpointDiscoverer endpointDiscoverer) {
+				WebAnnotationEndpointDiscoverer endpointDiscoverer) {
 			return new ReactiveEndpointRouterFunctionFactory()
 					.createRouterFunction(endpointDiscoverer.discoverEndpoints());
 		}

@@ -24,8 +24,8 @@ import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import org.springframework.boot.endpoint.AnnotationEndpointDiscoverer;
 import org.springframework.boot.endpoint.Endpoint;
-import org.springframework.boot.endpoint.EndpointDiscoverer;
 import org.springframework.boot.endpoint.EndpointInfo;
 import org.springframework.boot.endpoint.EndpointOperationType;
 import org.springframework.boot.endpoint.ReflectiveOperationInvoker;
@@ -45,21 +45,21 @@ import org.springframework.util.StringUtils;
  * @author Andy Wilkinson
  * @since 2.0.0
  */
-public class JmxEndpointDiscoverer
-		extends EndpointDiscoverer<JmxEndpointOperation, String> {
+public class JmxAnnotationEndpointDiscoverer
+		extends AnnotationEndpointDiscoverer<JmxEndpointOperation, String> {
 
 	private static final AnnotationJmxAttributeSource jmxAttributeSource = new AnnotationJmxAttributeSource();
 
 	/**
-	 * Creates a new {@link JmxEndpointDiscoverer} that will discover {@link Endpoint
-	 * endpoints} and {@link JmxEndpointExtension jmx extensions} using the given
-	 * {@link ApplicationContext}.
+	 * Creates a new {@link JmxAnnotationEndpointDiscoverer} that will discover
+	 * {@link Endpoint endpoints} and {@link JmxEndpointExtension jmx extensions} using
+	 * the given {@link ApplicationContext}.
 	 *
 	 * @param applicationContext the application context
 	 * @param conversionService the conversion service used to convert arguments when an
 	 * operation is invoked
 	 */
-	public JmxEndpointDiscoverer(ApplicationContext applicationContext,
+	public JmxAnnotationEndpointDiscoverer(ApplicationContext applicationContext,
 			ConversionService conversionService) {
 		super(applicationContext, new JmxEndpointOperationFactory(conversionService),
 				JmxEndpointOperation::getOperationName);
