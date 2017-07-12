@@ -82,8 +82,8 @@ public class JmxEndpointDiscoverer
 		});
 		if (!clashes.isEmpty()) {
 			StringBuilder message = new StringBuilder();
-			message.append(String.format(
-					"Found multiple JMX operations with the same name:%n"));
+			message.append(
+					String.format("Found multiple JMX operations with the same name:%n"));
 			clashes.forEach((clash) -> {
 				message.append("    ").append(clash.get(0).getOperationName())
 						.append(String.format(":%n"));
