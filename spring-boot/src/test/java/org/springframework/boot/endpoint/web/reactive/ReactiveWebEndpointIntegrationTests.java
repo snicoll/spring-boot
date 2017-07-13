@@ -20,7 +20,9 @@ import org.springframework.boot.endpoint.web.AbstractWebEndpointIntegrationTests
 import org.springframework.boot.endpoint.web.WebAnnotationEndpointDiscoverer;
 import org.springframework.boot.web.embedded.netty.NettyReactiveWebServerFactory;
 import org.springframework.boot.web.reactive.context.ReactiveWebServerApplicationContext;
+import org.springframework.boot.web.reactive.context.ReactiveWebServerInitializedEvent;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.server.reactive.HttpHandler;
@@ -49,16 +51,18 @@ public class ReactiveWebEndpointIntegrationTests
 
 	@Override
 	protected int getPort(ReactiveWebServerApplicationContext context) {
-		return 8080;
+		return context.getBean(ReactiveConfiguration.class).port;
 	}
 
 	@Configuration
 	@EnableWebFlux
 	static class ReactiveConfiguration {
 
+		private int port;
+
 		@Bean
 		public NettyReactiveWebServerFactory netty() {
-			return new NettyReactiveWebServerFactory(8080);
+			return new NettyReactiveWebServerFactory(0);
 		}
 
 		@Bean
@@ -71,6 +75,13 @@ public class ReactiveWebEndpointIntegrationTests
 				WebAnnotationEndpointDiscoverer endpointDiscoverer) {
 			return new ReactiveEndpointRouterFunctionFactory()
 					.createRouterFunction(endpointDiscoverer.discoverEndpoints());
+		}
+
+		@Bean
+		public ApplicationListener<ReactiveWebServerInitializedEvent> serverInitializedListener() {
+			return event -> {
+				this.port = event.getWebServer().getPort();
+			};
 		}
 
 	}

@@ -49,8 +49,9 @@ public class AnnotationEndpointDiscovererTests {
 
 	@Test
 	public void discoverWorksWhenThereAreNoEndpoints() {
-		load(EmptyConfiguration.class, (context) -> assertThat(
-				new TestAnnotationEndpointDiscoverer(context).discoverEndpoints().isEmpty()));
+		load(EmptyConfiguration.class,
+				(context) -> assertThat(new TestAnnotationEndpointDiscoverer(context)
+						.discoverEndpoints().isEmpty()));
 	}
 
 	@Test

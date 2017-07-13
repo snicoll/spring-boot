@@ -36,8 +36,8 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.ObjectUtils;
 
 /**
- * A base {@link EndpointDiscoverer} implementation that discover endpoint beans in an
- * application context.
+ * A base {@link EndpointDiscoverer} implementation that discovers {@link Endpoint} beans
+ * in an application context.
  *
  * @param <T> the type of the operation
  * @param <K> the type of the operation key
@@ -152,8 +152,7 @@ public abstract class AnnotationEndpointDiscoverer<T extends EndpointOperation, 
 
 	private Map<Class<?>, EndpointExtensionInfo<T>> discoverExtensions(
 			Map<Class<?>, EndpointInfo<T>> endpoints,
-			Class<? extends Annotation> extensionType,
-			EndpointType endpointType) {
+			Class<? extends Annotation> extensionType, EndpointType endpointType) {
 		if (extensionType == null) {
 			return Collections.emptyMap();
 		}
@@ -168,7 +167,8 @@ public abstract class AnnotationEndpointDiscoverer<T extends EndpointOperation, 
 			AnnotationAttributes endpointAttributes = AnnotatedElementUtils
 					.getMergedAnnotationAttributes(endpointClass, Endpoint.class);
 			if (!matchEndpointType(endpointAttributes, endpointType)) {
-				throw new IllegalStateException(String.format("Invalid extension %s': "
+				throw new IllegalStateException(String.format(
+						"Invalid extension %s': "
 								+ "endpoint '%s' does not support such extension",
 						beanType.getName(), endpointClass.getName()));
 			}

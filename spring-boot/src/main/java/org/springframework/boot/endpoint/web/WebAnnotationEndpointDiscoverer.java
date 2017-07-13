@@ -46,8 +46,8 @@ import org.springframework.util.ClassUtils;
  * @author Stephane Nicoll
  * @since 2.0.0
  */
-public class WebAnnotationEndpointDiscoverer
-		extends AnnotationEndpointDiscoverer<WebEndpointOperation, OperationRequestPredicate> {
+public class WebAnnotationEndpointDiscoverer extends
+		AnnotationEndpointDiscoverer<WebEndpointOperation, OperationRequestPredicate> {
 
 	/**
 	 * Creates a new {@link WebAnnotationEndpointDiscoverer} that will discover

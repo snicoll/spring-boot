@@ -19,7 +19,7 @@ package org.springframework.boot.endpoint;
 import java.util.Collection;
 
 /**
- * Discover endpoints and provides a {@link EndpointInfo} for each of them.
+ * Discovers endpoints and provides a {@link EndpointInfo} for each of them.
  *
  * @param <T> the type of the operation
  * @author Andy Wilkinson
