@@ -54,7 +54,7 @@ public class FlywayEndpoint {
 	}
 
 	@ReadOperation
-	public List<FlywayReport> getFlywayReports() {
+	public List<FlywayReport> flywayReports() {
 		List<FlywayReport> reports = new ArrayList<>();
 		for (Map.Entry<String, Flyway> entry : this.flyways.entrySet()) {
 			List<FlywayMigration> migrations = new ArrayList<>();

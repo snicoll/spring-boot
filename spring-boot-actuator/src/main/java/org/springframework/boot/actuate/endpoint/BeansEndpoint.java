@@ -57,7 +57,7 @@ public class BeansEndpoint implements ApplicationContextAware {
 	}
 
 	@ReadOperation
-	public List<Object> getBeans() {
+	public List<Object> beans() {
 		return this.parser.parseList(this.liveBeansView.getSnapshotAsJson());
 	}
 

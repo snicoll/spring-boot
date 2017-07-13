@@ -33,7 +33,7 @@ import org.springframework.boot.endpoint.ReadOperation;
 public class ThreadDumpEndpoint {
 
 	@ReadOperation
-	public List<ThreadInfo> getThreadDump() {
+	public List<ThreadInfo> threadDump() {
 		return Arrays
 				.asList(ManagementFactory.getThreadMXBean().dumpAllThreads(true, true));
 	}

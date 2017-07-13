@@ -60,7 +60,7 @@ public class EnvironmentEndpoint {
 	}
 
 	@ReadOperation
-	public Map<String, Object> getEnvironment() {
+	public Map<String, Object> environment() {
 		Map<String, Object> result = new LinkedHashMap<>();
 		result.put("profiles", this.environment.getActiveProfiles());
 		PropertyResolver resolver = getResolver();
@@ -84,6 +84,7 @@ public class EnvironmentEndpoint {
 		return result;
 	}
 
+	@ReadOperation
 	public Object getEnvironmentEntry(@Selector String name) {
 		return new NamePatternEnvironmentFilter(this.environment).getResults(name);
 	}

@@ -44,7 +44,7 @@ public class TraceEndpoint {
 	}
 
 	@ReadOperation
-	public List<Trace> getTraces() {
+	public List<Trace> traces() {
 		return this.repository.findAll();
 	}
 

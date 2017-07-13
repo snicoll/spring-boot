@@ -55,7 +55,7 @@ public class LoggersEndpoint {
 	}
 
 	@ReadOperation
-	public Map<String, Object> getLoggers() {
+	public Map<String, Object> loggers() {
 		Collection<LoggerConfiguration> configurations = this.loggingSystem
 				.getLoggerConfigurations();
 		if (configurations == null) {
@@ -68,7 +68,7 @@ public class LoggersEndpoint {
 	}
 
 	@ReadOperation
-	public LoggerLevels getLoggerLevels(@Selector String name) {
+	public LoggerLevels loggerLevels(@Selector String name) {
 		Assert.notNull(name, "Name must not be null");
 		LoggerConfiguration configuration = this.loggingSystem
 				.getLoggerConfiguration(name);
@@ -76,7 +76,7 @@ public class LoggersEndpoint {
 	}
 
 	@WriteOperation
-	public void setLogLevel(String name, LogLevel level) {
+	public void configureLogLevel(String name, LogLevel level) {
 		Assert.notNull(name, "Name must not be empty");
 		this.loggingSystem.setLogLevel(name, level);
 	}

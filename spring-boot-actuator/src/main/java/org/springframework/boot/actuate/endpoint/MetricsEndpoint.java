@@ -71,7 +71,7 @@ public class MetricsEndpoint {
 	}
 
 	@ReadOperation
-	public Map<String, Object> getMetrics() {
+	public Map<String, Object> metrics() {
 		Map<String, Object> result = new LinkedHashMap<>();
 		List<PublicMetrics> metrics = new ArrayList<>(this.publicMetrics);
 		for (PublicMetrics publicMetric : metrics) {

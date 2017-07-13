@@ -56,7 +56,7 @@ public class HealthEndpoint {
 	}
 
 	@ReadOperation
-	public Health getHealth() {
+	public Health health() {
 		return this.healthIndicator.health();
 	}
 

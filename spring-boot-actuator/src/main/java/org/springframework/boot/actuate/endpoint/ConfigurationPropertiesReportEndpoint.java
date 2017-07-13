@@ -64,6 +64,7 @@ import org.springframework.util.StringUtils;
  * @author Stephane Nicoll
  */
 @Endpoint(id = "configprops")
+@ConfigurationProperties("endpoints.configprops")
 public class ConfigurationPropertiesReportEndpoint implements ApplicationContextAware {
 
 	private static final String CGLIB_FILTER_ID = "cglibFilter";
@@ -82,7 +83,7 @@ public class ConfigurationPropertiesReportEndpoint implements ApplicationContext
 	}
 
 	@ReadOperation
-	public Map<String, Object> getConfigurationProperties() {
+	public Map<String, Object> configurationProperties() {
 		return extract(this.context);
 	}
 

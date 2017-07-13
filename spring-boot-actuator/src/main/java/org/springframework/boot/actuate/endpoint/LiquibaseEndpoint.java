@@ -54,7 +54,7 @@ public class LiquibaseEndpoint {
 	}
 
 	@ReadOperation
-	public List<LiquibaseReport> getLiquibaseReports() {
+	public List<LiquibaseReport> liquibaseReports() {
 		List<LiquibaseReport> reports = new ArrayList<>();
 		DatabaseFactory factory = DatabaseFactory.getInstance();
 		StandardChangeLogHistoryService service = new StandardChangeLogHistoryService();

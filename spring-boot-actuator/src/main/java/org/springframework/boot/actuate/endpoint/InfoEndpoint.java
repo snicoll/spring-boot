@@ -47,7 +47,7 @@ public class InfoEndpoint {
 	}
 
 	@ReadOperation
-	public Map<String, Object> getInfo() {
+	public Map<String, Object> info() {
 		Info.Builder builder = new Info.Builder();
 		for (InfoContributor contributor : this.infoContributors) {
 			contributor.contribute(builder);

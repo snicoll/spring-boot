@@ -72,7 +72,7 @@ public class RequestMappingEndpoint implements ApplicationContextAware {
 	}
 
 	@ReadOperation
-	public Map<String, Object> getMappings() {
+	public Map<String, Object> mappings() {
 		Map<String, Object> result = new LinkedHashMap<>();
 		extractHandlerMappings(this.handlerMappings, result);
 		extractHandlerMappings(this.applicationContext, result);
