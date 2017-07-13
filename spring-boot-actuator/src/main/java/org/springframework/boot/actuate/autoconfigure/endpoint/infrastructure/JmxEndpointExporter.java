@@ -21,20 +21,14 @@ import java.util.List;
 import java.util.Map;
 
 import javax.annotation.PostConstruct;
-import javax.management.MalformedObjectNameException;
-import javax.management.ObjectName;
 
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.springframework.boot.endpoint.Endpoint;
-import org.springframework.boot.endpoint.jmx.EndpointDynamicMBean;
+import org.springframework.boot.endpoint.jmx.EndpointMBeanRegistrar;
 import org.springframework.boot.endpoint.jmx.JmxAnnotationEndpointDiscoverer;
 import org.springframework.boot.endpoint.jmx.JmxEndpointMBeanFactory;
-import org.springframework.jmx.JmxException;
-import org.springframework.jmx.export.MBeanExporter;
-import org.springframework.jmx.support.ObjectNameManager;
-import org.springframework.util.StringUtils;
 
 /**
  * Exports all available {@link Endpoint}.
@@ -44,16 +38,16 @@ import org.springframework.util.StringUtils;
  */
 class JmxEndpointExporter {
 
-	private final MBeanExporter mBeanExporter;
+	private final EndpointMBeanRegistrar endpointMBeanRegistrar;
 
 	private final JmxAnnotationEndpointDiscoverer endpointDiscoverer;
 
 	private final JmxEndpointMBeanFactory mBeanFactory;
 
-	JmxEndpointExporter(MBeanExporter mBeanExporter,
+	JmxEndpointExporter(EndpointMBeanRegistrar endpointMBeanRegistrar,
 			JmxAnnotationEndpointDiscoverer endpointDiscoverer,
 			ObjectMapper objectMapper) {
-		this.mBeanExporter = mBeanExporter;
+		this.endpointMBeanRegistrar = endpointMBeanRegistrar;
 		this.endpointDiscoverer = endpointDiscoverer;
 		DataConverter dataConverter = new DataConverter(objectMapper);
 		this.mBeanFactory = new JmxEndpointMBeanFactory(dataConverter::convert);
@@ -61,31 +55,8 @@ class JmxEndpointExporter {
 
 	@PostConstruct
 	public void exportMBeans() {
-		this.mBeanFactory.createMBeans(
-				this.endpointDiscoverer.discoverEndpoints()).forEach(this::register);
-	}
-
-	private void register(EndpointDynamicMBean mBean) {
-		try {
-			ObjectName objectName = createObjectName(mBean);
-			this.mBeanExporter.registerManagedResource(mBean, objectName);
-		}
-		catch (MalformedObjectNameException | JmxException ex) {
-			throw new IllegalStateException(String.format(
-					"Failed to register Endpoint with id '%s'",
-					mBean.getEndpointId()), ex);
-		}
-	}
-
-	private String domain = "org.springframework.boot";
-
-	private ObjectName createObjectName(EndpointDynamicMBean mBean)
-			throws MalformedObjectNameException {
-		StringBuilder builder = new StringBuilder();
-		builder.append(this.domain);
-		builder.append(":type=Endpoint");
-		builder.append(",name=" + StringUtils.capitalize(mBean.getEndpointId()));
-		return ObjectNameManager.getInstance(builder.toString());
+		this.mBeanFactory.createMBeans(this.endpointDiscoverer.discoverEndpoints())
+				.forEach(this.endpointMBeanRegistrar::registerEndpointMBean);
 	}
 
 	static class DataConverter {
