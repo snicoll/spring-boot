@@ -16,11 +16,13 @@
 
 package org.springframework.boot.actuate.autoconfigure.endpoint.infrastructure;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
 import org.glassfish.jersey.server.ResourceConfig;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.actuate.autoconfigure.ManagementContextConfiguration;
 import org.springframework.boot.actuate.endpoint.mvc.WebEndpointHandlerMappingCustomizer;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -74,8 +76,9 @@ public class WebEndpointInfrastructureManagementContextConfiguration {
 		private final List<WebEndpointHandlerMappingCustomizer> mappingCustomizers;
 
 		public MvcWebEndpointConfiguration(
-				List<WebEndpointHandlerMappingCustomizer> mappingCustomizers) {
-			this.mappingCustomizers = mappingCustomizers;
+				ObjectProvider<List<WebEndpointHandlerMappingCustomizer>> mappingCustomizers) {
+			this.mappingCustomizers = mappingCustomizers
+					.getIfUnique(Collections::emptyList);
 		}
 
 		@Bean
