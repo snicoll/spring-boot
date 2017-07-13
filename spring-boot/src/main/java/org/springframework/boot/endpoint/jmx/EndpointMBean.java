@@ -43,16 +43,16 @@ import org.springframework.util.ClassUtils;
  * @since 2.0.0
  * @see EndpointMBeanInfoAssembler
  */
-public class EndpointDynamicMBean implements DynamicMBean {
+public class EndpointMBean implements DynamicMBean {
 
 	private static boolean REACTOR_PRESENT = ClassUtils.isPresent(
-			"reactor.core.publisher.Mono", EndpointDynamicMBean.class.getClassLoader());
+			"reactor.core.publisher.Mono", EndpointMBean.class.getClassLoader());
 
 	private final Function<Object, Object> operationResponseConverter;
 
 	private final EndpointMBeanInfo endpointInfo;
 
-	EndpointDynamicMBean(Function<Object, Object> operationResponseConverter,
+	EndpointMBean(Function<Object, Object> operationResponseConverter,
 			EndpointMBeanInfo endpointInfo) {
 		this.operationResponseConverter = operationResponseConverter;
 		this.endpointInfo = endpointInfo;
