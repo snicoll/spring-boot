@@ -58,6 +58,14 @@ public class EndpointDynamicMBean implements DynamicMBean {
 		this.endpointInfo = endpointInfo;
 	}
 
+	/**
+	 * Return the id of the related endpoint.
+	 * @return the endpoint id
+	 */
+	public String getEndpointId() {
+		return this.endpointInfo.getEndpointId();
+	}
+
 	@Override
 	public MBeanInfo getMBeanInfo() {
 		return this.endpointInfo.getMbeanInfo();
