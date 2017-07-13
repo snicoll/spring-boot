@@ -31,7 +31,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication.Type;
 import org.springframework.boot.autoconfigure.jersey.ResourceConfigCustomizer;
-import org.springframework.boot.endpoint.web.WebEndpointDiscoverer;
+import org.springframework.boot.endpoint.web.WebAnnotationEndpointDiscoverer;
 import org.springframework.boot.endpoint.web.jersey.JerseyEndpointResourceFactory;
 import org.springframework.boot.endpoint.web.mvc.WebEndpointHandlerMapping;
 import org.springframework.boot.endpoint.web.reactive.ReactiveEndpointRouterFunctionFactory;
@@ -52,13 +52,13 @@ public class WebEndpointInfrastructureManagementContextConfiguration {
 
 	@Configuration
 	@ConditionalOnClass(ResourceConfig.class)
-	@ConditionalOnBean({ ResourceConfig.class, WebEndpointDiscoverer.class })
+	@ConditionalOnBean({ ResourceConfig.class, WebAnnotationEndpointDiscoverer.class })
 	@ConditionalOnMissingBean(type = "org.springframework.web.servlet.DispatcherServlet")
 	static class JerseyWebEndpointConfiguration {
 
 		@Bean
 		public ResourceConfigCustomizer webEndpointRegistrar(
-				WebEndpointDiscoverer discoverer) {
+				WebAnnotationEndpointDiscoverer discoverer) {
 			return resourceConfig -> {
 				resourceConfig.registerResources(new HashSet<>(
 						new JerseyEndpointResourceFactory().createEndpointResources(
@@ -84,7 +84,7 @@ public class WebEndpointInfrastructureManagementContextConfiguration {
 		@Bean
 		@ConditionalOnMissingBean
 		public WebEndpointHandlerMapping webEndpointHandlerMapping(
-				WebEndpointDiscoverer discoverer) {
+				WebAnnotationEndpointDiscoverer discoverer) {
 			WebEndpointHandlerMapping handlerMapping = new WebEndpointHandlerMapping(
 					discoverer.discoverEndpoints());
 			for (WebEndpointHandlerMappingCustomizer customizer : this.mappingCustomizers) {
@@ -100,7 +100,7 @@ public class WebEndpointInfrastructureManagementContextConfiguration {
 
 		@Bean
 		public RouterFunction<ServerResponse> webEndpointRouterFunction(
-				WebEndpointDiscoverer discoverer) {
+				WebAnnotationEndpointDiscoverer discoverer) {
 			return new ReactiveEndpointRouterFunctionFactory()
 					.createRouterFunction(discoverer.discoverEndpoints());
 		}

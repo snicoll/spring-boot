@@ -22,8 +22,8 @@ import java.util.List;
 import org.springframework.boot.actuate.endpoint.mvc.ActuatorMediaTypes;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
-import org.springframework.boot.endpoint.jmx.JmxEndpointDiscoverer;
-import org.springframework.boot.endpoint.web.WebEndpointDiscoverer;
+import org.springframework.boot.endpoint.jmx.JmxAnnotationEndpointDiscoverer;
+import org.springframework.boot.endpoint.web.WebAnnotationEndpointDiscoverer;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -41,9 +41,9 @@ import org.springframework.core.convert.support.DefaultConversionService;
 public class EndpointInfrastructureAutoConfiguration {
 
 	@Bean
-	public JmxEndpointDiscoverer jmxEndpointDiscoverer(
+	public JmxAnnotationEndpointDiscoverer jmxEndpointDiscoverer(
 			ApplicationContext applicationContext) {
-		return new JmxEndpointDiscoverer(applicationContext,
+		return new JmxAnnotationEndpointDiscoverer(applicationContext,
 				DefaultConversionService.getSharedInstance());
 	}
 
@@ -52,11 +52,11 @@ public class EndpointInfrastructureAutoConfiguration {
 	static class WebInfrastructureConfiguration {
 
 		@Bean
-		public WebEndpointDiscoverer webEndpointDiscoverer(
+		public WebAnnotationEndpointDiscoverer webEndpointDiscoverer(
 				ApplicationContext applicationContext) {
 			List<String> mediaTypes = Arrays.asList("application/json",
 					ActuatorMediaTypes.APPLICATION_ACTUATOR_V2_JSON_VALUE);
-			return new WebEndpointDiscoverer(applicationContext,
+			return new WebAnnotationEndpointDiscoverer(applicationContext,
 					DefaultConversionService.getSharedInstance(), "application",
 					mediaTypes, mediaTypes);
 		}

@@ -31,7 +31,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.SpringBootCondition;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.boot.endpoint.web.WebEndpointDiscoverer;
+import org.springframework.boot.endpoint.Endpoint;
+import org.springframework.boot.endpoint.web.WebAnnotationEndpointDiscoverer;
 import org.springframework.boot.endpoint.web.mvc.WebEndpointHandlerMapping;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ConditionContext;
@@ -83,7 +84,7 @@ public class EndpointWebMvcManagementContextConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	public WebEndpointHandlerMapping webEndpointHandlerMapping(
-			WebEndpointDiscoverer discoverer) {
+			WebAnnotationEndpointDiscoverer discoverer) {
 		WebEndpointHandlerMapping handlerMapping = new WebEndpointHandlerMapping(
 				discoverer.discoverEndpoints());
 		for (WebEndpointHandlerMappingCustomizer customizer : this.mappingCustomizers) {
