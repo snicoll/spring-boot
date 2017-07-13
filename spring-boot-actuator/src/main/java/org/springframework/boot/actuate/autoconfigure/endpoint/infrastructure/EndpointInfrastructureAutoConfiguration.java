@@ -19,8 +19,12 @@ package org.springframework.boot.actuate.autoconfigure.endpoint.infrastructure;
 import java.util.Arrays;
 import java.util.List;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.actuate.endpoint.mvc.ActuatorMediaTypes;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnSingleCandidate;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.endpoint.jmx.JmxAnnotationEndpointDiscoverer;
 import org.springframework.boot.endpoint.web.WebAnnotationEndpointDiscoverer;
@@ -29,12 +33,14 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.convert.support.DefaultConversionService;
+import org.springframework.jmx.export.MBeanExporter;
 
 /**
  * {@link EnableAutoConfiguration Auto-configuration} for the endpoint infrastructure used
  * by the Actuator.
  *
  * @author Andy Wilkinson
+ * @author Stephane Nicoll
  * @since 2.0.0
  */
 @Configuration
@@ -45,6 +51,15 @@ public class EndpointInfrastructureAutoConfiguration {
 			ApplicationContext applicationContext) {
 		return new JmxAnnotationEndpointDiscoverer(applicationContext,
 				DefaultConversionService.getSharedInstance());
+	}
+
+	@ConditionalOnSingleCandidate(MBeanExporter.class)
+	@Bean
+	public JmxEndpointExporter jmxMBeanExporter(MBeanExporter mBeanExporter,
+			JmxAnnotationEndpointDiscoverer endpointDiscoverer,
+			ObjectProvider<ObjectMapper> objectMapper) {
+		return new JmxEndpointExporter(mBeanExporter, endpointDiscoverer,
+				objectMapper.getIfAvailable(ObjectMapper::new));
 	}
 
 	@ConditionalOnWebApplication
