@@ -52,12 +52,12 @@ public class JmxEndpointMBeanFactory {
 	 * @param endpoints the endpoints
 	 * @return the MBeans
 	 */
-	public Collection<EndpointDynamicMBean> createMBeans(
+	public Collection<EndpointMBean> createMBeans(
 			Collection<EndpointInfo<JmxEndpointOperation>> endpoints) {
 		return endpoints.stream().map((endpointInfo) -> {
 			EndpointMBeanInfo endpointMBeanInfo = this.assembler
 					.createEndpointMBeanInfo(endpointInfo);
-			return new EndpointDynamicMBean(this.operationResponseConverter,
+			return new EndpointMBean(this.operationResponseConverter,
 					endpointMBeanInfo);
 		}).collect(Collectors.toList());
 	}
