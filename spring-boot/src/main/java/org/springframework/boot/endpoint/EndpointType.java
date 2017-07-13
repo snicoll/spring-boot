@@ -17,7 +17,7 @@
 package org.springframework.boot.endpoint;
 
 /**
- * Enumerate the available {@link Endpoint} types.
+ * An enumeration of the available {@link Endpoint} types.
  *
  * @author Stephane Nicoll
  * @since 2.0.0
