@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 the original author or authors.
+ * Copyright 2012-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,18 +16,15 @@
 
 package org.springframework.boot.actuate.endpoint;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.Test;
 
 import org.springframework.boot.actuate.health.Health;
-import org.springframework.boot.actuate.health.HealthAggregator;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.boot.actuate.health.OrderedHealthAggregator;
 import org.springframework.boot.actuate.health.Status;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -36,45 +33,39 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * @author Phillip Webb
  * @author Christian Dupuis
+ * @author Andy Wilkinson
  */
-public class HealthEndpointTests extends AbstractEndpointTests<HealthEndpoint> {
+public class HealthEndpointTests {
 
-	public HealthEndpointTests() {
-		super(Config.class, HealthEndpoint.class, "health", false, "endpoints.health");
+	@Test
+	public void upAndUpIsAggregatedToUp() throws Exception {
+		Map<String, HealthIndicator> healthIndicators = new HashMap<>();
+		healthIndicators.put("up", () -> new Health.Builder().status(Status.UP).build());
+		healthIndicators.put("upAgain",
+				() -> new Health.Builder().status(Status.UP).build());
+		HealthEndpoint endpoint = new HealthEndpoint(new OrderedHealthAggregator(),
+				healthIndicators);
+		assertThat(endpoint.health().getStatus()).isEqualTo(Status.UP);
 	}
 
 	@Test
-	public void invoke() throws Exception {
-		// As FINE isn't configured in the order we get UNKNOWN
-		assertThat(getEndpointBean().invoke().getStatus()).isEqualTo(Status.UNKNOWN);
+	public void upAndDownIsAggregatedToDown() throws Exception {
+		Map<String, HealthIndicator> healthIndicators = new HashMap<>();
+		healthIndicators.put("up", () -> new Health.Builder().status(Status.UP).build());
+		healthIndicators.put("down",
+				() -> new Health.Builder().status(Status.DOWN).build());
+		HealthEndpoint endpoint = new HealthEndpoint(new OrderedHealthAggregator(),
+				healthIndicators);
+		assertThat(endpoint.health().getStatus()).isEqualTo(Status.DOWN);
 	}
 
-	@Configuration
-	@EnableConfigurationProperties
-	public static class Config {
-
-		@Bean
-		public HealthEndpoint endpoint(HealthAggregator healthAggregator,
-				Map<String, HealthIndicator> healthIndicators) {
-			return new HealthEndpoint(healthAggregator, healthIndicators);
-		}
-
-		@Bean
-		public HealthIndicator statusHealthIndicator() {
-			return new HealthIndicator() {
-
-				@Override
-				public Health health() {
-					return new Health.Builder().status("FINE").build();
-				}
-			};
-		}
-
-		@Bean
-		public HealthAggregator healthAggregator() {
-			return new OrderedHealthAggregator();
-		}
-
+	@Test
+	public void unknownStatusMapsToUnknown() throws Exception {
+		Map<String, HealthIndicator> healthIndicators = new HashMap<>();
+		healthIndicators.put("status", () -> new Health.Builder().status("FINE").build());
+		HealthEndpoint endpoint = new HealthEndpoint(new OrderedHealthAggregator(),
+				healthIndicators);
+		assertThat(endpoint.health().getStatus()).isEqualTo(Status.UNKNOWN);
 	}
 
 }

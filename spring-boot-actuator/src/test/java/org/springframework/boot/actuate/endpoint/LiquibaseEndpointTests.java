@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 the original author or authors.
+ * Copyright 2012-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import org.junit.Test;
 
 import org.springframework.boot.autoconfigure.jdbc.EmbeddedDataSourceConfiguration;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
+import org.springframework.boot.test.context.ContextLoader;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -31,17 +32,16 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Tests for {@link LiquibaseEndpoint}.
  *
  * @author Eddú Meléndez
+ * @author Andy Wilkinson
  */
-public class LiquibaseEndpointTests extends AbstractEndpointTests<LiquibaseEndpoint> {
-
-	public LiquibaseEndpointTests() {
-		super(Config.class, LiquibaseEndpoint.class, "liquibase", true,
-				"endpoints.liquibase");
-	}
+public class LiquibaseEndpointTests {
 
 	@Test
-	public void invoke() throws Exception {
-		assertThat(getEndpointBean().invoke()).hasSize(1);
+	public void liquibaseReportIsReturned() throws Exception {
+		ContextLoader.standard().config(Config.class).load(context -> {
+			LiquibaseEndpoint endpoint = context.getBean(LiquibaseEndpoint.class);
+			assertThat(endpoint.liquibaseReports()).hasSize(1);
+		});
 	}
 
 	@Configuration

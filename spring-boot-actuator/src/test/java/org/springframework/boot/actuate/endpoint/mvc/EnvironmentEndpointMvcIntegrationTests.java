@@ -25,11 +25,14 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.actuate.autoconfigure.AuditAutoConfiguration;
+import org.springframework.boot.actuate.autoconfigure.endpoint.infrastructure.EndpointInfrastructureAutoConfiguration;
 import org.springframework.boot.actuate.autoconfigure.endpoint.infrastructure.EndpointServletWebAutoConfiguration;
 import org.springframework.boot.actuate.endpoint.EnvironmentEndpoint;
+import org.springframework.boot.autoconfigure.condition.ConditionEvaluationReport;
 import org.springframework.boot.autoconfigure.http.HttpMessageConvertersAutoConfiguration;
 import org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration;
+import org.springframework.boot.autoconfigure.logging.ConditionEvaluationReportMessage;
+import org.springframework.boot.autoconfigure.web.servlet.DispatcherServletAutoConfiguration;
 import org.springframework.boot.autoconfigure.web.servlet.WebMvcAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.util.TestPropertyValues;
@@ -38,12 +41,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.Environment;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.MutablePropertySources;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -56,16 +58,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Tests for {@link EnvironmentMvcEndpoint}
+ * Integration tests for {@link EnvironmentEndpoint} exposed by Spring MVC.
  *
  * @author Dave Syer
  * @author Andy Wilkinson
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest
-@TestPropertySource(properties = "management.security.enabled=false")
-@DirtiesContext
-public class EnvironmentMvcEndpointTests {
+@SpringBootTest(properties = "logging.level.org.springframework.boot.autoconfigure.logging=DEBUG")
+public class EnvironmentEndpointMvcIntegrationTests {
+
+	// TODO Test Jersey and WebFlux too?
 
 	@Autowired
 	private WebApplicationContext context;
@@ -74,7 +76,8 @@ public class EnvironmentMvcEndpointTests {
 
 	@Before
 	public void setUp() {
-		this.context.getBean(EnvironmentEndpoint.class).setEnabled(true);
+		System.out.println(new ConditionEvaluationReportMessage(
+				this.context.getBean(ConditionEvaluationReport.class)));
 		this.mvc = MockMvcBuilders.webAppContextSetup(this.context).build();
 		TestPropertyValues.of("foo:bar", "fool:baz")
 				.applyTo((ConfigurableApplicationContext) this.context);
@@ -124,7 +127,6 @@ public class EnvironmentMvcEndpointTests {
 
 	@Test
 	public void subWhenDisabled() throws Exception {
-		this.context.getBean(EnvironmentEndpoint.class).setEnabled(false);
 		this.mvc.perform(get("/application/env/foo")).andExpect(status().isNotFound());
 	}
 
@@ -175,12 +177,14 @@ public class EnvironmentMvcEndpointTests {
 	@Configuration
 	@Import({ JacksonAutoConfiguration.class,
 			HttpMessageConvertersAutoConfiguration.class, WebMvcAutoConfiguration.class,
-			EndpointServletWebAutoConfiguration.class, AuditAutoConfiguration.class })
+			DispatcherServletAutoConfiguration.class,
+			EndpointInfrastructureAutoConfiguration.class,
+			EndpointServletWebAutoConfiguration.class })
 	public static class TestConfiguration {
 
 		@Bean
-		public EnvironmentEndpoint endpoint() {
-			return new EnvironmentEndpoint();
+		public EnvironmentEndpoint endpoint(Environment environment) {
+			return new EnvironmentEndpoint(environment);
 		}
 
 	}

@@ -19,9 +19,10 @@ package org.springframework.boot.actuate.endpoint;
 import java.util.List;
 import java.util.Map;
 
+import org.assertj.core.api.Condition;
 import org.junit.Test;
 
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.test.context.ContextLoader;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -31,27 +32,100 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Tests for {@link BeansEndpoint}.
  *
  * @author Phillip Webb
+ * @author Andy Wilkinson
  */
-public class BeansEndpointTests extends AbstractEndpointTests<BeansEndpoint> {
+public class BeansEndpointTests {
 
-	public BeansEndpointTests() {
-		super(Config.class, BeansEndpoint.class, "beans", true, "endpoints.beans");
+	@Test
+	public void beansAreFound() throws Exception {
+		ContextLoader.standard().config(EndpointConfiguration.class).load(context -> {
+			List<Object> result = context.getBean(BeansEndpoint.class).beans();
+			assertThat(result).hasSize(1);
+			assertThat(result.get(0)).isInstanceOf(Map.class);
+		});
 	}
 
 	@Test
-	public void invoke() throws Exception {
-		List<Object> result = getEndpointBean().invoke();
-		assertThat(result).hasSize(1);
-		assertThat(result.get(0)).isInstanceOf(Map.class);
+	public void beansInParentContextAreFound() {
+		ContextLoader.standard().config(BeanConfiguration.class).load(parent -> {
+			ContextLoader.standard().config(EndpointConfiguration.class).parent(parent)
+					.load(child -> {
+				BeansEndpoint endpoint = child.getBean(BeansEndpoint.class);
+				List<Object> contexts = endpoint.beans();
+				assertThat(contexts).hasSize(2);
+				assertThat(contexts.get(1)).has(beanNamed("bean"));
+				assertThat(contexts.get(0)).has(beanNamed("endpoint"));
+			});
+		});
+	}
+
+	@Test
+	public void beansInChildContextAreNotFound() {
+		ContextLoader.standard().config(EndpointConfiguration.class).load(parent -> {
+			ContextLoader.standard().config(BeanConfiguration.class).parent(parent)
+					.load(child -> {
+				BeansEndpoint endpoint = child.getBean(BeansEndpoint.class);
+				List<Object> contexts = endpoint.beans();
+				assertThat(contexts).hasSize(1);
+				assertThat(contexts.get(0)).has(beanNamed("endpoint"));
+				assertThat(contexts.get(0)).doesNotHave(beanNamed("bean"));
+			});
+		});
+	}
+
+	private ContextHasBeanCondition beanNamed(String beanName) {
+		return new ContextHasBeanCondition(beanName);
+	}
+
+	private static final class ContextHasBeanCondition extends Condition<Object> {
+
+		private final String beanName;
+
+		private ContextHasBeanCondition(String beanName) {
+			super("Bean named '" + beanName + "'");
+			this.beanName = beanName;
+		}
+
+		@Override
+		@SuppressWarnings("unchecked")
+		public boolean matches(Object context) {
+			if (!(context instanceof Map)) {
+				return false;
+			}
+			List<Object> beans = (List<Object>) ((Map<String, Object>) context)
+					.get("beans");
+			if (beans == null) {
+				return false;
+			}
+			for (Object bean : beans) {
+				if (!(bean instanceof Map)) {
+					return false;
+				}
+				if (this.beanName.equals(((Map<String, Object>) bean).get("bean"))) {
+					return true;
+				}
+			}
+			return false;
+		}
+
 	}
 
 	@Configuration
-	@EnableConfigurationProperties
-	public static class Config {
+	public static class EndpointConfiguration {
 
 		@Bean
 		public BeansEndpoint endpoint() {
 			return new BeansEndpoint();
+		}
+
+	}
+
+	@Configuration
+	static class BeanConfiguration {
+
+		@Bean
+		public String bean() {
+			return "bean";
 		}
 
 	}

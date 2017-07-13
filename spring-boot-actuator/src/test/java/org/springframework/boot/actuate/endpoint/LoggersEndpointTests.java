@@ -54,7 +54,7 @@ public class LoggersEndpointTests extends AbstractEndpointTests<LoggersEndpoint>
 				.singletonList(new LoggerConfiguration("ROOT", null, LogLevel.DEBUG)));
 		given(getLoggingSystem().getSupportedLogLevels())
 				.willReturn(EnumSet.allOf(LogLevel.class));
-		Map<String, Object> result = getEndpointBean().invoke();
+		Map<String, Object> result = getEndpointBean().loggers();
 		Map<String, LoggerLevels> loggers = (Map<String, LoggerLevels>) result
 				.get("loggers");
 		Set<LogLevel> levels = (Set<LogLevel>) result.get("levels");
@@ -69,20 +69,20 @@ public class LoggersEndpointTests extends AbstractEndpointTests<LoggersEndpoint>
 	public void invokeWhenNameSpecifiedShouldReturnLevels() throws Exception {
 		given(getLoggingSystem().getLoggerConfiguration("ROOT"))
 				.willReturn(new LoggerConfiguration("ROOT", null, LogLevel.DEBUG));
-		LoggerLevels levels = getEndpointBean().invoke("ROOT");
+		LoggerLevels levels = getEndpointBean().loggerLevels("ROOT");
 		assertThat(levels.getConfiguredLevel()).isNull();
 		assertThat(levels.getEffectiveLevel()).isEqualTo("DEBUG");
 	}
 
 	@Test
 	public void setLogLevelShouldSetLevelOnLoggingSystem() throws Exception {
-		getEndpointBean().setLogLevel("ROOT", LogLevel.DEBUG);
+		getEndpointBean().configureLogLevel("ROOT", LogLevel.DEBUG);
 		verify(getLoggingSystem()).setLogLevel("ROOT", LogLevel.DEBUG);
 	}
 
 	@Test
 	public void setLogLevelToNull() {
-		getEndpointBean().setLogLevel("ROOT", null);
+		getEndpointBean().configureLogLevel("ROOT", null);
 		verify(getLoggingSystem()).setLogLevel("ROOT", null);
 	}
 

@@ -44,7 +44,8 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
 /**
- * Tests for {@link HealthWebEndpointExtension}.
+ * Integration tests for {@link HealthEndpoint} and {@link HealthWebEndpointExtension}
+ * exposed via Spring MVC.
  *
  * @author Christian Dupuis
  * @author Dave Syer
@@ -52,7 +53,7 @@ import static org.mockito.Mockito.mock;
  * @author Eddú Meléndez
  * @author Madhura Bhave
  */
-public class HealthMvcEndpointTests {
+public class HealthEndpointMvcIntegrationTests {
 
 	private static final List<String> SECURITY_ROLES = new ArrayList<>(
 			Arrays.asList("HERO"));
@@ -60,8 +61,6 @@ public class HealthMvcEndpointTests {
 	private HttpServletRequest request = new MockHttpServletRequest();
 
 	private HealthEndpoint endpoint = null;
-
-	private HealthWebEndpointExtension mvc = null;
 
 	private HttpServletRequest defaultUser = createAuthenticationRequest("ROLE_ACTUATOR");
 
@@ -221,55 +220,4 @@ public class HealthMvcEndpointTests {
 		assertThat(((Health) result).getDetails().get("foo")).isNull();
 	}
 
-	@Test
-	public void healthIsCached() {
-		given(this.endpoint.getTimeToLive()).willReturn(10000L);
-		given(this.endpoint.invoke())
-				.willReturn(new Health.Builder().up().withDetail("foo", "bar").build());
-		Object result = this.mvc.invoke(this.defaultUser, null);
-		assertThat(result instanceof Health).isTrue();
-		Health health = (Health) result;
-		assertThat(health.getStatus() == Status.UP).isTrue();
-		assertThat(health.getDetails()).hasSize(1);
-		assertThat(health.getDetails().get("foo")).isEqualTo("bar");
-		given(this.endpoint.invoke()).willReturn(new Health.Builder().down().build());
-		result = this.mvc.invoke(this.request, null); // insecure now
-		assertThat(result instanceof Health).isTrue();
-		health = (Health) result;
-		// so the result is cached
-		assertThat(health.getStatus() == Status.UP).isTrue();
-		// but the details are hidden
-		assertThat(health.getDetails()).isEmpty();
-	}
-
-	@Test
-	public void noCachingWhenTimeToLiveIsZero() {
-		given(this.endpoint.getTimeToLive()).willReturn(0L);
-		given(this.endpoint.invoke())
-				.willReturn(new Health.Builder().up().withDetail("foo", "bar").build());
-		Object result = this.mvc.invoke(this.request, null);
-		assertThat(result instanceof Health).isTrue();
-		assertThat(((Health) result).getStatus() == Status.UP).isTrue();
-		given(this.endpoint.invoke()).willReturn(new Health.Builder().down().build());
-		result = this.mvc.invoke(this.request, null);
-		@SuppressWarnings("unchecked")
-		Health health = ((ResponseEntity<Health>) result).getBody();
-		assertThat(health.getStatus() == Status.DOWN).isTrue();
-	}
-
-	@Test
-	public void newValueIsReturnedOnceTtlExpires() throws InterruptedException {
-		given(this.endpoint.getTimeToLive()).willReturn(50L);
-		given(this.endpoint.invoke())
-				.willReturn(new Health.Builder().up().withDetail("foo", "bar").build());
-		Object result = this.mvc.invoke(this.request, null);
-		assertThat(result instanceof Health).isTrue();
-		assertThat(((Health) result).getStatus() == Status.UP).isTrue();
-		Thread.sleep(100);
-		given(this.endpoint.invoke()).willReturn(new Health.Builder().down().build());
-		result = this.mvc.invoke(this.request, null);
-		@SuppressWarnings("unchecked")
-		Health health = ((ResponseEntity<Health>) result).getBody();
-		assertThat(health.getStatus() == Status.DOWN).isTrue();
-	}
 }

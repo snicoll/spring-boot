@@ -223,7 +223,7 @@ public class EndpointAutoConfigurationTests {
 		this.context.refresh();
 		FlywayEndpoint endpoint = this.context.getBean(FlywayEndpoint.class);
 		assertThat(endpoint).isNotNull();
-		assertThat(endpoint.getFlywayReports()).hasSize(1);
+		assertThat(endpoint.flywayReports()).hasSize(1);
 	}
 
 	@Test

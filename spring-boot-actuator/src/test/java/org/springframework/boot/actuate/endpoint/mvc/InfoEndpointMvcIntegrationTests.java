@@ -25,13 +25,13 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.actuate.autoconfigure.AuditAutoConfiguration;
+import org.springframework.boot.actuate.autoconfigure.endpoint.infrastructure.EndpointInfrastructureAutoConfiguration;
 import org.springframework.boot.actuate.autoconfigure.endpoint.infrastructure.EndpointServletWebAutoConfiguration;
 import org.springframework.boot.actuate.endpoint.InfoEndpoint;
-import org.springframework.boot.actuate.info.Info;
 import org.springframework.boot.actuate.info.InfoContributor;
 import org.springframework.boot.autoconfigure.http.HttpMessageConvertersAutoConfiguration;
 import org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration;
+import org.springframework.boot.autoconfigure.web.servlet.DispatcherServletAutoConfiguration;
 import org.springframework.boot.autoconfigure.web.servlet.WebMvcAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
@@ -52,7 +52,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Tests for {@link InfoEndpoint} with {@link MockMvc}.
+ * Integration tests for {@link InfoEndpoint} exposed by Spring MVC.
  *
  * @author Meang Akira Tanaka
  * @author Stephane Nicoll
@@ -60,7 +60,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @TestPropertySource(properties = { "info.app.name=MyService" })
-public class InfoMvcEndpointTests {
+public class InfoEndpointMvcIntegrationTests {
+
+	// TODO Test Jersey and WebFlux too?
 
 	@Autowired
 	private WebApplicationContext context;
@@ -69,7 +71,6 @@ public class InfoMvcEndpointTests {
 
 	@Before
 	public void setUp() {
-		this.context.getBean(InfoEndpoint.class).setEnabled(true);
 		this.mvc = MockMvcBuilders.webAppContextSetup(this.context).build();
 	}
 
@@ -97,10 +98,12 @@ public class InfoMvcEndpointTests {
 						MediaType.APPLICATION_JSON_UTF8_VALUE));
 	}
 
-	@Import({ JacksonAutoConfiguration.class, AuditAutoConfiguration.class,
-			HttpMessageConvertersAutoConfiguration.class,
-			EndpointServletWebAutoConfiguration.class, WebMvcAutoConfiguration.class })
 	@Configuration
+	@Import({ JacksonAutoConfiguration.class,
+			HttpMessageConvertersAutoConfiguration.class, WebMvcAutoConfiguration.class,
+			DispatcherServletAutoConfiguration.class,
+			EndpointInfrastructureAutoConfiguration.class,
+			EndpointServletWebAutoConfiguration.class })
 	public static class TestConfiguration {
 
 		@Bean
@@ -110,28 +113,21 @@ public class InfoMvcEndpointTests {
 
 		@Bean
 		public InfoContributor beanName1() {
-			return new InfoContributor() {
-
-				@Override
-				public void contribute(Info.Builder builder) {
-					Map<String, Object> content = new LinkedHashMap<>();
-					content.put("key11", "value11");
-					content.put("key12", "value12");
-					builder.withDetail("beanName1", content);
-				}
+			return builder -> {
+				Map<String, Object> content = new LinkedHashMap<>();
+				content.put("key11", "value11");
+				content.put("key12", "value12");
+				builder.withDetail("beanName1", content);
 			};
 		}
 
 		@Bean
 		public InfoContributor beanName2() {
-			return new InfoContributor() {
-				@Override
-				public void contribute(Info.Builder builder) {
-					Map<String, Object> content = new LinkedHashMap<>();
-					content.put("key21", "value21");
-					content.put("key22", "value22");
-					builder.withDetail("beanName2", content);
-				}
+			return builder -> {
+				Map<String, Object> content = new LinkedHashMap<>();
+				content.put("key21", "value21");
+				content.put("key22", "value22");
+				builder.withDetail("beanName2", content);
 			};
 		}
 

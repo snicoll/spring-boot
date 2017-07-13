@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.boot.actuate.endpoint.mvc;
+package org.springframework.boot.actuate.endpoint;
 
 import java.util.Map;
 
