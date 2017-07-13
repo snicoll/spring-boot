@@ -360,7 +360,6 @@ public class WebAnnotationEndpointDiscovererTests {
 
 	}
 
-
 	@Configuration
 	static class MultipleEndpointsConfiguration {
 
