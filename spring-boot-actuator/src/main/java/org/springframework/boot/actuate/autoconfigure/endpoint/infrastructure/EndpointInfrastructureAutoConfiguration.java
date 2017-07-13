@@ -69,8 +69,9 @@ public class EndpointInfrastructureAutoConfiguration {
 		@Bean
 		public WebAnnotationEndpointDiscoverer webEndpointDiscoverer(
 				ApplicationContext applicationContext) {
-			List<String> mediaTypes = Arrays.asList("application/json",
-					ActuatorMediaTypes.APPLICATION_ACTUATOR_V2_JSON_VALUE);
+			List<String> mediaTypes = Arrays.asList(
+					ActuatorMediaTypes.APPLICATION_ACTUATOR_V2_JSON_VALUE,
+					"application/json");
 			return new WebAnnotationEndpointDiscoverer(applicationContext,
 					DefaultConversionService.getSharedInstance(), "application",
 					mediaTypes, mediaTypes);
