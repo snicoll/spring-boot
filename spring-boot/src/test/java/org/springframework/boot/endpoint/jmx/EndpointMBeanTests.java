@@ -29,7 +29,6 @@ import javax.management.InstanceNotFoundException;
 import javax.management.MBeanException;
 import javax.management.MBeanServer;
 import javax.management.MBeanServerFactory;
-import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import javax.management.ReflectionException;
 
@@ -47,20 +46,28 @@ import org.springframework.core.convert.support.DefaultConversionService;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Tests for {@link EndpointDynamicMBean}.
+ * Tests for {@link EndpointMBean}.
  *
  * @author Stephane Nicoll
  */
-public class EndpointDynamicMBeanTests {
+public class EndpointMBeanTests {
 
 	private final JmxEndpointMBeanFactory jmxEndpointMBeanFactory = new JmxEndpointMBeanFactory(
 			r -> (r != null ? r.toString().toUpperCase() : null));
 
 	private MBeanServer server;
 
+	private EndpointMBeanRegistrar endpointMBeanRegistrar;
+
+	private EndpointObjectNameFactory objectNameFactory = endpoint -> new ObjectName(
+			String.format("org.springframework.boot.test:type=Endpoint,name=%s",
+					UUID.randomUUID().toString()));
+
 	@Before
 	public void createMBeanServer() {
 		this.server = MBeanServerFactory.createMBeanServer();
+		this.endpointMBeanRegistrar = new EndpointMBeanRegistrar(this.server,
+				this.objectNameFactory);
 	}
 
 	@After
@@ -206,34 +213,12 @@ public class EndpointDynamicMBeanTests {
 
 	private ObjectName registerEndpoint(JmxAnnotationEndpointDiscoverer discoverer,
 			String endpointId) {
-		Collection<EndpointDynamicMBean> mBeans = this.jmxEndpointMBeanFactory
+		Collection<EndpointMBean> mBeans = this.jmxEndpointMBeanFactory
 				.createMBeans(discoverer.discoverEndpoints());
 		assertThat(mBeans).hasSize(1);
-		EndpointDynamicMBean endpointMBean = mBeans.iterator().next();
+		EndpointMBean endpointMBean = mBeans.iterator().next();
 		assertThat(endpointMBean.getEndpointId()).isEqualTo(endpointId);
-		return register(endpointMBean);
-	}
-
-	private ObjectName register(Object mbean) {
-		try {
-			ObjectName objectName = getRandomObjectName();
-			this.server.registerMBean(mbean, objectName);
-			return objectName;
-		}
-		catch (Exception ex) {
-			throw new IllegalStateException("Invalid MBean " + mbean + "", ex);
-		}
-	}
-
-	private ObjectName getRandomObjectName() {
-		String name = String.format("org.springframework.boot.test:type=Endpoint,name=%s",
-				UUID.randomUUID().toString());
-		try {
-			return new ObjectName(name);
-		}
-		catch (MalformedObjectNameException ex) {
-			throw new IllegalStateException("Invalid object name", ex);
-		}
+		return this.endpointMBeanRegistrar.registerEndpointMBean(endpointMBean);
 	}
 
 	private void load(Class<?> configuration,
