@@ -73,7 +73,7 @@ public class EndpointDynamicMBeanTests {
 	@Test
 	public void invokeSimpleEndpoint() {
 		load(FooEndpoint.class, discoverer -> {
-			ObjectName objectName = registerEndpoint(discoverer);
+			ObjectName objectName = registerEndpoint(discoverer, "foo");
 			try {
 				// getAll
 				Object allResponse = this.server.invoke(objectName, "getAll",
@@ -106,7 +106,7 @@ public class EndpointDynamicMBeanTests {
 	@Test
 	public void invokeReactiveOperation() {
 		load(ReactiveEndpoint.class, discoverer -> {
-			ObjectName objectName = registerEndpoint(discoverer);
+			ObjectName objectName = registerEndpoint(discoverer, "reactive");
 			try {
 				Object allResponse = this.server.invoke(objectName, "getInfo",
 						new Object[0], new String[0]);
@@ -123,7 +123,7 @@ public class EndpointDynamicMBeanTests {
 	@Test
 	public void invokeUnknownOperation() {
 		load(FooEndpoint.class, discoverer -> {
-			ObjectName objectName = registerEndpoint(discoverer);
+			ObjectName objectName = registerEndpoint(discoverer, "foo");
 			try {
 				this.server.invoke(objectName, "doesNotExist", new Object[0],
 						new String[0]);
@@ -144,7 +144,7 @@ public class EndpointDynamicMBeanTests {
 	@Test
 	public void dynamicMBeanCannotReadAttribute() {
 		load(FooEndpoint.class, discoverer -> {
-			ObjectName objectName = registerEndpoint(discoverer);
+			ObjectName objectName = registerEndpoint(discoverer, "foo");
 			try {
 				this.server.getAttribute(objectName, "foo");
 				throw new AssertionError("Should have failed to read attribute foo");
@@ -158,7 +158,7 @@ public class EndpointDynamicMBeanTests {
 	@Test
 	public void dynamicMBeanCannotWriteAttribute() {
 		load(FooEndpoint.class, discoverer -> {
-			ObjectName objectName = registerEndpoint(discoverer);
+			ObjectName objectName = registerEndpoint(discoverer, "foo");
 			try {
 				this.server.setAttribute(objectName, new Attribute("foo", "bar"));
 				throw new AssertionError("Should have failed to write attribute foo");
@@ -172,7 +172,7 @@ public class EndpointDynamicMBeanTests {
 	@Test
 	public void dynamicMBeanCannotReadAttributes() {
 		load(FooEndpoint.class, discoverer -> {
-			ObjectName objectName = registerEndpoint(discoverer);
+			ObjectName objectName = registerEndpoint(discoverer, "foo");
 			try {
 				AttributeList attributes = this.server.getAttributes(objectName,
 						new String[] { "foo", "bar" });
@@ -188,7 +188,7 @@ public class EndpointDynamicMBeanTests {
 	@Test
 	public void dynamicMBeanCannotWriteAttributes() {
 		load(FooEndpoint.class, discoverer -> {
-			ObjectName objectName = registerEndpoint(discoverer);
+			ObjectName objectName = registerEndpoint(discoverer, "foo");
 			try {
 				AttributeList attributes = new AttributeList();
 				attributes.add(new Attribute("foo", 1));
@@ -204,11 +204,14 @@ public class EndpointDynamicMBeanTests {
 		});
 	}
 
-	private ObjectName registerEndpoint(JmxAnnotationEndpointDiscoverer discoverer) {
+	private ObjectName registerEndpoint(JmxAnnotationEndpointDiscoverer discoverer,
+			String endpointId) {
 		Collection<EndpointDynamicMBean> mBeans = this.jmxEndpointMBeanFactory
 				.createMBeans(discoverer.discoverEndpoints());
 		assertThat(mBeans).hasSize(1);
-		return register(mBeans.iterator().next());
+		EndpointDynamicMBean endpointMBean = mBeans.iterator().next();
+		assertThat(endpointMBean.getEndpointId()).isEqualTo(endpointId);
+		return register(endpointMBean);
 	}
 
 	private ObjectName register(Object mbean) {
