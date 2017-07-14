@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import javax.ws.rs.HttpMethod;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
@@ -99,7 +100,8 @@ public class JerseyEndpointResourceFactory {
 			}
 			arguments.putAll(extractPathParmeters(data));
 			arguments.putAll(extractQueryParmeters(data));
-			return convertIfNecessary(this.operationInvoker.invoke(arguments));
+			return convertIfNecessary(this.operationInvoker.invoke(arguments),
+					data.getRequest().getMethod());
 		}
 
 		private Map<String, Object> extractPathParmeters(
@@ -123,9 +125,10 @@ public class JerseyEndpointResourceFactory {
 			return result;
 		}
 
-		private Object convertIfNecessary(Object response) {
+		private Object convertIfNecessary(Object response, String httpMethod) {
 			if (response == null) {
-				return Response.status(Status.NO_CONTENT).build();
+				return Response.status(HttpMethod.GET.equals(httpMethod)
+						? Status.NOT_FOUND : Status.NO_CONTENT).build();
 			}
 			if (!(response instanceof WebEndpointResponse)) {
 				return Response.status(Status.OK).entity(response).build();
