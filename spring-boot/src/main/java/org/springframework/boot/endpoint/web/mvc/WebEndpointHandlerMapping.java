@@ -20,9 +20,11 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.boot.endpoint.EndpointInfo;
@@ -34,10 +36,12 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.ReflectionUtils;
+import org.springframework.web.accept.PathExtensionContentNegotiationStrategy;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.HandlerMapping;
+import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 import org.springframework.web.servlet.mvc.condition.ConsumesRequestCondition;
 import org.springframework.web.servlet.mvc.condition.PatternsRequestCondition;
 import org.springframework.web.servlet.mvc.condition.ProducesRequestCondition;
@@ -87,7 +91,8 @@ public class WebEndpointHandlerMapping extends RequestMappingInfoHandlerMapping
 			WebEndpointOperation operationInfo) {
 		OperationRequestPredicate requestPredicate = operationInfo.getRequestPredicate();
 		return new RequestMappingInfo(null,
-				new PatternsRequestCondition(requestPredicate.getPath()),
+				new PatternsRequestCondition(new String[] { requestPredicate.getPath() },
+						null, null, false, false),
 				new RequestMethodsRequestCondition(
 						RequestMethod.valueOf(requestPredicate.getHttpMethod().name())),
 				null, null,
@@ -111,6 +116,11 @@ public class WebEndpointHandlerMapping extends RequestMappingInfoHandlerMapping
 	protected RequestMappingInfo getMappingForMethod(Method method,
 			Class<?> handlerType) {
 		return null;
+	}
+
+	@Override
+	protected void extendInterceptors(List<Object> interceptors) {
+		interceptors.add(new SkipPathExtensionContentNegotiation());
 	}
 
 	/**
@@ -151,6 +161,25 @@ public class WebEndpointHandlerMapping extends RequestMappingInfoHandlerMapping
 			WebEndpointResponse<?> response = (WebEndpointResponse<?>) result;
 			return new ResponseEntity<Object>(response.getBody(),
 					HttpStatus.valueOf(response.getStatus()));
+		}
+
+	}
+
+	/**
+	 * {@link HandlerInterceptorAdapter} to ensure that
+	 * {@link PathExtensionContentNegotiationStrategy} is skipped for actuator endpoints.
+	 */
+	private static final class SkipPathExtensionContentNegotiation
+			extends HandlerInterceptorAdapter {
+
+		private static final String SKIP_ATTRIBUTE = PathExtensionContentNegotiationStrategy.class
+				.getName() + ".SKIP";
+
+		@Override
+		public boolean preHandle(HttpServletRequest request, HttpServletResponse response,
+				Object handler) throws Exception {
+			request.setAttribute(SKIP_ATTRIBUTE, Boolean.TRUE);
+			return true;
 		}
 
 	}

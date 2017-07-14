@@ -72,6 +72,15 @@ public abstract class AbstractWebEndpointIntegrationTests<T extends Configurable
 	}
 
 	@Test
+	public void readOperationWithSelectorContainingADot() {
+		load(TestEndpointConfiguration.class, client -> {
+			client.get().uri("/test/foo.bar").accept(MediaType.APPLICATION_JSON)
+					.exchange().expectStatus().isOk().expectBody(String.class)
+					.isEqualTo("Part foo.bar");
+		});
+	}
+
+	@Test
 	public void readOperationWithSingleQueryParameters() {
 		load(QueryEndpointConfiguration.class, client -> {
 			client.get().uri("/query?one=1&two=2").accept(MediaType.APPLICATION_JSON)
