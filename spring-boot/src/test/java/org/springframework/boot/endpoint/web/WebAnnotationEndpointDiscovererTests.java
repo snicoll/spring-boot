@@ -37,11 +37,14 @@ import org.springframework.boot.endpoint.EndpointType;
 import org.springframework.boot.endpoint.ReadOperation;
 import org.springframework.boot.endpoint.Selector;
 import org.springframework.boot.endpoint.WriteOperation;
+import org.springframework.boot.endpoint.web.AbstractWebEndpointIntegrationTests.BaseConfiguration;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.convert.support.DefaultConversionService;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -205,6 +208,21 @@ public class WebAnnotationEndpointDiscovererTests {
 			assertThat(requestPredicates(endpoint)).has(requestPredicates(
 					path("/test").httpMethod(WebEndpointHttpMethod.GET)));
 		});
+	}
+
+	@Test
+	public void operationsThatReturnResourceProduceApplicationOctetStream() {
+		load(ResourceEndpointConfiguration.class, (discoverer) -> {
+			Collection<EndpointInfo<WebEndpointOperation>> endpoints = discoverer
+					.discoverEndpoints();
+			assertThat(endpoints).hasSize(1);
+			EndpointInfo<WebEndpointOperation> endpoint = endpoints.iterator().next();
+			assertThat(endpoint.getId()).isEqualTo("resource");
+			assertThat(requestPredicates(endpoint)).has(requestPredicates(
+					path("/application/resource").httpMethod(WebEndpointHttpMethod.GET)
+							.consumes().produces("application/octet-stream")));
+		});
+
 	}
 
 	private void load(Class<?> configuration,
@@ -387,6 +405,16 @@ public class WebAnnotationEndpointDiscovererTests {
 
 	}
 
+	@Endpoint(id = "resource")
+	static class ResourceEndpoint {
+
+		@ReadOperation
+		public Resource read() {
+			return new ByteArrayResource(new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 });
+		}
+
+	}
+
 	@Configuration
 	static class MultipleEndpointsConfiguration {
 
@@ -535,6 +563,17 @@ public class WebAnnotationEndpointDiscovererTests {
 		@Bean
 		public VoidWriteOperationEndpoint voidWriteOperationEndpoint() {
 			return new VoidWriteOperationEndpoint();
+		}
+
+	}
+
+	@Configuration
+	@Import(BaseConfiguration.class)
+	static class ResourceEndpointConfiguration {
+
+		@Bean
+		public ResourceEndpoint resourceEndpoint() {
+			return new ResourceEndpoint();
 		}
 
 	}

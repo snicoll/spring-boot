@@ -36,6 +36,7 @@ import org.springframework.boot.endpoint.Selector;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.core.io.Resource;
 import org.springframework.util.ClassUtils;
 
 /**
@@ -169,6 +170,9 @@ public class WebAnnotationEndpointDiscoverer extends
 			if (Void.class.equals(method.getReturnType())
 					|| void.class.equals(method.getReturnType())) {
 				return Collections.emptyList();
+			}
+			if (Resource.class.equals(method.getReturnType())) {
+				return Collections.singletonList("application/octet-stream");
 			}
 			return this.producedMediaTypes;
 		}

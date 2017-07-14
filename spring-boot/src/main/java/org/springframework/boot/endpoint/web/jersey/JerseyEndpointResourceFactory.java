@@ -16,6 +16,7 @@
 
 package org.springframework.boot.endpoint.web.jersey;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -100,7 +101,7 @@ public class JerseyEndpointResourceFactory {
 			}
 			arguments.putAll(extractPathParmeters(data));
 			arguments.putAll(extractQueryParmeters(data));
-			return convertIfNecessary(this.operationInvoker.invoke(arguments),
+			return convertToJaxRsResponse(this.operationInvoker.invoke(arguments),
 					data.getRequest().getMethod());
 		}
 
@@ -125,12 +126,23 @@ public class JerseyEndpointResourceFactory {
 			return result;
 		}
 
-		private Object convertIfNecessary(Object response, String httpMethod) {
+		private Response convertToJaxRsResponse(Object response, String httpMethod) {
 			if (response == null) {
 				return Response.status(HttpMethod.GET.equals(httpMethod)
 						? Status.NOT_FOUND : Status.NO_CONTENT).build();
 			}
 			if (!(response instanceof WebEndpointResponse)) {
+				if (response instanceof org.springframework.core.io.Resource) {
+					try {
+						return Response.status(Status.OK)
+								.entity(((org.springframework.core.io.Resource) response)
+										.getInputStream())
+								.build();
+					}
+					catch (IOException ex) {
+						return Response.status(Status.INTERNAL_SERVER_ERROR).build();
+					}
+				}
 				return Response.status(Status.OK).entity(response).build();
 			}
 			WebEndpointResponse<?> webEndpointResponse = (WebEndpointResponse<?>) response;
