@@ -138,9 +138,11 @@ public class WebAnnotationEndpointDiscoverer extends
 		public WebEndpointOperation createOperation(String endpointId,
 				AnnotationAttributes operationAttributes, Object target, Method method,
 				EndpointOperationType type) {
+			WebEndpointHttpMethod httpMethod = determineHttpMethod(type);
 			OperationRequestPredicate requestPredicate = new OperationRequestPredicate(
-					determinePath(endpointId, method), determineHttpMethod(type),
-					determineConsumedMediaTypes(method), this.producedMediaTypes);
+					determinePath(endpointId, method), httpMethod,
+					determineConsumedMediaTypes(httpMethod, method),
+					this.producedMediaTypes);
 			return new WebEndpointOperation(type,
 					new ReflectiveOperationInvoker(this.conversionService, target,
 							method),
@@ -155,9 +157,12 @@ public class WebAnnotationEndpointDiscoverer extends
 			return path.toString();
 		}
 
-		private Collection<String> determineConsumedMediaTypes(Method method) {
-			return consumesRequestBody(method) ? this.consumedMediaTypes
-					: Collections.emptyList();
+		private Collection<String> determineConsumedMediaTypes(
+				WebEndpointHttpMethod httpMethod, Method method) {
+			if (WebEndpointHttpMethod.POST == httpMethod && consumesRequestBody(method)) {
+				return this.consumedMediaTypes;
+			}
+			return Collections.emptyList();
 		}
 
 		private boolean consumesRequestBody(Method method) {

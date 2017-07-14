@@ -17,6 +17,7 @@
 package org.springframework.boot.endpoint.web.mvc;
 
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -29,6 +30,7 @@ import org.springframework.boot.endpoint.OperationInvoker;
 import org.springframework.boot.endpoint.web.OperationRequestPredicate;
 import org.springframework.boot.endpoint.web.WebEndpointOperation;
 import org.springframework.boot.endpoint.web.WebEndpointResponse;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.ReflectionUtils;
@@ -128,9 +130,14 @@ public class WebEndpointHandlerMapping extends RequestMappingInfoHandlerMapping
 				@RequestBody(required = false) Map<String, String> body) {
 			Map<String, Object> arguments = new HashMap<>((Map<String, String>) request
 					.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE));
-			if (body != null) {
+			if (body != null
+					&& HttpMethod.POST == HttpMethod.valueOf(request.getMethod())) {
 				arguments.putAll(body);
 			}
+			request.getParameterMap().forEach((name, values) -> {
+				arguments.put(name,
+						values.length == 1 ? values[0] : Arrays.asList(values));
+			});
 			return handleResult(this.operationInvoker.invoke(arguments));
 		}
 
