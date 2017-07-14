@@ -16,6 +16,8 @@
 
 package org.springframework.boot.endpoint.jmx;
 
+import javax.management.InstanceNotFoundException;
+import javax.management.MBeanRegistrationException;
 import javax.management.MBeanServer;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
@@ -23,12 +25,13 @@ import javax.management.ObjectName;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import org.springframework.jmx.JmxException;
 import org.springframework.jmx.export.MBeanExportException;
 import org.springframework.jmx.export.MBeanExporter;
 import org.springframework.util.Assert;
 
 /**
- * Register {@link EndpointMBean} to JMX.
+ * JMX Registrar for {@link EndpointMBean}.
  *
  * @author Stephane Nicoll
  * @since 2.0.0
@@ -65,8 +68,8 @@ public class EndpointMBeanRegistrar {
 		Assert.notNull(endpoint, "Endpoint must not be null");
 		try {
 			if (logger.isDebugEnabled()) {
-				logger.debug("Exporting endpoint " + endpoint.getEndpointId()
-						+ " to JMX domain");
+				logger.debug(String.format("Registering endpoint with id '%s' to "
+						+ "the JMX domain", endpoint.getEndpointId()));
 			}
 			ObjectName objectName = this.objectNameFactory.generate(endpoint);
 			this.mBeanServer.registerMBean(endpoint, objectName);
@@ -78,8 +81,32 @@ public class EndpointMBeanRegistrar {
 		}
 		catch (Exception ex) {
 			throw new MBeanExportException(String.format(
-					"Failed to export MBean for endpoint with id '%s'",
+					"Failed to register MBean for endpoint with id '%s'",
 					endpoint.getEndpointId()), ex);
+		}
+	}
+
+	/**
+	 * Unregister the specified {@link ObjectName} if necessary.
+	 * @param objectName the {@link ObjectName} of the endpoint to unregister
+	 * @return {@code true} if the endpoint was unregistered, {@code false} if no such
+	 * endpoint was found
+	 */
+	public boolean unregisterEndpointMbean(ObjectName objectName) {
+		try {
+			if (logger.isDebugEnabled()) {
+				logger.debug(String.format("Unregister endpoint with ObjectName '%s' "
+						+ "from the JMX domain", objectName));
+			}
+			this.mBeanServer.unregisterMBean(objectName);
+			return true;
+		}
+		catch (InstanceNotFoundException ex) {
+			return false;
+		}
+		catch (MBeanRegistrationException ex) {
+			throw new JmxException(String.format("Failed to unregister MBean with"
+					+ "ObjectName '%s'", objectName), ex);
 		}
 	}
 
