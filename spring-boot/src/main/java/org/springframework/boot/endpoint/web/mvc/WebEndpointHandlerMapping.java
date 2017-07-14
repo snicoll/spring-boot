@@ -142,6 +142,9 @@ public class WebEndpointHandlerMapping extends RequestMappingInfoHandlerMapping
 		}
 
 		private Object handleResult(Object result) {
+			if (result == null) {
+				return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+			}
 			if (!(result instanceof WebEndpointResponse)) {
 				return result;
 			}

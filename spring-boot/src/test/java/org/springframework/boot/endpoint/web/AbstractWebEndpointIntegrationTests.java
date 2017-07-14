@@ -114,7 +114,7 @@ public abstract class AbstractWebEndpointIntegrationTests<T extends Configurable
 			body.put("foo", "one");
 			body.put("bar", "two");
 			client.post().uri("/test").syncBody(body).accept(MediaType.APPLICATION_JSON)
-					.exchange().expectStatus().isOk().expectBody().isEmpty();
+					.exchange().expectStatus().isNoContent().expectBody().isEmpty();
 		});
 	}
 
@@ -122,7 +122,7 @@ public abstract class AbstractWebEndpointIntegrationTests<T extends Configurable
 	public void writeOperationWithEmptyBody() {
 		load(EmptyWriteEndpointConfiguration.class, (context, client) -> {
 			client.post().uri("/emptywrite").accept(MediaType.APPLICATION_JSON).exchange()
-					.expectStatus().isOk().expectBody().isEmpty();
+					.expectStatus().isNoContent().expectBody().isEmpty();
 			verify(context.getBean(EndpointDelegate.class)).write();
 		});
 	}
@@ -133,7 +133,7 @@ public abstract class AbstractWebEndpointIntegrationTests<T extends Configurable
 			Map<String, Object> body = new HashMap<>();
 			body.put("foo", "one");
 			client.post().uri("/test").syncBody(body).accept(MediaType.APPLICATION_JSON)
-					.exchange().expectStatus().isOk().expectBody().isEmpty();
+					.exchange().expectStatus().isNoContent().expectBody().isEmpty();
 			verify(context.getBean(EndpointDelegate.class)).write("one", null);
 		});
 	}
@@ -142,9 +142,17 @@ public abstract class AbstractWebEndpointIntegrationTests<T extends Configurable
 	public void nullsArePassedToTheOperationWhenPostRequestHasNoBody() {
 		load(TestEndpointConfiguration.class, (context, client) -> {
 			client.post().uri("/test").contentType(MediaType.APPLICATION_JSON)
-					.accept(MediaType.APPLICATION_JSON).exchange().expectStatus().isOk()
-					.expectBody().isEmpty();
+					.accept(MediaType.APPLICATION_JSON).exchange().expectStatus()
+					.isNoContent().expectBody().isEmpty();
 			verify(context.getBean(EndpointDelegate.class)).write(null, null);
+		});
+	}
+
+	@Test
+	public void nullResponseFromOperationResultsInNoContentResponseStatus() {
+		load(NullResponseEndpointConfiguration.class, (context, client) -> {
+			client.get().uri("/null").accept(MediaType.APPLICATION_JSON).exchange()
+					.expectStatus().isNoContent().expectBody().isEmpty();
 		});
 	}
 
@@ -235,6 +243,17 @@ public abstract class AbstractWebEndpointIntegrationTests<T extends Configurable
 
 	}
 
+	@Configuration
+	@Import(BaseConfiguration.class)
+	static class NullResponseEndpointConfiguration {
+
+		@Bean
+		public NullResponseEndpoint nullResponseEndpoint() {
+			return new NullResponseEndpoint();
+		}
+
+	}
+
 	@Endpoint(id = "test")
 	static class TestEndpoint {
 
@@ -299,6 +318,16 @@ public abstract class AbstractWebEndpointIntegrationTests<T extends Configurable
 		@WriteOperation
 		public void write() {
 			this.delegate.write();
+		}
+
+	}
+
+	@Endpoint(id = "null")
+	static class NullResponseEndpoint {
+
+		@ReadOperation
+		public String readReturningNull() {
+			return null;
 		}
 
 	}
