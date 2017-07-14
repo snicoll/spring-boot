@@ -16,6 +16,7 @@
 
 package org.springframework.boot.endpoint.web;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -94,7 +95,8 @@ public class WebAnnotationEndpointDiscovererTests {
 			EndpointInfo<WebEndpointOperation> endpoint = endpoints.iterator().next();
 			assertThat(endpoint.getId()).isEqualTo("test");
 			assertThat(requestPredicates(endpoint)).has(requestPredicates(
-					path("/application/test").httpMethod(WebEndpointHttpMethod.GET)));
+					path("/application/test").httpMethod(WebEndpointHttpMethod.GET)
+							.consumes().produces("application/json")));
 		});
 	}
 
@@ -107,9 +109,24 @@ public class WebAnnotationEndpointDiscovererTests {
 			EndpointInfo<WebEndpointOperation> endpoint = endpoints.iterator().next();
 			assertThat(endpoint.getId()).isEqualTo("test");
 			assertThat(requestPredicates(endpoint)).has(requestPredicates(
-					path("/application/test").httpMethod(WebEndpointHttpMethod.GET),
-					path("/application/test/{id}")
-							.httpMethod(WebEndpointHttpMethod.GET)));
+					path("/application/test").httpMethod(WebEndpointHttpMethod.GET)
+							.consumes().produces("application/json"),
+					path("/application/test/{id}").httpMethod(WebEndpointHttpMethod.GET)
+							.consumes().produces("application/json")));
+		});
+	}
+
+	@Test
+	public void predicateForWriteOperationThatReturnsVoidHasNoProducedMediaTypes() {
+		load(VoidWriteOperationEndpointConfiguration.class, (discoverer) -> {
+			Collection<EndpointInfo<WebEndpointOperation>> endpoints = discoverer
+					.discoverEndpoints();
+			assertThat(endpoints).hasSize(1);
+			EndpointInfo<WebEndpointOperation> endpoint = endpoints.iterator().next();
+			assertThat(endpoint.getId()).isEqualTo("voidwrite");
+			assertThat(requestPredicates(endpoint)).has(requestPredicates(
+					path("/application/voidwrite").httpMethod(WebEndpointHttpMethod.POST)
+							.produces().consumes("application/json")));
 		});
 	}
 
@@ -360,6 +377,16 @@ public class WebAnnotationEndpointDiscovererTests {
 
 	}
 
+	@Endpoint(id = "voidwrite")
+	static class VoidWriteOperationEndpoint {
+
+		@WriteOperation
+		public void write(String foo, String bar) {
+
+		}
+
+	}
+
 	@Configuration
 	static class MultipleEndpointsConfiguration {
 
@@ -502,14 +529,38 @@ public class WebAnnotationEndpointDiscovererTests {
 
 	}
 
+	@Configuration
+	static class VoidWriteOperationEndpointConfiguration {
+
+		@Bean
+		public VoidWriteOperationEndpoint voidWriteOperationEndpoint() {
+			return new VoidWriteOperationEndpoint();
+		}
+
+	}
+
 	private static final class RequestPredicateMatcher {
 
 		private final String path;
+
+		private List<String> produces;
+
+		private List<String> consumes;
 
 		private WebEndpointHttpMethod httpMethod;
 
 		private RequestPredicateMatcher(String path) {
 			this.path = path;
+		}
+
+		public RequestPredicateMatcher produces(String... mediaTypes) {
+			this.produces = Arrays.asList(mediaTypes);
+			return this;
+		}
+
+		public RequestPredicateMatcher consumes(String... mediaTypes) {
+			this.consumes = Arrays.asList(mediaTypes);
+			return this;
 		}
 
 		private RequestPredicateMatcher httpMethod(WebEndpointHttpMethod httpMethod) {
@@ -520,13 +571,17 @@ public class WebAnnotationEndpointDiscovererTests {
 		private boolean matches(OperationRequestPredicate predicate) {
 			return (this.path == null || this.path.equals(predicate.getPath()))
 					&& (this.httpMethod == null
-							|| this.httpMethod == predicate.getHttpMethod());
+							|| this.httpMethod == predicate.getHttpMethod())
+					&& (this.produces == null || this.produces
+							.equals(new ArrayList<>(predicate.getProduces())))
+					&& (this.consumes == null || this.consumes
+							.equals(new ArrayList<>(predicate.getConsumes())));
 		}
 
 		@Override
 		public String toString() {
 			return "Request predicate with path = '" + this.path + "', httpMethod = '"
-					+ this.httpMethod + "'";
+					+ this.httpMethod + "', produces = '" + this.produces + "'";
 		}
 
 	}

@@ -88,9 +88,11 @@ public class ReactiveEndpointRouterFunctionFactory {
 			requestPredicate = requestPredicate.and(RequestPredicates
 					.contentType(toMediaTypes(operationRequestPredicate.getConsumes())));
 		}
+		if (!CollectionUtils.isEmpty(operationRequestPredicate.getProduces())) {
+			requestPredicate = requestPredicate.and(RequestPredicates
+					.accept(toMediaTypes(operationRequestPredicate.getProduces())));
+		}
 		return requestPredicate
-				.and(RequestPredicates
-						.accept(toMediaTypes(operationRequestPredicate.getProduces())))
 				.and((RequestPredicates.path(operationRequestPredicate.getPath())));
 	}
 
