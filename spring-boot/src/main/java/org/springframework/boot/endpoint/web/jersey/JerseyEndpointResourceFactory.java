@@ -124,6 +124,9 @@ public class JerseyEndpointResourceFactory {
 		}
 
 		private Object convertIfNecessary(Object response) {
+			if (response == null) {
+				return Response.status(Status.NO_CONTENT).build();
+			}
 			if (!(response instanceof WebEndpointResponse)) {
 				return Response.status(Status.OK).entity(response).build();
 			}
