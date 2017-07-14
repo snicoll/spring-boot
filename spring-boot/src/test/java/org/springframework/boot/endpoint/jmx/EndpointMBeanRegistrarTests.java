@@ -16,6 +16,7 @@
 
 package org.springframework.boot.endpoint.jmx;
 
+import javax.management.InstanceNotFoundException;
 import javax.management.MBeanRegistrationException;
 import javax.management.MBeanServer;
 import javax.management.MalformedObjectNameException;
@@ -29,6 +30,7 @@ import org.springframework.jmx.JmxException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
@@ -105,8 +107,28 @@ public class EndpointMBeanRegistrarTests {
 		EndpointMBeanRegistrar registrar = new EndpointMBeanRegistrar(this.mBeanServer,
 				factory);
 		this.thrown.expect(JmxException.class);
-		this.thrown.expectMessage("Failed to export MBean for endpoint with id 'test'");
+		this.thrown.expectMessage("Failed to register MBean for endpoint with id 'test'");
 		registrar.registerEndpointMBean(endpointMBean);
+	}
+
+	@Test
+	public void unregisterEndpoint() throws Exception {
+		ObjectName objectName = mock(ObjectName.class);
+		EndpointMBeanRegistrar registrar = new EndpointMBeanRegistrar(this.mBeanServer,
+				mock(EndpointObjectNameFactory.class));
+		assertThat(registrar.unregisterEndpointMbean(objectName)).isTrue();
+		verify(this.mBeanServer).unregisterMBean(objectName);
+	}
+
+	@Test
+	public void unregisterUnknownEndpoint() throws Exception {
+		ObjectName objectName = mock(ObjectName.class);
+		willThrow(InstanceNotFoundException.class).given(this.mBeanServer)
+				.unregisterMBean(objectName);
+		EndpointMBeanRegistrar registrar = new EndpointMBeanRegistrar(this.mBeanServer,
+				mock(EndpointObjectNameFactory.class));
+		assertThat(registrar.unregisterEndpointMbean(objectName)).isFalse();
+		verify(this.mBeanServer).unregisterMBean(objectName);
 	}
 
 }
