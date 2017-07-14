@@ -128,9 +128,9 @@ public abstract class AbstractWebEndpointIntegrationTests<T extends Configurable
 	}
 
 	@Test
-	public void writeOperationWithEmptyBody() {
-		load(EmptyWriteEndpointConfiguration.class, (context, client) -> {
-			client.post().uri("/emptywrite").accept(MediaType.APPLICATION_JSON).exchange()
+	public void writeOperationWithVoidResponse() {
+		load(VoidWriteResponseEndpointConfiguration.class, (context, client) -> {
+			client.post().uri("/voidwrite").accept(MediaType.APPLICATION_JSON).exchange()
 					.expectStatus().isNoContent().expectBody().isEmpty();
 			verify(context.getBean(EndpointDelegate.class)).write();
 		});
@@ -158,10 +158,18 @@ public abstract class AbstractWebEndpointIntegrationTests<T extends Configurable
 	}
 
 	@Test
-	public void nullResponseFromOperationResultsInNoContentResponseStatus() {
-		load(NullResponseEndpointConfiguration.class, (context, client) -> {
-			client.get().uri("/null").accept(MediaType.APPLICATION_JSON).exchange()
-					.expectStatus().isNoContent().expectBody().isEmpty();
+	public void nullResponseFromReadOperationResultsInNotFoundResponseStatus() {
+		load(NullReadResponseEndpointConfiguration.class, (context, client) -> {
+			client.get().uri("/nullread").accept(MediaType.APPLICATION_JSON).exchange()
+					.expectStatus().isNotFound();
+		});
+	}
+
+	@Test
+	public void nullResponseFromWriteOperationResultsInNoContentResponseStatus() {
+		load(NullWriteResponseEndpointConfiguration.class, (context, client) -> {
+			client.post().uri("/nullwrite").accept(MediaType.APPLICATION_JSON).exchange()
+					.expectStatus().isNoContent();
 		});
 	}
 
@@ -243,22 +251,35 @@ public abstract class AbstractWebEndpointIntegrationTests<T extends Configurable
 
 	@Configuration
 	@Import(BaseConfiguration.class)
-	static class EmptyWriteEndpointConfiguration {
+	static class VoidWriteResponseEndpointConfiguration {
 
 		@Bean
-		public EmptyWriteEndpoint emptyWriteEndpoint(EndpointDelegate delegate) {
-			return new EmptyWriteEndpoint(delegate);
+		public VoidWriteResponseEndpoint voidWriteResponseEndpoint(
+				EndpointDelegate delegate) {
+			return new VoidWriteResponseEndpoint(delegate);
 		}
 
 	}
 
 	@Configuration
 	@Import(BaseConfiguration.class)
-	static class NullResponseEndpointConfiguration {
+	static class NullWriteResponseEndpointConfiguration {
 
 		@Bean
-		public NullResponseEndpoint nullResponseEndpoint() {
-			return new NullResponseEndpoint();
+		public NullWriteResponseEndpoint nullWriteResponseEndpoint(
+				EndpointDelegate delegate) {
+			return new NullWriteResponseEndpoint(delegate);
+		}
+
+	}
+
+	@Configuration
+	@Import(BaseConfiguration.class)
+	static class NullReadResponseEndpointConfiguration {
+
+		@Bean
+		public NullReadResponseEndpoint nullResponseEndpoint() {
+			return new NullReadResponseEndpoint();
 		}
 
 	}
@@ -315,12 +336,12 @@ public abstract class AbstractWebEndpointIntegrationTests<T extends Configurable
 
 	}
 
-	@Endpoint(id = "emptywrite")
-	static class EmptyWriteEndpoint {
+	@Endpoint(id = "voidwrite")
+	static class VoidWriteResponseEndpoint {
 
 		private final EndpointDelegate delegate;
 
-		EmptyWriteEndpoint(EndpointDelegate delegate) {
+		VoidWriteResponseEndpoint(EndpointDelegate delegate) {
 			this.delegate = delegate;
 		}
 
@@ -331,8 +352,25 @@ public abstract class AbstractWebEndpointIntegrationTests<T extends Configurable
 
 	}
 
-	@Endpoint(id = "null")
-	static class NullResponseEndpoint {
+	@Endpoint(id = "nullwrite")
+	static class NullWriteResponseEndpoint {
+
+		private final EndpointDelegate delegate;
+
+		NullWriteResponseEndpoint(EndpointDelegate delegate) {
+			this.delegate = delegate;
+		}
+
+		@WriteOperation
+		public Object write() {
+			this.delegate.write();
+			return null;
+		}
+
+	}
+
+	@Endpoint(id = "nullread")
+	static class NullReadResponseEndpoint {
 
 		@ReadOperation
 		public String readReturningNull() {

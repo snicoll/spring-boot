@@ -140,20 +140,21 @@ public class WebEndpointHandlerMapping extends RequestMappingInfoHandlerMapping
 				@RequestBody(required = false) Map<String, String> body) {
 			Map<String, Object> arguments = new HashMap<>((Map<String, String>) request
 					.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE));
-			if (body != null
-					&& HttpMethod.POST == HttpMethod.valueOf(request.getMethod())) {
+			HttpMethod httpMethod = HttpMethod.valueOf(request.getMethod());
+			if (body != null && HttpMethod.POST == httpMethod) {
 				arguments.putAll(body);
 			}
 			request.getParameterMap().forEach((name, values) -> {
 				arguments.put(name,
 						values.length == 1 ? values[0] : Arrays.asList(values));
 			});
-			return handleResult(this.operationInvoker.invoke(arguments));
+			return handleResult(this.operationInvoker.invoke(arguments), httpMethod);
 		}
 
-		private Object handleResult(Object result) {
+		private Object handleResult(Object result, HttpMethod httpMethod) {
 			if (result == null) {
-				return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+				return new ResponseEntity<>(httpMethod == HttpMethod.GET
+						? HttpStatus.NOT_FOUND : HttpStatus.NO_CONTENT);
 			}
 			if (!(result instanceof WebEndpointResponse)) {
 				return result;

@@ -134,7 +134,10 @@ public class ReactiveEndpointRouterFunctionFactory {
 
 		public Mono<ServerResponse> apply(ServerRequest serverRequest) {
 			return invoke(serverRequest)
-					.switchIfEmpty(Mono.just(new WebEndpointResponse<>(204)))
+					.switchIfEmpty(Mono.just(new WebEndpointResponse<>(
+							serverRequest.method() == HttpMethod.GET
+									? HttpStatus.NOT_FOUND.value()
+									: HttpStatus.NO_CONTENT.value())))
 					.map((entity) -> entity instanceof WebEndpointResponse
 							? (WebEndpointResponse<?>) entity
 							: new WebEndpointResponse<Object>(entity))
