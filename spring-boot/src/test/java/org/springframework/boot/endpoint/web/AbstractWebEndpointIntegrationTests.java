@@ -35,9 +35,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.convert.support.DefaultConversionService;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
@@ -173,6 +176,16 @@ public abstract class AbstractWebEndpointIntegrationTests<T extends Configurable
 		});
 	}
 
+	@Test
+	public void readOperationWithResourceResponse() {
+		load(ResourceEndpointConfiguration.class, (context, client) -> {
+			byte[] responseBody = client.get().uri("/resource").exchange().expectStatus()
+					.isOk().expectHeader().contentType(MediaType.APPLICATION_OCTET_STREAM)
+					.returnResult(byte[].class).getResponseBodyContent();
+			assertThat(responseBody).containsExactly(0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
+		});
+	}
+
 	protected abstract T createApplicationContext(Class<?>... config);
 
 	protected abstract int getPort(T context);
@@ -284,6 +297,17 @@ public abstract class AbstractWebEndpointIntegrationTests<T extends Configurable
 
 	}
 
+	@Configuration
+	@Import(BaseConfiguration.class)
+	static class ResourceEndpointConfiguration {
+
+		@Bean
+		public ResourceEndpoint resourceEndpoint() {
+			return new ResourceEndpoint();
+		}
+
+	}
+
 	@Endpoint(id = "test")
 	static class TestEndpoint {
 
@@ -375,6 +399,16 @@ public abstract class AbstractWebEndpointIntegrationTests<T extends Configurable
 		@ReadOperation
 		public String readReturningNull() {
 			return null;
+		}
+
+	}
+
+	@Endpoint(id = "resource")
+	static class ResourceEndpoint {
+
+		@ReadOperation
+		public Resource read() {
+			return new ByteArrayResource(new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 });
 		}
 
 	}
