@@ -39,6 +39,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.BodyExtractors;
 import org.springframework.web.reactive.function.server.RequestPredicate;
 import org.springframework.web.reactive.function.server.RequestPredicates;
@@ -120,6 +121,7 @@ public class ReactiveEndpointRouterFunctionFactory {
 	private static class EndpointHandler {
 
 		private static final ParameterizedTypeReference<Map<String, String>> BODY_TYPE = new ParameterizedTypeReference<Map<String, String>>() {
+
 		};
 
 		private final OperationInvoker operationInvoker;
@@ -145,20 +147,27 @@ public class ReactiveEndpointRouterFunctionFactory {
 		@SuppressWarnings("unchecked")
 		private Mono<Object> invoke(ServerRequest request) {
 			// TODO Better handling of an empty request body
-			return request.body(BodyExtractors.toMono(BODY_TYPE))
-					.onErrorResume(ex -> Mono.just(Collections.emptyMap()))
+			Mono<Map<String, String>> mapBody = request
+					.body(BodyExtractors.toMono(BODY_TYPE));
+			if (!request.headers().contentType().isPresent()) {
+				mapBody = mapBody.onErrorResume(ex -> Mono.just(Collections.emptyMap()));
+			}
+			return mapBody.switchIfEmpty(Mono.just(Collections.emptyMap()))
 					.flatMap((body) -> {
-						Object result = this.operationInvoker
-								.invoke(endpointArguments(request.pathVariables(), body));
+						Object result = this.operationInvoker.invoke(endpointArguments(
+								request.pathVariables(), request.queryParams(), body));
 						return result instanceof Mono ? (Mono<Object>) result
 								: Mono.just(result);
 					});
 		}
 
 		private Map<String, Object> endpointArguments(Map<String, String> pathVariables,
-				Map<String, String> body) {
+				MultiValueMap<String, String> queryParameters, Map<String, String> body) {
 			Map<String, Object> arguments = new HashMap<>(pathVariables);
 			arguments.putAll(body);
+			queryParameters.forEach((name, values) -> {
+				arguments.put(name, values.size() == 1 ? values.get(0) : values);
+			});
 			return arguments;
 		}
 

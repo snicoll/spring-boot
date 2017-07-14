@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
@@ -62,8 +63,9 @@ public class JerseyEndpointResourceFactory {
 		Builder resourceBuilder = Resource.builder().path(requestPredicate.getPath());
 		resourceBuilder.addMethod(requestPredicate.getHttpMethod().name())
 				.consumes(toStringArray(requestPredicate.getConsumes()))
-				.produces(toStringArray(requestPredicate.getProduces())).handledBy(
-						new EndpointInvokingInflector(operation.getOperationInvoker()));
+				.produces(toStringArray(requestPredicate.getProduces()))
+				.handledBy(new EndpointInvokingInflector(operation.getOperationInvoker(),
+						!requestPredicate.getConsumes().isEmpty()));
 		return resourceBuilder.build();
 	}
 
@@ -76,30 +78,49 @@ public class JerseyEndpointResourceFactory {
 
 		private final OperationInvoker operationInvoker;
 
-		private EndpointInvokingInflector(OperationInvoker operationInvoker) {
+		private final boolean readBody;
+
+		private EndpointInvokingInflector(OperationInvoker operationInvoker,
+				boolean readBody) {
 			this.operationInvoker = operationInvoker;
+			this.readBody = readBody;
 		}
 
 		@SuppressWarnings("unchecked")
 		@Override
 		public Object apply(ContainerRequestContext data) {
-			Map<String, Object> body = ((ContainerRequest) data).readEntity(Map.class);
-			Map<String, Object> arguments = body == null ? new HashMap<>()
-					: new HashMap<>(body);
+			Map<String, Object> arguments = new HashMap<>();
+			if (this.readBody) {
+				Map<String, Object> body = ((ContainerRequest) data)
+						.readEntity(Map.class);
+				if (body != null) {
+					arguments.putAll(body);
+				}
+			}
 			arguments.putAll(extractPathParmeters(data));
-
+			arguments.putAll(extractQueryParmeters(data));
 			return convertIfNecessary(this.operationInvoker.invoke(arguments));
 		}
 
-		private Map<String, String> extractPathParmeters(
+		private Map<String, Object> extractPathParmeters(
 				ContainerRequestContext requestContext) {
-			Map<String, String> pathParameters = new HashMap<>();
-			requestContext.getUriInfo().getPathParameters().forEach((name, values) -> {
+			return extract(requestContext.getUriInfo().getPathParameters());
+		}
+
+		private Map<String, Object> extractQueryParmeters(
+				ContainerRequestContext requestContext) {
+			return extract(requestContext.getUriInfo().getQueryParameters());
+		}
+
+		private Map<String, Object> extract(
+				MultivaluedMap<String, String> multivaluedMap) {
+			Map<String, Object> result = new HashMap<>();
+			multivaluedMap.forEach((name, values) -> {
 				if (!CollectionUtils.isEmpty(values)) {
-					pathParameters.put(name, values.get(0));
+					result.put(name, values.size() == 1 ? values.get(0) : values);
 				}
 			});
-			return pathParameters;
+			return result;
 		}
 
 		private Object convertIfNecessary(Object response) {

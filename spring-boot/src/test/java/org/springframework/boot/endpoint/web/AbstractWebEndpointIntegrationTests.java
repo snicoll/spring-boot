@@ -18,6 +18,7 @@ package org.springframework.boot.endpoint.web;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -32,6 +33,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
@@ -55,7 +57,7 @@ public abstract class AbstractWebEndpointIntegrationTests<T extends Configurable
 
 	@Test
 	public void readOperation() {
-		load(client -> {
+		load(TestEndpointConfiguration.class, client -> {
 			client.get().uri("/test").accept(MediaType.APPLICATION_JSON).exchange()
 					.expectStatus().isOk().expectBody(String.class).isEqualTo("All");
 		});
@@ -63,15 +65,51 @@ public abstract class AbstractWebEndpointIntegrationTests<T extends Configurable
 
 	@Test
 	public void readOperationWithSelector() {
-		load(client -> {
+		load(TestEndpointConfiguration.class, client -> {
 			client.get().uri("/test/one").accept(MediaType.APPLICATION_JSON).exchange()
 					.expectStatus().isOk().expectBody(String.class).isEqualTo("Part one");
 		});
 	}
 
 	@Test
+	public void readOperationWithSingleQueryParameters() {
+		load(QueryEndpointConfiguration.class, client -> {
+			client.get().uri("/query?one=1&two=2").accept(MediaType.APPLICATION_JSON)
+					.exchange().expectStatus().isOk().expectBody(String.class)
+					.isEqualTo("Query 1 2");
+		});
+	}
+
+	@Test
+	public void readOperationWithSingleQueryParametersAndMultipleValues() {
+		load(QueryEndpointConfiguration.class, client -> {
+			client.get().uri("/query?one=1&two=2&two=2")
+					.accept(MediaType.APPLICATION_JSON).exchange().expectStatus().isOk()
+					.expectBody(String.class).isEqualTo("Query 1 2,2");
+		});
+	}
+
+	@Test
+	public void readOperationWithListQueryParameterAndSingleValue() {
+		load(QueryWithListEndpointConfiguration.class, client -> {
+			client.get().uri("/query?one=1&two=2").accept(MediaType.APPLICATION_JSON)
+					.exchange().expectStatus().isOk().expectBody(String.class)
+					.isEqualTo("Query 1 [2]");
+		});
+	}
+
+	@Test
+	public void readOperationWithListQueryParameterAndMultipleValues() {
+		load(QueryWithListEndpointConfiguration.class, client -> {
+			client.get().uri("/query?one=1&two=2&two=2")
+					.accept(MediaType.APPLICATION_JSON).exchange().expectStatus().isOk()
+					.expectBody(String.class).isEqualTo("Query 1 [2, 2]");
+		});
+	}
+
+	@Test
 	public void writeOperation() {
-		load(client -> {
+		load(TestEndpointConfiguration.class, client -> {
 			Map<String, Object> body = new HashMap<>();
 			body.put("foo", "one");
 			body.put("bar", "two");
@@ -81,8 +119,17 @@ public abstract class AbstractWebEndpointIntegrationTests<T extends Configurable
 	}
 
 	@Test
-	public void nullIsPassedToTheOperationWhenArgumentIsNotFoundInTheRequestBody() {
-		load((context, client) -> {
+	public void writeOperationWithEmptyBody() {
+		load(EmptyWriteEndpointConfiguration.class, (context, client) -> {
+			client.post().uri("/emptywrite").accept(MediaType.APPLICATION_JSON).exchange()
+					.expectStatus().isOk().expectBody().isEmpty();
+			verify(context.getBean(EndpointDelegate.class)).write();
+		});
+	}
+
+	@Test
+	public void nullIsPassedToTheOperationWhenArgumentIsNotFoundInPostRequestBody() {
+		load(TestEndpointConfiguration.class, (context, client) -> {
 			Map<String, Object> body = new HashMap<>();
 			body.put("foo", "one");
 			client.post().uri("/test").syncBody(body).accept(MediaType.APPLICATION_JSON)
@@ -91,13 +138,23 @@ public abstract class AbstractWebEndpointIntegrationTests<T extends Configurable
 		});
 	}
 
+	@Test
+	public void nullsArePassedToTheOperationWhenPostRequestHasNoBody() {
+		load(TestEndpointConfiguration.class, (context, client) -> {
+			client.post().uri("/test").contentType(MediaType.APPLICATION_JSON)
+					.accept(MediaType.APPLICATION_JSON).exchange().expectStatus().isOk()
+					.expectBody().isEmpty();
+			verify(context.getBean(EndpointDelegate.class)).write(null, null);
+		});
+	}
+
 	protected abstract T createApplicationContext(Class<?>... config);
 
 	protected abstract int getPort(T context);
 
-	private void load(BiConsumer<ApplicationContext, WebTestClient> consumer) {
-		T context = createApplicationContext(BaseConfiguration.class,
-				this.exporterConfiguration);
+	private void load(Class<?> configuration,
+			BiConsumer<ApplicationContext, WebTestClient> consumer) {
+		T context = createApplicationContext(configuration, this.exporterConfiguration);
 		try {
 			consumer.accept(context,
 					WebTestClient.bindToServer()
@@ -110,19 +167,14 @@ public abstract class AbstractWebEndpointIntegrationTests<T extends Configurable
 		}
 	}
 
-	private void load(Consumer<WebTestClient> clientConsumer) {
-		load((context, client) -> {
+	private void load(Class<?> configuration, Consumer<WebTestClient> clientConsumer) {
+		load(configuration, (context, client) -> {
 			clientConsumer.accept(client);
 		});
 	}
 
 	@Configuration
 	static class BaseConfiguration {
-
-		@Bean
-		public TestWebEndpoint testWebEndpoint(EndpointDelegate endpointDelegate) {
-			return new TestWebEndpoint(endpointDelegate);
-		}
 
 		@Bean
 		public EndpointDelegate endpointDelegate() {
@@ -139,12 +191,56 @@ public abstract class AbstractWebEndpointIntegrationTests<T extends Configurable
 
 	}
 
+	@Configuration
+	@Import(BaseConfiguration.class)
+	static class TestEndpointConfiguration {
+
+		@Bean
+		public TestEndpoint testEndpoint(EndpointDelegate endpointDelegate) {
+			return new TestEndpoint(endpointDelegate);
+		}
+
+	}
+
+	@Configuration
+	@Import(BaseConfiguration.class)
+	static class QueryEndpointConfiguration {
+
+		@Bean
+		public QueryEndpoint queryEndpoint() {
+			return new QueryEndpoint();
+		}
+
+	}
+
+	@Configuration
+	@Import(BaseConfiguration.class)
+	static class QueryWithListEndpointConfiguration {
+
+		@Bean
+		public QueryWithListEndpoint queryEndpoint() {
+			return new QueryWithListEndpoint();
+		}
+
+	}
+
+	@Configuration
+	@Import(BaseConfiguration.class)
+	static class EmptyWriteEndpointConfiguration {
+
+		@Bean
+		public EmptyWriteEndpoint emptyWriteEndpoint(EndpointDelegate delegate) {
+			return new EmptyWriteEndpoint(delegate);
+		}
+
+	}
+
 	@Endpoint(id = "test")
-	static class TestWebEndpoint {
+	static class TestEndpoint {
 
 		private final EndpointDelegate endpointDelegate;
 
-		TestWebEndpoint(EndpointDelegate endpointDelegate) {
+		TestEndpoint(EndpointDelegate endpointDelegate) {
 			this.endpointDelegate = endpointDelegate;
 		}
 
@@ -165,7 +261,51 @@ public abstract class AbstractWebEndpointIntegrationTests<T extends Configurable
 
 	}
 
+	@Endpoint(id = "query")
+	static class QueryEndpoint {
+
+		@ReadOperation
+		public String query(String one, String two) {
+			return "Query " + one + " " + two;
+		}
+
+		@ReadOperation
+		public String queryWithParameterList(@Selector String list, String one,
+				List<String> two) {
+			return "Query " + list + " " + one + " " + two;
+		}
+
+	}
+
+	@Endpoint(id = "query")
+	static class QueryWithListEndpoint {
+
+		@ReadOperation
+		public String queryWithParameterList(String one, List<String> two) {
+			return "Query " + one + " " + two;
+		}
+
+	}
+
+	@Endpoint(id = "emptywrite")
+	static class EmptyWriteEndpoint {
+
+		private final EndpointDelegate delegate;
+
+		EmptyWriteEndpoint(EndpointDelegate delegate) {
+			this.delegate = delegate;
+		}
+
+		@WriteOperation
+		public void write() {
+			this.delegate.write();
+		}
+
+	}
+
 	public interface EndpointDelegate {
+
+		void write();
 
 		void write(String foo, String bar);
 
