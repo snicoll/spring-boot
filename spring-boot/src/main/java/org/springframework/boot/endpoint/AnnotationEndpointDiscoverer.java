@@ -127,7 +127,7 @@ public abstract class AnnotationEndpointDiscoverer<T extends EndpointOperation, 
 		for (String beanName : endpointBeanNames) {
 			Class<?> beanType = this.applicationContext.getType(beanName);
 			AnnotationAttributes endpointAttributes = AnnotatedElementUtils
-					.getMergedAnnotationAttributes(beanType, Endpoint.class);
+					.findMergedAnnotationAttributes(beanType, Endpoint.class, true, true);
 			String endpointId = endpointAttributes.getString("id");
 			if (matchEndpointType(endpointAttributes, endpointType)) {
 				Map<Method, T> operationMethods = discoverOperations(endpointId, beanName,

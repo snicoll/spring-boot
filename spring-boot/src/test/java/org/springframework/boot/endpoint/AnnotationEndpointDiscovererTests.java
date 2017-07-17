@@ -78,6 +78,32 @@ public class AnnotationEndpointDiscovererTests {
 	}
 
 	@Test
+	public void subclassedEndpointIsDiscovered() {
+		load(TestEndpointSubclassConfiguration.class, (context) -> {
+			Collection<EndpointInfo<TestEndpointOperation>> endpoints = new TestAnnotationEndpointDiscoverer(
+					context).discoverEndpoints();
+			assertThat(endpoints).hasSize(1);
+			EndpointInfo<TestEndpointOperation> endpoint = endpoints.iterator().next();
+			assertThat(endpoint.getId()).isEqualTo("test");
+			Collection<TestEndpointOperation> operations = endpoint.getOperations();
+			assertThat(operations).hasSize(4);
+			Map<Method, EndpointOperation> operationByMethod = new HashMap<>();
+			operations.forEach((operation) -> {
+				operationByMethod.put(operation.getOperationMethod(), operation);
+			});
+			assertThat(operationByMethod).containsKeys(
+					ReflectionUtils.findMethod(TestEndpoint.class, "getAll"),
+					ReflectionUtils.findMethod(TestEndpoint.class, "getOne",
+							String.class),
+					ReflectionUtils.findMethod(TestEndpoint.class, "update", String.class,
+							String.class),
+					ReflectionUtils.findMethod(TestEndpointSubclass.class,
+							"updateWithMoreArguments", String.class, String.class,
+							String.class));
+		});
+	}
+
+	@Test
 	public void discoveryFailsWhenTwoEndpointsHaveTheSameId() {
 		load(ClashingEndpointConfiguration.class, (context) -> {
 			this.thrown.expect(IllegalStateException.class);
@@ -127,12 +153,31 @@ public class AnnotationEndpointDiscovererTests {
 
 	}
 
+	static class TestEndpointSubclass extends TestEndpoint {
+
+		@WriteOperation
+		public void updateWithMoreArguments(String foo, String bar, String baz) {
+
+		}
+
+	}
+
 	@Configuration
 	static class TestEndpointConfiguration {
 
 		@Bean
 		public TestEndpoint testEndpoint() {
 			return new TestEndpoint();
+		}
+
+	}
+
+	@Configuration
+	static class TestEndpointSubclassConfiguration {
+
+		@Bean
+		public TestEndpointSubclass testEndpointSubclass() {
+			return new TestEndpointSubclass();
 		}
 
 	}
