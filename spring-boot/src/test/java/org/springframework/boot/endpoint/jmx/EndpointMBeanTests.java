@@ -37,6 +37,7 @@ import org.junit.Before;
 import org.junit.Test;
 import reactor.core.publisher.Mono;
 
+import org.springframework.boot.endpoint.DefaultOperationParameterMapper;
 import org.springframework.boot.endpoint.Endpoint;
 import org.springframework.boot.endpoint.ReadOperation;
 import org.springframework.boot.endpoint.WriteOperation;
@@ -226,7 +227,8 @@ public class EndpointMBeanTests {
 		try (AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(
 				configuration)) {
 			consumer.accept(new JmxAnnotationEndpointDiscoverer(context,
-					DefaultConversionService.getSharedInstance()));
+					new DefaultOperationParameterMapper(
+							DefaultConversionService.getSharedInstance())));
 		}
 	}
 

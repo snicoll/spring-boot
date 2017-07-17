@@ -19,6 +19,7 @@ package org.springframework.boot.endpoint.web;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +32,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import org.springframework.boot.endpoint.DefaultOperationParameterMapper;
 import org.springframework.boot.endpoint.Endpoint;
 import org.springframework.boot.endpoint.EndpointInfo;
 import org.springframework.boot.endpoint.EndpointType;
@@ -236,9 +238,10 @@ public class WebAnnotationEndpointDiscovererTests {
 				configuration);
 		try {
 			consumer.accept(new WebAnnotationEndpointDiscoverer(context,
-					DefaultConversionService.getSharedInstance(), basePath,
-					Arrays.asList("application/json"),
-					Arrays.asList("application/json")));
+					new DefaultOperationParameterMapper(
+							DefaultConversionService.getSharedInstance()), basePath,
+					Collections.singletonList("application/json"),
+					Collections.singletonList("application/json")));
 		}
 		finally {
 			context.close();
@@ -610,11 +613,11 @@ public class WebAnnotationEndpointDiscovererTests {
 		private boolean matches(OperationRequestPredicate predicate) {
 			return (this.path == null || this.path.equals(predicate.getPath()))
 					&& (this.httpMethod == null
-							|| this.httpMethod == predicate.getHttpMethod())
+					|| this.httpMethod == predicate.getHttpMethod())
 					&& (this.produces == null || this.produces
-							.equals(new ArrayList<>(predicate.getProduces())))
+					.equals(new ArrayList<>(predicate.getProduces())))
 					&& (this.consumes == null || this.consumes
-							.equals(new ArrayList<>(predicate.getConsumes())));
+					.equals(new ArrayList<>(predicate.getConsumes())));
 		}
 
 		@Override

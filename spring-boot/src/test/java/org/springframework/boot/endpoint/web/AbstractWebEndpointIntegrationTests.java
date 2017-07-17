@@ -16,7 +16,7 @@
 
 package org.springframework.boot.endpoint.web;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,7 +25,9 @@ import java.util.function.Consumer;
 
 import org.junit.Test;
 
+import org.springframework.boot.endpoint.DefaultOperationParameterMapper;
 import org.springframework.boot.endpoint.Endpoint;
+import org.springframework.boot.endpoint.OperationParameterMapper;
 import org.springframework.boot.endpoint.ReadOperation;
 import org.springframework.boot.endpoint.Selector;
 import org.springframework.boot.endpoint.WriteOperation;
@@ -222,9 +224,12 @@ public abstract class AbstractWebEndpointIntegrationTests<T extends Configurable
 		@Bean
 		public WebAnnotationEndpointDiscoverer webEndpointDiscoverer(
 				ApplicationContext applicationContext) {
+			OperationParameterMapper parameterMapper = new DefaultOperationParameterMapper(
+					DefaultConversionService.getSharedInstance());
 			return new WebAnnotationEndpointDiscoverer(applicationContext,
-					DefaultConversionService.getSharedInstance(), "endpoints",
-					Arrays.asList("application/json"), Arrays.asList("application/json"));
+					parameterMapper, "endpoints",
+					Collections.singletonList("application/json"),
+					Collections.singletonList("application/json"));
 		}
 
 	}

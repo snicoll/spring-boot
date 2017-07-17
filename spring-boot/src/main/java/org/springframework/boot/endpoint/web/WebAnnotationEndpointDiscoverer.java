@@ -31,11 +31,11 @@ import org.springframework.boot.endpoint.Endpoint;
 import org.springframework.boot.endpoint.EndpointInfo;
 import org.springframework.boot.endpoint.EndpointOperationType;
 import org.springframework.boot.endpoint.EndpointType;
+import org.springframework.boot.endpoint.OperationParameterMapper;
 import org.springframework.boot.endpoint.ReflectiveOperationInvoker;
 import org.springframework.boot.endpoint.Selector;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.annotation.AnnotationAttributes;
-import org.springframework.core.convert.ConversionService;
 import org.springframework.core.io.Resource;
 import org.springframework.util.ClassUtils;
 
@@ -55,18 +55,18 @@ public class WebAnnotationEndpointDiscoverer extends
 	 * {@link Endpoint endpoints} and {@link WebEndpointExtension web extensions} using
 	 * the given {@link ApplicationContext}.
 	 * @param applicationContext the application context
-	 * @param conversionService the conversion service used to convert arguments when an
-	 * operation is invoked
+	 * @param operationParameterMapper the {@link OperationParameterMapper} used to
+	 * convert arguments when an operation is invoked
 	 * @param basePath the path to prepend to the path of each discovered operation
 	 * @param consumedMediaTypes the media types consumed by web endpoint operations
 	 * @param producedMediaTypes the media types produced by web endpoint operations
 	 */
 	public WebAnnotationEndpointDiscoverer(ApplicationContext applicationContext,
-			ConversionService conversionService, String basePath,
+			OperationParameterMapper operationParameterMapper, String basePath,
 			Collection<String> consumedMediaTypes,
 			Collection<String> producedMediaTypes) {
 		super(applicationContext,
-				new WebEndpointOperationFactory(conversionService, basePath,
+				new WebEndpointOperationFactory(operationParameterMapper, basePath,
 						consumedMediaTypes, producedMediaTypes),
 				WebEndpointOperation::getRequestPredicate);
 	}
@@ -108,7 +108,7 @@ public class WebAnnotationEndpointDiscoverer extends
 				"org.reactivestreams.Publisher",
 				WebEndpointOperationFactory.class.getClassLoader());
 
-		private final ConversionService conversionService;
+		private final OperationParameterMapper parameterMapper;
 
 		private final String basePath;
 
@@ -116,10 +116,11 @@ public class WebAnnotationEndpointDiscoverer extends
 
 		private final Collection<String> producedMediaTypes;
 
-		private WebEndpointOperationFactory(ConversionService conversionService,
+		private WebEndpointOperationFactory(
+				OperationParameterMapper parameterMapper,
 				String basePath, Collection<String> consumedMediaTypes,
 				Collection<String> producedMediaTypes) {
-			this.conversionService = conversionService;
+			this.parameterMapper = parameterMapper;
 			this.basePath = normalizeBasePath(basePath);
 			this.consumedMediaTypes = consumedMediaTypes;
 			this.producedMediaTypes = producedMediaTypes;
@@ -145,7 +146,7 @@ public class WebAnnotationEndpointDiscoverer extends
 					determineConsumedMediaTypes(httpMethod, method),
 					determineProducedMediaTypes(method));
 			return new WebEndpointOperation(type,
-					new ReflectiveOperationInvoker(this.conversionService, target,
+					new ReflectiveOperationInvoker(this.parameterMapper, target,
 							method),
 					determineBlocking(method), requestPredicate);
 		}
