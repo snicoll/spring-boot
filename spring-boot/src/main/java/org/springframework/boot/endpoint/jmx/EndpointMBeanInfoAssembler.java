@@ -41,6 +41,12 @@ import org.springframework.boot.endpoint.EndpointOperationType;
  */
 class EndpointMBeanInfoAssembler {
 
+	private final JmxOperationResponseMapper responseMapper;
+
+	EndpointMBeanInfoAssembler(JmxOperationResponseMapper responseMapper) {
+		this.responseMapper = responseMapper;
+	}
+
 	/**
 	 * Creates the {@link EndpointMBeanInfo} for the specified {@link EndpointInfo
 	 * endpoint}.
@@ -79,7 +85,8 @@ class EndpointMBeanInfoAssembler {
 			ModelMBeanOperationInfo mBeanOperationInfo = new ModelMBeanOperationInfo(
 					operationInfo.getOperationName(), operationInfo.getDescription(),
 					getMBeanParameterInfos(operationInfo),
-					operationInfo.getOutputType().getName(),
+					this.responseMapper.mapResponseType(
+							operationInfo.getOutputType()).getName(),
 					mapOperationType(operationInfo.getType()));
 			operationInfos.put(name,
 					new OperationInfos(mBeanOperationInfo, operationInfo));

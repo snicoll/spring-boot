@@ -18,6 +18,7 @@ package org.springframework.boot.endpoint.jmx;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -27,6 +28,9 @@ import javax.management.AttributeList;
 import javax.management.AttributeNotFoundException;
 import javax.management.InstanceNotFoundException;
 import javax.management.MBeanException;
+import javax.management.MBeanInfo;
+import javax.management.MBeanOperationInfo;
+import javax.management.MBeanParameterInfo;
 import javax.management.MBeanServer;
 import javax.management.MBeanServerFactory;
 import javax.management.ObjectName;
@@ -54,7 +58,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class EndpointMBeanTests {
 
 	private final JmxEndpointMBeanFactory jmxEndpointMBeanFactory = new JmxEndpointMBeanFactory(
-			r -> (r != null ? r.toString().toUpperCase() : null));
+			new TestJmxOperationResponseMapper());
 
 	private MBeanServer server;
 
@@ -109,6 +113,40 @@ public class EndpointMBeanTests {
 				throw new AssertionError("Failed to invoke method on FooEndpoint", ex);
 			}
 		});
+	}
+
+	@Test
+	public void jmxTypesAreProperlyMapped() {
+		load(FooEndpoint.class, discoverer -> {
+			ObjectName objectName = registerEndpoint(discoverer, "foo");
+			try {
+				MBeanInfo mBeanInfo = this.server.getMBeanInfo(objectName);
+				Map<String, MBeanOperationInfo> operations = mapOperations(mBeanInfo);
+				assertThat(operations).containsOnlyKeys("getAll", "getOne", "update");
+				assertOperation(operations.get("getAll"), String.class,
+						MBeanOperationInfo.INFO, new Class<?>[0]);
+				assertOperation(operations.get("getOne"), String.class,
+						MBeanOperationInfo.INFO, new Class<?>[] { String.class });
+				assertOperation(operations.get("update"), Void.TYPE,
+						MBeanOperationInfo.ACTION, new Class<?>[] { String.class,
+								String.class });
+			}
+			catch (Exception ex) {
+				throw new AssertionError("Failed to retrieve MBeanInfo of FooEndpoint",
+						ex);
+			}
+		});
+	}
+
+	private void assertOperation(MBeanOperationInfo operation,
+			Class<?> returnType, int impact, Class<?>[] types) {
+		assertThat(operation.getReturnType()).isEqualTo(returnType.getName());
+		assertThat(operation.getImpact()).isEqualTo(impact);
+		MBeanParameterInfo[] signature = operation.getSignature();
+		assertThat(signature).hasSize(types.length);
+		for (int i = 0; i < types.length; i++) {
+			assertThat(signature[i].getType()).isEqualTo(types[0].getName());
+		}
 	}
 
 	@Test
@@ -222,6 +260,14 @@ public class EndpointMBeanTests {
 		return this.endpointMBeanRegistrar.registerEndpointMBean(endpointMBean);
 	}
 
+	private Map<String, MBeanOperationInfo> mapOperations(MBeanInfo info) {
+		Map<String, MBeanOperationInfo> operations = new HashMap<>();
+		for (MBeanOperationInfo mBeanOperationInfo : info.getOperations()) {
+			operations.put(mBeanOperationInfo.getName(), mBeanOperationInfo);
+		}
+		return operations;
+	}
+
 	private void load(Class<?> configuration,
 			Consumer<JmxAnnotationEndpointDiscoverer> consumer) {
 		try (AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(
@@ -235,11 +281,11 @@ public class EndpointMBeanTests {
 	@Endpoint(id = "foo")
 	static class FooEndpoint {
 
-		private final Map<String, Foo> all = new HashMap<>();
+		private final Map<FooName, Foo> all = new LinkedHashMap<>();
 
 		FooEndpoint() {
-			this.all.put("one", new Foo("one"));
-			this.all.put("two", new Foo("two"));
+			this.all.put(FooName.ONE, new Foo("one"));
+			this.all.put(FooName.TWO, new Foo("two"));
 		}
 
 		@ReadOperation
@@ -248,12 +294,12 @@ public class EndpointMBeanTests {
 		}
 
 		@ReadOperation
-		public Foo getOne(String name) {
+		public Foo getOne(FooName name) {
 			return this.all.get(name);
 		}
 
 		@WriteOperation
-		public void update(String name, String value) {
+		public void update(FooName name, String value) {
 			this.all.put(name, new Foo(value));
 		}
 
@@ -266,6 +312,12 @@ public class EndpointMBeanTests {
 		public Mono<String> getInfo() {
 			return Mono.defer(() -> Mono.just("Hello World"));
 		}
+
+	}
+
+	enum FooName {
+
+		ONE, TWO, THREE
 
 	}
 
@@ -286,6 +338,23 @@ public class EndpointMBeanTests {
 			return this.name;
 		}
 
+	}
+
+	private static class TestJmxOperationResponseMapper
+			implements JmxOperationResponseMapper {
+
+		@Override
+		public Object mapResponse(Object response) {
+			return (response != null ? response.toString().toUpperCase() : null);
+		}
+
+		@Override
+		public Class<?> mapResponseType(Class<?> responseType) {
+			if (responseType == Void.TYPE) {
+				return Void.TYPE;
+			}
+			return String.class;
+		}
 	}
 
 }

@@ -17,7 +17,6 @@
 package org.springframework.boot.endpoint.jmx;
 
 import java.util.Collection;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.springframework.boot.endpoint.EndpointInfo;
@@ -31,19 +30,20 @@ import org.springframework.boot.endpoint.EndpointInfo;
  */
 public class JmxEndpointMBeanFactory {
 
-	private final EndpointMBeanInfoAssembler assembler = new EndpointMBeanInfoAssembler();
+	private final EndpointMBeanInfoAssembler assembler;
 
-	private final Function<Object, Object> operationResponseConverter;
+	private final JmxOperationResponseMapper resultMapper;
 
 	/**
 	 * Create a new {@link JmxEndpointMBeanFactory} instance that will use the given
 	 * {@code endpointResponseConverter} to convert an operation's response to a
 	 * JMX-friendly form. The given {@code beanFactory} is used to look up the bean that
 	 * implements an operation.
-	 * @param operationResponseConverter the response converter
+	 * @param responseMapper the response mapper
 	 */
-	public JmxEndpointMBeanFactory(Function<Object, Object> operationResponseConverter) {
-		this.operationResponseConverter = operationResponseConverter;
+	public JmxEndpointMBeanFactory(JmxOperationResponseMapper responseMapper) {
+		this.assembler = new EndpointMBeanInfoAssembler(responseMapper);
+		this.resultMapper = responseMapper;
 	}
 
 	/**
@@ -57,7 +57,7 @@ public class JmxEndpointMBeanFactory {
 		return endpoints.stream().map((endpointInfo) -> {
 			EndpointMBeanInfo endpointMBeanInfo = this.assembler
 					.createEndpointMBeanInfo(endpointInfo);
-			return new EndpointMBean(this.operationResponseConverter,
+			return new EndpointMBean(this.resultMapper::mapResponse,
 					endpointMBeanInfo);
 		}).collect(Collectors.toList());
 	}

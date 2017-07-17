@@ -39,7 +39,8 @@ import static org.assertj.core.api.Assertions.entry;
  */
 public class EndpointMBeanInfoAssemblerTests {
 
-	private final EndpointMBeanInfoAssembler mBeanInfoAssembler = new EndpointMBeanInfoAssembler();
+	private final EndpointMBeanInfoAssembler mBeanInfoAssembler = new EndpointMBeanInfoAssembler(
+			new DummyOperationResponseMapper());
 
 	@Test
 	public void exposeSimpleReadOperation() {
@@ -110,6 +111,20 @@ public class EndpointMBeanInfoAssemblerTests {
 			return null;
 		}
 
+	}
+
+	private static class DummyOperationResponseMapper
+			implements JmxOperationResponseMapper {
+
+		@Override
+		public Object mapResponse(Object response) {
+			return response;
+		}
+
+		@Override
+		public Class<?> mapResponseType(Class<?> responseType) {
+			return responseType;
+		}
 	}
 
 }
