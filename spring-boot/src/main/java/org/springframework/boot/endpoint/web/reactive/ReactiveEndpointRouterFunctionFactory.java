@@ -140,7 +140,7 @@ public class ReactiveEndpointRouterFunctionFactory {
 									: HttpStatus.NO_CONTENT.value())))
 					.map((entity) -> entity instanceof WebEndpointResponse
 							? (WebEndpointResponse<?>) entity
-							: new WebEndpointResponse<Object>(entity))
+							: new WebEndpointResponse<>(entity))
 					.flatMap((entity) -> {
 						BodyBuilder bodyBuilder = ServerResponse
 								.status(HttpStatus.valueOf(entity.getStatus()));
@@ -170,9 +170,8 @@ public class ReactiveEndpointRouterFunctionFactory {
 				MultiValueMap<String, String> queryParameters, Map<String, String> body) {
 			Map<String, Object> arguments = new HashMap<>(pathVariables);
 			arguments.putAll(body);
-			queryParameters.forEach((name, values) -> {
-				arguments.put(name, values.size() == 1 ? values.get(0) : values);
-			});
+			queryParameters.forEach((name, values) ->
+					arguments.put(name, values.size() == 1 ? values.get(0) : values));
 			return arguments;
 		}
 

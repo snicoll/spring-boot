@@ -144,10 +144,8 @@ public class WebEndpointHandlerMapping extends RequestMappingInfoHandlerMapping
 			if (body != null && HttpMethod.POST == httpMethod) {
 				arguments.putAll(body);
 			}
-			request.getParameterMap().forEach((name, values) -> {
-				arguments.put(name,
-						values.length == 1 ? values[0] : Arrays.asList(values));
-			});
+			request.getParameterMap().forEach((name, values) -> arguments.put(name,
+					values.length == 1 ? values[0] : Arrays.asList(values)));
 			return handleResult(this.operationInvoker.invoke(arguments), httpMethod);
 		}
 

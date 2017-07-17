@@ -78,9 +78,8 @@ public class JmxAnnotationEndpointDiscoverer
 	private void verifyThatOperationsHaveDistinctName(
 			Collection<EndpointInfoDescriptor<JmxEndpointOperation, String>> endpointDescriptors) {
 		List<List<JmxEndpointOperation>> clashes = new ArrayList<>();
-		endpointDescriptors.forEach(descriptor -> {
-			clashes.addAll(descriptor.findDuplicateOperations().values());
-		});
+		endpointDescriptors.forEach(descriptor ->
+				clashes.addAll(descriptor.findDuplicateOperations().values()));
 		if (!clashes.isEmpty()) {
 			StringBuilder message = new StringBuilder();
 			message.append(
@@ -88,9 +87,8 @@ public class JmxAnnotationEndpointDiscoverer
 			clashes.forEach((clash) -> {
 				message.append("    ").append(clash.get(0).getOperationName())
 						.append(String.format(":%n"));
-				clash.forEach((operation) -> {
-					message.append("        ").append(String.format("%s%n", operation));
-				});
+				clash.forEach((operation) -> message.append("        ").append(
+						String.format("%s%n", operation)));
 			});
 			throw new IllegalStateException(message.toString());
 		}

@@ -111,10 +111,9 @@ public abstract class AnnotationEndpointDiscoverer<T extends EndpointOperation, 
 	private Map<OperationKey<K>, List<T>> indexOperations(String endpointId,
 			Class<?> target, Collection<T> operations) {
 		LinkedMultiValueMap<OperationKey<K>, T> operationByKey = new LinkedMultiValueMap<>();
-		operations.forEach(operation -> {
-			operationByKey.add(new OperationKey<K>(endpointId, target,
-					this.operationKeyFactory.apply(operation)), operation);
-		});
+		operations.forEach(operation ->
+				operationByKey.add(new OperationKey<>(endpointId, target,
+						this.operationKeyFactory.apply(operation)), operation));
 		return operationByKey;
 	}
 

@@ -45,7 +45,7 @@ import org.springframework.util.ClassUtils;
  */
 public class EndpointMBean implements DynamicMBean {
 
-	private static boolean REACTOR_PRESENT = ClassUtils.isPresent(
+	private static final boolean REACTOR_PRESENT = ClassUtils.isPresent(
 			"reactor.core.publisher.Mono", EndpointMBean.class.getClassLoader());
 
 	private final Function<Object, Object> operationResponseConverter;

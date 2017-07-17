@@ -50,7 +50,7 @@ public class OperationRequestPredicate {
 	public OperationRequestPredicate(String path, WebEndpointHttpMethod httpMethod,
 			Collection<String> consumes, Collection<String> produces) {
 		this.path = path;
-		this.canonicalPath = path.replaceAll("\\{.*?\\}", "{*}");
+		this.canonicalPath = path.replaceAll("\\{.*?}", "{*}");
 		this.httpMethod = httpMethod;
 		this.consumes = consumes;
 		this.produces = produces;

@@ -83,9 +83,8 @@ public class WebAnnotationEndpointDiscoverer extends
 	private void verifyThatOperationsHaveDistinctPredicates(
 			Collection<EndpointInfoDescriptor<WebEndpointOperation, OperationRequestPredicate>> endpointDescriptors) {
 		List<List<WebEndpointOperation>> clashes = new ArrayList<>();
-		endpointDescriptors.forEach(descriptor -> {
-			clashes.addAll(descriptor.findDuplicateOperations().values());
-		});
+		endpointDescriptors.forEach(descriptor ->
+				clashes.addAll(descriptor.findDuplicateOperations().values()));
 		if (!clashes.isEmpty()) {
 			StringBuilder message = new StringBuilder();
 			message.append(String.format(
@@ -93,9 +92,8 @@ public class WebAnnotationEndpointDiscoverer extends
 			clashes.forEach((clash) -> {
 				message.append("    ").append(clash.get(0).getRequestPredicate())
 						.append(String.format(":%n"));
-				clash.forEach((operation) -> {
-					message.append("        ").append(String.format("%s%n", operation));
-				});
+				clash.forEach((operation) ->
+						message.append("        ").append(String.format("%s%n", operation)));
 			});
 			throw new IllegalStateException(message.toString());
 		}
@@ -104,7 +102,7 @@ public class WebAnnotationEndpointDiscoverer extends
 	private static final class WebEndpointOperationFactory
 			implements EndpointOperationFactory<WebEndpointOperation> {
 
-		private static boolean REACTIVE_STREAMS_PRESENT = ClassUtils.isPresent(
+		private static final boolean REACTIVE_STREAMS_PRESENT = ClassUtils.isPresent(
 				"org.reactivestreams.Publisher",
 				WebEndpointOperationFactory.class.getClassLoader());
 
@@ -153,9 +151,9 @@ public class WebAnnotationEndpointDiscoverer extends
 
 		private String determinePath(String endpointId, Method operationMethod) {
 			StringBuilder path = new StringBuilder(this.basePath + endpointId);
-			Stream.of(operationMethod.getParameters()).filter((parameter) -> {
-				return parameter.getAnnotation(Selector.class) != null;
-			}).map((parameter) -> "/{" + parameter.getName() + "}").forEach(path::append);
+			Stream.of(operationMethod.getParameters()).filter((parameter) -> parameter.getAnnotation(Selector.class) != null)
+					.map((parameter) -> "/{" + parameter.getName() + "}")
+					.forEach(path::append);
 			return path.toString();
 		}
 

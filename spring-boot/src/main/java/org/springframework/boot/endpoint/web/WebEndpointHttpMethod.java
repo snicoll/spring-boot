@@ -32,6 +32,6 @@ public enum WebEndpointHttpMethod {
 	/**
 	 * An HTTP POST request.
 	 */
-	POST;
+	POST
 
 }
