@@ -22,7 +22,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.springframework.core.convert.ConversionService;
 import org.springframework.util.ReflectionUtils;
 
 /**
@@ -33,15 +32,15 @@ import org.springframework.util.ReflectionUtils;
  */
 public class ReflectiveOperationInvoker implements OperationInvoker {
 
-	private final ConversionService conversionService;
+	private final OperationParameterMapper parameterMapper;
 
 	private final Object target;
 
 	private final Method method;
 
-	public ReflectiveOperationInvoker(ConversionService conversionService, Object target,
-			Method method) {
-		this.conversionService = conversionService;
+	public ReflectiveOperationInvoker(OperationParameterMapper parameterMapper,
+			Object target, Method method) {
+		this.parameterMapper = parameterMapper;
 		this.target = target;
 		ReflectionUtils.makeAccessible(method);
 		this.method = method;
@@ -62,11 +61,7 @@ public class ReflectiveOperationInvoker implements OperationInvoker {
 
 	private Object resolveArgument(Parameter parameter, Map<String, Object> arguments) {
 		Object resolved = arguments.get(parameter.getName());
-		if (resolved == null
-				|| parameter.getType().isAssignableFrom(resolved.getClass())) {
-			return resolved;
-		}
-		return this.conversionService.convert(resolved, parameter.getType());
+		return this.parameterMapper.mapParameter(resolved, parameter.getType());
 	}
 
 }

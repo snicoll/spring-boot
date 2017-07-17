@@ -29,10 +29,10 @@ import org.springframework.boot.endpoint.Endpoint;
 import org.springframework.boot.endpoint.EndpointInfo;
 import org.springframework.boot.endpoint.EndpointOperationType;
 import org.springframework.boot.endpoint.EndpointType;
+import org.springframework.boot.endpoint.OperationParameterMapper;
 import org.springframework.boot.endpoint.ReflectiveOperationInvoker;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.annotation.AnnotationAttributes;
-import org.springframework.core.convert.ConversionService;
 import org.springframework.jmx.export.annotation.AnnotationJmxAttributeSource;
 import org.springframework.jmx.export.metadata.ManagedOperation;
 import org.springframework.jmx.export.metadata.ManagedOperationParameter;
@@ -57,12 +57,12 @@ public class JmxAnnotationEndpointDiscoverer
 	 * the given {@link ApplicationContext}.
 	 *
 	 * @param applicationContext the application context
-	 * @param conversionService the conversion service used to convert arguments when an
-	 * operation is invoked
+	 * @param parameterMapper the {@link OperationParameterMapper} used to convert
+	 * arguments when an operation is invoked
 	 */
 	public JmxAnnotationEndpointDiscoverer(ApplicationContext applicationContext,
-			ConversionService conversionService) {
-		super(applicationContext, new JmxEndpointOperationFactory(conversionService),
+			OperationParameterMapper parameterMapper) {
+		super(applicationContext, new JmxEndpointOperationFactory(parameterMapper),
 				JmxEndpointOperation::getOperationName);
 	}
 
@@ -99,10 +99,10 @@ public class JmxAnnotationEndpointDiscoverer
 	private static class JmxEndpointOperationFactory
 			implements EndpointOperationFactory<JmxEndpointOperation> {
 
-		private final ConversionService conversionService;
+		private final OperationParameterMapper parameterMapper;
 
-		JmxEndpointOperationFactory(ConversionService conversionService) {
-			this.conversionService = conversionService;
+		JmxEndpointOperationFactory(OperationParameterMapper parameterMapper) {
+			this.parameterMapper = parameterMapper;
 		}
 
 		@Override
@@ -115,7 +115,7 @@ public class JmxAnnotationEndpointDiscoverer
 					() -> "Invoke " + operationName + " for endpoint " + endpointId);
 			List<JmxEndpointOperationParameterInfo> parameters = getParameters(method);
 			return new JmxEndpointOperation(type,
-					new ReflectiveOperationInvoker(this.conversionService, target,
+					new ReflectiveOperationInvoker(this.parameterMapper, target,
 							method),
 					operationName, outputType, description, parameters);
 		}
