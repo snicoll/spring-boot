@@ -16,12 +16,15 @@
 
 package org.springframework.boot.endpoint.web.mvc;
 
+import java.util.Arrays;
+
 import org.springframework.boot.endpoint.web.AbstractWebEndpointIntegrationTests;
 import org.springframework.boot.endpoint.web.WebAnnotationEndpointDiscoverer;
 import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
 import org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.servlet.DispatcherServlet;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
@@ -63,10 +66,13 @@ public class MvcWebEndpointIntegrationTests extends
 		}
 
 		@Bean
-		public WebEndpointHandlerMapping webEndpointHandlerMapping(
+		public WebEndpointServletHandlerMapping webEndpointHandlerMapping(
 				WebAnnotationEndpointDiscoverer webEndpointDiscoverer) {
-			return new WebEndpointHandlerMapping(
-					webEndpointDiscoverer.discoverEndpoints());
+			CorsConfiguration corsConfiguration = new CorsConfiguration();
+			corsConfiguration.setAllowedOrigins(Arrays.asList("http://example.com"));
+			corsConfiguration.setAllowedMethods(Arrays.asList("GET", "POST"));
+			return new WebEndpointServletHandlerMapping(
+					webEndpointDiscoverer.discoverEndpoints(), corsConfiguration);
 		}
 
 	}

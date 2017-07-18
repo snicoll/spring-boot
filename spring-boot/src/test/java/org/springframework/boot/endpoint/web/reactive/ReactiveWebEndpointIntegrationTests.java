@@ -16,6 +16,8 @@
 
 package org.springframework.boot.endpoint.web.reactive;
 
+import java.util.Arrays;
+
 import org.springframework.boot.endpoint.web.AbstractWebEndpointIntegrationTests;
 import org.springframework.boot.endpoint.web.WebAnnotationEndpointDiscoverer;
 import org.springframework.boot.web.embedded.netty.NettyReactiveWebServerFactory;
@@ -26,9 +28,8 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.server.reactive.HttpHandler;
+import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.reactive.config.EnableWebFlux;
-import org.springframework.web.reactive.function.server.RouterFunction;
-import org.springframework.web.reactive.function.server.ServerResponse;
 import org.springframework.web.server.adapter.WebHttpHandlerBuilder;
 
 /**
@@ -71,10 +72,13 @@ public class ReactiveWebEndpointIntegrationTests
 		}
 
 		@Bean
-		public RouterFunction<ServerResponse> endpointsRouter(
+		public WebEndpointReactiveHandlerMapping webEndpointHandlerMapping(
 				WebAnnotationEndpointDiscoverer endpointDiscoverer) {
-			return new ReactiveEndpointRouterFunctionFactory()
-					.createRouterFunction(endpointDiscoverer.discoverEndpoints());
+			CorsConfiguration corsConfiguration = new CorsConfiguration();
+			corsConfiguration.setAllowedOrigins(Arrays.asList("http://example.com"));
+			corsConfiguration.setAllowedMethods(Arrays.asList("GET", "POST"));
+			return new WebEndpointReactiveHandlerMapping(
+					endpointDiscoverer.discoverEndpoints(), corsConfiguration);
 		}
 
 		@Bean

@@ -14,20 +14,16 @@
  * limitations under the License.
  */
 
-package org.springframework.boot.endpoint.web.mvc;
+package org.springframework.boot.endpoint.web.reactive;
 
 import java.lang.reflect.Method;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.boot.endpoint.EndpointInfo;
+import org.springframework.boot.endpoint.EndpointOperationType;
 import org.springframework.boot.endpoint.OperationInvoker;
 import org.springframework.boot.endpoint.web.OperationRequestPredicate;
 import org.springframework.boot.endpoint.web.WebEndpointOperation;
@@ -36,43 +32,61 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.ReflectionUtils;
-import org.springframework.web.accept.PathExtensionContentNegotiationStrategy;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.servlet.HandlerMapping;
-import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
-import org.springframework.web.servlet.mvc.condition.ConsumesRequestCondition;
-import org.springframework.web.servlet.mvc.condition.PatternsRequestCondition;
-import org.springframework.web.servlet.mvc.condition.ProducesRequestCondition;
-import org.springframework.web.servlet.mvc.condition.RequestMethodsRequestCondition;
-import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
-import org.springframework.web.servlet.mvc.method.RequestMappingInfoHandlerMapping;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.reactive.HandlerMapping;
+import org.springframework.web.reactive.result.condition.ConsumesRequestCondition;
+import org.springframework.web.reactive.result.condition.PatternsRequestCondition;
+import org.springframework.web.reactive.result.condition.ProducesRequestCondition;
+import org.springframework.web.reactive.result.condition.RequestMethodsRequestCondition;
+import org.springframework.web.reactive.result.method.RequestMappingInfo;
+import org.springframework.web.reactive.result.method.RequestMappingInfoHandlerMapping;
+import org.springframework.web.server.ServerWebExchange;
 
 /**
  * A custom {@link RequestMappingInfoHandlerMapping} that makes web endpoints available
- * over HTTP using Spring MVC.
+ * over HTTP using Spring WebFlux.
  *
  * @author Andy Wilkinson
  * @since 2.0.0
  */
-public class WebEndpointHandlerMapping extends RequestMappingInfoHandlerMapping
+public class WebEndpointReactiveHandlerMapping extends RequestMappingInfoHandlerMapping
 		implements InitializingBean {
 
-	private final Method handle = ReflectionUtils.findMethod(OperationHandler.class,
-			"handle", HttpServletRequest.class, Map.class);
+	private final Method handleRead = ReflectionUtils
+			.findMethod(ReadOperationHandler.class, "handle", ServerWebExchange.class);
+
+	private final Method handleWrite = ReflectionUtils.findMethod(
+			WriteOperationHandler.class, "handle", ServerWebExchange.class, Map.class);
 
 	private final Collection<EndpointInfo<WebEndpointOperation>> webEndpoints;
+
+	private final CorsConfiguration corsConfiguration;
 
 	/**
 	 * Creates a new {@code WebEndpointHandlerMapping} that provides mappings for the
 	 * operations of the given {@code webEndpoints}.
 	 * @param collection the web endpoints
 	 */
-	public WebEndpointHandlerMapping(
+	public WebEndpointReactiveHandlerMapping(
 			Collection<EndpointInfo<WebEndpointOperation>> collection) {
+		this(collection, null);
+	}
+
+	/**
+	 * Creates a new {@code WebEndpointHandlerMapping} that provides mappings for the
+	 * operations of the given {@code webEndpoints}.
+	 * @param webEndpoints the web endpoints
+	 * @param corsConfiguration the CORS configuraton for the endpoints
+	 */
+	public WebEndpointReactiveHandlerMapping(
+			Collection<EndpointInfo<WebEndpointOperation>> webEndpoints,
+			CorsConfiguration corsConfiguration) {
+		this.webEndpoints = webEndpoints;
+		this.corsConfiguration = corsConfiguration;
 		setOrder(-100);
-		this.webEndpoints = collection;
 	}
 
 	@Override
@@ -82,17 +96,27 @@ public class WebEndpointHandlerMapping extends RequestMappingInfoHandlerMapping
 				.forEach(this::registerMappingForOperation);
 	}
 
+	@Override
+	protected CorsConfiguration initCorsConfiguration(Object handler, Method method,
+			RequestMappingInfo mapping) {
+		return this.corsConfiguration;
+	}
+
 	private void registerMappingForOperation(WebEndpointOperation operation) {
+		EndpointOperationType operationType = operation.getType();
 		registerMapping(createRequestMappingInfo(operation),
-				new OperationHandler(operation.getOperationInvoker()), this.handle);
+				operationType == EndpointOperationType.WRITE
+						? new WriteOperationHandler(operation.getOperationInvoker())
+						: new ReadOperationHandler(operation.getOperationInvoker()),
+				operationType == EndpointOperationType.WRITE ? this.handleWrite
+						: this.handleRead);
 	}
 
 	private RequestMappingInfo createRequestMappingInfo(
 			WebEndpointOperation operationInfo) {
 		OperationRequestPredicate requestPredicate = operationInfo.getRequestPredicate();
 		return new RequestMappingInfo(null,
-				new PatternsRequestCondition(new String[] { requestPredicate.getPath() },
-						null, null, false, false),
+				new PatternsRequestCondition(requestPredicate.getPath()),
 				new RequestMethodsRequestCondition(
 						RequestMethod.valueOf(requestPredicate.getHttpMethod().name())),
 				null, null,
@@ -118,44 +142,38 @@ public class WebEndpointHandlerMapping extends RequestMappingInfoHandlerMapping
 		return null;
 	}
 
-	@Override
-	protected void extendInterceptors(List<Object> interceptors) {
-		interceptors.add(new SkipPathExtensionContentNegotiation());
-	}
-
 	/**
-	 * A handler for an endpoint operation.
+	 * Base class for handlers for endpoint operations.
 	 */
-	final class OperationHandler {
+	abstract class AbstractOperationHandler {
 
 		private final OperationInvoker operationInvoker;
 
-		OperationHandler(OperationInvoker operationInvoker) {
+		AbstractOperationHandler(OperationInvoker operationInvoker) {
 			this.operationInvoker = operationInvoker;
 		}
 
 		@SuppressWarnings("unchecked")
-		@ResponseBody
-		public Object handle(HttpServletRequest request,
-				@RequestBody(required = false) Map<String, String> body) {
-			Map<String, Object> arguments = new HashMap<>((Map<String, String>) request
+		ResponseEntity<?> doHandle(ServerWebExchange exchange, Map<String, String> body) {
+			Map<String, Object> arguments = new HashMap<>((Map<String, String>) exchange
 					.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE));
-			HttpMethod httpMethod = HttpMethod.valueOf(request.getMethod());
-			if (body != null && HttpMethod.POST == httpMethod) {
+			if (body != null) {
 				arguments.putAll(body);
 			}
-			request.getParameterMap().forEach((name, values) -> arguments.put(name,
-					values.length == 1 ? values[0] : Arrays.asList(values)));
-			return handleResult(this.operationInvoker.invoke(arguments), httpMethod);
+			exchange.getRequest().getQueryParams().forEach((name, values) -> {
+				arguments.put(name, values.size() == 1 ? values.get(0) : values);
+			});
+			return handleResult(this.operationInvoker.invoke(arguments),
+					exchange.getRequest().getMethod());
 		}
 
-		private Object handleResult(Object result, HttpMethod httpMethod) {
+		private ResponseEntity<?> handleResult(Object result, HttpMethod httpMethod) {
 			if (result == null) {
 				return new ResponseEntity<>(httpMethod == HttpMethod.GET
 						? HttpStatus.NOT_FOUND : HttpStatus.NO_CONTENT);
 			}
 			if (!(result instanceof WebEndpointResponse)) {
-				return result;
+				return new ResponseEntity<>(result, HttpStatus.OK);
 			}
 			WebEndpointResponse<?> response = (WebEndpointResponse<?>) result;
 			return new ResponseEntity<Object>(response.getBody(),
@@ -165,20 +183,34 @@ public class WebEndpointHandlerMapping extends RequestMappingInfoHandlerMapping
 	}
 
 	/**
-	 * {@link HandlerInterceptorAdapter} to ensure that
-	 * {@link PathExtensionContentNegotiationStrategy} is skipped for actuator endpoints.
+	 * A handler for an endpoint write operation.
 	 */
-	private static final class SkipPathExtensionContentNegotiation
-			extends HandlerInterceptorAdapter {
+	final class WriteOperationHandler extends AbstractOperationHandler {
 
-		private static final String SKIP_ATTRIBUTE = PathExtensionContentNegotiationStrategy.class
-				.getName() + ".SKIP";
+		WriteOperationHandler(OperationInvoker operationInvoker) {
+			super(operationInvoker);
+		}
 
-		@Override
-		public boolean preHandle(HttpServletRequest request, HttpServletResponse response,
-				Object handler) throws Exception {
-			request.setAttribute(SKIP_ATTRIBUTE, Boolean.TRUE);
-			return true;
+		@ResponseBody
+		public ResponseEntity<?> handle(ServerWebExchange exchange,
+				@RequestBody(required = false) Map<String, String> body) {
+			return doHandle(exchange, body);
+		}
+
+	}
+
+	/**
+	 * A handler for an endpoint write operation.
+	 */
+	final class ReadOperationHandler extends AbstractOperationHandler {
+
+		ReadOperationHandler(OperationInvoker operationInvoker) {
+			super(operationInvoker);
+		}
+
+		@ResponseBody
+		public ResponseEntity<?> handle(ServerWebExchange exchange) {
+			return doHandle(exchange, null);
 		}
 
 	}

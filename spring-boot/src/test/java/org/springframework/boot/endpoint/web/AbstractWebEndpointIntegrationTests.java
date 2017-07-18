@@ -65,7 +65,7 @@ public abstract class AbstractWebEndpointIntegrationTests<T extends Configurable
 	public void readOperation() {
 		load(TestEndpointConfiguration.class, client -> {
 			client.get().uri("/test").accept(MediaType.APPLICATION_JSON).exchange()
-					.expectStatus().isOk().expectBody(String.class).isEqualTo("All");
+					.expectStatus().isOk().expectBody().jsonPath("All").isEqualTo(true);
 		});
 	}
 
@@ -73,7 +73,7 @@ public abstract class AbstractWebEndpointIntegrationTests<T extends Configurable
 	public void readOperationWithSelector() {
 		load(TestEndpointConfiguration.class, client -> {
 			client.get().uri("/test/one").accept(MediaType.APPLICATION_JSON).exchange()
-					.expectStatus().isOk().expectBody(String.class).isEqualTo("Part one");
+					.expectStatus().isOk().expectBody().jsonPath("part").isEqualTo("one");
 		});
 	}
 
@@ -81,8 +81,8 @@ public abstract class AbstractWebEndpointIntegrationTests<T extends Configurable
 	public void readOperationWithSelectorContainingADot() {
 		load(TestEndpointConfiguration.class, client -> {
 			client.get().uri("/test/foo.bar").accept(MediaType.APPLICATION_JSON)
-					.exchange().expectStatus().isOk().expectBody(String.class)
-					.isEqualTo("Part foo.bar");
+					.exchange().expectStatus().isOk().expectBody().jsonPath("part")
+					.isEqualTo("foo.bar");
 		});
 	}
 
@@ -90,8 +90,8 @@ public abstract class AbstractWebEndpointIntegrationTests<T extends Configurable
 	public void readOperationWithSingleQueryParameters() {
 		load(QueryEndpointConfiguration.class, client -> {
 			client.get().uri("/query?one=1&two=2").accept(MediaType.APPLICATION_JSON)
-					.exchange().expectStatus().isOk().expectBody(String.class)
-					.isEqualTo("Query 1 2");
+					.exchange().expectStatus().isOk().expectBody().jsonPath("query")
+					.isEqualTo("1 2");
 		});
 	}
 
@@ -100,7 +100,7 @@ public abstract class AbstractWebEndpointIntegrationTests<T extends Configurable
 		load(QueryEndpointConfiguration.class, client -> {
 			client.get().uri("/query?one=1&two=2&two=2")
 					.accept(MediaType.APPLICATION_JSON).exchange().expectStatus().isOk()
-					.expectBody(String.class).isEqualTo("Query 1 2,2");
+					.expectBody().jsonPath("query").isEqualTo("1 2,2");
 		});
 	}
 
@@ -108,8 +108,8 @@ public abstract class AbstractWebEndpointIntegrationTests<T extends Configurable
 	public void readOperationWithListQueryParameterAndSingleValue() {
 		load(QueryWithListEndpointConfiguration.class, client -> {
 			client.get().uri("/query?one=1&two=2").accept(MediaType.APPLICATION_JSON)
-					.exchange().expectStatus().isOk().expectBody(String.class)
-					.isEqualTo("Query 1 [2]");
+					.exchange().expectStatus().isOk().expectBody().jsonPath("query")
+					.isEqualTo("1 [2]");
 		});
 	}
 
@@ -118,7 +118,7 @@ public abstract class AbstractWebEndpointIntegrationTests<T extends Configurable
 		load(QueryWithListEndpointConfiguration.class, client -> {
 			client.get().uri("/query?one=1&two=2&two=2")
 					.accept(MediaType.APPLICATION_JSON).exchange().expectStatus().isOk()
-					.expectBody(String.class).isEqualTo("Query 1 [2, 2]");
+					.expectBody().jsonPath("query").isEqualTo("1 [2, 2]");
 		});
 	}
 
@@ -186,6 +186,19 @@ public abstract class AbstractWebEndpointIntegrationTests<T extends Configurable
 					.isOk().expectHeader().contentType(MediaType.APPLICATION_OCTET_STREAM)
 					.returnResult(byte[].class).getResponseBodyContent();
 			assertThat(responseBody).containsExactly(0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
+		});
+	}
+
+	@Test
+	public void responseToOptionsRequestIncludesCorsHeaders() {
+		load(TestEndpointConfiguration.class, client -> {
+			client.options().uri("/test").accept(MediaType.APPLICATION_JSON)
+					.header("Access-Control-Request-Method", "POST")
+					.header("Origin", "http://example.com").exchange().expectStatus()
+					.isOk().expectHeader()
+					.valueEquals("Access-Control-Allow-Origin", "http://example.com")
+					.expectHeader()
+					.valueEquals("Access-Control-Allow-Methods", "GET,POST");
 		});
 	}
 
@@ -324,13 +337,13 @@ public abstract class AbstractWebEndpointIntegrationTests<T extends Configurable
 		}
 
 		@ReadOperation
-		public String readAll() {
-			return "All";
+		public Map<String, Object> readAll() {
+			return Collections.singletonMap("All", true);
 		}
 
 		@ReadOperation
-		public String readPart(@Selector String part) {
-			return "Part " + part;
+		public Map<String, Object> readPart(@Selector String part) {
+			return Collections.singletonMap("part", part);
 		}
 
 		@WriteOperation
@@ -344,14 +357,14 @@ public abstract class AbstractWebEndpointIntegrationTests<T extends Configurable
 	static class QueryEndpoint {
 
 		@ReadOperation
-		public String query(String one, String two) {
-			return "Query " + one + " " + two;
+		public Map<String, String> query(String one, String two) {
+			return Collections.singletonMap("query", one + " " + two);
 		}
 
 		@ReadOperation
-		public String queryWithParameterList(@Selector String list, String one,
-				List<String> two) {
-			return "Query " + list + " " + one + " " + two;
+		public Map<String, String> queryWithParameterList(@Selector String list,
+				String one, List<String> two) {
+			return Collections.singletonMap("query", list + " " + one + " " + two);
 		}
 
 	}
@@ -360,8 +373,8 @@ public abstract class AbstractWebEndpointIntegrationTests<T extends Configurable
 	static class QueryWithListEndpoint {
 
 		@ReadOperation
-		public String queryWithParameterList(String one, List<String> two) {
-			return "Query " + one + " " + two;
+		public Map<String, String> queryWithParameterList(String one, List<String> two) {
+			return Collections.singletonMap("query", one + " " + two);
 		}
 
 	}
