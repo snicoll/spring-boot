@@ -54,12 +54,16 @@ public abstract class AnnotationEndpointDiscoverer<T extends EndpointOperation, 
 
 	private final Function<T, K> operationKeyFactory;
 
+	private final Function<String, CachingConfiguration> cachingConfigurationFactory;
+
 	protected AnnotationEndpointDiscoverer(ApplicationContext applicationContext,
 			EndpointOperationFactory<T> operationFactory,
-			Function<T, K> operationKeyFactory) {
+			Function<T, K> operationKeyFactory,
+			Function<String, CachingConfiguration> cachingConfigurationFactory) {
 		this.applicationContext = applicationContext;
 		this.operationFactory = operationFactory;
 		this.operationKeyFactory = operationKeyFactory;
+		this.cachingConfigurationFactory = cachingConfigurationFactory;
 	}
 
 	/**
@@ -243,8 +247,21 @@ public abstract class AnnotationEndpointDiscoverer<T extends EndpointOperation, 
 		if (operationAttributes == null) {
 			return null;
 		}
+		CachingConfiguration cachingConfiguration = this.cachingConfigurationFactory.apply(
+				endpointId);
 		return this.operationFactory.createOperation(endpointId, operationAttributes,
-				this.applicationContext.getBean(beanName), method, operationType);
+				this.applicationContext.getBean(beanName), method, operationType,
+				determineTimeToLive(cachingConfiguration, operationType, method));
+	}
+
+	private long determineTimeToLive(CachingConfiguration cachingConfiguration,
+			EndpointOperationType operationType, Method method) {
+		if (cachingConfiguration != null && cachingConfiguration.getTimeToLive() > 0
+				&& operationType == EndpointOperationType.READ
+				&& method.getParameters().length == 0) {
+			return cachingConfiguration.getTimeToLive();
+		}
+		return 0;
 	}
 
 	/**
@@ -263,11 +280,13 @@ public abstract class AnnotationEndpointDiscoverer<T extends EndpointOperation, 
 		 * @param target the target that implements the operation
 		 * @param operationMethod the method on the bean that implements the operation
 		 * @param operationType the type of the operation
+		 * @param timeToLive the caching period in milliseconds
 		 * @return the operation info that describes the operation
 		 */
 		T createOperation(String endpointId, AnnotationAttributes operationAttributes,
 				Object target, Method operationMethod,
-				EndpointOperationType operationType);
+				EndpointOperationType operationType,
+				long timeToLive);
 
 	}
 

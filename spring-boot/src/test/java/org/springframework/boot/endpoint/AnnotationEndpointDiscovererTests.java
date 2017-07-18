@@ -19,8 +19,10 @@ package org.springframework.boot.endpoint;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.junit.Rule;
@@ -57,18 +59,12 @@ public class AnnotationEndpointDiscovererTests {
 	@Test
 	public void endpointIsDiscovered() {
 		load(TestEndpointConfiguration.class, (context) -> {
-			Collection<EndpointInfo<TestEndpointOperation>> endpoints = new TestAnnotationEndpointDiscoverer(
-					context).discoverEndpoints();
-			assertThat(endpoints).hasSize(1);
-			EndpointInfo<TestEndpointOperation> endpoint = endpoints.iterator().next();
-			assertThat(endpoint.getId()).isEqualTo("test");
-			Collection<TestEndpointOperation> operations = endpoint.getOperations();
+			Map<String, EndpointInfo<TestEndpointOperation>> endpoints = mapEndpoints(
+					new TestAnnotationEndpointDiscoverer(context).discoverEndpoints());
+			assertThat(endpoints).containsOnlyKeys("test");
+			Map<Method, TestEndpointOperation> operations = mapOperations(endpoints.get("test"));
 			assertThat(operations).hasSize(3);
-			Map<Method, EndpointOperation> operationByMethod = new HashMap<>();
-			operations.forEach((operation) -> {
-				operationByMethod.put(operation.getOperationMethod(), operation);
-			});
-			assertThat(operationByMethod).containsKeys(
+			assertThat(operations).containsKeys(
 					ReflectionUtils.findMethod(TestEndpoint.class, "getAll"),
 					ReflectionUtils.findMethod(TestEndpoint.class, "getOne",
 							String.class),
@@ -80,18 +76,12 @@ public class AnnotationEndpointDiscovererTests {
 	@Test
 	public void subclassedEndpointIsDiscovered() {
 		load(TestEndpointSubclassConfiguration.class, (context) -> {
-			Collection<EndpointInfo<TestEndpointOperation>> endpoints = new TestAnnotationEndpointDiscoverer(
-					context).discoverEndpoints();
-			assertThat(endpoints).hasSize(1);
-			EndpointInfo<TestEndpointOperation> endpoint = endpoints.iterator().next();
-			assertThat(endpoint.getId()).isEqualTo("test");
-			Collection<TestEndpointOperation> operations = endpoint.getOperations();
+			Map<String, EndpointInfo<TestEndpointOperation>> endpoints = mapEndpoints(
+					new TestAnnotationEndpointDiscoverer(context).discoverEndpoints());
+			assertThat(endpoints).containsOnlyKeys("test");
+			Map<Method, TestEndpointOperation> operations = mapOperations(endpoints.get("test"));
 			assertThat(operations).hasSize(4);
-			Map<Method, EndpointOperation> operationByMethod = new HashMap<>();
-			operations.forEach((operation) -> {
-				operationByMethod.put(operation.getOperationMethod(), operation);
-			});
-			assertThat(operationByMethod).containsKeys(
+			assertThat(operations).containsKeys(
 					ReflectionUtils.findMethod(TestEndpoint.class, "getAll"),
 					ReflectionUtils.findMethod(TestEndpoint.class, "getOne",
 							String.class),
@@ -110,6 +100,89 @@ public class AnnotationEndpointDiscovererTests {
 			this.thrown.expectMessage("Found two endpoints with the id 'test': ");
 			new TestAnnotationEndpointDiscoverer(context).discoverEndpoints();
 		});
+	}
+
+	@Test
+	public void endpointMainReadOperationIsNotCachedWithTtlSetToZero() {
+		load(TestEndpointConfiguration.class, (context) -> {
+			Map<String, EndpointInfo<TestEndpointOperation>> endpoints = mapEndpoints(
+					new TestAnnotationEndpointDiscoverer(context,
+							(endpointId) -> new CachingConfiguration(0)).discoverEndpoints());
+			assertThat(endpoints).containsOnlyKeys("test");
+			Map<Method, TestEndpointOperation> operations = mapOperations(endpoints.get("test"));
+			assertThat(operations).hasSize(3);
+			operations.values().forEach(operation -> assertThat(operation
+					.getOperationInvoker()).isNotInstanceOf(CachingOperationInvoker.class));
+		});
+	}
+
+	@Test
+	public void endpointMainReadOperationIsNotCachedWithNonMatchingId() {
+		Function<String, CachingConfiguration> cachingConfigurationFactory = (endpointId) ->
+				(endpointId.equals("foo") ? new CachingConfiguration(500) : new CachingConfiguration(0));
+		load(TestEndpointConfiguration.class, (context) -> {
+			Map<String, EndpointInfo<TestEndpointOperation>> endpoints = mapEndpoints(
+					new TestAnnotationEndpointDiscoverer(context,
+							cachingConfigurationFactory).discoverEndpoints());
+			assertThat(endpoints).containsOnlyKeys("test");
+			Map<Method, TestEndpointOperation> operations = mapOperations(endpoints.get("test"));
+			assertThat(operations).hasSize(3);
+			operations.values().forEach(operation -> assertThat(operation
+					.getOperationInvoker()).isNotInstanceOf(CachingOperationInvoker.class));
+		});
+	}
+
+	@Test
+	public void endpointMainReadOperationIsCachedWithMatchingId() {
+		Function<String, CachingConfiguration> cachingConfigurationFactory = (endpointId) ->
+				(endpointId.equals("test") ? new CachingConfiguration(500) : new CachingConfiguration(0));
+		load(TestEndpointConfiguration.class, (context) -> {
+			Map<String, EndpointInfo<TestEndpointOperation>> endpoints = mapEndpoints(
+					new TestAnnotationEndpointDiscoverer(context,
+							cachingConfigurationFactory).discoverEndpoints());
+			assertThat(endpoints).containsOnlyKeys("test");
+			Map<Method, TestEndpointOperation> operations = mapOperations(endpoints.get("test"));
+			OperationInvoker getAllOperationInvoker = operations.get(
+					ReflectionUtils.findMethod(TestEndpoint.class, "getAll")).getOperationInvoker();
+			assertThat(getAllOperationInvoker).isInstanceOf(CachingOperationInvoker.class);
+			assertThat(((CachingOperationInvoker) getAllOperationInvoker).getTimeToLive())
+					.isEqualTo(500);
+			assertThat(operations.get(ReflectionUtils.findMethod(TestEndpoint.class,
+					"getOne", String.class)).getOperationInvoker()).isNotInstanceOf(
+					CachingOperationInvoker.class);
+			assertThat(operations.get(ReflectionUtils.findMethod(TestEndpoint.class,
+					"update", String.class, String.class)).getOperationInvoker())
+					.isNotInstanceOf(CachingOperationInvoker.class);
+		});
+	}
+
+	private Map<String, EndpointInfo<TestEndpointOperation>> mapEndpoints(
+			Collection<EndpointInfo<TestEndpointOperation>> endpoints) {
+		Map<String, EndpointInfo<TestEndpointOperation>> endpointById = new LinkedHashMap<>();
+		endpoints.forEach(endpoint -> {
+			EndpointInfo<TestEndpointOperation> existing = endpointById.put(
+					endpoint.getId(), endpoint);
+			if (existing != null) {
+				throw new AssertionError(String.format(
+						"Found endpoints with duplicate id '%s'", endpoint.getId()));
+			}
+		});
+		return endpointById;
+	}
+
+	private Map<Method, TestEndpointOperation> mapOperations(
+			EndpointInfo<TestEndpointOperation> endpoint) {
+		Map<Method, TestEndpointOperation> operationByMethod = new HashMap<>();
+		endpoint.getOperations().forEach((operation) -> {
+			EndpointOperation existing = operationByMethod.put(
+					operation.getOperationMethod(), operation);
+			if (existing != null) {
+				throw new AssertionError(String.format(
+						"Found endpoint with duplicate operation method '%s'",
+						operation.getOperationMethod()));
+			}
+		});
+		return operationByMethod;
 	}
 
 	private void load(Class<?> configuration,
@@ -215,9 +288,15 @@ public class AnnotationEndpointDiscovererTests {
 	private static class TestAnnotationEndpointDiscoverer
 			extends AnnotationEndpointDiscoverer<TestEndpointOperation, Method> {
 
-		TestAnnotationEndpointDiscoverer(ApplicationContext applicationContext) {
+		TestAnnotationEndpointDiscoverer(ApplicationContext applicationContext,
+				Function<String, CachingConfiguration> cachingConfigurationFactory) {
 			super(applicationContext, endpointOperationFactory(),
-					TestEndpointOperation::getOperationMethod);
+					TestEndpointOperation::getOperationMethod,
+					cachingConfigurationFactory);
+		}
+
+		TestAnnotationEndpointDiscoverer(ApplicationContext applicationContext) {
+			this(applicationContext, (id) -> null);
 		}
 
 		@Override
@@ -233,9 +312,20 @@ public class AnnotationEndpointDiscovererTests {
 				@Override
 				public TestEndpointOperation createOperation(String endpointId,
 						AnnotationAttributes operationAttributes, Object target,
-						Method operationMethod, EndpointOperationType operationType) {
-					return new TestEndpointOperation(operationType, null,
-							operationMethod);
+						Method operationMethod, EndpointOperationType operationType,
+						long timeToLive) {
+					return new TestEndpointOperation(operationType,
+							createOperationInvoker(timeToLive), operationMethod);
+				}
+
+				private OperationInvoker createOperationInvoker(long timeToLive) {
+					OperationInvoker invoker = (arguments) -> null;
+					if (timeToLive > 0) {
+						return new CachingOperationInvoker(invoker, timeToLive);
+					}
+					else {
+						return invoker;
+					}
 				}
 			};
 		}

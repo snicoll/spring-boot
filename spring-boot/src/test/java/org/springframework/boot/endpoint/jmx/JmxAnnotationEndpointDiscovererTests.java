@@ -21,16 +21,20 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import org.springframework.boot.endpoint.CachingConfiguration;
+import org.springframework.boot.endpoint.CachingOperationInvoker;
 import org.springframework.boot.endpoint.DefaultOperationParameterMapper;
 import org.springframework.boot.endpoint.Endpoint;
 import org.springframework.boot.endpoint.EndpointInfo;
 import org.springframework.boot.endpoint.EndpointType;
 import org.springframework.boot.endpoint.ReadOperation;
+import org.springframework.boot.endpoint.ReflectiveOperationInvoker;
 import org.springframework.boot.endpoint.WriteOperation;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -74,6 +78,8 @@ public class JmxAnnotationEndpointDiscovererTests {
 					.isEqualTo("Invoke getAll for endpoint test");
 			assertThat(getAll.getOutputType()).isEqualTo(Object.class);
 			assertThat(getAll.getParameters()).isEmpty();
+			assertThat(getAll.getOperationInvoker()).isInstanceOf(
+					ReflectiveOperationInvoker.class);
 			JmxEndpointOperation getSomething = operationByName.get("getSomething");
 			assertThat(getSomething.getDescription())
 					.isEqualTo("Invoke getSomething for endpoint test");
@@ -132,10 +138,52 @@ public class JmxAnnotationEndpointDiscovererTests {
 					endpoints.get("test").getOperations());
 			assertThat(operationByName).containsOnlyKeys("getAll", "getSomething",
 					"update", "getAnother");
-			JmxEndpointOperation getAll = operationByName.get("getAnother");
-			assertThat(getAll.getDescription()).isEqualTo("Get another thing");
-			assertThat(getAll.getOutputType()).isEqualTo(Object.class);
-			assertThat(getAll.getParameters()).isEmpty();
+			JmxEndpointOperation getAnother = operationByName.get("getAnother");
+			assertThat(getAnother.getDescription()).isEqualTo("Get another thing");
+			assertThat(getAnother.getOutputType()).isEqualTo(Object.class);
+			assertThat(getAnother.getParameters()).isEmpty();
+		});
+	}
+
+	@Test
+	public void endpointMainReadOperationIsCachedWithMatchingId() {
+		load(TestEndpoint.class, (id) -> new CachingConfiguration(500), discoverer -> {
+			Map<String, EndpointInfo<JmxEndpointOperation>> endpoints = discover(
+					discoverer);
+			assertThat(endpoints).containsOnlyKeys("test");
+			Map<String, JmxEndpointOperation> operationByName = mapOperations(
+					endpoints.get("test").getOperations());
+			assertThat(operationByName).containsOnlyKeys("getAll", "getSomething",
+					"update");
+			JmxEndpointOperation getAll = operationByName.get("getAll");
+			assertThat(getAll.getOperationInvoker()).isInstanceOf(
+					CachingOperationInvoker.class);
+			assertThat(((CachingOperationInvoker) getAll.getOperationInvoker())
+					.getTimeToLive()).isEqualTo(500);
+		});
+	}
+
+	@Test
+	public void extraReadOperationsAreCached() {
+		load(AdditionalOperationJmxEndpointConfiguration.class, (id) ->
+				new CachingConfiguration(500), discoverer -> {
+			Map<String, EndpointInfo<JmxEndpointOperation>> endpoints = discover(
+					discoverer);
+			assertThat(endpoints).containsOnlyKeys("test");
+			Map<String, JmxEndpointOperation> operationByName = mapOperations(
+					endpoints.get("test").getOperations());
+			assertThat(operationByName).containsOnlyKeys("getAll", "getSomething",
+					"update", "getAnother");
+			JmxEndpointOperation getAll = operationByName.get("getAll");
+			assertThat(getAll.getOperationInvoker()).isInstanceOf(
+					CachingOperationInvoker.class);
+			assertThat(((CachingOperationInvoker) getAll.getOperationInvoker())
+					.getTimeToLive()).isEqualTo(500);
+			JmxEndpointOperation getAnother = operationByName.get("getAnother");
+			assertThat(getAnother.getOperationInvoker()).isInstanceOf(
+					CachingOperationInvoker.class);
+			assertThat(((CachingOperationInvoker) getAnother.getOperationInvoker())
+					.getTimeToLive()).isEqualTo(500);
 		});
 	}
 
@@ -252,11 +300,17 @@ public class JmxAnnotationEndpointDiscovererTests {
 
 	private void load(Class<?> configuration,
 			Consumer<JmxAnnotationEndpointDiscoverer> consumer) {
+		load(configuration, (id) -> null, consumer);
+	}
+
+	private void load(Class<?> configuration, Function<String, CachingConfiguration> cachingConfigurationFactory,
+			Consumer<JmxAnnotationEndpointDiscoverer> consumer) {
 		try (AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(
 				configuration)) {
 			consumer.accept(new JmxAnnotationEndpointDiscoverer(context,
 					new DefaultOperationParameterMapper(
-							DefaultConversionService.getSharedInstance())));
+							DefaultConversionService.getSharedInstance()),
+					cachingConfigurationFactory));
 		}
 	}
 

@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -32,10 +33,13 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import org.springframework.boot.endpoint.CachingConfiguration;
+import org.springframework.boot.endpoint.CachingOperationInvoker;
 import org.springframework.boot.endpoint.DefaultOperationParameterMapper;
 import org.springframework.boot.endpoint.Endpoint;
 import org.springframework.boot.endpoint.EndpointInfo;
 import org.springframework.boot.endpoint.EndpointType;
+import org.springframework.boot.endpoint.OperationInvoker;
 import org.springframework.boot.endpoint.ReadOperation;
 import org.springframework.boot.endpoint.Selector;
 import org.springframework.boot.endpoint.WriteOperation;
@@ -83,22 +87,19 @@ public class WebAnnotationEndpointDiscovererTests {
 	@Test
 	public void onlyWebEndpointsAreDiscovered() {
 		load(MultipleEndpointsConfiguration.class, discoverer -> {
-			Collection<EndpointInfo<WebEndpointOperation>> endpoints = discoverer
-					.discoverEndpoints();
-			assertThat(endpoints).hasSize(1);
-			EndpointInfo<WebEndpointOperation> endpoint = endpoints.iterator().next();
-			assertThat(endpoint.getId()).isEqualTo("test");
+			Map<String, EndpointInfo<WebEndpointOperation>> endpoints = mapEndpoints(discoverer
+					.discoverEndpoints());
+			assertThat(endpoints).containsOnlyKeys("test");
 		});
 	}
 
 	@Test
 	public void oneOperationIsDiscoveredWhenExtensionOverridesOperation() {
 		load(OverriddenOperationWebEndpointExtensionConfiguration.class, (discoverer) -> {
-			Collection<EndpointInfo<WebEndpointOperation>> endpoints = discoverer
-					.discoverEndpoints();
-			assertThat(endpoints).hasSize(1);
-			EndpointInfo<WebEndpointOperation> endpoint = endpoints.iterator().next();
-			assertThat(endpoint.getId()).isEqualTo("test");
+			Map<String, EndpointInfo<WebEndpointOperation>> endpoints = mapEndpoints(discoverer
+					.discoverEndpoints());
+			assertThat(endpoints).containsOnlyKeys("test");
+			EndpointInfo<WebEndpointOperation> endpoint = endpoints.get("test");
 			assertThat(requestPredicates(endpoint)).has(requestPredicates(
 					path("/application/test").httpMethod(WebEndpointHttpMethod.GET)
 							.consumes().produces("application/json")));
@@ -108,11 +109,10 @@ public class WebAnnotationEndpointDiscovererTests {
 	@Test
 	public void twoOperationsAreDiscoveredWhenExtensionAddsOperation() {
 		load(AdditionalOperationWebEndpointConfiguration.class, (discoverer) -> {
-			Collection<EndpointInfo<WebEndpointOperation>> endpoints = discoverer
-					.discoverEndpoints();
-			assertThat(endpoints).hasSize(1);
-			EndpointInfo<WebEndpointOperation> endpoint = endpoints.iterator().next();
-			assertThat(endpoint.getId()).isEqualTo("test");
+			Map<String, EndpointInfo<WebEndpointOperation>> endpoints = mapEndpoints(discoverer
+					.discoverEndpoints());
+			assertThat(endpoints).containsOnlyKeys("test");
+			EndpointInfo<WebEndpointOperation> endpoint = endpoints.get("test");
 			assertThat(requestPredicates(endpoint)).has(requestPredicates(
 					path("/application/test").httpMethod(WebEndpointHttpMethod.GET)
 							.consumes().produces("application/json"),
@@ -124,11 +124,10 @@ public class WebAnnotationEndpointDiscovererTests {
 	@Test
 	public void predicateForWriteOperationThatReturnsVoidHasNoProducedMediaTypes() {
 		load(VoidWriteOperationEndpointConfiguration.class, (discoverer) -> {
-			Collection<EndpointInfo<WebEndpointOperation>> endpoints = discoverer
-					.discoverEndpoints();
-			assertThat(endpoints).hasSize(1);
-			EndpointInfo<WebEndpointOperation> endpoint = endpoints.iterator().next();
-			assertThat(endpoint.getId()).isEqualTo("voidwrite");
+			Map<String, EndpointInfo<WebEndpointOperation>> endpoints = mapEndpoints(
+					discoverer.discoverEndpoints());
+			assertThat(endpoints).containsOnlyKeys("voidwrite");
+			EndpointInfo<WebEndpointOperation> endpoint = endpoints.get("voidwrite");
 			assertThat(requestPredicates(endpoint)).has(requestPredicates(
 					path("/application/voidwrite").httpMethod(WebEndpointHttpMethod.POST)
 							.produces().consumes("application/json")));
@@ -187,13 +186,28 @@ public class WebAnnotationEndpointDiscovererTests {
 	}
 
 	@Test
+	public void endpointMainReadOperationIsCachedWithMatchingId() {
+		load((id) -> new CachingConfiguration(500), TestEndpointConfiguration.class, (discoverer) -> {
+			Map<String, EndpointInfo<WebEndpointOperation>> endpoints = mapEndpoints(discoverer
+					.discoverEndpoints());
+			assertThat(endpoints).containsOnlyKeys("test");
+			EndpointInfo<WebEndpointOperation> endpoint = endpoints.get("test");
+			assertThat(endpoint.getOperations()).hasSize(1);
+			OperationInvoker operationInvoker = endpoint.getOperations().iterator()
+					.next().getOperationInvoker();
+			assertThat(operationInvoker).isInstanceOf(CachingOperationInvoker.class);
+			assertThat(((CachingOperationInvoker) operationInvoker).getTimeToLive())
+					.isEqualTo(500);
+		});
+	}
+
+	@Test
 	public void anEmptyBasePathExposesEndpointsAtTheRoot() {
 		load("", TestEndpointConfiguration.class, (discoverer) -> {
-			Collection<EndpointInfo<WebEndpointOperation>> endpoints = discoverer
-					.discoverEndpoints();
-			assertThat(endpoints).hasSize(1);
-			EndpointInfo<WebEndpointOperation> endpoint = endpoints.iterator().next();
-			assertThat(endpoint.getId()).isEqualTo("test");
+			Map<String, EndpointInfo<WebEndpointOperation>> endpoints = mapEndpoints(
+					discoverer.discoverEndpoints());
+			assertThat(endpoints).containsOnlyKeys("test");
+			EndpointInfo<WebEndpointOperation> endpoint = endpoints.get("test");
 			assertThat(requestPredicates(endpoint)).has(requestPredicates(
 					path("/test").httpMethod(WebEndpointHttpMethod.GET)));
 		});
@@ -202,11 +216,10 @@ public class WebAnnotationEndpointDiscovererTests {
 	@Test
 	public void singleSlashBasePathExposesEndpointsAtTheRoot() {
 		load("/", TestEndpointConfiguration.class, (discoverer) -> {
-			Collection<EndpointInfo<WebEndpointOperation>> endpoints = discoverer
-					.discoverEndpoints();
-			assertThat(endpoints).hasSize(1);
-			EndpointInfo<WebEndpointOperation> endpoint = endpoints.iterator().next();
-			assertThat(endpoint.getId()).isEqualTo("test");
+			Map<String, EndpointInfo<WebEndpointOperation>> endpoints = mapEndpoints(
+					discoverer.discoverEndpoints());
+			assertThat(endpoints).containsOnlyKeys("test");
+			EndpointInfo<WebEndpointOperation> endpoint = endpoints.get("test");
 			assertThat(requestPredicates(endpoint)).has(requestPredicates(
 					path("/test").httpMethod(WebEndpointHttpMethod.GET)));
 		});
@@ -215,16 +228,14 @@ public class WebAnnotationEndpointDiscovererTests {
 	@Test
 	public void operationsThatReturnResourceProduceApplicationOctetStream() {
 		load(ResourceEndpointConfiguration.class, (discoverer) -> {
-			Collection<EndpointInfo<WebEndpointOperation>> endpoints = discoverer
-					.discoverEndpoints();
-			assertThat(endpoints).hasSize(1);
-			EndpointInfo<WebEndpointOperation> endpoint = endpoints.iterator().next();
-			assertThat(endpoint.getId()).isEqualTo("resource");
+			Map<String, EndpointInfo<WebEndpointOperation>> endpoints = mapEndpoints(
+					discoverer.discoverEndpoints());
+			assertThat(endpoints).containsOnlyKeys("resource");
+			EndpointInfo<WebEndpointOperation> endpoint = endpoints.get("resource");
 			assertThat(requestPredicates(endpoint)).has(requestPredicates(
 					path("/application/resource").httpMethod(WebEndpointHttpMethod.GET)
 							.consumes().produces("application/octet-stream")));
 		});
-
 	}
 
 	private void load(Class<?> configuration,
@@ -234,12 +245,25 @@ public class WebAnnotationEndpointDiscovererTests {
 
 	private void load(String basePath, Class<?> configuration,
 			Consumer<WebAnnotationEndpointDiscoverer> consumer) {
+		this.load(basePath, (id) -> null, configuration, consumer);
+	}
+
+	private void load(Function<String, CachingConfiguration> cachingConfigurationFactory,
+			Class<?> configuration, Consumer<WebAnnotationEndpointDiscoverer> consumer) {
+		this.load("application", cachingConfigurationFactory, configuration, consumer);
+	}
+
+	private void load(String basePath,
+			Function<String, CachingConfiguration> cachingConfigurationFactory,
+			Class<?> configuration,
+			Consumer<WebAnnotationEndpointDiscoverer> consumer) {
 		AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(
 				configuration);
 		try {
 			consumer.accept(new WebAnnotationEndpointDiscoverer(context,
 					new DefaultOperationParameterMapper(
-							DefaultConversionService.getSharedInstance()), basePath,
+							DefaultConversionService.getSharedInstance()),
+					cachingConfigurationFactory, basePath,
 					Collections.singletonList("application/json"),
 					Collections.singletonList("application/json")));
 		}
@@ -248,16 +272,25 @@ public class WebAnnotationEndpointDiscovererTests {
 		}
 	}
 
+	private Map<String, EndpointInfo<WebEndpointOperation>> mapEndpoints(
+			Collection<EndpointInfo<WebEndpointOperation>> endpoints) {
+		Map<String, EndpointInfo<WebEndpointOperation>> endpointById = new HashMap<>();
+		endpoints.forEach((endpoint) -> {
+			endpointById.put(endpoint.getId(), endpoint);
+		});
+		return endpointById;
+	}
+
 	private List<OperationRequestPredicate> requestPredicates(
 			EndpointInfo<WebEndpointOperation> endpoint) {
 		return endpoint.getOperations().stream()
-				.map(operation -> operation.getRequestPredicate())
+				.map(WebEndpointOperation::getRequestPredicate)
 				.collect(Collectors.toList());
 	}
 
 	private Condition<List<? extends OperationRequestPredicate>> requestPredicates(
 			RequestPredicateMatcher... matchers) {
-		return new Condition<List<? extends OperationRequestPredicate>>(predicates -> {
+		return new Condition<>(predicates -> {
 			if (predicates.size() != matchers.length) {
 				return false;
 			}
@@ -266,7 +299,7 @@ public class WebAnnotationEndpointDiscovererTests {
 				matchCounts.put(predicate, Stream.of(matchers)
 						.filter(matcher -> matcher.matches(predicate)).count());
 			}
-			return !matchCounts.values().stream().anyMatch(count -> count != 1);
+			return matchCounts.values().stream().noneMatch(count -> count != 1);
 		}, Arrays.toString(matchers));
 	}
 

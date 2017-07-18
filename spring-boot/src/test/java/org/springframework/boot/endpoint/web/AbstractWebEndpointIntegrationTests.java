@@ -25,6 +25,7 @@ import java.util.function.Consumer;
 
 import org.junit.Test;
 
+import org.springframework.boot.endpoint.CachingConfiguration;
 import org.springframework.boot.endpoint.DefaultOperationParameterMapper;
 import org.springframework.boot.endpoint.Endpoint;
 import org.springframework.boot.endpoint.OperationParameterMapper;
@@ -227,7 +228,7 @@ public abstract class AbstractWebEndpointIntegrationTests<T extends Configurable
 			OperationParameterMapper parameterMapper = new DefaultOperationParameterMapper(
 					DefaultConversionService.getSharedInstance());
 			return new WebAnnotationEndpointDiscoverer(applicationContext,
-					parameterMapper, "endpoints",
+					parameterMapper, (id) -> new CachingConfiguration(0), "endpoints",
 					Collections.singletonList("application/json"),
 					Collections.singletonList("application/json"));
 		}

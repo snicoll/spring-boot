@@ -21,14 +21,18 @@ import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.springframework.boot.endpoint.AnnotationEndpointDiscoverer;
+import org.springframework.boot.endpoint.CachingConfiguration;
+import org.springframework.boot.endpoint.CachingOperationInvoker;
 import org.springframework.boot.endpoint.Endpoint;
 import org.springframework.boot.endpoint.EndpointInfo;
 import org.springframework.boot.endpoint.EndpointOperationType;
 import org.springframework.boot.endpoint.EndpointType;
+import org.springframework.boot.endpoint.OperationInvoker;
 import org.springframework.boot.endpoint.OperationParameterMapper;
 import org.springframework.boot.endpoint.ReflectiveOperationInvoker;
 import org.springframework.context.ApplicationContext;
@@ -59,11 +63,13 @@ public class JmxAnnotationEndpointDiscoverer
 	 * @param applicationContext the application context
 	 * @param parameterMapper the {@link OperationParameterMapper} used to convert
 	 * arguments when an operation is invoked
+	 * @param cachingConfigurationFactory the {@link CachingConfiguration} factory to use
 	 */
 	public JmxAnnotationEndpointDiscoverer(ApplicationContext applicationContext,
-			OperationParameterMapper parameterMapper) {
+			OperationParameterMapper parameterMapper,
+			Function<String, CachingConfiguration> cachingConfigurationFactory) {
 		super(applicationContext, new JmxEndpointOperationFactory(parameterMapper),
-				JmxEndpointOperation::getOperationName);
+				JmxEndpointOperation::getOperationName, cachingConfigurationFactory);
 	}
 
 	@Override
@@ -106,19 +112,22 @@ public class JmxAnnotationEndpointDiscoverer
 		@Override
 		public JmxEndpointOperation createOperation(String endpointId,
 				AnnotationAttributes operationAttributes, Object target, Method method,
-				EndpointOperationType type) {
+				EndpointOperationType type, long timeToLive) {
 			String operationName = method.getName();
 			Class<?> outputType = mapParameterType(method.getReturnType());
 			String description = getDescription(method,
 					() -> "Invoke " + operationName + " for endpoint " + endpointId);
 			List<JmxEndpointOperationParameterInfo> parameters = getParameters(method);
-			return new JmxEndpointOperation(type,
-					new ReflectiveOperationInvoker(this.parameterMapper, target,
-							method),
-					operationName, outputType, description, parameters);
+			OperationInvoker invoker = new ReflectiveOperationInvoker(this.parameterMapper,
+					target, method);
+			if (timeToLive > 0) {
+				invoker = new CachingOperationInvoker(invoker, timeToLive);
+			}
+			return new JmxEndpointOperation(type, invoker, operationName, outputType,
+					description, parameters);
 		}
 
-		private static String getDescription(Method method, Supplier<String> fallback) {
+		private String getDescription(Method method, Supplier<String> fallback) {
 			ManagedOperation managedOperation = jmxAttributeSource
 					.getManagedOperation(method);
 			if (managedOperation != null
@@ -128,8 +137,7 @@ public class JmxAnnotationEndpointDiscoverer
 			return fallback.get();
 		}
 
-		private static List<JmxEndpointOperationParameterInfo> getParameters(
-				Method method) {
+		private List<JmxEndpointOperationParameterInfo> getParameters(Method method) {
 			List<JmxEndpointOperationParameterInfo> parameters = new ArrayList<>();
 			Parameter[] methodParameters = method.getParameters();
 			if (methodParameters.length == 0) {
@@ -157,7 +165,7 @@ public class JmxAnnotationEndpointDiscoverer
 			return parameters;
 		}
 
-		private static Class<?> mapParameterType(Class<?> parameter) {
+		private Class<?> mapParameterType(Class<?> parameter) {
 			if (parameter.isEnum()) {
 				return String.class;
 			}

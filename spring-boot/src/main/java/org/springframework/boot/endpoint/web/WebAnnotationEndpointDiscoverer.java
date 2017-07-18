@@ -21,16 +21,20 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.reactivestreams.Publisher;
 
 import org.springframework.boot.endpoint.AnnotationEndpointDiscoverer;
+import org.springframework.boot.endpoint.CachingConfiguration;
+import org.springframework.boot.endpoint.CachingOperationInvoker;
 import org.springframework.boot.endpoint.Endpoint;
 import org.springframework.boot.endpoint.EndpointInfo;
 import org.springframework.boot.endpoint.EndpointOperationType;
 import org.springframework.boot.endpoint.EndpointType;
+import org.springframework.boot.endpoint.OperationInvoker;
 import org.springframework.boot.endpoint.OperationParameterMapper;
 import org.springframework.boot.endpoint.ReflectiveOperationInvoker;
 import org.springframework.boot.endpoint.Selector;
@@ -57,18 +61,20 @@ public class WebAnnotationEndpointDiscoverer extends
 	 * @param applicationContext the application context
 	 * @param operationParameterMapper the {@link OperationParameterMapper} used to
 	 * convert arguments when an operation is invoked
+	 * @param cachingConfigurationFactory the {@link CachingConfiguration} factory to use
 	 * @param basePath the path to prepend to the path of each discovered operation
 	 * @param consumedMediaTypes the media types consumed by web endpoint operations
 	 * @param producedMediaTypes the media types produced by web endpoint operations
 	 */
 	public WebAnnotationEndpointDiscoverer(ApplicationContext applicationContext,
-			OperationParameterMapper operationParameterMapper, String basePath,
-			Collection<String> consumedMediaTypes,
+			OperationParameterMapper operationParameterMapper,
+			Function<String, CachingConfiguration> cachingConfigurationFactory,
+			String basePath, Collection<String> consumedMediaTypes,
 			Collection<String> producedMediaTypes) {
 		super(applicationContext,
 				new WebEndpointOperationFactory(operationParameterMapper, basePath,
 						consumedMediaTypes, producedMediaTypes),
-				WebEndpointOperation::getRequestPredicate);
+				WebEndpointOperation::getRequestPredicate, cachingConfigurationFactory);
 	}
 
 	@Override
@@ -137,15 +143,18 @@ public class WebAnnotationEndpointDiscoverer extends
 		@Override
 		public WebEndpointOperation createOperation(String endpointId,
 				AnnotationAttributes operationAttributes, Object target, Method method,
-				EndpointOperationType type) {
+				EndpointOperationType type, long timeToLive) {
 			WebEndpointHttpMethod httpMethod = determineHttpMethod(type);
 			OperationRequestPredicate requestPredicate = new OperationRequestPredicate(
 					determinePath(endpointId, method), httpMethod,
 					determineConsumedMediaTypes(httpMethod, method),
 					determineProducedMediaTypes(method));
-			return new WebEndpointOperation(type,
-					new ReflectiveOperationInvoker(this.parameterMapper, target,
-							method),
+			OperationInvoker invoker = new ReflectiveOperationInvoker(
+					this.parameterMapper, target, method);
+			if (timeToLive > 0) {
+				invoker = new CachingOperationInvoker(invoker, timeToLive);
+			}
+			return new WebEndpointOperation(type, invoker,
 					determineBlocking(method), requestPredicate);
 		}
 
