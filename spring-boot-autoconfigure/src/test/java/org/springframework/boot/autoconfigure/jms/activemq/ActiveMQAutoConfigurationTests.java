@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 the original author or authors.
+ * Copyright 2012-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -92,6 +92,16 @@ public class ActiveMQAutoConfigurationTests {
 		assertThat(connectionFactory.createConnection()).isNull();
 	}
 
+	@Test
+	public void customizerOverridesAutConfig() {
+		load(CustomizerConfiguration.class);
+		ActiveMQConnectionFactory connectionFactory = this.context.getBean(
+				ActiveMQConnectionFactory.class);
+		assertThat(connectionFactory.getBrokerURL()).isEqualTo(
+				"vm://localhost?useJmx=false&broker.persistent=false");
+		assertThat(connectionFactory.getUserName()).isEqualTo("foobar");
+	}
+
 	private void load(Class<?> config, String... environment) {
 		this.context = doLoad(config, environment);
 	}
@@ -120,6 +130,22 @@ public class ActiveMQAutoConfigurationTests {
 			return mock(ConnectionFactory.class);
 		}
 
+	}
+
+	@Configuration
+	static class CustomizerConfiguration {
+
+		@Bean
+		public ActiveMQConnectionFactoryCustomizer activeMQConnectionFactoryCustomizer() {
+			return new ActiveMQConnectionFactoryCustomizer() {
+				@Override
+				public void customize(ActiveMQConnectionFactory factory) {
+					factory.setBrokerURL(
+							"vm://localhost?useJmx=false&broker.persistent=false");
+					factory.setUserName("foobar");
+				}
+			};
+		}
 	}
 
 }
