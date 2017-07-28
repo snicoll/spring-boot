@@ -22,7 +22,7 @@ import org.junit.Test;
 import org.springframework.boot.actuate.autoconfigure.AuditAutoConfiguration;
 import org.springframework.boot.actuate.autoconfigure.EndpointAutoConfiguration;
 import org.springframework.boot.actuate.autoconfigure.EndpointWebMvcAutoConfiguration;
-import org.springframework.boot.actuate.autoconfigure.JolokiaAutoConfiguration;
+import org.springframework.boot.actuate.autoconfigure.JolokiaManagementContextConfiguration;
 import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.autoconfigure.http.HttpMessageConvertersAutoConfiguration;
 import org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration;
@@ -56,7 +56,7 @@ public class MvcEndpointCorsIntegrationTests {
 				HttpMessageConvertersAutoConfiguration.class,
 				EndpointAutoConfiguration.class, EndpointWebMvcAutoConfiguration.class,
 				PropertyPlaceholderAutoConfiguration.class, AuditAutoConfiguration.class,
-				JolokiaAutoConfiguration.class, WebMvcAutoConfiguration.class);
+				JolokiaManagementContextConfiguration.class, WebMvcAutoConfiguration.class);
 	}
 
 	@Test

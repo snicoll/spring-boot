@@ -74,7 +74,7 @@ public class SpringApplicationHierarchyTests {
 
 	}
 
-	@EnableAutoConfiguration(exclude = { JolokiaAutoConfiguration.class,
+	@EnableAutoConfiguration(exclude = { JolokiaManagementContextConfiguration.class,
 			EndpointMBeanExportAutoConfiguration.class,
 			ElasticsearchDataAutoConfiguration.class,
 			ElasticsearchRepositoriesAutoConfiguration.class,

@@ -41,7 +41,6 @@ import org.springframework.boot.actuate.endpoint.mvc.EndpointMvcAdapter;
 import org.springframework.boot.actuate.endpoint.mvc.EnvironmentMvcEndpoint;
 import org.springframework.boot.actuate.endpoint.mvc.HalJsonMvcEndpoint;
 import org.springframework.boot.actuate.endpoint.mvc.HealthMvcEndpoint;
-import org.springframework.boot.actuate.endpoint.mvc.JolokiaMvcEndpoint;
 import org.springframework.boot.actuate.endpoint.mvc.LogFileMvcEndpoint;
 import org.springframework.boot.actuate.endpoint.mvc.LoggersMvcEndpoint;
 import org.springframework.boot.actuate.endpoint.mvc.ManagementServletContext;
@@ -96,7 +95,6 @@ public class MvcEndpointPathConfigurationTests {
 				new Object[] { "flyway", FlywayEndpoint.class },
 				new Object[] { "health", HealthMvcEndpoint.class },
 				new Object[] { "info", InfoEndpoint.class },
-				new Object[] { "jolokia", JolokiaMvcEndpoint.class },
 				new Object[] { "liquibase", LiquibaseEndpoint.class },
 				new Object[] { "logfile", LogFileMvcEndpoint.class },
 				new Object[] { "loggers", LoggersMvcEndpoint.class },
@@ -144,7 +142,7 @@ public class MvcEndpointPathConfigurationTests {
 	@Configuration
 	@ImportAutoConfiguration({ EndpointAutoConfiguration.class,
 			HttpMessageConvertersAutoConfiguration.class, AuditAutoConfiguration.class,
-			EndpointWebMvcAutoConfiguration.class, JolokiaAutoConfiguration.class })
+			EndpointWebMvcAutoConfiguration.class, JolokiaManagementContextConfiguration.class })
 
 	protected static class TestConfiguration {
 
