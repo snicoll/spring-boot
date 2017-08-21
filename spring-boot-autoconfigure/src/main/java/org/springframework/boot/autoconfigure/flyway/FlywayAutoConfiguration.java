@@ -80,6 +80,13 @@ public class FlywayAutoConfiguration {
 		return new StringOrNumberToMigrationVersionConverter();
 	}
 
+	@Bean
+	public FlywayDefaultDdlAutoProvider flywayDefaultDdlModeProvider(
+			ObjectProvider<List<Flyway>> flyways) {
+		return new FlywayDefaultDdlAutoProvider(
+				flyways.getIfAvailable(Collections::emptyList));
+	}
+
 	@Configuration
 	@ConditionalOnMissingBean(Flyway.class)
 	@EnableConfigurationProperties(FlywayProperties.class)
