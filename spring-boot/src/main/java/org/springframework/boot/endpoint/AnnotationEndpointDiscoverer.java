@@ -229,9 +229,15 @@ public abstract class AnnotationEndpointDiscoverer<T extends EndpointOperation, 
 
 	private T createOperationIfPossible(String endpointId, String beanName,
 			Method method) {
-		T readOperation = createReadOperationIfPossible(endpointId, beanName, method);
-		return readOperation != null ? readOperation
-				: createWriteOperationIfPossible(endpointId, beanName, method);
+		T operation = createReadOperationIfPossible(endpointId, beanName, method);
+		if (operation != null) {
+			return operation;
+		}
+		operation = createWriteOperationIfPossible(endpointId, beanName, method);
+		if (operation != null) {
+			return operation;
+		}
+		return createDeleteOperationIfPossible(endpointId, beanName, method);
 	}
 
 	private T createReadOperationIfPossible(String endpointId, String beanName,
@@ -244,6 +250,12 @@ public abstract class AnnotationEndpointDiscoverer<T extends EndpointOperation, 
 			Method method) {
 		return createOperationIfPossible(endpointId, beanName, method,
 				WriteOperation.class, EndpointOperationType.WRITE);
+	}
+
+	private T createDeleteOperationIfPossible(String endpointId, String beanName,
+			Method method) {
+		return createOperationIfPossible(endpointId, beanName, method,
+				DeleteOperation.class, EndpointOperationType.DELETE);
 	}
 
 	private T createOperationIfPossible(String endpointId, String beanName, Method method,
