@@ -32,6 +32,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
 /**
+ * Tests for {@link RedisReactiveHealthIndicator}.
  *
  * @author Stephane Nicoll
  */

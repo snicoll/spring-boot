@@ -374,5 +374,10 @@
 			<artifactId>snakeyaml</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>redis.clients</groupId>
+			<artifactId>jedis</artifactId>
+			<optional>true</optional>
+		</dependency>
 	</dependencies>
 </project>

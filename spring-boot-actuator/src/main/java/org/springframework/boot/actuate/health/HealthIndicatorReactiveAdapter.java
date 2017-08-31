@@ -17,30 +17,39 @@
 package org.springframework.boot.actuate.health;
 
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
-import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
+import org.springframework.util.Assert;
 
 /**
- * A {@link ReactiveHealthIndicator} for Redis.
+ * Adapts a {@link HealthIndicator} to a {@link ReactiveHealthIndicator} so that it can
+ * be safely invoked in a reactive environment.
  *
  * @author Stephane Nicoll
  * @since 2.0.0
  */
-public class RedisReactiveHealthIndicator extends AbstractReactiveHealthIndicator {
+public class HealthIndicatorReactiveAdapter implements ReactiveHealthIndicator {
 
-	private final ReactiveRedisConnectionFactory connectionFactory;
+	private final HealthIndicator delegate;
 
-	public RedisReactiveHealthIndicator(
-			ReactiveRedisConnectionFactory connectionFactory) {
-		this.connectionFactory = connectionFactory;
+	public HealthIndicatorReactiveAdapter(HealthIndicator delegate) {
+		Assert.notNull(delegate, "Delegate must not be null");
+		this.delegate = delegate;
 	}
 
 	@Override
-	protected Mono<Health> doHealthCheck(Health.Builder builder) {
-		return this.connectionFactory.getReactiveConnection().serverCommands().info()
-				.map(info -> builder.up().withDetail(
-						RedisHealthIndicator.VERSION, info.getProperty(
-								RedisHealthIndicator.REDIS_VERSION)).build());
+	public Mono<Health> health() {
+		return Mono.create((sink) -> {
+			Schedulers.elastic().schedule(() -> {
+				try {
+					Health health = this.delegate.health();
+					sink.success(health);
+				}
+				catch (Exception ex) {
+					sink.error(ex);
+				}
+			});
+		});
 	}
 
 }
