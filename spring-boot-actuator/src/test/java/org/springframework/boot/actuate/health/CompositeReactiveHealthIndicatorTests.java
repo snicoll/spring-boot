@@ -25,11 +25,11 @@ import reactor.test.StepVerifier;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Tests for {@link ReactiveCompositeHealthIndicator}.
+ * Tests for {@link CompositeReactiveHealthIndicator}.
  *
  * @author Stephane Nicoll
  */
-public class ReactiveCompositeHealthIndicatorTests {
+public class CompositeReactiveHealthIndicatorTests {
 
 	private static final Health UNKNOWN_HEALTH = Health.unknown()
 			.withDetail("detail", "value").build();
@@ -38,8 +38,8 @@ public class ReactiveCompositeHealthIndicatorTests {
 
 	private OrderedHealthAggregator healthAggregator = new OrderedHealthAggregator();
 
-	private ReactiveCompositeHealthIndicator indicator =
-			new ReactiveCompositeHealthIndicator(this.healthAggregator);
+	private CompositeReactiveHealthIndicator indicator =
+			new CompositeReactiveHealthIndicator(this.healthAggregator);
 
 	@Test
 	public void singleIndicator() {

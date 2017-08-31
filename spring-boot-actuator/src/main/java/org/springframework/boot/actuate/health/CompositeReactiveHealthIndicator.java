@@ -35,7 +35,7 @@ import org.springframework.util.Assert;
  * @author Stephane Nicoll
  * @since 2.0.0
  */
-public class ReactiveCompositeHealthIndicator implements ReactiveHealthIndicator {
+public class CompositeReactiveHealthIndicator implements ReactiveHealthIndicator {
 
 	private final Map<String, ReactiveHealthIndicator> indicators;
 
@@ -47,11 +47,11 @@ public class ReactiveCompositeHealthIndicator implements ReactiveHealthIndicator
 
 	private final Function<Mono<Health>, Mono<Health>> timeoutCompose;
 
-	public ReactiveCompositeHealthIndicator(HealthAggregator healthAggregator) {
+	public CompositeReactiveHealthIndicator(HealthAggregator healthAggregator) {
 		this(healthAggregator, new LinkedHashMap<>());
 	}
 
-	public ReactiveCompositeHealthIndicator(HealthAggregator healthAggregator,
+	public CompositeReactiveHealthIndicator(HealthAggregator healthAggregator,
 			Map<String, ReactiveHealthIndicator> indicators) {
 		Assert.notNull(healthAggregator, "HealthAggregator must not be null");
 		Assert.notNull(indicators, "Indicators must not be null");
@@ -68,7 +68,7 @@ public class ReactiveCompositeHealthIndicator implements ReactiveHealthIndicator
 	 * @param indicator the health indicator to add
 	 * @return this instance
 	 */
-	public ReactiveCompositeHealthIndicator addHealthIndicator(String name,
+	public CompositeReactiveHealthIndicator addHealthIndicator(String name,
 			ReactiveHealthIndicator indicator) {
 		this.indicators.put(name, indicator);
 		return this;
@@ -82,7 +82,7 @@ public class ReactiveCompositeHealthIndicator implements ReactiveHealthIndicator
 	 * {@code} timeout
 	 * @return this instance
 	 */
-	public ReactiveCompositeHealthIndicator timeoutStrategy(long timeout,
+	public CompositeReactiveHealthIndicator timeoutStrategy(long timeout,
 			Health timeoutHealth) {
 		this.timeout = timeout;
 		this.timeoutHealth = (timeoutHealth != null ? timeoutHealth

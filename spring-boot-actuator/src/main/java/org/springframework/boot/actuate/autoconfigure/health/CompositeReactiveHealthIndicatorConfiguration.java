@@ -19,8 +19,8 @@ package org.springframework.boot.actuate.autoconfigure.health;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.actuate.health.CompositeReactiveHealthIndicator;
 import org.springframework.boot.actuate.health.HealthAggregator;
-import org.springframework.boot.actuate.health.ReactiveCompositeHealthIndicator;
 import org.springframework.boot.actuate.health.ReactiveHealthIndicator;
 import org.springframework.core.ResolvableType;
 
@@ -41,7 +41,7 @@ public class CompositeReactiveHealthIndicatorConfiguration<H extends ReactiveHea
 		if (beans.size() == 1) {
 			return createHealthIndicator(beans.values().iterator().next());
 		}
-		ReactiveCompositeHealthIndicator composite = new ReactiveCompositeHealthIndicator(
+		CompositeReactiveHealthIndicator composite = new CompositeReactiveHealthIndicator(
 				this.healthAggregator);
 		for (Map.Entry<String, S> entry : beans.entrySet()) {
 			composite.addHealthIndicator(entry.getKey(),
