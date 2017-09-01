@@ -52,7 +52,7 @@ public class ReactiveHealthIndicatorFactoryTests {
 	@Test
 	public void defaultHealthIndicatorNameFactory() {
 		ReactiveHealthIndicator healthIndicator = new ReactiveHealthIndicatorFactory()
-				.createHealthIndicator(new OrderedHealthAggregator(),
+				.createReactiveHealthIndicator(new OrderedHealthAggregator(),
 						Collections.singletonMap("myHealthIndicator", () -> Mono.just(UP)),
 						null);
 		StepVerifier.create(healthIndicator.health()).consumeNextWith(h -> {
@@ -93,7 +93,7 @@ public class ReactiveHealthIndicatorFactoryTests {
 			Map<String, ReactiveHealthIndicator> reactiveHealthIndicators,
 			Map<String, HealthIndicator> healthIndicators) {
 		return new ReactiveHealthIndicatorFactory(n -> n)
-				.createHealthIndicator(new OrderedHealthAggregator(),
+				.createReactiveHealthIndicator(new OrderedHealthAggregator(),
 						reactiveHealthIndicators, healthIndicators);
 	}
 

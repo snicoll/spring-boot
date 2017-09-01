@@ -55,7 +55,8 @@ public class ReactiveHealthIndicatorFactory {
 	 * @return a {@link ReactiveHealthIndicator} that delegates to the specified
 	 * {@code reactiveHealthIndicators}.
 	 */
-	public ReactiveHealthIndicator createHealthIndicator(HealthAggregator healthAggregator,
+	public ReactiveHealthIndicator createReactiveHealthIndicator(
+			HealthAggregator healthAggregator,
 			Map<String, ReactiveHealthIndicator> reactiveHealthIndicators,
 			Map<String, HealthIndicator> healthIndicators) {
 		Assert.notNull(healthAggregator, "HealthAggregator must not be null");
