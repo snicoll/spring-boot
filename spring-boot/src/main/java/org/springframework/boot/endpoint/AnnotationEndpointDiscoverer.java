@@ -111,9 +111,10 @@ public abstract class AnnotationEndpointDiscoverer<T extends Operation, K>
 	private EndpointInfo<T> createEndpointInfo(String beanName, Class<?> beanType,
 			AnnotationAttributes attributes) {
 		String id = attributes.getString("id");
-		boolean enabledByDefault = attributes.getBoolean("enabledByDefault");
+		DefaultEnablement defaultEnablement = (DefaultEnablement) attributes.get(
+				"defaultEnablement");
 		Map<Method, T> operations = discoverOperations(id, beanName, beanType);
-		return new EndpointInfo<>(id, enabledByDefault, operations.values());
+		return new EndpointInfo<>(id, defaultEnablement, operations.values());
 	}
 
 	private Map<Class<?>, EndpointExtensionInfo<T>> discoverExtensions(
@@ -186,7 +187,7 @@ public abstract class AnnotationEndpointDiscoverer<T extends Operation, K>
 				.put(this.operationKeyFactory.apply(operation), operation);
 		endpoint.getOperations().forEach(consumer);
 		extension.getOperations().forEach(consumer);
-		return new EndpointInfo<>(endpoint.getId(), endpoint.isEnabledByDefault(),
+		return new EndpointInfo<>(endpoint.getId(), endpoint.getDefaultEnablement(),
 				operations.values());
 	}
 

@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.Map;
 
 import org.springframework.beans.BeansException;
+import org.springframework.boot.endpoint.DefaultEnablement;
 import org.springframework.boot.endpoint.Endpoint;
 import org.springframework.boot.endpoint.WriteOperation;
 import org.springframework.context.ApplicationContext;
@@ -33,7 +34,7 @@ import org.springframework.context.ConfigurableApplicationContext;
  * @author Christian Dupuis
  * @author Andy Wilkinson
  */
-@Endpoint(id = "shutdown", enabledByDefault = false)
+@Endpoint(id = "shutdown", defaultEnablement = DefaultEnablement.DISABLED)
 public class ShutdownEndpoint implements ApplicationContextAware {
 
 	private static final Map<String, Object> NO_CONTEXT_MESSAGE = Collections

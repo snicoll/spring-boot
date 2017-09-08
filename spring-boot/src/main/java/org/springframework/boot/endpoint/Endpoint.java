@@ -48,9 +48,10 @@ public @interface Endpoint {
 	EndpointExposure[] exposure() default {};
 
 	/**
-	 * Whether or not the endpoint is enabled by default.
-	 * @return {@code true} if the endpoint is enabled by default, otherwise {@code false}
+	 * Defines the {@link DefaultEnablement} of the endpoint. By default, the endpoint's
+	 * enablement defaults to the "default" settings.
+	 * @return the default enablement
 	 */
-	boolean enabledByDefault() default true;
+	DefaultEnablement defaultEnablement() default DefaultEnablement.NEUTRAL;
 
 }

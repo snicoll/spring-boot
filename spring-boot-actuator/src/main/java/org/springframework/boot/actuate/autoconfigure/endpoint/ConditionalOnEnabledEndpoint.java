@@ -22,21 +22,31 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.springframework.boot.endpoint.DefaultEnablement;
 import org.springframework.boot.endpoint.Endpoint;
-import org.springframework.boot.endpoint.EndpointExposure;
 import org.springframework.context.annotation.Conditional;
 
 /**
  * {@link Conditional} that checks whether an endpoint is enabled or not. Matches
- * according to the {@code enabledByDefault} flag {@code types} flag that the
+ * according to the {@code defaultEnablement} and {@code types} flag that the
  * {@link Endpoint} may be restricted to.
  * <p>
- * If no specific {@code endpoints.<id>.*} or {@code endpoints.default.*} properties are
- * defined, the condition matches the {@code enabledByDefault} value regardless of the
- * specific {@link EndpointExposure}, if any. If any property are set, they are evaluated
- * with a sensible order of precedence.
+ * When an endpoint uses {@link DefaultEnablement#DISABLED}, it will only be enabled if
+ * {@code endpoint."name".enabled}, {@code endpoint."name".jmx.enabled} or
+ * {@code endpoint."name".web.enabled} is {@code true}.
  * <p>
- * For instance if {@code endpoints.default.enabled} is {@code false} but
+ * When an endpoint uses {@link DefaultEnablement#ENABLED}, it will be enabled unless
+ * {code endpoint."name".enabled}, {@code endpoint."name".jmx.enabled} or
+ * {@code endpoint."name".web.enabled} is {@code false}.
+ * <p>
+ * When an endpoint uses {@link DefaultEnablement#NEUTRAL}, it will be enabled if
+ * {@code endpoint.default.enabled}, {@code endpoint.default.jmx.enabled} or
+ * {@code endpoint.default.web.enabled} is {@code true} and
+ * {@code endpoint."name".enabled}, {@code endpoint."name".jmx.enabled} or
+ * {@code endpoint."name".web.enabled} has not been set to {@code false}.
+ * <p>
+ * If any property are set, they are evaluated with a sensible order of precedence. For
+ * instance if {@code endpoints.default.enabled} is {@code false} but
  * {@code endpoints.<id>.enabled} is {@code true}, the condition will match.
  * <p>
  * This condition must be placed on a {@code @Bean} method producing an endpoint as its id
@@ -53,7 +63,7 @@ import org.springframework.context.annotation.Conditional;
  *         ...
  *     }
  *
- *     &#064;Endpoint(id = "my", enabledByDefault = false)
+ *     &#064;Endpoint(id = "my", defaultEnablement = DefaultEnablement.DISABLED)
  *     static class MyEndpoint { ... }
  *
  * }</pre>

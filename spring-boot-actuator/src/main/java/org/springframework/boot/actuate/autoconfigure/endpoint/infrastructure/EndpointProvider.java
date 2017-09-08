@@ -62,7 +62,7 @@ public final class EndpointProvider<T extends Operation> {
 
 	private boolean isEnabled(EndpointInfo<?> endpoint) {
 		return this.endpointEnablementProvider.getEndpointEnablement(endpoint.getId(),
-				endpoint.isEnabledByDefault(), this.exposure).isEnabled();
+				endpoint.getDefaultEnablement(), this.exposure).isEnabled();
 	}
 
 }
