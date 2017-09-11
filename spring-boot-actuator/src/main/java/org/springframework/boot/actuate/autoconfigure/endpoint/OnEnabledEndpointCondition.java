@@ -115,22 +115,22 @@ class OnEnabledEndpointCondition extends SpringBootCondition {
 
 		private final String id;
 
-		private final DefaultEnablement enableByDefault;
+		private final DefaultEnablement defaultEnablement;
 
 		private final EndpointExposure exposure;
 
-		EndpointAttributes(String id, DefaultEnablement enableByDefault,
+		EndpointAttributes(String id, DefaultEnablement defaultEnablement,
 				EndpointExposure exposure) {
 			if (!StringUtils.hasText(id)) {
 				throw new IllegalStateException("Endpoint id could not be determined");
 			}
 			this.id = id;
-			this.enableByDefault = enableByDefault;
+			this.defaultEnablement = defaultEnablement;
 			this.exposure = exposure;
 		}
 
 		public EndpointEnablement getEnablement(EndpointEnablementProvider provider) {
-			return provider.getEndpointEnablement(this.id, this.enableByDefault,
+			return provider.getEndpointEnablement(this.id, this.defaultEnablement,
 					this.exposure);
 		}
 

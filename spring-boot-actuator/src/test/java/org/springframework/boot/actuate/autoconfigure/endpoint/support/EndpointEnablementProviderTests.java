@@ -223,6 +223,38 @@ public class EndpointEnablementProviderTests {
 				"found property endpoints.biz.jmx.enabled");
 	}
 
+	@Test
+	public void defaultEnablementNeutralTechTakesPrecedenceOnEverything() {
+		EndpointEnablement enablement = getEndpointEnablement("biz",
+				DefaultEnablement.NEUTRAL, EndpointExposure.JMX,
+				"endpoints.default.enabled=false",
+				"endpoints.default.jmx.enabled=false",
+				"endpoints.biz.enabled=false",
+				"endpoints.biz.jmx.enabled=true");
+		validate(enablement, true,
+				"found property endpoints.biz.jmx.enabled");
+	}
+
+	@Test
+	public void defaultEnablementNeutralSpecificTakesPrecedenceOnDefaults() {
+		EndpointEnablement enablement = getEndpointEnablement("biz",
+				DefaultEnablement.NEUTRAL, EndpointExposure.JMX,
+				"endpoints.default.enabled=false",
+				"endpoints.default.jmx.enabled=false",
+				"endpoints.biz.enabled=true");
+		validate(enablement, true,
+				"found property endpoints.biz.enabled");
+	}
+
+	@Test
+	public void defaultEnablementNeutralDefaultTechTakesPrecedenceOnGeneralDefault() {
+		EndpointEnablement enablement = getEndpointEnablement("biz",
+				DefaultEnablement.NEUTRAL, EndpointExposure.JMX,
+				"endpoints.default.enabled=false",
+				"endpoints.default.jmx.enabled=true");
+		validate(enablement, true,
+				"found property endpoints.default.jmx.enabled");
+	}
 
 	private EndpointEnablement getEndpointEnablement(String id,
 			DefaultEnablement enabledByDefault, String... environment) {

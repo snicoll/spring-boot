@@ -25,12 +25,12 @@ package org.springframework.boot.endpoint;
 public enum DefaultEnablement {
 
 	/**
-	 * The endpoint is enabled.
+	 * The endpoint is enabled unless explicitly disabled.
 	 */
 	ENABLED,
 
 	/**
-	 * The endpoint is disabled.
+	 * The endpoint is disabled unless explicitly enabled.
 	 */
 	DISABLED,
 

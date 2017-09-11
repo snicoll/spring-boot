@@ -32,22 +32,29 @@ import org.springframework.context.annotation.Conditional;
  * {@link Endpoint} may be restricted to.
  * <p>
  * When an endpoint uses {@link DefaultEnablement#DISABLED}, it will only be enabled if
- * {@code endpoint."name".enabled}, {@code endpoint."name".jmx.enabled} or
- * {@code endpoint."name".web.enabled} is {@code true}.
+ * {@code endpoint.<name>.enabled}, {@code endpoint.<name>.jmx.enabled} or
+ * {@code endpoint.<name>.web.enabled} is {@code true}.
  * <p>
  * When an endpoint uses {@link DefaultEnablement#ENABLED}, it will be enabled unless
- * {code endpoint."name".enabled}, {@code endpoint."name".jmx.enabled} or
- * {@code endpoint."name".web.enabled} is {@code false}.
+ * {@code endpoint.<name>.enabled}, {@code endpoint.<name>.jmx.enabled} or
+ * {@code endpoint.<name>.web.enabled} is {@code false}.
  * <p>
  * When an endpoint uses {@link DefaultEnablement#NEUTRAL}, it will be enabled if
  * {@code endpoint.default.enabled}, {@code endpoint.default.jmx.enabled} or
  * {@code endpoint.default.web.enabled} is {@code true} and
- * {@code endpoint."name".enabled}, {@code endpoint."name".jmx.enabled} or
- * {@code endpoint."name".web.enabled} has not been set to {@code false}.
+ * {@code endpoint.<name>.enabled}, {@code endpoint.<name>.jmx.enabled} or
+ * {@code endpoint.<name>.web.enabled} has not been set to {@code false}.
  * <p>
- * If any property are set, they are evaluated with a sensible order of precedence. For
- * instance if {@code endpoints.default.enabled} is {@code false} but
- * {@code endpoints.<id>.enabled} is {@code true}, the condition will match.
+ * If any properties are set, they are evaluated from most to least specific, e.g.
+ * considering a web endpoint with id {@code foo}:
+ * <ol>
+ *     <li>endpoints.foo.web.enabled</li>
+ *     <li>endpoints.foo.enabled</li>
+ *     <li>endpoints.default.web.enabled</li>
+ *     <li>endpoints.default.enabled</li>
+ * </ol>
+ * For instance if {@code endpoints.default.enabled} is {@code false} but
+ * {@code endpoints.<name>.enabled} is {@code true}, the condition will match.
  * <p>
  * This condition must be placed on a {@code @Bean} method producing an endpoint as its id
  * and other attributes are inferred from the {@link Endpoint} annotation set on the
