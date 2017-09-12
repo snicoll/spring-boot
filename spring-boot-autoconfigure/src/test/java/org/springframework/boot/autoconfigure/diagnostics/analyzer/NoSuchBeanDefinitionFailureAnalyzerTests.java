@@ -32,6 +32,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionEvaluationRepor
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.diagnostics.AutoConfigurationReportProcessor;
 import org.springframework.boot.diagnostics.FailureAnalysis;
 import org.springframework.boot.diagnostics.LoggingFailureAnalysisReporter;
 import org.springframework.boot.test.util.TestPropertyValues;
@@ -223,8 +224,8 @@ public class NoSuchBeanDefinitionFailureAnalyzerTests {
 
 	private static void addExclusions(NoSuchBeanDefinitionFailureAnalyzer analyzer,
 			Class<?>... classes) {
-		ConditionEvaluationReport report = (ConditionEvaluationReport) new DirectFieldAccessor(
-				analyzer).getPropertyValue("report");
+		ConditionEvaluationReport report = ((AutoConfigurationReportProcessor) new DirectFieldAccessor(
+				analyzer).getPropertyValue("processor")).getReport();
 		List<String> exclusions = new ArrayList<>(report.getExclusions());
 		for (Class<?> c : classes) {
 			exclusions.add(c.getName());
