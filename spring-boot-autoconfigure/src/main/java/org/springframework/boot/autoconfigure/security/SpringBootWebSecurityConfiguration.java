@@ -37,7 +37,7 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
  * @author Madhura Bhave
  * @since 2.0.0
  */
-@ConditionalOnProperty(prefix = "security.basic", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "spring.security.default", name = "enabled", havingValue = "true", matchIfMissing = true)
 @ConditionalOnClass(EnableWebSecurity.class)
 @ConditionalOnMissingBean(WebSecurityConfigurerAdapter.class)
 @ConditionalOnWebApplication(type = Type.SERVLET)

@@ -1,9 +1,5 @@
 {"properties": [
   {
-    "name": "security.filter-dispatcher-types",
-    "defaultValue": ["async", "error", "request"]
-  },
-  {
     "name": "server.error.include-stacktrace",
     "defaultValue": "never"
   },
@@ -354,6 +350,10 @@
     "type": "java.lang.Boolean",
     "description": "Create an AmqpAdmin bean.",
     "defaultValue": true
+  },
+  {
+    "name": "spring.security.filter.dispatcher-types",
+    "defaultValue": ["async", "error", "request"]
   },
   {
     "name": "spring.session.hazelcast.flush-mode",
