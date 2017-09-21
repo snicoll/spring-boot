@@ -38,7 +38,7 @@ public class Sanitizer {
 	private Pattern[] keysToSanitize;
 
 	public Sanitizer() {
-		this("password", "secret", "key", "token", ".*credentials.*", "vcap_services");
+		this("password", "secret", "key", "token", ".*credentials.*", "vcapservices");
 	}
 
 	public Sanitizer(String... keysToSanitize) {

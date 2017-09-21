@@ -21,6 +21,7 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -31,19 +32,23 @@ import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
 import org.springframework.boot.actuate.endpoint.annotation.Selector;
 import org.springframework.boot.actuate.env.EnvironmentEndpoint.EnvironmentDescriptor.PropertySourceDescriptor;
 import org.springframework.boot.actuate.env.EnvironmentEndpoint.EnvironmentDescriptor.PropertySourceDescriptor.PropertyValueDescriptor;
-import org.springframework.boot.origin.OriginLookup;
-import org.springframework.core.env.CompositePropertySource;
+import org.springframework.boot.context.properties.bind.PlaceholdersResolver;
+import org.springframework.boot.context.properties.bind.PropertySourcesPlaceholdersResolver;
+import org.springframework.boot.context.properties.source.ConfigurationProperty;
+import org.springframework.boot.context.properties.source.ConfigurationPropertyName;
+import org.springframework.boot.context.properties.source.ConfigurationPropertySource;
+import org.springframework.boot.context.properties.source.ConfigurationPropertySources;
+import org.springframework.boot.context.properties.source.IterableConfigurationPropertySource;
+import org.springframework.boot.origin.Origin;
 import org.springframework.core.env.ConfigurableEnvironment;
-import org.springframework.core.env.EnumerablePropertySource;
 import org.springframework.core.env.Environment;
 import org.springframework.core.env.MutablePropertySources;
-import org.springframework.core.env.PropertyResolver;
 import org.springframework.core.env.PropertySource;
-import org.springframework.core.env.PropertySources;
-import org.springframework.core.env.PropertySourcesPropertyResolver;
 import org.springframework.core.env.StandardEnvironment;
 import org.springframework.http.HttpStatus;
+import org.springframework.util.PropertyPlaceholderHelper;
 import org.springframework.util.StringUtils;
+import org.springframework.util.SystemPropertyUtils;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 /**
@@ -62,8 +67,12 @@ public class EnvironmentEndpoint {
 
 	private final Environment environment;
 
+	private final PlaceholdersResolver placeholdersResolver;
+
 	public EnvironmentEndpoint(Environment environment) {
 		this.environment = environment;
+		this.placeholdersResolver = new PropertySourcesPlaceholdersSanitizingResolver(
+				getPropertySources(environment), this.sanitizer);
 	}
 
 	public void setKeysToSanitize(String... keysToSanitize) {
@@ -73,68 +82,76 @@ public class EnvironmentEndpoint {
 	@ReadOperation
 	public EnvironmentDescriptor environment(String pattern) {
 		if (StringUtils.hasText(pattern)) {
-			return getEnvironmentDescriptor(Pattern.compile(pattern).asPredicate());
+			return getEnvironmentDescriptor(source -> {
+				Predicate<String> stringPredicate = Pattern.compile(pattern).asPredicate();
+				return source.filter(name -> stringPredicate.test(name.toString())).stream();
+			});
 		}
-		return getEnvironmentDescriptor((name) -> true);
+		return getEnvironmentDescriptor(IterableConfigurationPropertySource::stream);
 	}
 
 	@ReadOperation
 	public EnvironmentDescriptor environmentEntry(@Selector String toMatch) {
-		return getEnvironmentDescriptor(toMatch::equals);
+		return getEnvironmentDescriptor(source -> {
+			ConfigurationProperty property = source.getConfigurationProperty(
+					ConfigurationPropertyName.of(toMatch));
+			return (property != null ? Stream.of(property.getName())
+					: Stream.empty());
+		});
 	}
 
 	private EnvironmentDescriptor getEnvironmentDescriptor(
-			Predicate<String> propertyNamePredicate) {
-		PropertyResolver resolver = getResolver();
+			Function<IterableConfigurationPropertySource, Stream<ConfigurationPropertyName>> filter) {
 		List<PropertySourceDescriptor> propertySources = new ArrayList<>();
 		getPropertySourcesAsMap().forEach((sourceName, source) -> {
-			if (source instanceof EnumerablePropertySource) {
-				propertySources.add(
-						describeSource(sourceName, (EnumerablePropertySource<?>) source,
-								resolver, propertyNamePredicate));
-			}
+			propertySources.add(describeSource(sourceName, source, filter));
 		});
 		return new EnvironmentDescriptor(
 				Arrays.asList(this.environment.getActiveProfiles()), propertySources);
 	}
 
 	private PropertySourceDescriptor describeSource(String sourceName,
-			EnumerablePropertySource<?> source, PropertyResolver resolver,
-			Predicate<String> namePredicate) {
+			IterableConfigurationPropertySource source,
+			Function<IterableConfigurationPropertySource, Stream<ConfigurationPropertyName>> filter) {
 		Map<String, PropertyValueDescriptor> properties = new LinkedHashMap<>();
-		Stream.of(source.getPropertyNames()).filter(namePredicate).forEach(
-				(name) -> properties.put(name, describeValueOf(name, source, resolver)));
+		filter.apply(source).forEach(
+				(name) -> properties.put(name.toString(), describeValueOf(name, source)));
 		return new PropertySourceDescriptor(sourceName, properties);
 	}
 
-	private PropertyValueDescriptor describeValueOf(String name,
-			EnumerablePropertySource<?> source, PropertyResolver resolver) {
-		Object resolved = resolver.getProperty(name, Object.class);
-		@SuppressWarnings("unchecked")
-		String origin = (source instanceof OriginLookup)
-				? ((OriginLookup<Object>) source).getOrigin(name).toString() : null;
-		return new PropertyValueDescriptor(sanitize(name, resolved), origin);
+	private PropertyValueDescriptor describeValueOf(ConfigurationPropertyName name,
+			ConfigurationPropertySource source) {
+		ConfigurationProperty property = source.getConfigurationProperty(name);
+		if (property != null) {
+			Object value = this.placeholdersResolver.resolvePlaceholders(property.getValue());
+			Origin origin = source.getConfigurationProperty(name).getOrigin();
+			return new PropertyValueDescriptor(sanitize(property.getName(), value),
+					(origin != null ? origin.toString() : null));
+		}
+		return new PropertyValueDescriptor(null, null);
 	}
 
-	private PropertyResolver getResolver() {
-		PlaceholderSanitizingPropertyResolver resolver = new PlaceholderSanitizingPropertyResolver(
-				getPropertySources(), this.sanitizer);
-		resolver.setIgnoreUnresolvableNestedPlaceholders(true);
-		return resolver;
-	}
-
-	private Map<String, PropertySource<?>> getPropertySourcesAsMap() {
-		Map<String, PropertySource<?>> map = new LinkedHashMap<>();
-		for (PropertySource<?> source : getPropertySources()) {
-			extract("", map, source);
+	private Map<String, IterableConfigurationPropertySource> getPropertySourcesAsMap() {
+		Map<String, IterableConfigurationPropertySource> map = new LinkedHashMap<>();
+		for (ConfigurationPropertySource source : ConfigurationPropertySources.get(this.environment)) {
+			if (source instanceof IterableConfigurationPropertySource) {
+				map.put(extractName(source.getUnderlyingSource()), (IterableConfigurationPropertySource) source);
+			}
 		}
 		return map;
 	}
 
-	private MutablePropertySources getPropertySources() {
+	private String extractName(Object underlyingSource) {
+		if (underlyingSource instanceof PropertySource) {
+			return ((PropertySource) underlyingSource).getName();
+		}
+		throw new IllegalStateException("YOLO");
+	}
+
+	private static Iterable<PropertySource<?>> getPropertySources(Environment environment) {
 		MutablePropertySources sources;
-		if (this.environment instanceof ConfigurableEnvironment) {
-			sources = ((ConfigurableEnvironment) this.environment).getPropertySources();
+		if (environment instanceof ConfigurableEnvironment) {
+			sources = ((ConfigurableEnvironment) environment).getPropertySources();
 		}
 		else {
 			sources = new StandardEnvironment().getPropertySources();
@@ -142,49 +159,34 @@ public class EnvironmentEndpoint {
 		return sources;
 	}
 
-	private void extract(String root, Map<String, PropertySource<?>> map,
-			PropertySource<?> source) {
-		if (source instanceof CompositePropertySource) {
-			for (PropertySource<?> nest : ((CompositePropertySource) source)
-					.getPropertySources()) {
-				extract(source.getName() + ":", map, nest);
-			}
-		}
-		else {
-			map.put(root + source.getName(), source);
-		}
-	}
-
-	public Object sanitize(String name, Object object) {
-		return this.sanitizer.sanitize(name, object);
+	public Object sanitize(ConfigurationPropertyName name, Object value) {
+		return this.sanitizer.sanitize(name.toString(), value);
 	}
 
 	/**
-	 * {@link PropertySourcesPropertyResolver} that sanitizes sensitive placeholders if
-	 * present.
+	 * {@link PropertySourcesPlaceholdersResolver} that sanitizes sensitive placeholders
+	 * if present.
 	 */
-	private class PlaceholderSanitizingPropertyResolver
-			extends PropertySourcesPropertyResolver {
+	private static class PropertySourcesPlaceholdersSanitizingResolver
+			extends PropertySourcesPlaceholdersResolver {
 
 		private final Sanitizer sanitizer;
 
-		/**
-		 * Create a new resolver against the given property sources.
-		 * @param propertySources the set of {@link PropertySource} objects to use
-		 * @param sanitizer the sanitizer used to sanitize sensitive values
-		 */
-		PlaceholderSanitizingPropertyResolver(PropertySources propertySources,
-				Sanitizer sanitizer) {
-			super(propertySources);
+		public PropertySourcesPlaceholdersSanitizingResolver(
+				Iterable<PropertySource<?>> sources, Sanitizer sanitizer) {
+			super(sources, new PropertyPlaceholderHelper(
+					SystemPropertyUtils.PLACEHOLDER_PREFIX,
+					SystemPropertyUtils.PLACEHOLDER_SUFFIX,
+					SystemPropertyUtils.VALUE_SEPARATOR, true));
 			this.sanitizer = sanitizer;
 		}
 
 		@Override
-		protected String getPropertyAsRawString(String key) {
-			String value = super.getPropertyAsRawString(key);
-			return (String) this.sanitizer.sanitize(key, value);
+		protected String resolvePlaceholder(String placeholder) {
+			String value = super.resolvePlaceholder(placeholder);
+			return (value != null ?
+					(String) this.sanitizer.sanitize(placeholder, value) : null);
 		}
-
 	}
 
 	/**
