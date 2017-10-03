@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Arrays;
+import java.util.UUID;
 
 import javax.sql.DataSource;
 
@@ -28,6 +29,8 @@ import com.zaxxer.hikari.HikariDataSource;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.junit.After;
 import org.junit.Test;
+
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -76,6 +79,29 @@ public class DataSourceBuilderTests {
 		HikariDataSource hikariDataSource = DataSourceBuilder.create()
 				.type(HikariDataSource.class).build();
 		assertThat(hikariDataSource).isInstanceOf(HikariDataSource.class);
+	}
+
+	@Test
+	public void fromExistingDataSourceWithHikari() {
+		DataSource first = initializeTestDataSource(DataSourceBuilder.create()
+				.type(HikariDataSource.class), "hikari");
+		assertThat(getBarValue(first)).isEqualTo("hikari");
+		DataSource second = DataSourceBuilder.from(first).build();
+		assertThat(getBarValue(second)).isEqualTo("hikari");
+	}
+
+	private <D extends DataSource> D initializeTestDataSource(DataSourceBuilder<D> builder, String value) {
+		String url = "jdbc:h2:mem:" + UUID.randomUUID().toString();
+		D dataSource = builder.url(url).build();
+		JdbcTemplate template = new JdbcTemplate(dataSource);
+		template.execute("CREATE TABLE BAR (id INTEGER IDENTITY PRIMARY KEY, name VARCHAR(30));");
+		template.execute("INSERT INTO BAR VALUES (1, '" + value + "');");
+		return dataSource;
+	}
+
+	private String getBarValue(DataSource dataSource) {
+		return new JdbcTemplate(dataSource)
+				.queryForObject("SELECT name FROM BAR where id=1", String.class);
 	}
 
 	final class HidePackagesClassLoader extends URLClassLoader {

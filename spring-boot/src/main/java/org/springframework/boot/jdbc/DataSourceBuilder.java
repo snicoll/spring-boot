@@ -65,6 +65,10 @@ public final class DataSourceBuilder<T extends DataSource> {
 		return new DataSourceBuilder<>(classLoader);
 	}
 
+	public static <T extends DataSource> DataSourceBuilder<T> from(T dataSource) {
+		return new DataSourceBuilderInitializer().initializeFrom(dataSource);
+	}
+
 	private DataSourceBuilder(ClassLoader classLoader) {
 		this.classLoader = classLoader;
 	}
