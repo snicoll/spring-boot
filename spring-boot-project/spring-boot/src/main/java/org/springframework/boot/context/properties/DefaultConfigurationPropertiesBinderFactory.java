@@ -16,24 +16,21 @@
 
 package org.springframework.boot.context.properties;
 
-import org.springframework.core.env.PropertySource;
-
 /**
- * Bind target object from a configurable list of {@link PropertySource property sources}.
+ * A default {@link ConfigurationPropertiesBinderFactory}.
  *
  * @author Stephane Nicoll
  * @since 2.0.0
+ * @see DefaultConfigurationPropertiesBinder
  */
-@FunctionalInterface
-public interface ConfigurationPropertiesBinder {
+public final class DefaultConfigurationPropertiesBinderFactory
+		implements ConfigurationPropertiesBinderFactory {
 
-	/**
-	 * Bind the specified {@code target} object using the configuration defined by the
-	 * specified {@link ConfigurationPropertiesBindingOptions binding options}.
-	 * @param target the target to bind the configuration property sources to
-	 * @param options the binding configuration
-	 * @throws ConfigurationPropertiesBindingException if the binding failed
-	 */
-	void bind(Object target, ConfigurationPropertiesBindingOptions options);
+	@Override
+	public ConfigurationPropertiesBinder createBinder(
+			ConfigurationPropertiesBindingContext context) {
+		return new DefaultConfigurationPropertiesBinder(context.getPropertySources(),
+				context.getConversionService(), context.getValidator());
+	}
 
 }

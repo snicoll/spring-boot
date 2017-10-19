@@ -34,13 +34,13 @@ import org.springframework.util.ClassUtils;
 import org.springframework.validation.Validator;
 
 /**
- * Builder for creating {@link ConfigurationPropertiesBinder} based on the state of the
- * {@link ApplicationContext}.
+ * Builder for creating {@link ConfigurationPropertiesBindingContext} based on the state
+ * of the {@link ApplicationContext}.
  *
  * @author Stephane Nicoll
  * @since 2.0.0
  */
-public class ConfigurationPropertiesBinderBuilder {
+public class ConfigurationPropertiesBindingContextBuilder {
 
 	/**
 	 * The bean name of the configuration properties validator.
@@ -67,7 +67,8 @@ public class ConfigurationPropertiesBinderBuilder {
 	 * Creates an instance with the {@link ApplicationContext} to use.
 	 * @param applicationContext the application context
 	 */
-	public ConfigurationPropertiesBinderBuilder(ApplicationContext applicationContext) {
+	public ConfigurationPropertiesBindingContextBuilder(
+			ApplicationContext applicationContext) {
 		Assert.notNull(applicationContext, "ApplicationContext must not be null");
 		this.applicationContext = applicationContext;
 	}
@@ -83,7 +84,7 @@ public class ConfigurationPropertiesBinderBuilder {
 	 * @param conversionService the conversion service to use or {@code null}
 	 * @return this instance
 	 */
-	public ConfigurationPropertiesBinderBuilder withConversionService(
+	public ConfigurationPropertiesBindingContextBuilder withConversionService(
 			ConversionService conversionService) {
 		this.conversionService = conversionService;
 		return this;
@@ -98,7 +99,7 @@ public class ConfigurationPropertiesBinderBuilder {
 	 * @param validator the validator to use or {@code null}
 	 * @return this instance
 	 */
-	public ConfigurationPropertiesBinderBuilder withValidator(Validator validator) {
+	public ConfigurationPropertiesBindingContextBuilder withValidator(Validator validator) {
 		this.validator = validator;
 		return this;
 	}
@@ -109,7 +110,7 @@ public class ConfigurationPropertiesBinderBuilder {
 	 * @return this instance
 	 * @see #withEnvironment(ConfigurableEnvironment)
 	 */
-	public ConfigurationPropertiesBinderBuilder withPropertySources(
+	public ConfigurationPropertiesBindingContextBuilder withPropertySources(
 			Iterable<PropertySource<?>> propertySources) {
 		this.propertySources = propertySources;
 		return this;
@@ -122,18 +123,19 @@ public class ConfigurationPropertiesBinderBuilder {
 	 * @return this instance
 	 * @see #withPropertySources(Iterable)
 	 */
-	public ConfigurationPropertiesBinderBuilder withEnvironment(
+	public ConfigurationPropertiesBindingContextBuilder withEnvironment(
 			ConfigurableEnvironment environment) {
 		return withPropertySources(environment.getPropertySources());
 	}
 
 	/**
-	 * Build a {@link ConfigurationPropertiesBinder} based on the state of the builder,
-	 * discovering the {@link ConversionService} and {@link Validator} if necessary.
-	 * @return a {@link ConfigurationPropertiesBinder}
+	 * Build a {@link ConfigurationPropertiesBindingContext} based on the state of the
+	 * builder, discovering the {@link ConversionService} and {@link Validator} if
+	 * necessary.
+	 * @return a {@link ConfigurationPropertiesBindingContext}
 	 */
-	public ConfigurationPropertiesBinder build() {
-		return new ConfigurationPropertiesBinder(this.propertySources,
+	public ConfigurationPropertiesBindingContext build() {
+		return new ConfigurationPropertiesBindingContext(this.propertySources,
 				determineConversionService(), determineValidator());
 	}
 

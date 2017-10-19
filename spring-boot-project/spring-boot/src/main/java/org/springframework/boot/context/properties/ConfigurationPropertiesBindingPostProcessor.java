@@ -41,6 +41,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.core.env.PropertySource;
 import org.springframework.core.env.PropertySources;
 import org.springframework.core.env.StandardEnvironment;
+import org.springframework.util.Assert;
 import org.springframework.validation.Validator;
 
 /**
@@ -56,6 +57,11 @@ import org.springframework.validation.Validator;
 public class ConfigurationPropertiesBindingPostProcessor implements BeanPostProcessor,
 		BeanFactoryAware, EnvironmentAware, ApplicationContextAware, InitializingBean,
 		PriorityOrdered {
+
+	/**
+	 * The bean name to use to override the default {@link ConfigurationPropertiesBinderFactory}.
+	 */
+	public static final String FACTORY_BEAN_NAME = ConfigurationPropertiesBinderFactory.class.getName();
 
 	private static final Log logger = LogFactory
 			.getLog(ConfigurationPropertiesBindingPostProcessor.class);
@@ -186,7 +192,8 @@ public class ConfigurationPropertiesBindingPostProcessor implements BeanPostProc
 		ConfigurationProperties annotation = getAnnotation(bean, beanName);
 		if (annotation != null) {
 			try {
-				getBinder().bind(bean, annotation);
+				getBinder().bind(bean, ConfigurationPropertiesBindingOptions
+						.fromAnnotation(annotation));
 			}
 			catch (ConfigurationPropertiesBindingException ex) {
 				throw new BeanCreationException(beanName, ex.getMessage(), ex.getCause());
@@ -213,12 +220,31 @@ public class ConfigurationPropertiesBindingPostProcessor implements BeanPostProc
 
 	private ConfigurationPropertiesBinder getBinder() {
 		if (this.configurationPropertiesBinder == null) {
-			this.configurationPropertiesBinder = new ConfigurationPropertiesBinderBuilder(
-					this.applicationContext).withConversionService(this.conversionService)
-							.withValidator(this.validator)
-							.withPropertySources(this.propertySources).build();
+			ConfigurationPropertiesBindingContext bindingContext = createBindingContext();
+			this.configurationPropertiesBinder = determineBinderFactory()
+					.createBinder(bindingContext);
 		}
 		return this.configurationPropertiesBinder;
+	}
+
+	private ConfigurationPropertiesBindingContext createBindingContext() {
+		return new ConfigurationPropertiesBindingContextBuilder(this.applicationContext)
+						.withConversionService(this.conversionService)
+						.withValidator(this.validator)
+						.withPropertySources(this.propertySources).build();
+	}
+
+	private ConfigurationPropertiesBinderFactory determineBinderFactory() {
+		if (this.applicationContext.containsBean(FACTORY_BEAN_NAME)) {
+			Object builder = this.applicationContext.getBean(FACTORY_BEAN_NAME);
+			Assert.state(builder instanceof ConfigurationPropertiesBinderFactory,
+					String.format("Bean with name %s must be a %s but got %s",
+							FACTORY_BEAN_NAME,
+							ConfigurationPropertiesBinderFactory.class.getName(),
+							builder.getClass().getName()));
+			return (ConfigurationPropertiesBinderFactory) builder;
+		}
+		return new DefaultConfigurationPropertiesBinderFactory();
 	}
 
 }

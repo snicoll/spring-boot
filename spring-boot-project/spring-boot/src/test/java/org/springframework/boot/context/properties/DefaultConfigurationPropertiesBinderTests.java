@@ -45,11 +45,11 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 /**
- * Tests for {@link ConfigurationPropertiesBinder}.
+ * Tests for {@link DefaultConfigurationPropertiesBinder}.
  *
  * @author Stephane Nicoll
  */
-public class ConfigurationPropertiesBinderTests {
+public class DefaultConfigurationPropertiesBinderTests {
 
 	private final MockEnvironment environment = new MockEnvironment();
 
@@ -57,7 +57,7 @@ public class ConfigurationPropertiesBinderTests {
 	public void bindSimpleProperties() {
 		TestPropertySourceUtils.addInlinedPropertiesToEnvironment(this.environment,
 				"person.name=John Smith", "person.age=42");
-		ConfigurationPropertiesBinder binder = new ConfigurationPropertiesBinder(
+		DefaultConfigurationPropertiesBinder binder = new DefaultConfigurationPropertiesBinder(
 				this.environment.getPropertySources(), null, null);
 		PersonProperties target = new PersonProperties();
 		binder.bind(target);
@@ -69,7 +69,7 @@ public class ConfigurationPropertiesBinderTests {
 	public void bindUnknownFieldFailureMessageContainsDetailsOfPropertyOrigin() {
 		TestPropertySourceUtils.addInlinedPropertiesToEnvironment(this.environment,
 				"person.does-not-exist=yolo");
-		ConfigurationPropertiesBinder binder = new ConfigurationPropertiesBinder(
+		DefaultConfigurationPropertiesBinder binder = new DefaultConfigurationPropertiesBinder(
 				this.environment.getPropertySources(), null, null);
 		PersonProperties target = new PersonProperties();
 		try {
@@ -88,7 +88,7 @@ public class ConfigurationPropertiesBinderTests {
 	public void bindWithIgnoreInvalidFieldsAnnotation() {
 		TestPropertySourceUtils.addInlinedPropertiesToEnvironment(this.environment,
 				"com.example.bar=spam");
-		ConfigurationPropertiesBinder binder = new ConfigurationPropertiesBinder(
+		DefaultConfigurationPropertiesBinder binder = new DefaultConfigurationPropertiesBinder(
 				this.environment.getPropertySources(), null, null);
 		PropertyWithIgnoreInvalidFields target = new PropertyWithIgnoreInvalidFields();
 		binder.bind(target);
@@ -97,7 +97,7 @@ public class ConfigurationPropertiesBinderTests {
 
 	@Test
 	public void bindNonAnnotatedObject() {
-		ConfigurationPropertiesBinder binder = new ConfigurationPropertiesBinder(
+		DefaultConfigurationPropertiesBinder binder = new DefaultConfigurationPropertiesBinder(
 				this.environment.getPropertySources(), null, null);
 		binder.bind("FooBar");
 	}
@@ -116,7 +116,7 @@ public class ConfigurationPropertiesBinderTests {
 	private void bindToEnum(String property) {
 		TestPropertySourceUtils.addInlinedPropertiesToEnvironment(this.environment,
 				property);
-		ConfigurationPropertiesBinder binder = new ConfigurationPropertiesBinder(
+		DefaultConfigurationPropertiesBinder binder = new DefaultConfigurationPropertiesBinder(
 				this.environment.getPropertySources(), null, null);
 		PropertyWithEnum target = new PropertyWithEnum();
 		binder.bind(target);
@@ -132,7 +132,7 @@ public class ConfigurationPropertiesBinderTests {
 	private void bindToEnumSet(String property, FooEnum... expected) {
 		TestPropertySourceUtils.addInlinedPropertiesToEnvironment(this.environment,
 				property);
-		ConfigurationPropertiesBinder binder = new ConfigurationPropertiesBinder(
+		DefaultConfigurationPropertiesBinder binder = new DefaultConfigurationPropertiesBinder(
 				this.environment.getPropertySources(), null, null);
 		PropertyWithEnum target = new PropertyWithEnum();
 		binder.bind(target);
@@ -143,7 +143,7 @@ public class ConfigurationPropertiesBinderTests {
 	public void bindToCharArray() {
 		TestPropertySourceUtils.addInlinedPropertiesToEnvironment(this.environment,
 				"test.chars=word");
-		ConfigurationPropertiesBinder binder = new ConfigurationPropertiesBinder(
+		DefaultConfigurationPropertiesBinder binder = new DefaultConfigurationPropertiesBinder(
 				this.environment.getPropertySources(), null, null);
 		PropertyWithCharArray target = new PropertyWithCharArray();
 		binder.bind(target);
@@ -159,7 +159,7 @@ public class ConfigurationPropertiesBinderTests {
 	private void testRelaxedPropertyNames(String... pairs) {
 		TestPropertySourceUtils.addInlinedPropertiesToEnvironment(this.environment,
 				pairs);
-		ConfigurationPropertiesBinder binder = new ConfigurationPropertiesBinder(
+		DefaultConfigurationPropertiesBinder binder = new DefaultConfigurationPropertiesBinder(
 				this.environment.getPropertySources(), null, null);
 		PropertyWithRelaxedNames target = new PropertyWithRelaxedNames();
 		binder.bind(target);
@@ -171,7 +171,7 @@ public class ConfigurationPropertiesBinderTests {
 	public void bindToNestedProperty() {
 		TestPropertySourceUtils.addInlinedPropertiesToEnvironment(this.environment,
 				"test.nested.value=test1");
-		ConfigurationPropertiesBinder binder = new ConfigurationPropertiesBinder(
+		DefaultConfigurationPropertiesBinder binder = new DefaultConfigurationPropertiesBinder(
 				this.environment.getPropertySources(), null, null);
 		PropertyWithNestedValue target = new PropertyWithNestedValue();
 		binder.bind(target);
@@ -182,7 +182,7 @@ public class ConfigurationPropertiesBinderTests {
 	public void bindToMap() {
 		TestPropertySourceUtils.addInlinedPropertiesToEnvironment(this.environment,
 				"test.map.foo=bar");
-		ConfigurationPropertiesBinder binder = new ConfigurationPropertiesBinder(
+		DefaultConfigurationPropertiesBinder binder = new DefaultConfigurationPropertiesBinder(
 				this.environment.getPropertySources(), null, null);
 		PropertiesWithMap target = new PropertiesWithMap();
 		binder.bind(target);
@@ -194,7 +194,7 @@ public class ConfigurationPropertiesBinderTests {
 		MutablePropertySources propertySources = new MutablePropertySources();
 		propertySources.addLast(new SystemEnvironmentPropertySource("system",
 				Collections.singletonMap("TEST_MAP_FOO_BAR", "baz")));
-		ConfigurationPropertiesBinder binder = new ConfigurationPropertiesBinder(
+		DefaultConfigurationPropertiesBinder binder = new DefaultConfigurationPropertiesBinder(
 				propertySources, null, null);
 		PropertiesWithComplexMap target = new PropertiesWithComplexMap();
 		binder.bind(target);
@@ -209,7 +209,7 @@ public class ConfigurationPropertiesBinderTests {
 				Collections.singletonMap("PERSON_NAME", "Jane")));
 		propertySources.addLast(new MapPropertySource("test",
 				Collections.singletonMap("person.name", "John")));
-		ConfigurationPropertiesBinder binder = new ConfigurationPropertiesBinder(
+		DefaultConfigurationPropertiesBinder binder = new DefaultConfigurationPropertiesBinder(
 				propertySources, null, null);
 		PersonProperties target = new PersonProperties();
 		binder.bind(target);
@@ -220,7 +220,7 @@ public class ConfigurationPropertiesBinderTests {
 	public void validationWithSetter() {
 		TestPropertySourceUtils.addInlinedPropertiesToEnvironment(this.environment,
 				"test.foo=spam");
-		ConfigurationPropertiesBinder binder = new ConfigurationPropertiesBinder(
+		DefaultConfigurationPropertiesBinder binder = new DefaultConfigurationPropertiesBinder(
 				this.environment.getPropertySources(), null, null);
 		PropertyWithValidatingSetter target = new PropertyWithValidatingSetter();
 		try {
@@ -238,7 +238,7 @@ public class ConfigurationPropertiesBinderTests {
 	@Test
 	public void validationWithCustomValidator() {
 		CustomPropertyValidator validator = spy(new CustomPropertyValidator());
-		ConfigurationPropertiesBinder binder = new ConfigurationPropertiesBinder(
+		DefaultConfigurationPropertiesBinder binder = new DefaultConfigurationPropertiesBinder(
 				this.environment.getPropertySources(), null, validator);
 		PropertyWithCustomValidator target = new PropertyWithCustomValidator();
 		assertThat(bindWithValidationErrors(binder, target).getAllErrors()).hasSize(1);
@@ -250,7 +250,7 @@ public class ConfigurationPropertiesBinderTests {
 		TestPropertySourceUtils.addInlinedPropertiesToEnvironment(this.environment,
 				"test.foo=bar");
 		CustomPropertyValidator validator = spy(new CustomPropertyValidator());
-		ConfigurationPropertiesBinder binder = new ConfigurationPropertiesBinder(
+		DefaultConfigurationPropertiesBinder binder = new DefaultConfigurationPropertiesBinder(
 				this.environment.getPropertySources(), null, validator);
 		PropertyWithValidatingSetter target = new PropertyWithValidatingSetter();
 		binder.bind(target);
@@ -259,7 +259,7 @@ public class ConfigurationPropertiesBinderTests {
 	}
 
 	private ValidationErrors bindWithValidationErrors(
-			ConfigurationPropertiesBinder binder, Object target) {
+			DefaultConfigurationPropertiesBinder binder, Object target) {
 		try {
 			binder.bind(target);
 			throw new AssertionError("Should have failed to bind " + target);

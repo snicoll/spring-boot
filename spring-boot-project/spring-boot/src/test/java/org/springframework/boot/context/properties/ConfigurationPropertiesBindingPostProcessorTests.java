@@ -55,6 +55,7 @@ import org.springframework.core.env.SystemEnvironmentPropertySource;
 import org.springframework.lang.Nullable;
 import org.springframework.mock.env.MockEnvironment;
 import org.springframework.test.context.support.TestPropertySourceUtils;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 
@@ -84,6 +85,20 @@ public class ConfigurationPropertiesBindingPostProcessorTests {
 		if (this.context != null) {
 			this.context.close();
 		}
+	}
+
+	@Test
+	public void binderStateIsNullOutAfterContextRefresh() {
+		this.context = new AnnotationConfigApplicationContext();
+		this.context.register(TestConfiguration.class);
+		this.context.refresh();
+		ConfigurationPropertiesBindingPostProcessor bean = this.context
+				.getBean(ConfigurationPropertiesBindingPostProcessor.class);
+		Object configurationPropertiesBinder = ReflectionTestUtils.getField(bean,
+				"configurationPropertiesBinder");
+		assertThat(configurationPropertiesBinder).isNotNull();
+		assertThat(ReflectionTestUtils.getField(bean, "validator")).isNull();
+		assertThat(ReflectionTestUtils.getField(bean, "conversionService")).isNull();
 	}
 
 	@Test
