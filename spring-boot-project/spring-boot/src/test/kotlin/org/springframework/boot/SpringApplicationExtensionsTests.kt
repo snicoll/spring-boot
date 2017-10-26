@@ -18,7 +18,7 @@ package org.springframework.boot
 import org.junit.Assert.*
 import org.junit.Test
 import org.springframework.beans.factory.getBean
-import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory
+import org.springframework.boot.web.servlet.server.MockServletWebServerFactory
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.env.StandardEnvironment
@@ -110,8 +110,8 @@ class SpringApplicationExtensionsTests {
 	internal open class ExampleWebConfig {
 
 		@Bean
-		open fun webServer(): TomcatServletWebServerFactory {
-			return TomcatServletWebServerFactory(0)
+		open fun webServer(): MockServletWebServerFactory {
+			return MockServletWebServerFactory()
 		}
 	}
 
