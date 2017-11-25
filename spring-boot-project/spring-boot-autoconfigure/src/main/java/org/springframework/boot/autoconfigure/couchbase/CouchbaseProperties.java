@@ -17,7 +17,11 @@
 package org.springframework.boot.autoconfigure.couchbase;
 
 import java.time.Duration;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+
+import com.couchbase.client.core.env.DefaultCoreEnvironment;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.DeprecatedConfigurationProperty;
@@ -29,6 +33,7 @@ import org.springframework.util.StringUtils;
  * @author Eddú Meléndez
  * @author Stephane Nicoll
  * @author Yulin Qin
+ * @author Alex Derkach
  * @since 1.4.0
  */
 @ConfigurationProperties(prefix = "spring.couchbase")
@@ -42,6 +47,26 @@ public class CouchbaseProperties {
 	private final Bucket bucket = new Bucket();
 
 	private final Env env = new Env();
+
+	private int bootstrapHttpDirectPort = DefaultCoreEnvironment.BOOTSTRAP_HTTP_DIRECT_PORT;
+
+	private int bootstrapCarrierDirectPort = DefaultCoreEnvironment.BOOTSTRAP_CARRIER_DIRECT_PORT;
+
+	public int getBootstrapHttpDirectPort() {
+		return this.bootstrapHttpDirectPort;
+	}
+
+	public void setBootstrapHttpDirectPort(int bootstrapHttpDirectPort) {
+		this.bootstrapHttpDirectPort = bootstrapHttpDirectPort;
+	}
+
+	public int getBootstrapCarrierDirectPort() {
+		return this.bootstrapCarrierDirectPort;
+	}
+
+	public void setBootstrapCarrierDirectPort(int bootstrapCarrierDirectPort) {
+		this.bootstrapCarrierDirectPort = bootstrapCarrierDirectPort;
+	}
 
 	public List<String> getBootstrapHosts() {
 		return this.bootstrapHosts;
