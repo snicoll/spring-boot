@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -92,7 +92,6 @@ public class MetricsAutoConfigurationIntegrationTests {
 						"{\"message\": \"hello\"}", MediaType.APPLICATION_JSON));
 		assertThat(this.external.getForObject("/api/external", Map.class))
 				.containsKey("message");
-		MockClock.clock(this.registry).add(SimpleConfig.DEFAULT_STEP);
 		assertThat(this.registry.find("http.client.requests").value(Statistic.Count, 1.0)
 				.timer()).isPresent();
 	}
@@ -100,7 +99,6 @@ public class MetricsAutoConfigurationIntegrationTests {
 	@Test
 	public void requestMappingIsInstrumented() {
 		this.loopback.getForObject("/api/people", Set.class);
-		MockClock.clock(this.registry).add(SimpleConfig.DEFAULT_STEP);
 		assertThat(this.registry.find("http.server.requests").value(Statistic.Count, 1.0)
 				.timer()).isPresent();
 	}

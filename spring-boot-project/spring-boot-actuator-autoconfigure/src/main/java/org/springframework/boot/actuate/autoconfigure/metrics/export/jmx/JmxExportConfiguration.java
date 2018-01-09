@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.springframework.boot.actuate.autoconfigure.metrics.export.jmx;
 
 import io.micrometer.core.instrument.Clock;
 import io.micrometer.core.instrument.util.HierarchicalNameMapper;
+import io.micrometer.jmx.JmxConfig;
 import io.micrometer.jmx.JmxMeterRegistry;
 
 import org.springframework.boot.actuate.autoconfigure.metrics.export.MetricsExporter;
@@ -40,7 +41,7 @@ public class JmxExportConfiguration {
 	@Bean
 	@ConditionalOnProperty(value = "management.metrics.export.jmx.enabled", matchIfMissing = true)
 	public MetricsExporter jmxExporter(HierarchicalNameMapper nameMapper, Clock clock) {
-		return () -> new JmxMeterRegistry(nameMapper, clock);
+		return () -> new JmxMeterRegistry(JmxConfig.DEFAULT, nameMapper, clock);
 	}
 
 	@Bean
