@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,11 +30,11 @@ import javax.management.modelmbean.ModelMBeanInfoSupport;
 import javax.management.modelmbean.ModelMBeanNotificationInfo;
 import javax.management.modelmbean.ModelMBeanOperationInfo;
 
-import org.springframework.boot.actuate.endpoint.EndpointInfo;
+import org.springframework.boot.actuate.endpoint.OperableEndpointInfo;
 import org.springframework.boot.actuate.endpoint.OperationType;
 
 /**
- * Gathers the management operations of a particular {@link EndpointInfo endpoint}.
+ * Gathers the management operations of a particular {@link OperableEndpointInfo endpoint}.
  *
  * @author Stephane Nicoll
  * @author Andy Wilkinson
@@ -48,13 +48,13 @@ class EndpointMBeanInfoAssembler {
 	}
 
 	/**
-	 * Creates the {@link EndpointMBeanInfo} for the specified {@link EndpointInfo
+	 * Creates the {@link EndpointMBeanInfo} for the specified {@link OperableEndpointInfo
 	 * endpoint}.
 	 * @param endpointInfo the endpoint to handle
 	 * @return the mbean info for the endpoint
 	 */
 	EndpointMBeanInfo createEndpointMBeanInfo(
-			EndpointInfo<JmxOperation> endpointInfo) {
+			OperableEndpointInfo<JmxOperation> endpointInfo) {
 		Map<String, OperationInfos> operationsMapping = getOperationInfo(endpointInfo);
 		ModelMBeanOperationInfo[] operationsMBeanInfo = operationsMapping.values()
 				.stream().map((t) -> t.mBeanOperationInfo).collect(Collectors.toList())
@@ -68,12 +68,12 @@ class EndpointMBeanInfoAssembler {
 		return new EndpointMBeanInfo(endpointInfo.getId(), info, operationsInfo);
 	}
 
-	private String getDescription(EndpointInfo<?> endpointInfo) {
+	private String getDescription(OperableEndpointInfo<?> endpointInfo) {
 		return "MBean operations for endpoint " + endpointInfo.getId();
 	}
 
 	private Map<String, OperationInfos> getOperationInfo(
-			EndpointInfo<JmxOperation> endpointInfo) {
+			OperableEndpointInfo<JmxOperation> endpointInfo) {
 		Map<String, OperationInfos> operationInfos = new HashMap<>();
 		endpointInfo.getOperations().forEach((operationInfo) -> {
 			String name = operationInfo.getOperationName();

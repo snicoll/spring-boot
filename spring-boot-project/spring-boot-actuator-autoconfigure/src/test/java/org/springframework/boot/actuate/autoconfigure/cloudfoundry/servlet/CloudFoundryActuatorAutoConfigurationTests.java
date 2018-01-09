@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ import org.springframework.boot.actuate.autoconfigure.endpoint.web.WebEndpointAu
 import org.springframework.boot.actuate.autoconfigure.health.HealthEndpointAutoConfiguration;
 import org.springframework.boot.actuate.autoconfigure.web.server.ManagementContextAutoConfiguration;
 import org.springframework.boot.actuate.autoconfigure.web.servlet.ServletManagementContextAutoConfiguration;
-import org.springframework.boot.actuate.endpoint.EndpointInfo;
+import org.springframework.boot.actuate.endpoint.OperableEndpointInfo;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
 import org.springframework.boot.actuate.endpoint.http.ActuatorMediaType;
@@ -217,7 +217,7 @@ public class CloudFoundryActuatorAutoConfigurationTests {
 		this.context.register(TestConfiguration.class);
 		this.context.refresh();
 		CloudFoundryWebEndpointServletHandlerMapping handlerMapping = getHandlerMapping();
-		List<EndpointInfo<WebOperation>> endpoints = (List<EndpointInfo<WebOperation>>) handlerMapping
+		List<OperableEndpointInfo<WebOperation>> endpoints = (List<OperableEndpointInfo<WebOperation>>) handlerMapping
 				.getEndpoints();
 		assertThat(endpoints.stream()
 				.filter((candidate) -> "test".equals(candidate.getId())).findFirst())
@@ -231,9 +231,9 @@ public class CloudFoundryActuatorAutoConfigurationTests {
 		this.context.register(TestConfiguration.class);
 		this.context.refresh();
 		CloudFoundryWebEndpointServletHandlerMapping handlerMapping = getHandlerMapping();
-		List<EndpointInfo<WebOperation>> endpoints = (List<EndpointInfo<WebOperation>>) handlerMapping
+		List<OperableEndpointInfo<WebOperation>> endpoints = (List<OperableEndpointInfo<WebOperation>>) handlerMapping
 				.getEndpoints();
-		EndpointInfo<WebOperation> endpoint = endpoints.stream()
+		OperableEndpointInfo<WebOperation> endpoint = endpoints.stream()
 				.filter((candidate) -> "test".equals(candidate.getId())).findFirst()
 				.get();
 		Collection<WebOperation> operations = endpoint.getOperations();
@@ -251,11 +251,11 @@ public class CloudFoundryActuatorAutoConfigurationTests {
 		this.context.register(HealthEndpointAutoConfiguration.class,
 				CloudFoundryHealthWebEndpointAutoConfiguration.class);
 		this.context.refresh();
-		Collection<EndpointInfo<WebOperation>> endpoints = this.context
+		Collection<OperableEndpointInfo<WebOperation>> endpoints = this.context
 				.getBean("cloudFoundryWebEndpointServletHandlerMapping",
 						CloudFoundryWebEndpointServletHandlerMapping.class)
 				.getEndpoints();
-		EndpointInfo<WebOperation> endpointInfo = endpoints.iterator().next();
+		OperableEndpointInfo<WebOperation> endpointInfo = endpoints.iterator().next();
 		WebOperation webOperation = endpointInfo.getOperations().iterator().next();
 		ReflectiveOperationInvoker invoker = (ReflectiveOperationInvoker) webOperation
 				.getInvoker();

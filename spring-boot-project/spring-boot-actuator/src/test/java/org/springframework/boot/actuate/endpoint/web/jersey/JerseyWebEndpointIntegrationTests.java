@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.servlet.ServletContainer;
 
 import org.springframework.boot.actuate.endpoint.EndpointDiscoverer;
+import org.springframework.boot.actuate.endpoint.OperableEndpointInfo;
 import org.springframework.boot.actuate.endpoint.web.AbstractWebEndpointIntegrationTests;
 import org.springframework.boot.actuate.endpoint.web.EndpointMediaTypes;
 import org.springframework.boot.actuate.endpoint.web.WebOperation;
@@ -82,7 +83,7 @@ public class JerseyWebEndpointIntegrationTests extends
 
 		@Bean
 		public ResourceConfig resourceConfig(Environment environment,
-				EndpointDiscoverer<WebOperation> endpointDiscoverer,
+				EndpointDiscoverer<OperableEndpointInfo<WebOperation>> endpointDiscoverer,
 				EndpointMediaTypes endpointMediaTypes) {
 			ResourceConfig resourceConfig = new ResourceConfig();
 			Collection<Resource> resources = new JerseyEndpointResourceFactory()

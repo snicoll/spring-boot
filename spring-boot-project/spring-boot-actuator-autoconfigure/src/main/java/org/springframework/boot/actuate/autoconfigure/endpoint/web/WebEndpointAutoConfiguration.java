@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import org.springframework.boot.actuate.autoconfigure.endpoint.EndpointAutoConfi
 import org.springframework.boot.actuate.autoconfigure.endpoint.ExposeExcludePropertyEndpointFilter;
 import org.springframework.boot.actuate.endpoint.EndpointDiscoverer;
 import org.springframework.boot.actuate.endpoint.EndpointFilter;
+import org.springframework.boot.actuate.endpoint.OperableEndpointInfo;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.http.ActuatorMediaType;
 import org.springframework.boot.actuate.endpoint.reflect.OperationMethodInvokerAdvisor;
@@ -81,7 +82,7 @@ public class WebEndpointAutoConfiguration {
 	public WebAnnotationEndpointDiscoverer webAnnotationEndpointDiscoverer(
 			ParameterMapper parameterMapper, EndpointPathResolver endpointPathResolver,
 			Collection<OperationMethodInvokerAdvisor> invokerAdvisors,
-			Collection<EndpointFilter<WebOperation>> filters) {
+			Collection<EndpointFilter<OperableEndpointInfo<WebOperation>>> filters) {
 		return new WebAnnotationEndpointDiscoverer(this.applicationContext,
 				parameterMapper, endpointMediaTypes(), endpointPathResolver,
 				invokerAdvisors, filters);
@@ -96,7 +97,7 @@ public class WebEndpointAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	public EndpointPathProvider endpointPathProvider(
-			EndpointDiscoverer<WebOperation> endpointDiscoverer,
+			EndpointDiscoverer<OperableEndpointInfo<WebOperation>> endpointDiscoverer,
 			WebEndpointProperties webEndpointProperties) {
 		return new DefaultEndpointPathProvider(endpointDiscoverer, webEndpointProperties);
 	}

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.boot.actuate.endpoint.EndpointInfo;
+import org.springframework.boot.actuate.endpoint.OperableEndpointInfo;
 import org.springframework.boot.actuate.endpoint.web.EndpointMediaTypes;
 import org.springframework.boot.actuate.endpoint.web.OperationRequestPredicate;
 import org.springframework.boot.actuate.endpoint.web.WebOperation;
@@ -55,7 +55,7 @@ public abstract class AbstractWebMvcEndpointHandlerMapping
 
 	private final EndpointMapping endpointMapping;
 
-	private final Collection<EndpointInfo<WebOperation>> webEndpoints;
+	private final Collection<OperableEndpointInfo<WebOperation>> webEndpoints;
 
 	private final EndpointMediaTypes endpointMediaTypes;
 
@@ -69,7 +69,7 @@ public abstract class AbstractWebMvcEndpointHandlerMapping
 	 * @param endpointMediaTypes media types consumed and produced by the endpoints
 	 */
 	public AbstractWebMvcEndpointHandlerMapping(EndpointMapping endpointMapping,
-			Collection<EndpointInfo<WebOperation>> collection,
+			Collection<OperableEndpointInfo<WebOperation>> collection,
 			EndpointMediaTypes endpointMediaTypes) {
 		this(endpointMapping, collection, endpointMediaTypes, null);
 	}
@@ -83,7 +83,7 @@ public abstract class AbstractWebMvcEndpointHandlerMapping
 	 * @param corsConfiguration the CORS configuration for the endpoints
 	 */
 	public AbstractWebMvcEndpointHandlerMapping(EndpointMapping endpointMapping,
-			Collection<EndpointInfo<WebOperation>> webEndpoints,
+			Collection<OperableEndpointInfo<WebOperation>> webEndpoints,
 			EndpointMediaTypes endpointMediaTypes, CorsConfiguration corsConfiguration) {
 		this.endpointMapping = endpointMapping;
 		this.webEndpoints = webEndpoints;
@@ -92,7 +92,7 @@ public abstract class AbstractWebMvcEndpointHandlerMapping
 		setOrder(-100);
 	}
 
-	public Collection<EndpointInfo<WebOperation>> getEndpoints() {
+	public Collection<OperableEndpointInfo<WebOperation>> getEndpoints() {
 		return this.webEndpoints;
 	}
 

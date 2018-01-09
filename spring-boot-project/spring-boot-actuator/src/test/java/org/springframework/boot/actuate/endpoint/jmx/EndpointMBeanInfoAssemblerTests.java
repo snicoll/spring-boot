@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import javax.management.MBeanParameterInfo;
 
 import org.junit.Test;
 
-import org.springframework.boot.actuate.endpoint.EndpointInfo;
+import org.springframework.boot.actuate.endpoint.OperableEndpointInfo;
 import org.springframework.boot.actuate.endpoint.OperationInvoker;
 import org.springframework.boot.actuate.endpoint.OperationType;
 
@@ -47,7 +47,7 @@ public class EndpointMBeanInfoAssemblerTests {
 		JmxOperation operation = new JmxOperation(OperationType.READ,
 				new DummyOperationInvoker(), "getAll", Object.class, "Test operation",
 				Collections.emptyList());
-		EndpointInfo<JmxOperation> endpoint = new EndpointInfo<>("test", true,
+		OperableEndpointInfo<JmxOperation> endpoint = new OperableEndpointInfo<>("test", true,
 				Collections.singletonList(operation));
 		EndpointMBeanInfo endpointMBeanInfo = this.mBeanInfoAssembler
 				.createEndpointMBeanInfo(endpoint);
@@ -77,7 +77,7 @@ public class EndpointMBeanInfoAssemblerTests {
 				new DummyOperationInvoker(), "update", Object.class, "Update operation",
 				Collections.singletonList(new JmxEndpointOperationParameterInfo("test",
 						String.class, "Test argument")));
-		EndpointInfo<JmxOperation> endpoint = new EndpointInfo<>("another", true,
+		OperableEndpointInfo<JmxOperation> endpoint = new OperableEndpointInfo<>("another", true,
 				Collections.singletonList(operation));
 		EndpointMBeanInfo endpointMBeanInfo = this.mBeanInfoAssembler
 				.createEndpointMBeanInfo(endpoint);

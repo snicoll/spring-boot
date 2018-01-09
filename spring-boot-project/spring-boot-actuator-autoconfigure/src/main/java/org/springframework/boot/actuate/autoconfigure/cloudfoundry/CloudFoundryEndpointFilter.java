@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ package org.springframework.boot.actuate.autoconfigure.cloudfoundry;
 
 import org.springframework.boot.actuate.endpoint.EndpointDiscoverer;
 import org.springframework.boot.actuate.endpoint.EndpointFilter;
-import org.springframework.boot.actuate.endpoint.EndpointInfo;
+import org.springframework.boot.actuate.endpoint.OperableEndpointInfo;
 import org.springframework.boot.actuate.endpoint.web.WebOperation;
 
 /**
@@ -27,10 +27,12 @@ import org.springframework.boot.actuate.endpoint.web.WebOperation;
  *
  * @author Madhura Bhave
  */
-public class CloudFoundryEndpointFilter implements EndpointFilter<WebOperation> {
+public class CloudFoundryEndpointFilter
+		implements EndpointFilter<OperableEndpointInfo<WebOperation>> {
 
 	@Override
-	public boolean match(EndpointInfo<WebOperation> info, EndpointDiscoverer<WebOperation> discoverer) {
+	public boolean match(OperableEndpointInfo<WebOperation> info,
+			EndpointDiscoverer<OperableEndpointInfo<WebOperation>> discoverer) {
 		return (discoverer instanceof CloudFoundryWebAnnotationEndpointDiscoverer);
 	}
 

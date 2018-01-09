@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ package org.springframework.boot.actuate.endpoint.jmx;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
-import org.springframework.boot.actuate.endpoint.EndpointInfo;
+import org.springframework.boot.actuate.endpoint.OperableEndpointInfo;
 
 /**
  * A factory for creating JMX MBeans for endpoint operations.
@@ -50,11 +50,11 @@ public class JmxEndpointMBeanFactory {
 	 * @return the MBeans
 	 */
 	public Collection<EndpointMBean> createMBeans(
-			Collection<EndpointInfo<JmxOperation>> endpoints) {
+			Collection<OperableEndpointInfo<JmxOperation>> endpoints) {
 		return endpoints.stream().map(this::createMBean).collect(Collectors.toList());
 	}
 
-	private EndpointMBean createMBean(EndpointInfo<JmxOperation> endpointInfo) {
+	private EndpointMBean createMBean(OperableEndpointInfo<JmxOperation> endpointInfo) {
 		EndpointMBeanInfo endpointMBeanInfo = this.assembler
 				.createEndpointMBeanInfo(endpointInfo);
 		return new EndpointMBean(this.resultMapper::mapResponse, endpointMBeanInfo);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import java.util.Arrays;
 import org.junit.Test;
 
 import org.springframework.boot.actuate.endpoint.EndpointDiscoverer;
+import org.springframework.boot.actuate.endpoint.OperableEndpointInfo;
 import org.springframework.boot.actuate.endpoint.web.AbstractWebEndpointIntegrationTests;
 import org.springframework.boot.actuate.endpoint.web.EndpointMediaTypes;
 import org.springframework.boot.actuate.endpoint.web.WebOperation;
@@ -106,7 +107,7 @@ public class MvcWebEndpointIntegrationTests extends
 		@Bean
 		public WebMvcEndpointHandlerMapping webEndpointHandlerMapping(
 				Environment environment,
-				EndpointDiscoverer<WebOperation> webEndpointDiscoverer,
+				EndpointDiscoverer<OperableEndpointInfo<WebOperation>> webEndpointDiscoverer,
 				EndpointMediaTypes endpointMediaTypes) {
 			CorsConfiguration corsConfiguration = new CorsConfiguration();
 			corsConfiguration.setAllowedOrigins(Arrays.asList("http://example.com"));

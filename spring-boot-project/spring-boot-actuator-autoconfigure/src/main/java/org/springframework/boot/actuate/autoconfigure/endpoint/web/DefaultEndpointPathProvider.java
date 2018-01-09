@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.springframework.boot.actuate.endpoint.EndpointDiscoverer;
-import org.springframework.boot.actuate.endpoint.EndpointInfo;
+import org.springframework.boot.actuate.endpoint.OperableEndpointInfo;
 import org.springframework.boot.actuate.endpoint.web.WebOperation;
 import org.springframework.util.Assert;
 
@@ -35,10 +35,10 @@ public class DefaultEndpointPathProvider implements EndpointPathProvider {
 
 	private final String basePath;
 
-	private final EndpointDiscoverer<WebOperation> endpointDiscoverer;
+	private final EndpointDiscoverer<OperableEndpointInfo<WebOperation>> endpointDiscoverer;
 
 	public DefaultEndpointPathProvider(
-			EndpointDiscoverer<WebOperation> endpointDiscoverer,
+			EndpointDiscoverer<OperableEndpointInfo<WebOperation>> endpointDiscoverer,
 			WebEndpointProperties webEndpointProperties) {
 		this.endpointDiscoverer = endpointDiscoverer;
 		this.basePath = webEndpointProperties.getBasePath();
@@ -56,11 +56,11 @@ public class DefaultEndpointPathProvider implements EndpointPathProvider {
 				.map(this::getPath).orElse(null);
 	}
 
-	private Stream<EndpointInfo<WebOperation>> getEndpoints() {
+	private Stream<OperableEndpointInfo<WebOperation>> getEndpoints() {
 		return this.endpointDiscoverer.discoverEndpoints().stream();
 	}
 
-	private String getPath(EndpointInfo<WebOperation> endpointInfo) {
+	private String getPath(OperableEndpointInfo<WebOperation> endpointInfo) {
 		return this.basePath + "/" + endpointInfo.getId();
 	}
 

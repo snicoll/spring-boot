@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import org.springframework.boot.actuate.endpoint.EndpointDiscoverer;
-import org.springframework.boot.actuate.endpoint.EndpointInfo;
+import org.springframework.boot.actuate.endpoint.OperableEndpointInfo;
 import org.springframework.boot.actuate.endpoint.web.WebOperation;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -40,7 +40,7 @@ import static org.mockito.BDDMockito.given;
 public class DefaultEndpointPathProviderTests {
 
 	@Mock
-	private EndpointDiscoverer<WebOperation> discoverer;
+	private EndpointDiscoverer<OperableEndpointInfo<WebOperation>> discoverer;
 
 	@Before
 	public void setup() {
@@ -78,9 +78,9 @@ public class DefaultEndpointPathProviderTests {
 	}
 
 	private DefaultEndpointPathProvider createProvider(String contextPath) {
-		Collection<EndpointInfo<WebOperation>> endpoints = new ArrayList<>();
-		endpoints.add(new EndpointInfo<>("foo", true, Collections.emptyList()));
-		endpoints.add(new EndpointInfo<>("bar", true, Collections.emptyList()));
+		Collection<OperableEndpointInfo<WebOperation>> endpoints = new ArrayList<>();
+		endpoints.add(new OperableEndpointInfo<>("foo", true, Collections.emptyList()));
+		endpoints.add(new OperableEndpointInfo<>("bar", true, Collections.emptyList()));
 		given(this.discoverer.discoverEndpoints()).willReturn(endpoints);
 		WebEndpointProperties webEndpointProperties = new WebEndpointProperties();
 		webEndpointProperties.setBasePath(contextPath);

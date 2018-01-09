@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,18 +21,18 @@ import java.util.Collection;
 /**
  * Discovers endpoints and provides an {@link EndpointInfo} for each of them.
  *
- * @param <T> the type of the operation
+ * @param <T> the {@link EndpointInfo} type
  * @author Andy Wilkinson
  * @author Stephane Nicoll
  * @since 2.0.0
  */
 @FunctionalInterface
-public interface EndpointDiscoverer<T extends Operation> {
+public interface EndpointDiscoverer<T extends EndpointInfo> {
 
 	/**
 	 * Perform endpoint discovery.
 	 * @return the discovered endpoints
 	 */
-	Collection<EndpointInfo<T>> discoverEndpoints();
+	Collection<T> discoverEndpoints();
 
 }

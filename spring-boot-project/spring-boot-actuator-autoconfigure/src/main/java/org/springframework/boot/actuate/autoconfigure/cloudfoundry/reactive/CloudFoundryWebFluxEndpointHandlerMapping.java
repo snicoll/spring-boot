@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ import reactor.core.publisher.Mono;
 
 import org.springframework.boot.actuate.autoconfigure.cloudfoundry.AccessLevel;
 import org.springframework.boot.actuate.autoconfigure.cloudfoundry.SecurityResponse;
-import org.springframework.boot.actuate.endpoint.EndpointInfo;
+import org.springframework.boot.actuate.endpoint.OperableEndpointInfo;
 import org.springframework.boot.actuate.endpoint.OperationInvoker;
 import org.springframework.boot.actuate.endpoint.OperationType;
 import org.springframework.boot.actuate.endpoint.reflect.ParameterMappingException;
@@ -135,7 +135,7 @@ class CloudFoundryWebFluxEndpointHandlerMapping
 	 * @param securityInterceptor the Security Interceptor
 	 */
 	CloudFoundryWebFluxEndpointHandlerMapping(EndpointMapping endpointMapping,
-			Collection<EndpointInfo<WebOperation>> webEndpoints,
+			Collection<OperableEndpointInfo<WebOperation>> webEndpoints,
 			EndpointMediaTypes endpointMediaTypes, CorsConfiguration corsConfiguration,
 			ReactiveCloudFoundrySecurityInterceptor securityInterceptor) {
 		super(endpointMapping, webEndpoints, endpointMediaTypes, corsConfiguration);

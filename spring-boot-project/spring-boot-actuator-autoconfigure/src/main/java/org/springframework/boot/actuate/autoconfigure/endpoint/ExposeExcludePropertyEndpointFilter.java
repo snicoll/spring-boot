@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.boot.actuate.endpoint.EndpointDiscoverer;
 import org.springframework.boot.actuate.endpoint.EndpointFilter;
-import org.springframework.boot.actuate.endpoint.EndpointInfo;
+import org.springframework.boot.actuate.endpoint.OperableEndpointInfo;
 import org.springframework.boot.actuate.endpoint.Operation;
 import org.springframework.boot.context.properties.bind.Bindable;
 import org.springframework.boot.context.properties.bind.Binder;
@@ -42,9 +42,9 @@ import org.springframework.util.Assert;
  * @since 2.0.0
  */
 public class ExposeExcludePropertyEndpointFilter<T extends Operation>
-		implements EndpointFilter<T> {
+		implements EndpointFilter<OperableEndpointInfo<T>> {
 
-	private final Class<? extends EndpointDiscoverer<T>> discovererType;
+	private final Class<? extends EndpointDiscoverer<OperableEndpointInfo<T>>> discovererType;
 
 	private final Set<String> expose;
 
@@ -53,7 +53,7 @@ public class ExposeExcludePropertyEndpointFilter<T extends Operation>
 	private final Set<String> exposeDefaults;
 
 	public ExposeExcludePropertyEndpointFilter(
-			Class<? extends EndpointDiscoverer<T>> discovererType,
+			Class<? extends EndpointDiscoverer<OperableEndpointInfo<T>>> discovererType,
 			Environment environment, String prefix, String... exposeDefaults) {
 		Assert.notNull(discovererType, "Discoverer Type must not be null");
 		Assert.notNull(environment, "Environment must not be null");
@@ -66,7 +66,7 @@ public class ExposeExcludePropertyEndpointFilter<T extends Operation>
 	}
 
 	public ExposeExcludePropertyEndpointFilter(
-			Class<? extends EndpointDiscoverer<T>> discovererType,
+			Class<? extends EndpointDiscoverer<OperableEndpointInfo<T>>> discovererType,
 			Collection<String> expose, Collection<String> exclude,
 			String... exposeDefaults) {
 		Assert.notNull(discovererType, "Discoverer Type must not be null");
@@ -90,14 +90,14 @@ public class ExposeExcludePropertyEndpointFilter<T extends Operation>
 	}
 
 	@Override
-	public boolean match(EndpointInfo<T> info, EndpointDiscoverer<T> discoverer) {
+	public boolean match(OperableEndpointInfo<T> info, EndpointDiscoverer<OperableEndpointInfo<T>> discoverer) {
 		if (this.discovererType.isInstance(discoverer)) {
 			return isExposed(info) && !isExcluded(info);
 		}
 		return true;
 	}
 
-	private boolean isExposed(EndpointInfo<T> info) {
+	private boolean isExposed(OperableEndpointInfo<T> info) {
 		if (this.expose.isEmpty()) {
 			return this.exposeDefaults.contains("*")
 					|| contains(this.exposeDefaults, info);
@@ -105,14 +105,14 @@ public class ExposeExcludePropertyEndpointFilter<T extends Operation>
 		return this.expose.contains("*") || contains(this.expose, info);
 	}
 
-	private boolean isExcluded(EndpointInfo<T> info) {
+	private boolean isExcluded(OperableEndpointInfo<T> info) {
 		if (this.exclude.isEmpty()) {
 			return false;
 		}
 		return this.exclude.contains("*") || contains(this.exclude, info);
 	}
 
-	private boolean contains(Set<String> items, EndpointInfo<T> info) {
+	private boolean contains(Set<String> items, OperableEndpointInfo<T> info) {
 		return items.contains(info.getId().toLowerCase());
 	}
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ import java.util.Map;
 import org.assertj.core.api.Condition;
 import org.junit.Test;
 
-import org.springframework.boot.actuate.endpoint.EndpointInfo;
+import org.springframework.boot.actuate.endpoint.OperableEndpointInfo;
 import org.springframework.boot.actuate.endpoint.OperationType;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -59,7 +59,7 @@ public class EndpointLinksResolverTests {
 	public void resolvedLinksContainsALinkForEachEndpointOperation() {
 		Map<String, Link> links = this.linksResolver
 				.resolveLinks(
-						Arrays.asList(new EndpointInfo<>("alpha", true,
+						Arrays.asList(new OperableEndpointInfo<>("alpha", true,
 								Arrays.asList(operationWithPath("/alpha", "alpha"),
 										operationWithPath("/alpha/{name}",
 												"alpha-name")))),

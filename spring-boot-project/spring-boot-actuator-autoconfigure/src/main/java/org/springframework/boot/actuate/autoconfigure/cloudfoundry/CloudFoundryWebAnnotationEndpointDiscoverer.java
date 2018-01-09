@@ -19,7 +19,7 @@ package org.springframework.boot.actuate.autoconfigure.cloudfoundry;
 import java.util.Collection;
 
 import org.springframework.boot.actuate.endpoint.EndpointFilter;
-import org.springframework.boot.actuate.endpoint.EndpointInfo;
+import org.springframework.boot.actuate.endpoint.OperableEndpointInfo;
 import org.springframework.boot.actuate.endpoint.reflect.OperationMethodInvokerAdvisor;
 import org.springframework.boot.actuate.endpoint.reflect.ParameterMapper;
 import org.springframework.boot.actuate.endpoint.web.EndpointMediaTypes;
@@ -46,7 +46,7 @@ public class CloudFoundryWebAnnotationEndpointDiscoverer
 			EndpointMediaTypes endpointMediaTypes,
 			EndpointPathResolver endpointPathResolver,
 			Collection<? extends OperationMethodInvokerAdvisor> invokerAdvisors,
-			Collection<? extends EndpointFilter<WebOperation>> filters,
+			Collection<? extends EndpointFilter<OperableEndpointInfo<WebOperation>>> filters,
 			Class<?> requiredExtensionType) {
 		super(applicationContext, parameterMapper, endpointMediaTypes,
 				endpointPathResolver, invokerAdvisors, filters);
@@ -55,7 +55,7 @@ public class CloudFoundryWebAnnotationEndpointDiscoverer
 
 	@Override
 	protected boolean isExtensionExposed(Class<?> endpointType, Class<?> extensionType,
-			EndpointInfo<WebOperation> endpointInfo) {
+			OperableEndpointInfo<WebOperation> endpointInfo) {
 		if (HealthEndpoint.class.equals(endpointType)
 				&& !this.requiredExtensionType.equals(extensionType)) {
 			return false;

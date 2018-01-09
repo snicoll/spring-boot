@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ import org.mockito.MockitoAnnotations;
 
 import org.springframework.boot.actuate.endpoint.EndpointDiscoverer;
 import org.springframework.boot.actuate.endpoint.EndpointFilter;
-import org.springframework.boot.actuate.endpoint.EndpointInfo;
+import org.springframework.boot.actuate.endpoint.OperableEndpointInfo;
 import org.springframework.boot.actuate.endpoint.Operation;
 import org.springframework.mock.env.MockEnvironment;
 
@@ -45,7 +45,7 @@ public class ExposeExcludePropertyEndpointFilterTests {
 
 	private MockEnvironment environment = new MockEnvironment();
 
-	private EndpointFilter<Operation> filter;
+	private EndpointFilter<OperableEndpointInfo<Operation>> filter;
 
 	@Mock
 	private TestEndpointDiscoverer discoverer;
@@ -161,18 +161,18 @@ public class ExposeExcludePropertyEndpointFilterTests {
 	}
 
 	private boolean match(String id) {
-		EndpointInfo<Operation> info = new EndpointInfo<>(id, true,
+		OperableEndpointInfo<Operation> info = new OperableEndpointInfo<>(id, true,
 				Collections.emptyList());
 		return this.filter.match(info, this.discoverer);
 	}
 
 	private abstract static class TestEndpointDiscoverer
-			implements EndpointDiscoverer<Operation> {
+			implements EndpointDiscoverer<OperableEndpointInfo<Operation>> {
 
 	}
 
 	private abstract static class DifferentTestEndpointDiscoverer
-			implements EndpointDiscoverer<Operation> {
+			implements EndpointDiscoverer<OperableEndpointInfo<Operation>> {
 
 	}
 

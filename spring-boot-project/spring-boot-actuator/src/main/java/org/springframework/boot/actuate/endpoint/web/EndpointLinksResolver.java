@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.springframework.boot.actuate.endpoint.EndpointInfo;
+import org.springframework.boot.actuate.endpoint.OperableEndpointInfo;
 
 /**
  * A resolver for {@link Link links} to web endpoints.
@@ -38,12 +39,12 @@ public class EndpointLinksResolver {
 	 * @return the links
 	 */
 	public Map<String, Link> resolveLinks(
-			Collection<EndpointInfo<WebOperation>> webEndpoints,
+			Collection<OperableEndpointInfo<WebOperation>> webEndpoints,
 			String requestUrl) {
 		String normalizedUrl = normalizeRequestUrl(requestUrl);
 		Map<String, Link> links = new LinkedHashMap<>();
 		links.put("self", new Link(normalizedUrl));
-		for (EndpointInfo<WebOperation> endpoint : webEndpoints) {
+		for (OperableEndpointInfo<WebOperation> endpoint : webEndpoints) {
 			for (WebOperation operation : endpoint.getOperations()) {
 				webEndpoints.stream().map(EndpointInfo::getId).forEach((id) -> links
 						.put(operation.getId(), createLink(normalizedUrl, operation)));

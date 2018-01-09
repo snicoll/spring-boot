@@ -14,24 +14,23 @@
  * limitations under the License.
  */
 
-package org.springframework.boot.actuate.endpoint;
+package org.springframework.boot.actuate.endpoint.web.servlet;
+
+import org.springframework.boot.actuate.endpoint.EndpointDiscoverer;
+import org.springframework.boot.actuate.endpoint.EndpointFilter;
+import org.springframework.boot.actuate.endpoint.EndpointInfo;
 
 /**
- * Strategy class that can be used to filter discovered endpoints.
+ * {@link EndpointFilter} for Spring MVC specific endpoints.
  *
- * @author Phillip Webb
- * @param <T> the type of the endpoint's operations
- * @since 2.0.0
+ * @author Stephane Nicoll
  */
-@FunctionalInterface
-public interface EndpointFilter<T extends EndpointInfo> {
+class WebMvcEndpointFilter implements EndpointFilter<EndpointInfo> {
 
-	/**
-	 * Return {@code true} if the filter matches.
-	 * @param info the endpoint info
-	 * @param discoverer the endpoint discoverer
-	 * @return {@code true} if the filter matches
-	 */
-	boolean match(T info, EndpointDiscoverer<T> discoverer);
+	@Override
+	public boolean match(EndpointInfo info,
+			EndpointDiscoverer<EndpointInfo> discoverer) {
+		return false;
+	}
 
 }

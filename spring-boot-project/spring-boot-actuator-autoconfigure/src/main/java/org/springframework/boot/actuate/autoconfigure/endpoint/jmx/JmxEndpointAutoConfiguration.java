@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.actuate.autoconfigure.endpoint.ExposeExcludePropertyEndpointFilter;
 import org.springframework.boot.actuate.endpoint.EndpointFilter;
+import org.springframework.boot.actuate.endpoint.OperableEndpointInfo;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.jmx.EndpointMBeanRegistrar;
 import org.springframework.boot.actuate.endpoint.jmx.EndpointObjectNameFactory;
@@ -69,7 +70,7 @@ public class JmxEndpointAutoConfiguration {
 	public JmxAnnotationEndpointDiscoverer jmxAnnotationEndpointDiscoverer(
 			ParameterMapper parameterMapper,
 			Collection<OperationMethodInvokerAdvisor> invokerAdvisors,
-			Collection<EndpointFilter<JmxOperation>> filters) {
+			Collection<EndpointFilter<OperableEndpointInfo<JmxOperation>>> filters) {
 		return new JmxAnnotationEndpointDiscoverer(this.applicationContext,
 				parameterMapper, invokerAdvisors, filters);
 	}

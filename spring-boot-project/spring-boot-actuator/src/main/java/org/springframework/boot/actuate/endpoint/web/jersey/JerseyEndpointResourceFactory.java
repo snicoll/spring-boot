@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,7 +38,7 @@ import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.Resource.Builder;
 import reactor.core.publisher.Mono;
 
-import org.springframework.boot.actuate.endpoint.EndpointInfo;
+import org.springframework.boot.actuate.endpoint.OperableEndpointInfo;
 import org.springframework.boot.actuate.endpoint.OperationInvoker;
 import org.springframework.boot.actuate.endpoint.reflect.ParameterMappingException;
 import org.springframework.boot.actuate.endpoint.reflect.ParametersMissingException;
@@ -73,7 +73,7 @@ public class JerseyEndpointResourceFactory {
 	 * @return the resources for the operations
 	 */
 	public Collection<Resource> createEndpointResources(EndpointMapping endpointMapping,
-			Collection<EndpointInfo<WebOperation>> webEndpoints,
+			Collection<OperableEndpointInfo<WebOperation>> webEndpoints,
 			EndpointMediaTypes endpointMediaTypes) {
 		List<Resource> resources = new ArrayList<>();
 		webEndpoints.stream()
@@ -105,7 +105,7 @@ public class JerseyEndpointResourceFactory {
 	}
 
 	private Resource createEndpointLinksResource(String endpointPath,
-			Collection<EndpointInfo<WebOperation>> webEndpoints,
+			Collection<OperableEndpointInfo<WebOperation>> webEndpoints,
 			EndpointMediaTypes endpointMediaTypes) {
 		Builder resourceBuilder = Resource.builder().path(endpointPath);
 		resourceBuilder.addMethod("GET")
@@ -263,11 +263,12 @@ public class JerseyEndpointResourceFactory {
 	private static final class EndpointLinksInflector
 			implements Inflector<ContainerRequestContext, Response> {
 
-		private final Collection<EndpointInfo<WebOperation>> endpoints;
+		private final Collection<OperableEndpointInfo<WebOperation>> endpoints;
 
 		private final EndpointLinksResolver linksResolver;
 
-		private EndpointLinksInflector(Collection<EndpointInfo<WebOperation>> endpoints,
+		private EndpointLinksInflector(
+				Collection<OperableEndpointInfo<WebOperation>> endpoints,
 				EndpointLinksResolver linksResolver) {
 			this.endpoints = endpoints;
 			this.linksResolver = linksResolver;

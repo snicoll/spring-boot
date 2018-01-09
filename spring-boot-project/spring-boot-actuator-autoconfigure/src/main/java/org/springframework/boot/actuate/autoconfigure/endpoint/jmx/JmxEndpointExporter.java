@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.boot.actuate.endpoint.EndpointInfo;
+import org.springframework.boot.actuate.endpoint.OperableEndpointInfo;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.jmx.EndpointMBeanRegistrar;
 import org.springframework.boot.actuate.endpoint.jmx.JmxEndpointMBeanFactory;
@@ -67,7 +67,7 @@ class JmxEndpointExporter implements InitializingBean, DisposableBean {
 	}
 
 	private Collection<ObjectName> registerEndpointMBeans() {
-		Collection<EndpointInfo<JmxOperation>> endpoints = this.endpointDiscoverer
+		Collection<OperableEndpointInfo<JmxOperation>> endpoints = this.endpointDiscoverer
 				.discoverEndpoints();
 		return this.mBeanFactory.createMBeans(endpoints).stream()
 				.map(this.endpointMBeanRegistrar::registerEndpointMBean)

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import org.springframework.boot.actuate.endpoint.EndpointInfo;
+import org.springframework.boot.actuate.endpoint.OperableEndpointInfo;
 import org.springframework.boot.actuate.endpoint.OperationInvoker;
 import org.springframework.boot.actuate.endpoint.annotation.DeleteOperation;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
@@ -90,7 +90,7 @@ public class WebAnnotationEndpointDiscovererTests {
 	@Test
 	public void onlyWebEndpointsAreDiscovered() {
 		load(MultipleEndpointsConfiguration.class, (discoverer) -> {
-			Map<String, EndpointInfo<WebOperation>> endpoints = mapEndpoints(
+			Map<String, OperableEndpointInfo<WebOperation>> endpoints = mapEndpoints(
 					discoverer.discoverEndpoints());
 			assertThat(endpoints).containsOnlyKeys("test");
 		});
@@ -99,10 +99,10 @@ public class WebAnnotationEndpointDiscovererTests {
 	@Test
 	public void oneOperationIsDiscoveredWhenExtensionOverridesOperation() {
 		load(OverriddenOperationWebEndpointExtensionConfiguration.class, (discoverer) -> {
-			Map<String, EndpointInfo<WebOperation>> endpoints = mapEndpoints(
+			Map<String, OperableEndpointInfo<WebOperation>> endpoints = mapEndpoints(
 					discoverer.discoverEndpoints());
 			assertThat(endpoints).containsOnlyKeys("test");
-			EndpointInfo<WebOperation> endpoint = endpoints.get("test");
+			OperableEndpointInfo<WebOperation> endpoint = endpoints.get("test");
 			assertThat(requestPredicates(endpoint)).has(
 					requestPredicates(path("test").httpMethod(WebEndpointHttpMethod.GET)
 							.consumes().produces("application/json")));
@@ -112,10 +112,10 @@ public class WebAnnotationEndpointDiscovererTests {
 	@Test
 	public void twoOperationsAreDiscoveredWhenExtensionAddsOperation() {
 		load(AdditionalOperationWebEndpointConfiguration.class, (discoverer) -> {
-			Map<String, EndpointInfo<WebOperation>> endpoints = mapEndpoints(
+			Map<String, OperableEndpointInfo<WebOperation>> endpoints = mapEndpoints(
 					discoverer.discoverEndpoints());
 			assertThat(endpoints).containsOnlyKeys("test");
-			EndpointInfo<WebOperation> endpoint = endpoints.get("test");
+			OperableEndpointInfo<WebOperation> endpoint = endpoints.get("test");
 			assertThat(requestPredicates(endpoint)).has(requestPredicates(
 					path("test").httpMethod(WebEndpointHttpMethod.GET).consumes()
 							.produces("application/json"),
@@ -127,10 +127,10 @@ public class WebAnnotationEndpointDiscovererTests {
 	@Test
 	public void predicateForWriteOperationThatReturnsVoidHasNoProducedMediaTypes() {
 		load(VoidWriteOperationEndpointConfiguration.class, (discoverer) -> {
-			Map<String, EndpointInfo<WebOperation>> endpoints = mapEndpoints(
+			Map<String, OperableEndpointInfo<WebOperation>> endpoints = mapEndpoints(
 					discoverer.discoverEndpoints());
 			assertThat(endpoints).containsOnlyKeys("voidwrite");
-			EndpointInfo<WebOperation> endpoint = endpoints.get("voidwrite");
+			OperableEndpointInfo<WebOperation> endpoint = endpoints.get("voidwrite");
 			assertThat(requestPredicates(endpoint)).has(requestPredicates(
 					path("voidwrite").httpMethod(WebEndpointHttpMethod.POST).produces()
 							.consumes("application/json")));
@@ -203,10 +203,10 @@ public class WebAnnotationEndpointDiscovererTests {
 	@Test
 	public void endpointMainReadOperationIsCachedWithMatchingId() {
 		load((id) -> 500L, (id) -> id, TestEndpointConfiguration.class, (discoverer) -> {
-			Map<String, EndpointInfo<WebOperation>> endpoints = mapEndpoints(
+			Map<String, OperableEndpointInfo<WebOperation>> endpoints = mapEndpoints(
 					discoverer.discoverEndpoints());
 			assertThat(endpoints).containsOnlyKeys("test");
-			EndpointInfo<WebOperation> endpoint = endpoints.get("test");
+			OperableEndpointInfo<WebOperation> endpoint = endpoints.get("test");
 			assertThat(endpoint.getOperations()).hasSize(1);
 			OperationInvoker operationInvoker = endpoint.getOperations().iterator().next()
 					.getInvoker();
@@ -219,10 +219,10 @@ public class WebAnnotationEndpointDiscovererTests {
 	@Test
 	public void operationsThatReturnResourceProduceApplicationOctetStream() {
 		load(ResourceEndpointConfiguration.class, (discoverer) -> {
-			Map<String, EndpointInfo<WebOperation>> endpoints = mapEndpoints(
+			Map<String, OperableEndpointInfo<WebOperation>> endpoints = mapEndpoints(
 					discoverer.discoverEndpoints());
 			assertThat(endpoints).containsOnlyKeys("resource");
-			EndpointInfo<WebOperation> endpoint = endpoints.get("resource");
+			OperableEndpointInfo<WebOperation> endpoint = endpoints.get("resource");
 			assertThat(requestPredicates(endpoint)).has(requestPredicates(
 					path("resource").httpMethod(WebEndpointHttpMethod.GET).consumes()
 							.produces("application/octet-stream")));
@@ -232,10 +232,10 @@ public class WebAnnotationEndpointDiscovererTests {
 	@Test
 	public void operationCanProduceCustomMediaTypes() {
 		load(CustomMediaTypesEndpointConfiguration.class, (discoverer) -> {
-			Map<String, EndpointInfo<WebOperation>> endpoints = mapEndpoints(
+			Map<String, OperableEndpointInfo<WebOperation>> endpoints = mapEndpoints(
 					discoverer.discoverEndpoints());
 			assertThat(endpoints).containsOnlyKeys("custommediatypes");
-			EndpointInfo<WebOperation> endpoint = endpoints.get("custommediatypes");
+			OperableEndpointInfo<WebOperation> endpoint = endpoints.get("custommediatypes");
 			assertThat(requestPredicates(endpoint)).has(requestPredicates(
 					path("custommediatypes").httpMethod(WebEndpointHttpMethod.GET)
 							.consumes().produces("text/plain"),
@@ -250,10 +250,10 @@ public class WebAnnotationEndpointDiscovererTests {
 	public void endpointPathCanBeCustomized() {
 		load((id) -> null, (id) -> "custom/" + id,
 				AdditionalOperationWebEndpointConfiguration.class, (discoverer) -> {
-					Map<String, EndpointInfo<WebOperation>> endpoints = mapEndpoints(
+					Map<String, OperableEndpointInfo<WebOperation>> endpoints = mapEndpoints(
 							discoverer.discoverEndpoints());
 					assertThat(endpoints).containsOnlyKeys("test");
-					EndpointInfo<WebOperation> endpoint = endpoints.get("test");
+					OperableEndpointInfo<WebOperation> endpoint = endpoints.get("test");
 					Condition<List<? extends OperationRequestPredicate>> expected = requestPredicates(
 							path("custom/test").httpMethod(WebEndpointHttpMethod.GET)
 									.consumes().produces("application/json"),
@@ -290,15 +290,15 @@ public class WebAnnotationEndpointDiscovererTests {
 		}
 	}
 
-	private Map<String, EndpointInfo<WebOperation>> mapEndpoints(
-			Collection<EndpointInfo<WebOperation>> endpoints) {
-		Map<String, EndpointInfo<WebOperation>> endpointById = new HashMap<>();
+	private Map<String, OperableEndpointInfo<WebOperation>> mapEndpoints(
+			Collection<OperableEndpointInfo<WebOperation>> endpoints) {
+		Map<String, OperableEndpointInfo<WebOperation>> endpointById = new HashMap<>();
 		endpoints.forEach((endpoint) -> endpointById.put(endpoint.getId(), endpoint));
 		return endpointById;
 	}
 
 	private List<OperationRequestPredicate> requestPredicates(
-			EndpointInfo<WebOperation> endpoint) {
+			OperableEndpointInfo<WebOperation> endpoint) {
 		return endpoint.getOperations().stream().map(WebOperation::getRequestPredicate)
 				.collect(Collectors.toList());
 	}

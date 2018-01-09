@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 import org.springframework.boot.actuate.endpoint.EndpointFilter;
+import org.springframework.boot.actuate.endpoint.OperableEndpointInfo;
 import org.springframework.boot.actuate.endpoint.reflect.OperationMethodInvokerAdvisor;
 import org.springframework.boot.actuate.endpoint.reflect.ParameterMapper;
 import org.springframework.boot.actuate.endpoint.web.EndpointMediaTypes;
@@ -67,7 +68,7 @@ public class CloudFoundryEndpointFilterTests {
 				ParameterMapper parameterMapper, EndpointMediaTypes endpointMediaTypes,
 				EndpointPathResolver endpointPathResolver,
 				Collection<? extends OperationMethodInvokerAdvisor> invokerAdvisors,
-				Collection<? extends EndpointFilter<WebOperation>> filters) {
+				Collection<? extends EndpointFilter<OperableEndpointInfo<WebOperation>>> filters) {
 			super(applicationContext, parameterMapper, endpointMediaTypes,
 					endpointPathResolver, invokerAdvisors, filters);
 		}

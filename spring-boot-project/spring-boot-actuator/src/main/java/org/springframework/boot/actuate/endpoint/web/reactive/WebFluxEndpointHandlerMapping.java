@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
 
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.boot.actuate.endpoint.EndpointInfo;
+import org.springframework.boot.actuate.endpoint.OperableEndpointInfo;
 import org.springframework.boot.actuate.endpoint.OperationInvoker;
 import org.springframework.boot.actuate.endpoint.OperationType;
 import org.springframework.boot.actuate.endpoint.reflect.ParameterMappingException;
@@ -78,7 +78,7 @@ public class WebFluxEndpointHandlerMapping extends AbstractWebFluxEndpointHandle
 	 * @param endpointMediaTypes media types consumed and produced by the endpoints
 	 */
 	public WebFluxEndpointHandlerMapping(EndpointMapping endpointMapping,
-			Collection<EndpointInfo<WebOperation>> collection,
+			Collection<OperableEndpointInfo<WebOperation>> collection,
 			EndpointMediaTypes endpointMediaTypes) {
 		this(endpointMapping, collection, endpointMediaTypes, null);
 	}
@@ -92,7 +92,7 @@ public class WebFluxEndpointHandlerMapping extends AbstractWebFluxEndpointHandle
 	 * @param corsConfiguration the CORS configuration for the endpoints
 	 */
 	public WebFluxEndpointHandlerMapping(EndpointMapping endpointMapping,
-			Collection<EndpointInfo<WebOperation>> webEndpoints,
+			Collection<OperableEndpointInfo<WebOperation>> webEndpoints,
 			EndpointMediaTypes endpointMediaTypes, CorsConfiguration corsConfiguration) {
 		super(endpointMapping, webEndpoints, endpointMediaTypes, corsConfiguration);
 		setOrder(-100);

@@ -16,46 +16,40 @@
 
 package org.springframework.boot.actuate.endpoint;
 
+import java.util.Collection;
+
 import org.springframework.util.Assert;
 
 /**
- * Information describing an endpoint.
+ * An {@link EndpointInfo} that exposes its {@link Operation operations}.
  *
+ * @param <T> the type of the endpoint's operations
  * @author Andy Wilkinson
  * @since 2.0.0
  */
-public class EndpointInfo {
+public class OperableEndpointInfo<T extends Operation> extends EndpointInfo {
 
-	private final String id;
-
-	private final boolean enableByDefault;
+	private final Collection<T> operations;
 
 	/**
-	 * Creates a new {@code EndpointInfo} describing an endpoint with the given
-	 * {@code id}.
+	 * Creates a new {@code EndpointInfo} describing an endpoint with the given {@code id}
+	 * and {@code operations}.
 	 * @param id the id of the endpoint
 	 * @param enableByDefault if the endpoint is enabled by default
+	 * @param operations the operations of the endpoint
 	 */
-	public EndpointInfo(String id, boolean enableByDefault) {
-		Assert.hasText(id, "ID must not be empty");
-		this.id = id;
-		this.enableByDefault = enableByDefault;
+	public OperableEndpointInfo(String id, boolean enableByDefault, Collection<T> operations) {
+		super(id, enableByDefault);
+		Assert.notNull(operations, "Operations must not be null");
+		this.operations = operations;
 	}
 
 	/**
-	 * Returns the id of the endpoint.
-	 * @return the id
+	 * Returns the operations of the endpoint.
+	 * @return the operations
 	 */
-	public String getId() {
-		return this.id;
-	}
-
-	/**
-	 * Returns if the endpoint is enabled by default.
-	 * @return if the endpoint is enabled by default
-	 */
-	public boolean isEnableByDefault() {
-		return this.enableByDefault;
+	public Collection<T> getOperations() {
+		return this.operations;
 	}
 
 }

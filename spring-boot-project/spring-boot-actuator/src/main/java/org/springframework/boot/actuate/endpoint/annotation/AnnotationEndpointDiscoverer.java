@@ -35,6 +35,7 @@ import org.springframework.beans.factory.BeanFactoryUtils;
 import org.springframework.boot.actuate.endpoint.EndpointDiscoverer;
 import org.springframework.boot.actuate.endpoint.EndpointFilter;
 import org.springframework.boot.actuate.endpoint.EndpointInfo;
+import org.springframework.boot.actuate.endpoint.OperableEndpointInfo;
 import org.springframework.boot.actuate.endpoint.Operation;
 import org.springframework.boot.actuate.endpoint.reflect.OperationMethodInvokerAdvisor;
 import org.springframework.boot.actuate.endpoint.reflect.ParameterMapper;
@@ -61,7 +62,7 @@ import org.springframework.util.StringUtils;
  * @since 2.0.0
  */
 public abstract class AnnotationEndpointDiscoverer<K, T extends Operation>
-		implements EndpointDiscoverer<T> {
+		implements EndpointDiscoverer<OperableEndpointInfo<T>> {
 
 	private static final Log logger = LogFactory.getLog(AnnotationEndpointDiscoverer.class);
 
@@ -71,7 +72,7 @@ public abstract class AnnotationEndpointDiscoverer<K, T extends Operation>
 
 	private final OperationsFactory<T> operationsFactory;
 
-	private final List<EndpointFilter<T>> filters;
+	private final List<EndpointFilter<OperableEndpointInfo<T>>> filters;
 
 	/**
 	 * Create a new {@link AnnotationEndpointDiscoverer} instance.
@@ -87,7 +88,7 @@ public abstract class AnnotationEndpointDiscoverer<K, T extends Operation>
 			OperationFactory<T> operationFactory, Function<T, K> operationKeyFactory,
 			ParameterMapper parameterMapper,
 			Collection<? extends OperationMethodInvokerAdvisor> invokerAdvisors,
-			Collection<? extends EndpointFilter<T>> filters) {
+			Collection<? extends EndpointFilter<OperableEndpointInfo<T>>> filters) {
 		Assert.notNull(applicationContext, "Application Context must not be null");
 		Assert.notNull(operationFactory, "Operation Factory must not be null");
 		Assert.notNull(operationKeyFactory, "Operation Key Factory must not be null");
@@ -101,7 +102,7 @@ public abstract class AnnotationEndpointDiscoverer<K, T extends Operation>
 	}
 
 	@Override
-	public final Collection<EndpointInfo<T>> discoverEndpoints() {
+	public final Collection<OperableEndpointInfo<T>> discoverEndpoints() {
 		Class<T> operationType = getOperationType();
 		Map<Class<?>, DiscoveredEndpoint> endpoints = getEndpoints(operationType);
 		Map<Class<?>, DiscoveredExtension> extensions = getExtensions(operationType,
@@ -156,8 +157,8 @@ public abstract class AnnotationEndpointDiscoverer<K, T extends Operation>
 		boolean enabledByDefault = (Boolean) annotationAttributes.get("enableByDefault");
 		Collection<T> operations = this.operationsFactory
 				.createOperations(id, target, endpointType).values();
-		EndpointInfo<T> endpointInfo = new EndpointInfo<>(id, enabledByDefault,
-				operations);
+		OperableEndpointInfo<T> endpointInfo = new OperableEndpointInfo<>(id,
+				enabledByDefault, operations);
 		boolean exposed = isEndpointExposed(endpointType, endpointInfo);
 		return new DiscoveredEndpoint(endpointType, endpointInfo, exposed);
 	}
@@ -220,7 +221,7 @@ public abstract class AnnotationEndpointDiscoverer<K, T extends Operation>
 	}
 
 	private boolean isEndpointExposed(Class<?> endpointType,
-			EndpointInfo<T> endpointInfo) {
+			OperableEndpointInfo<T> endpointInfo) {
 		if (isEndpointFiltered(endpointInfo)) {
 			return false;
 		}
@@ -233,8 +234,8 @@ public abstract class AnnotationEndpointDiscoverer<K, T extends Operation>
 		return isFilterMatch(filterClass, endpointInfo);
 	}
 
-	private boolean isEndpointFiltered(EndpointInfo<T> endpointInfo) {
-		for (EndpointFilter<T> filter : this.filters) {
+	private boolean isEndpointFiltered(OperableEndpointInfo<T> endpointInfo) {
+		for (EndpointFilter<OperableEndpointInfo<T>> filter : this.filters) {
 			if (!isFilterMatch(filter, endpointInfo)) {
 				return true;
 			}
@@ -250,7 +251,7 @@ public abstract class AnnotationEndpointDiscoverer<K, T extends Operation>
 	 * @return if the extension is exposed
 	 */
 	protected boolean isExtensionExposed(Class<?> endpointType, Class<?> extensionType,
-			EndpointInfo<T> endpointInfo) {
+			OperableEndpointInfo<T> endpointInfo) {
 		AnnotationAttributes annotationAttributes = AnnotatedElementUtils
 				.getMergedAnnotationAttributes(extensionType, EndpointExtension.class);
 		Class<?> filterClass = annotationAttributes.getClass("filter");
@@ -258,19 +259,19 @@ public abstract class AnnotationEndpointDiscoverer<K, T extends Operation>
 	}
 
 	@SuppressWarnings("unchecked")
-	private boolean isFilterMatch(Class<?> filterClass, EndpointInfo<T> endpointInfo) {
+	private boolean isFilterMatch(Class<?> filterClass, OperableEndpointInfo<T> endpointInfo) {
 		Class<?> generic = ResolvableType.forClass(EndpointFilter.class, filterClass)
-				.resolveGeneric(0);
+				.getGeneric(0).as(OperableEndpointInfo.class).resolveGeneric(0);
 		if (generic == null || generic.isAssignableFrom(getOperationType())) {
-			EndpointFilter<T> filter = (EndpointFilter<T>) BeanUtils
+			EndpointFilter<OperableEndpointInfo<T>> filter = (EndpointFilter<OperableEndpointInfo<T>>) BeanUtils
 					.instantiateClass(filterClass);
 			return isFilterMatch(filter, endpointInfo);
 		}
 		return false;
 	}
 
-	private boolean isFilterMatch(EndpointFilter<T> filter,
-			EndpointInfo<T> endpointInfo) {
+	private boolean isFilterMatch(EndpointFilter<OperableEndpointInfo<T>> filter,
+			OperableEndpointInfo<T> endpointInfo) {
 		try {
 			return filter.match(endpointInfo, this);
 		}
@@ -314,13 +315,14 @@ public abstract class AnnotationEndpointDiscoverer<K, T extends Operation>
 	 */
 	protected final class DiscoveredEndpoint {
 
-		private final EndpointInfo<T> info;
+		private final OperableEndpointInfo<T> info;
 
 		private final boolean exposed;
 
 		private final Map<OperationKey, List<T>> operations;
 
-		private DiscoveredEndpoint(Class<?> type, EndpointInfo<T> info, boolean exposed) {
+		private DiscoveredEndpoint(Class<?> type, OperableEndpointInfo<T> info,
+				boolean exposed) {
 			Assert.notNull(info, "Info must not be null");
 			this.info = info;
 			this.exposed = exposed;
@@ -328,12 +330,12 @@ public abstract class AnnotationEndpointDiscoverer<K, T extends Operation>
 		}
 
 		private Map<OperationKey, List<T>> indexEndpointOperations(Class<?> endpointType,
-				EndpointInfo<T> info) {
+				OperableEndpointInfo<T> info) {
 			return Collections.unmodifiableMap(
 					indexOperations(info.getId(), endpointType, info.getOperations()));
 		}
 
-		private DiscoveredEndpoint(EndpointInfo<T> info, boolean exposed,
+		private DiscoveredEndpoint(OperableEndpointInfo<T> info, boolean exposed,
 				Map<OperationKey, List<T>> operations) {
 			Assert.notNull(info, "Info must not be null");
 			this.info = info;
@@ -345,7 +347,7 @@ public abstract class AnnotationEndpointDiscoverer<K, T extends Operation>
 		 * Return the {@link EndpointInfo} for the discovered endpoint.
 		 * @return the endpoint info
 		 */
-		public EndpointInfo<T> getInfo() {
+		public OperableEndpointInfo<T> getInfo() {
 			return this.info;
 		}
 
@@ -382,7 +384,7 @@ public abstract class AnnotationEndpointDiscoverer<K, T extends Operation>
 				return this;
 			}
 			Map<OperationKey, List<T>> operations = mergeOperations(extension);
-			EndpointInfo<T> info = new EndpointInfo<>(this.info.getId(),
+			OperableEndpointInfo<T> info = new OperableEndpointInfo<>(this.info.getId(),
 					this.info.isEnableByDefault(), flatten(operations).values());
 			return new DiscoveredEndpoint(info, this.exposed, operations);
 		}

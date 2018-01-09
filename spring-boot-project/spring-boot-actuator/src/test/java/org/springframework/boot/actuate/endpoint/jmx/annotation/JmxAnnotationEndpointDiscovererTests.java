@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import org.springframework.boot.actuate.endpoint.EndpointInfo;
+import org.springframework.boot.actuate.endpoint.OperableEndpointInfo;
 import org.springframework.boot.actuate.endpoint.annotation.DeleteOperation;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
@@ -70,7 +70,7 @@ public class JmxAnnotationEndpointDiscovererTests {
 	@Test
 	public void standardEndpointIsDiscovered() {
 		load(TestEndpoint.class, (discoverer) -> {
-			Map<String, EndpointInfo<JmxOperation>> endpoints = discover(discoverer);
+			Map<String, OperableEndpointInfo<JmxOperation>> endpoints = discover(discoverer);
 			assertThat(endpoints).containsOnlyKeys("test");
 			Map<String, JmxOperation> operationByName = mapOperations(
 					endpoints.get("test").getOperations());
@@ -109,7 +109,7 @@ public class JmxAnnotationEndpointDiscovererTests {
 	@Test
 	public void onlyJmxEndpointsAreDiscovered() {
 		load(MultipleEndpointsConfiguration.class, (discoverer) -> {
-			Map<String, EndpointInfo<JmxOperation>> endpoints = discover(discoverer);
+			Map<String, OperableEndpointInfo<JmxOperation>> endpoints = discover(discoverer);
 			assertThat(endpoints).containsOnlyKeys("test", "jmx");
 		});
 	}
@@ -129,7 +129,7 @@ public class JmxAnnotationEndpointDiscovererTests {
 	@Test
 	public void jmxEndpointOverridesStandardEndpoint() {
 		load(OverriddenOperationJmxEndpointConfiguration.class, (discoverer) -> {
-			Map<String, EndpointInfo<JmxOperation>> endpoints = discover(discoverer);
+			Map<String, OperableEndpointInfo<JmxOperation>> endpoints = discover(discoverer);
 			assertThat(endpoints).containsOnlyKeys("test");
 			assertJmxTestEndpoint(endpoints.get("test"));
 		});
@@ -138,7 +138,7 @@ public class JmxAnnotationEndpointDiscovererTests {
 	@Test
 	public void jmxEndpointAddsExtraOperation() {
 		load(AdditionalOperationJmxEndpointConfiguration.class, (discoverer) -> {
-			Map<String, EndpointInfo<JmxOperation>> endpoints = discover(discoverer);
+			Map<String, OperableEndpointInfo<JmxOperation>> endpoints = discover(discoverer);
 			assertThat(endpoints).containsOnlyKeys("test");
 			Map<String, JmxOperation> operationByName = mapOperations(
 					endpoints.get("test").getOperations());
@@ -154,7 +154,7 @@ public class JmxAnnotationEndpointDiscovererTests {
 	@Test
 	public void endpointMainReadOperationIsCachedWithMatchingId() {
 		load(TestEndpoint.class, (id) -> 500L, (discoverer) -> {
-			Map<String, EndpointInfo<JmxOperation>> endpoints = discover(discoverer);
+			Map<String, OperableEndpointInfo<JmxOperation>> endpoints = discover(discoverer);
 			assertThat(endpoints).containsOnlyKeys("test");
 			Map<String, JmxOperation> operationByName = mapOperations(
 					endpoints.get("test").getOperations());
@@ -171,7 +171,7 @@ public class JmxAnnotationEndpointDiscovererTests {
 	public void extraReadOperationsAreCached() {
 		load(AdditionalOperationJmxEndpointConfiguration.class, (id) -> 500L,
 				(discoverer) -> {
-					Map<String, EndpointInfo<JmxOperation>> endpoints = discover(
+					Map<String, OperableEndpointInfo<JmxOperation>> endpoints = discover(
 							discoverer);
 					assertThat(endpoints).containsOnlyKeys("test");
 					Map<String, JmxOperation> operationByName = mapOperations(
@@ -254,7 +254,7 @@ public class JmxAnnotationEndpointDiscovererTests {
 		});
 	}
 
-	private void assertJmxTestEndpoint(EndpointInfo<JmxOperation> endpoint) {
+	private void assertJmxTestEndpoint(OperableEndpointInfo<JmxOperation> endpoint) {
 		Map<String, JmxOperation> operationByName = mapOperations(
 				endpoint.getOperations());
 		assertThat(operationByName).containsOnlyKeys("getAll", "getSomething", "update",
@@ -303,9 +303,9 @@ public class JmxAnnotationEndpointDiscovererTests {
 		assertThat(parameter.getDescription()).isEqualTo(description);
 	}
 
-	private Map<String, EndpointInfo<JmxOperation>> discover(
+	private Map<String, OperableEndpointInfo<JmxOperation>> discover(
 			JmxAnnotationEndpointDiscoverer discoverer) {
-		Map<String, EndpointInfo<JmxOperation>> endpointsById = new HashMap<>();
+		Map<String, OperableEndpointInfo<JmxOperation>> endpointsById = new HashMap<>();
 		discoverer.discoverEndpoints()
 				.forEach((endpoint) -> endpointsById.put(endpoint.getId(), endpoint));
 		return endpointsById;

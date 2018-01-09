@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ import org.junit.rules.ExpectedException;
 
 import org.springframework.boot.actuate.endpoint.EndpointDiscoverer;
 import org.springframework.boot.actuate.endpoint.EndpointFilter;
-import org.springframework.boot.actuate.endpoint.EndpointInfo;
+import org.springframework.boot.actuate.endpoint.OperableEndpointInfo;
 import org.springframework.boot.actuate.endpoint.Operation;
 import org.springframework.boot.actuate.endpoint.OperationInvoker;
 import org.springframework.boot.actuate.endpoint.cache.CachingOperationInvoker;
@@ -85,7 +85,7 @@ public class AnnotationEndpointDiscovererTests {
 
 	private Consumer<AnnotationConfigApplicationContext> hasTestEndpoint() {
 		return (context) -> {
-			Map<String, EndpointInfo<TestEndpointOperation>> endpoints = mapEndpoints(
+			Map<String, OperableEndpointInfo<TestEndpointOperation>> endpoints = mapEndpoints(
 					new TestAnnotationEndpointDiscoverer(context).discoverEndpoints());
 			assertThat(endpoints).containsOnlyKeys("test");
 			Map<Method, TestEndpointOperation> operations = mapOperations(
@@ -105,7 +105,7 @@ public class AnnotationEndpointDiscovererTests {
 	@Test
 	public void subclassedEndpointIsDiscovered() {
 		load(TestEndpointSubclassConfiguration.class, (context) -> {
-			Map<String, EndpointInfo<TestEndpointOperation>> endpoints = mapEndpoints(
+			Map<String, OperableEndpointInfo<TestEndpointOperation>> endpoints = mapEndpoints(
 					new TestAnnotationEndpointDiscoverer(context).discoverEndpoints());
 			assertThat(endpoints).containsOnlyKeys("test");
 			Map<Method, TestEndpointOperation> operations = mapOperations(
@@ -138,7 +138,7 @@ public class AnnotationEndpointDiscovererTests {
 	public void endpointMainReadOperationIsNotCachedWithTtlSetToZero() {
 		Function<String, Long> timeToLive = (endpointId) -> 0L;
 		load(TestEndpointConfiguration.class, (context) -> {
-			Map<String, EndpointInfo<TestEndpointOperation>> endpoints = mapEndpoints(
+			Map<String, OperableEndpointInfo<TestEndpointOperation>> endpoints = mapEndpoints(
 					new TestAnnotationEndpointDiscoverer(context, timeToLive)
 							.discoverEndpoints());
 			assertThat(endpoints).containsOnlyKeys("test");
@@ -154,7 +154,7 @@ public class AnnotationEndpointDiscovererTests {
 	public void endpointMainReadOperationIsNotCachedWithNonMatchingId() {
 		Function<String, Long> timeToLive = (id) -> (id.equals("foo") ? 500L : 0L);
 		load(TestEndpointConfiguration.class, (context) -> {
-			Map<String, EndpointInfo<TestEndpointOperation>> endpoints = mapEndpoints(
+			Map<String, OperableEndpointInfo<TestEndpointOperation>> endpoints = mapEndpoints(
 					new TestAnnotationEndpointDiscoverer(context, timeToLive)
 							.discoverEndpoints());
 			assertThat(endpoints).containsOnlyKeys("test");
@@ -170,7 +170,7 @@ public class AnnotationEndpointDiscovererTests {
 	public void endpointMainReadOperationIsCachedWithMatchingId() {
 		Function<String, Long> timeToLive = (id) -> (id.equals("test") ? 500L : 0L);
 		load(TestEndpointConfiguration.class, (context) -> {
-			Map<String, EndpointInfo<TestEndpointOperation>> endpoints = mapEndpoints(
+			Map<String, OperableEndpointInfo<TestEndpointOperation>> endpoints = mapEndpoints(
 					new TestAnnotationEndpointDiscoverer(context, timeToLive)
 							.discoverEndpoints());
 			assertThat(endpoints).containsOnlyKeys("test");
@@ -195,7 +195,7 @@ public class AnnotationEndpointDiscovererTests {
 	@Test
 	public void specializedEndpointsAreFilteredFromRegular() {
 		load(TestEndpointsConfiguration.class, (context) -> {
-			Map<String, EndpointInfo<TestEndpointOperation>> endpoints = mapEndpoints(
+			Map<String, OperableEndpointInfo<TestEndpointOperation>> endpoints = mapEndpoints(
 					new TestAnnotationEndpointDiscoverer(context).discoverEndpoints());
 			assertThat(endpoints).containsOnlyKeys("test");
 		});
@@ -204,7 +204,7 @@ public class AnnotationEndpointDiscovererTests {
 	@Test
 	public void specializedEndpointsAreNotFilteredFromSpecialized() {
 		load(TestEndpointsConfiguration.class, (context) -> {
-			Map<String, EndpointInfo<SpecializedTestEndpointOperation>> endpoints = mapEndpoints(
+			Map<String, OperableEndpointInfo<SpecializedTestEndpointOperation>> endpoints = mapEndpoints(
 					new SpecializedTestAnnotationEndpointDiscoverer(context)
 							.discoverEndpoints());
 			assertThat(endpoints).containsOnlyKeys("test", "specialized");
@@ -214,7 +214,7 @@ public class AnnotationEndpointDiscovererTests {
 	@Test
 	public void extensionsAreApplied() {
 		load(TestEndpointsConfiguration.class, (context) -> {
-			Map<String, EndpointInfo<SpecializedTestEndpointOperation>> endpoints = mapEndpoints(
+			Map<String, OperableEndpointInfo<SpecializedTestEndpointOperation>> endpoints = mapEndpoints(
 					new SpecializedTestAnnotationEndpointDiscoverer(context)
 							.discoverEndpoints());
 			Map<Method, TestEndpointOperation> operations = mapOperations(
@@ -227,20 +227,20 @@ public class AnnotationEndpointDiscovererTests {
 	@Test
 	public void filtersAreApplied() {
 		load(TestEndpointsConfiguration.class, (context) -> {
-			EndpointFilter<SpecializedTestEndpointOperation> filter = (info,
+			EndpointFilter<OperableEndpointInfo<SpecializedTestEndpointOperation>> filter = (info,
 					discoverer) -> !(info.getId().equals("specialized"));
-			Map<String, EndpointInfo<SpecializedTestEndpointOperation>> endpoints = mapEndpoints(
+			Map<String, OperableEndpointInfo<SpecializedTestEndpointOperation>> endpoints = mapEndpoints(
 					new SpecializedTestAnnotationEndpointDiscoverer(context,
 							Collections.singleton(filter)).discoverEndpoints());
 			assertThat(endpoints).containsOnlyKeys("test");
 		});
 	}
 
-	private <T extends Operation> Map<String, EndpointInfo<T>> mapEndpoints(
-			Collection<EndpointInfo<T>> endpoints) {
-		Map<String, EndpointInfo<T>> endpointById = new LinkedHashMap<>();
+	private <T extends Operation> Map<String, OperableEndpointInfo<T>> mapEndpoints(
+			Collection<OperableEndpointInfo<T>> endpoints) {
+		Map<String, OperableEndpointInfo<T>> endpointById = new LinkedHashMap<>();
 		endpoints.forEach((endpoint) -> {
-			EndpointInfo<T> existing = endpointById.put(endpoint.getId(), endpoint);
+			OperableEndpointInfo<T> existing = endpointById.put(endpoint.getId(), endpoint);
 			if (existing != null) {
 				throw new AssertionError(String.format(
 						"Found endpoints with duplicate id '%s'", endpoint.getId()));
@@ -250,7 +250,7 @@ public class AnnotationEndpointDiscovererTests {
 	}
 
 	private Map<Method, TestEndpointOperation> mapOperations(
-			EndpointInfo<? extends TestEndpointOperation> endpoint) {
+			OperableEndpointInfo<? extends TestEndpointOperation> endpoint) {
 		Map<Method, TestEndpointOperation> operationByMethod = new HashMap<>();
 		endpoint.getOperations().forEach((operation) -> {
 			Method method = operation.getMethodInfo().getMethod();
@@ -406,11 +406,11 @@ public class AnnotationEndpointDiscovererTests {
 	}
 
 	static class SpecializedEndpointFilter
-			implements EndpointFilter<SpecializedTestEndpointOperation> {
+			implements EndpointFilter<OperableEndpointInfo<SpecializedTestEndpointOperation>> {
 
 		@Override
-		public boolean match(EndpointInfo<SpecializedTestEndpointOperation> info,
-				EndpointDiscoverer<SpecializedTestEndpointOperation> discoverer) {
+		public boolean match(OperableEndpointInfo<SpecializedTestEndpointOperation> info,
+				EndpointDiscoverer<OperableEndpointInfo<SpecializedTestEndpointOperation>> discoverer) {
 			return discoverer instanceof SpecializedTestAnnotationEndpointDiscoverer;
 		}
 
@@ -430,7 +430,7 @@ public class AnnotationEndpointDiscovererTests {
 
 		TestAnnotationEndpointDiscoverer(ApplicationContext applicationContext,
 				Function<String, Long> timeToLive,
-				Collection<? extends EndpointFilter<TestEndpointOperation>> filters) {
+				Collection<? extends EndpointFilter<OperableEndpointInfo<TestEndpointOperation>>> filters) {
 			super(applicationContext, TestEndpointOperation::new,
 					TestEndpointOperation::getMethod,
 					new ConversionServiceParameterMapper(),
@@ -449,13 +449,13 @@ public class AnnotationEndpointDiscovererTests {
 		}
 
 		SpecializedTestAnnotationEndpointDiscoverer(ApplicationContext applicationContext,
-				Collection<? extends EndpointFilter<SpecializedTestEndpointOperation>> filters) {
+				Collection<? extends EndpointFilter<OperableEndpointInfo<SpecializedTestEndpointOperation>>> filters) {
 			this(applicationContext, (id) -> null, filters);
 		}
 
 		SpecializedTestAnnotationEndpointDiscoverer(ApplicationContext applicationContext,
 				Function<String, Long> timeToLive,
-				Collection<? extends EndpointFilter<SpecializedTestEndpointOperation>> filters) {
+				Collection<? extends EndpointFilter<OperableEndpointInfo<SpecializedTestEndpointOperation>>> filters) {
 			super(applicationContext, SpecializedTestEndpointOperation::new,
 					SpecializedTestEndpointOperation::getMethod,
 					new ConversionServiceParameterMapper(),
