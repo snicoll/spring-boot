@@ -68,8 +68,8 @@ public class WebMvcEndpointFilterTests {
 		WebAnnotationEndpointDiscoverer discoverer = mock(
 				WebAnnotationEndpointDiscoverer.class);
 		this.thrown.expect(IllegalStateException.class);
-		this.thrown.expectMessage("Endpoint operations are not supported, use only "
-				+ "@ReqestMappings with @WebMvcEndpoints");
+		this.thrown.expectMessage("Invalid @WebMvcEndpoint: operations are not supported"
+				+ ", use only standard Spring MVC annotations (e.g. @RequestMapping");
 		this.filter.match(info, discoverer);
 	}
 

@@ -66,7 +66,7 @@ public class WebMvcEndpointManagementContextConfiguration {
 	public WebMvcEndpointRequestMappingHandlerMapping webMvcEndpointRequestMappingHandlerMapping(
 			EndpointPathResolver endpointPathResolver,
 			WebAnnotationEndpointDiscoverer endpointDiscoverer,
-			EndpointMediaTypes endpointMediaTypes, CorsEndpointProperties corsProperties,
+			CorsEndpointProperties corsProperties,
 			WebEndpointProperties webEndpointProperties) {
 		return new WebMvcEndpointRequestMappingHandlerMapping(
 				new EndpointMapping(webEndpointProperties.getBasePath()),

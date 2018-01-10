@@ -36,8 +36,8 @@ class WebMvcEndpointFilter implements EndpointFilter<WebOperation> {
 			EndpointDiscoverer<WebOperation> discoverer) {
 		if (discoverer instanceof WebAnnotationEndpointDiscoverer) {
 			Assert.state(info.getOperations().isEmpty(),
-					"Endpoint operations are not supported, use only @ReqestMappings "
-							+ "with @WebMvcEndpoints");
+					"Invalid @WebMvcEndpoint: operations are not supported, use only "
+							+ "standard Spring MVC annotations (e.g. @RequestMapping");
 			return true;
 		}
 		return false;
