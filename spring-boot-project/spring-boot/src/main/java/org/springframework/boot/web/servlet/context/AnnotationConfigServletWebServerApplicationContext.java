@@ -20,6 +20,7 @@ import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.support.BeanNameGenerator;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.context.annotation.AnnotatedBeanDefinitionReader;
+import org.springframework.context.annotation.AnnotationConfigRegistry;
 import org.springframework.context.annotation.AnnotationConfigUtils;
 import org.springframework.context.annotation.AnnotationScopeMetadataResolver;
 import org.springframework.context.annotation.ClassPathBeanDefinitionScanner;
@@ -48,7 +49,7 @@ import org.springframework.web.context.support.AnnotationConfigWebApplicationCon
  * @see AnnotationConfigWebApplicationContext
  */
 public class AnnotationConfigServletWebServerApplicationContext
-		extends ServletWebServerApplicationContext {
+		extends ServletWebServerApplicationContext implements AnnotationConfigRegistry {
 
 	private final AnnotatedBeanDefinitionReader reader;
 
@@ -122,8 +123,8 @@ public class AnnotationConfigServletWebServerApplicationContext
 
 	/**
 	 * Provide a custom {@link BeanNameGenerator} for use with
-	 * {@link AnnotatedBeanDefinitionReader} and/or {@link ClassPathBeanDefinitionScanner},
-	 * if any.
+	 * {@link AnnotatedBeanDefinitionReader} and/or
+	 * {@link ClassPathBeanDefinitionScanner}, if any.
 	 * <p>
 	 * Default is
 	 * {@link org.springframework.context.annotation.AnnotationBeanNameGenerator}.
