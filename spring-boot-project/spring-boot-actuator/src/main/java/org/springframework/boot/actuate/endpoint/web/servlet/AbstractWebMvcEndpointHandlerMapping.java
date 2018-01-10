@@ -55,7 +55,7 @@ public abstract class AbstractWebMvcEndpointHandlerMapping
 
 	private final EndpointMapping endpointMapping;
 
-	private final Collection<EndpointInfo<WebOperation>> webEndpoints;
+	private final Collection<EndpointInfo<WebOperation>> endpoints;
 
 	private final EndpointMediaTypes endpointMediaTypes;
 
@@ -65,35 +65,35 @@ public abstract class AbstractWebMvcEndpointHandlerMapping
 	 * Creates a new {@code WebEndpointHandlerMapping} that provides mappings for the
 	 * operations of the given {@code webEndpoints}.
 	 * @param endpointMapping the base mapping for all endpoints
-	 * @param collection the web endpoints operations
+	 * @param endpoints the web endpoints operations
 	 * @param endpointMediaTypes media types consumed and produced by the endpoints
 	 */
 	public AbstractWebMvcEndpointHandlerMapping(EndpointMapping endpointMapping,
-			Collection<EndpointInfo<WebOperation>> collection,
+			Collection<EndpointInfo<WebOperation>> endpoints,
 			EndpointMediaTypes endpointMediaTypes) {
-		this(endpointMapping, collection, endpointMediaTypes, null);
+		this(endpointMapping, endpoints, endpointMediaTypes, null);
 	}
 
 	/**
 	 * Creates a new {@code WebEndpointHandlerMapping} that provides mappings for the
 	 * operations of the given {@code webEndpoints}.
 	 * @param endpointMapping the base mapping for all endpoints
-	 * @param webEndpoints the web endpoints
+	 * @param endpoints the web endpoints
 	 * @param endpointMediaTypes media types consumed and produced by the endpoints
 	 * @param corsConfiguration the CORS configuration for the endpoints
 	 */
 	public AbstractWebMvcEndpointHandlerMapping(EndpointMapping endpointMapping,
-			Collection<EndpointInfo<WebOperation>> webEndpoints,
+			Collection<EndpointInfo<WebOperation>> endpoints,
 			EndpointMediaTypes endpointMediaTypes, CorsConfiguration corsConfiguration) {
 		this.endpointMapping = endpointMapping;
-		this.webEndpoints = webEndpoints;
+		this.endpoints = endpoints;
 		this.endpointMediaTypes = endpointMediaTypes;
 		this.corsConfiguration = corsConfiguration;
 		setOrder(-100);
 	}
 
 	public Collection<EndpointInfo<WebOperation>> getEndpoints() {
-		return this.webEndpoints;
+		return this.endpoints;
 	}
 
 	public EndpointMapping getEndpointMapping() {
@@ -102,7 +102,7 @@ public abstract class AbstractWebMvcEndpointHandlerMapping
 
 	@Override
 	protected void initHandlerMethods() {
-		this.webEndpoints.stream()
+		this.endpoints.stream()
 				.flatMap((webEndpoint) -> webEndpoint.getOperations().stream())
 				.forEach(this::registerMappingForOperation);
 		if (StringUtils.hasText(this.endpointMapping.getPath())) {
@@ -132,8 +132,7 @@ public abstract class AbstractWebMvcEndpointHandlerMapping
 
 	protected abstract void registerMappingForOperation(WebOperation operation);
 
-	protected RequestMappingInfo createRequestMappingInfo(
-			WebOperation operationInfo) {
+	protected RequestMappingInfo createRequestMappingInfo(WebOperation operationInfo) {
 		OperationRequestPredicate requestPredicate = operationInfo.getRequestPredicate();
 		PatternsRequestCondition patterns = patternsRequestConditionForPattern(
 				requestPredicate.getPath());

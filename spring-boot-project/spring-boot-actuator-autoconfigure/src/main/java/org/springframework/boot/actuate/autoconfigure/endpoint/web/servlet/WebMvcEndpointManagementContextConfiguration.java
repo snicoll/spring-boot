@@ -40,7 +40,6 @@ import org.springframework.web.servlet.DispatcherServlet;
  * @author Phillip Webb
  * @since 2.0.0
  */
-
 @ManagementContextConfiguration
 @ConditionalOnWebApplication(type = Type.SERVLET)
 @ConditionalOnClass(DispatcherServlet.class)

@@ -68,21 +68,21 @@ public class JerseyEndpointResourceFactory {
 	 * Creates {@link Resource Resources} for the operations of the given
 	 * {@code webEndpoints}.
 	 * @param endpointMapping the base mapping for all endpoints
-	 * @param webEndpoints the web endpoints
+	 * @param endpoints the web endpoints
 	 * @param endpointMediaTypes media types consumed and produced by the endpoints
 	 * @return the resources for the operations
 	 */
 	public Collection<Resource> createEndpointResources(EndpointMapping endpointMapping,
-			Collection<EndpointInfo<WebOperation>> webEndpoints,
+			Collection<EndpointInfo<WebOperation>> endpoints,
 			EndpointMediaTypes endpointMediaTypes) {
 		List<Resource> resources = new ArrayList<>();
-		webEndpoints.stream()
+		endpoints.stream()
 				.flatMap((endpointInfo) -> endpointInfo.getOperations().stream())
 				.map((operation) -> createResource(endpointMapping, operation))
 				.forEach(resources::add);
 		if (StringUtils.hasText(endpointMapping.getPath())) {
 			resources.add(createEndpointLinksResource(endpointMapping.getPath(),
-					webEndpoints, endpointMediaTypes));
+					endpoints, endpointMediaTypes));
 		}
 		return resources;
 	}
@@ -105,13 +105,13 @@ public class JerseyEndpointResourceFactory {
 	}
 
 	private Resource createEndpointLinksResource(String endpointPath,
-			Collection<EndpointInfo<WebOperation>> webEndpoints,
+			Collection<EndpointInfo<WebOperation>> endpoints,
 			EndpointMediaTypes endpointMediaTypes) {
 		Builder resourceBuilder = Resource.builder().path(endpointPath);
 		resourceBuilder.addMethod("GET")
 				.produces(endpointMediaTypes.getProduced()
 						.toArray(new String[endpointMediaTypes.getProduced().size()]))
-				.handledBy(new EndpointLinksInflector(webEndpoints,
+				.handledBy(new EndpointLinksInflector(endpoints,
 						this.endpointLinksResolver));
 		return resourceBuilder.build();
 	}

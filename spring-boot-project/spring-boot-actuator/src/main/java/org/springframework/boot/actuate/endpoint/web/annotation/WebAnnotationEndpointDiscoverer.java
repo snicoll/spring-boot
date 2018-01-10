@@ -69,10 +69,10 @@ public class WebAnnotationEndpointDiscoverer
 	}
 
 	@Override
-	protected void verify(Collection<DiscoveredEndpoint> exposedEndpoints) {
+	protected void verify(Collection<DiscoveredEndpoint> endpoints) {
 		List<List<WebOperation>> clashes = new ArrayList<>();
-		exposedEndpoints.forEach((descriptor) -> clashes
-				.addAll(descriptor.findDuplicateOperations().values()));
+		endpoints.forEach((endpoint) -> clashes
+				.addAll(endpoint.findDuplicateOperations().values()));
 		if (!clashes.isEmpty()) {
 			StringBuilder message = new StringBuilder();
 			message.append(String.format(

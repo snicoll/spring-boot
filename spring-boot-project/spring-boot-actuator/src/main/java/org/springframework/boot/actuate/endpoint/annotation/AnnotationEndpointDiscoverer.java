@@ -157,8 +157,8 @@ public abstract class AnnotationEndpointDiscoverer<K, T extends Operation>
 		boolean enabledByDefault = (Boolean) annotationAttributes.get("enableByDefault");
 		Collection<T> operations = this.operationsFactory
 				.createOperations(id, target, endpointType).values();
-		EndpointInfo<T> endpointInfo = new EndpointInfo<>(id, enabledByDefault,
-				operations);
+		AnnotatedEndpointInfo<T> endpointInfo = new AnnotatedEndpointInfo<>(target, id,
+				enabledByDefault, operations);
 		boolean exposed = isEndpointExposed(endpointType, endpointInfo);
 		return new DiscoveredEndpoint(endpointType, endpointInfo, exposed);
 	}
@@ -221,7 +221,7 @@ public abstract class AnnotationEndpointDiscoverer<K, T extends Operation>
 	}
 
 	private boolean isEndpointExposed(Class<?> endpointType,
-			EndpointInfo<T> endpointInfo) {
+			AnnotatedEndpointInfo<T> endpointInfo) {
 		if (isEndpointFiltered(endpointInfo)) {
 			return false;
 		}
@@ -234,7 +234,7 @@ public abstract class AnnotationEndpointDiscoverer<K, T extends Operation>
 		return isFilterMatch(filterClass, endpointInfo);
 	}
 
-	private boolean isEndpointFiltered(EndpointInfo<T> endpointInfo) {
+	private boolean isEndpointFiltered(AnnotatedEndpointInfo<T> endpointInfo) {
 		for (EndpointFilter<T> filter : this.filters) {
 			if (!isFilterMatch(filter, endpointInfo)) {
 				return true;
@@ -251,7 +251,7 @@ public abstract class AnnotationEndpointDiscoverer<K, T extends Operation>
 	 * @return if the extension is exposed
 	 */
 	protected boolean isExtensionExposed(Class<?> endpointType, Class<?> extensionType,
-			EndpointInfo<T> endpointInfo) {
+			AnnotatedEndpointInfo<T> endpointInfo) {
 		AnnotationAttributes annotationAttributes = AnnotatedElementUtils
 				.getMergedAnnotationAttributes(extensionType, EndpointExtension.class);
 		Class<?> filterClass = annotationAttributes.getClass("filter");
@@ -259,7 +259,8 @@ public abstract class AnnotationEndpointDiscoverer<K, T extends Operation>
 	}
 
 	@SuppressWarnings("unchecked")
-	private boolean isFilterMatch(Class<?> filterClass, EndpointInfo<T> endpointInfo) {
+	private boolean isFilterMatch(Class<?> filterClass,
+			AnnotatedEndpointInfo<T> endpointInfo) {
 		Class<?> generic = ResolvableType.forClass(EndpointFilter.class, filterClass)
 				.resolveGeneric(0);
 		if (generic == null || generic.isAssignableFrom(getOperationType())) {
@@ -271,7 +272,7 @@ public abstract class AnnotationEndpointDiscoverer<K, T extends Operation>
 	}
 
 	private boolean isFilterMatch(EndpointFilter<T> filter,
-			EndpointInfo<T> endpointInfo) {
+			AnnotatedEndpointInfo<T> endpointInfo) {
 		try {
 			return filter.match(endpointInfo, this);
 		}
@@ -307,9 +308,9 @@ public abstract class AnnotationEndpointDiscoverer<K, T extends Operation>
 
 	/**
 	 * Allows subclasses to verify that the descriptors are correctly configured.
-	 * @param exposedEndpoints the discovered endpoints to verify before exposing
+	 * @param endpoints the discovered endpoints to verify before exposing
 	 */
-	protected void verify(Collection<DiscoveredEndpoint> exposedEndpoints) {
+	protected void verify(Collection<DiscoveredEndpoint> endpoints) {
 	}
 
 	/**
@@ -317,13 +318,14 @@ public abstract class AnnotationEndpointDiscoverer<K, T extends Operation>
 	 */
 	protected final class DiscoveredEndpoint {
 
-		private final EndpointInfo<T> info;
+		private final AnnotatedEndpointInfo<T> info;
 
 		private final boolean exposed;
 
 		private final Map<OperationKey, List<T>> operations;
 
-		private DiscoveredEndpoint(Class<?> type, EndpointInfo<T> info, boolean exposed) {
+		private DiscoveredEndpoint(Class<?> type, AnnotatedEndpointInfo<T> info,
+				boolean exposed) {
 			Assert.notNull(info, "Info must not be null");
 			this.info = info;
 			this.exposed = exposed;
@@ -331,12 +333,12 @@ public abstract class AnnotationEndpointDiscoverer<K, T extends Operation>
 		}
 
 		private Map<OperationKey, List<T>> indexEndpointOperations(Class<?> endpointType,
-				EndpointInfo<T> info) {
+				AnnotatedEndpointInfo<T> info) {
 			return Collections.unmodifiableMap(
 					indexOperations(info.getId(), endpointType, info.getOperations()));
 		}
 
-		private DiscoveredEndpoint(EndpointInfo<T> info, boolean exposed,
+		private DiscoveredEndpoint(AnnotatedEndpointInfo<T> info, boolean exposed,
 				Map<OperationKey, List<T>> operations) {
 			Assert.notNull(info, "Info must not be null");
 			this.info = info;
@@ -348,7 +350,7 @@ public abstract class AnnotationEndpointDiscoverer<K, T extends Operation>
 		 * Return the {@link EndpointInfo} for the discovered endpoint.
 		 * @return the endpoint info
 		 */
-		public EndpointInfo<T> getInfo() {
+		public AnnotatedEndpointInfo<T> getInfo() {
 			return this.info;
 		}
 
@@ -385,8 +387,8 @@ public abstract class AnnotationEndpointDiscoverer<K, T extends Operation>
 				return this;
 			}
 			Map<OperationKey, List<T>> operations = mergeOperations(extension);
-			EndpointInfo<T> info = new EndpointInfo<>(this.info.getId(),
-					this.info.isEnableByDefault(), flatten(operations).values());
+			AnnotatedEndpointInfo<T> info = this.info
+					.withNewOperations(flatten(operations).values());
 			return new DiscoveredEndpoint(info, this.exposed, operations);
 		}
 

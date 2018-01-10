@@ -62,10 +62,10 @@ public class JmxAnnotationEndpointDiscoverer
 	}
 
 	@Override
-	protected void verify(Collection<DiscoveredEndpoint> exposedEndpoints) {
+	protected void verify(Collection<DiscoveredEndpoint> endpoints) {
 		List<List<JmxOperation>> clashes = new ArrayList<>();
-		exposedEndpoints.forEach((exposedEndpoint) -> clashes
-				.addAll(exposedEndpoint.findDuplicateOperations().values()));
+		endpoints.forEach((endpoint) -> clashes
+				.addAll(endpoint.findDuplicateOperations().values()));
 		if (!clashes.isEmpty()) {
 			StringBuilder message = new StringBuilder();
 			message.append(
