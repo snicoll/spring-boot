@@ -23,6 +23,7 @@ import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.web.EndpointMediaTypes;
 import org.springframework.boot.actuate.endpoint.web.annotation.WebAnnotationEndpointDiscoverer;
 import org.springframework.boot.actuate.endpoint.web.servlet.WebMvcEndpointHandlerMapping;
+import org.springframework.boot.actuate.endpoint.web.servlet.annotation.WebMvcEndpointRequestMappingHandlerMapping;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -53,11 +54,22 @@ public class WebMvcEndpointManagementContextConfiguration {
 			WebAnnotationEndpointDiscoverer endpointDiscoverer,
 			EndpointMediaTypes endpointMediaTypes, CorsEndpointProperties corsProperties,
 			WebEndpointProperties webEndpointProperties) {
-		WebMvcEndpointHandlerMapping handlerMapping = new WebMvcEndpointHandlerMapping(
+		return new WebMvcEndpointHandlerMapping(
 				new EndpointMapping(webEndpointProperties.getBasePath()),
 				endpointDiscoverer.discoverEndpoints(), endpointMediaTypes,
 				corsProperties.toCorsConfiguration());
-		return handlerMapping;
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	public WebMvcEndpointRequestMappingHandlerMapping webMvcEndpointRequestMappingHandlerMapping(
+			WebAnnotationEndpointDiscoverer endpointDiscoverer,
+			EndpointMediaTypes endpointMediaTypes, CorsEndpointProperties corsProperties,
+			WebEndpointProperties webEndpointProperties) {
+		return new WebMvcEndpointRequestMappingHandlerMapping(
+				new EndpointMapping(webEndpointProperties.getBasePath()),
+				endpointDiscoverer.discoverEndpoints(),
+				corsProperties.toCorsConfiguration());
 	}
 
 }

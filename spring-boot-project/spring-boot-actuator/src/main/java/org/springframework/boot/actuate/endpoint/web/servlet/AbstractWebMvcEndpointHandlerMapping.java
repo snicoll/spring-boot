@@ -80,7 +80,7 @@ public abstract class AbstractWebMvcEndpointHandlerMapping
 	 * @param endpointMapping the base mapping for all endpoints
 	 * @param endpoints the web endpoints
 	 * @param endpointMediaTypes media types consumed and produced by the endpoints
-	 * @param corsConfiguration the CORS configuration for the endpoints
+	 * @param corsConfiguration the CORS configuration for the endpoints or {@code null}
 	 */
 	public AbstractWebMvcEndpointHandlerMapping(EndpointMapping endpointMapping,
 			Collection<EndpointInfo<WebOperation>> endpoints,

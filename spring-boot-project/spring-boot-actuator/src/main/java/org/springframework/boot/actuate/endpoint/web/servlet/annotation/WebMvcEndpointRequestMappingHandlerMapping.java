@@ -27,9 +27,11 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.boot.actuate.endpoint.EndpointInfo;
 import org.springframework.boot.actuate.endpoint.annotation.AnnotatedEndpointInfo;
+import org.springframework.boot.actuate.endpoint.web.EndpointPathResolver;
 import org.springframework.boot.actuate.endpoint.web.WebOperation;
 import org.springframework.boot.endpoint.web.EndpointMapping;
 import org.springframework.core.annotation.AnnotatedElementUtils;
+import org.springframework.util.Assert;
 import org.springframework.web.accept.PathExtensionContentNegotiationStrategy;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.reactive.HandlerMapping;
@@ -39,7 +41,8 @@ import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
 /**
- * {@link HandlerMapping}.
+ * {@link HandlerMapping} that exposes {@link WebMvcEndpoint @WebMvcEndpoint} annotated
+ * endpoints over Spring MVC.
  *
  * @author Phillip Webb
  * @since 2.0.0
@@ -47,23 +50,44 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
 public class WebMvcEndpointRequestMappingHandlerMapping
 		extends RequestMappingHandlerMapping {
 
-	// FIXME DC
-
 	private final EndpointMapping endpointMapping;
+
+	private final EndpointPathResolver endpointPathResolver;
 
 	private final Set<Object> handlers;
 
 	private final CorsConfiguration corsConfiguration;
 
+	/**
+	 * Create a new {@link WebMvcEndpointRequestMappingHandlerMapping} instance providing
+	 * mappings for the specified endpoints.
+	 * @param endpointMapping the base mapping for all endpoints
+	 * @param endpointPathResolver the endpoint path resolver
+	 * @param endpoints the web endpoints operations
+	 */
 	public WebMvcEndpointRequestMappingHandlerMapping(EndpointMapping endpointMapping,
+			EndpointPathResolver endpointPathResolver,
 			Collection<EndpointInfo<WebOperation>> endpoints) {
-		this(endpointMapping, endpoints, null);
+		this(endpointMapping, endpointPathResolver, endpoints, null);
 	}
 
+	/**
+	 * Create a new {@link WebMvcEndpointRequestMappingHandlerMapping} instance providing
+	 * mappings for the specified endpoints.
+	 * @param endpointMapping the base mapping for all endpoints
+	 * @param endpointPathResolver the endpoint path resolver
+	 * @param endpoints the web endpoints operations
+	 * @param corsConfiguration the CORS configuration for the endpoints or {@code null}
+	 */
 	public WebMvcEndpointRequestMappingHandlerMapping(EndpointMapping endpointMapping,
+			EndpointPathResolver endpointPathResolver,
 			Collection<EndpointInfo<WebOperation>> endpoints,
 			CorsConfiguration corsConfiguration) {
+		Assert.notNull(endpointMapping, "EndpointMapping must not be null");
+		Assert.notNull(endpointPathResolver, "EndpointPathResolver must not be null");
+		Assert.notNull(endpoints, "Endpoints must not be null");
 		this.endpointMapping = endpointMapping;
+		this.endpointPathResolver = endpointPathResolver;
 		this.handlers = endpoints.stream().filter(AnnotatedEndpointInfo.class::isInstance)
 				.map(this::getSource).filter(this::isWebMvcEndpoint)
 				.collect(Collectors.toSet());
@@ -93,13 +117,19 @@ public class WebMvcEndpointRequestMappingHandlerMapping
 	@Override
 	protected void registerHandlerMethod(Object handler, Method method,
 			RequestMappingInfo mapping) {
+		mapping = updateMapping(handler, mapping);
 		super.registerHandlerMethod(handler, method, withEndpointMappedPath(mapping));
 	}
 
-	private RequestMappingInfo withEndpointMappedPath(RequestMappingInfo mapping) {
+	private RequestMappingInfo updateMapping(Object handler, RequestMappingInfo mapping) {
 		String[] subPathPatterns = mapping.getPatternsCondition().getPatterns().stream()
 				.map(this.endpointMapping::createSubPath).toArray(String[]::new);
 		return withNewPatterns(mapping, subPathPatterns);
+	}
+
+	private String getEndpointMappedPath(String pattern) {
+		this.endpointMapping.endpointMapping.createSubPath(path);
+
 	}
 
 	private RequestMappingInfo withNewPatterns(RequestMappingInfo mapping,
