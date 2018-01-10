@@ -18,9 +18,11 @@ package org.springframework.boot.actuate.endpoint.web.servlet.annotation;
 
 import java.lang.reflect.Method;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -54,7 +56,7 @@ public class WebMvcEndpointRequestMappingHandlerMapping
 
 	private final EndpointPathResolver endpointPathResolver;
 
-	private final Set<Object> handlers;
+	private final Map<Object, AnnotatedEndpointInfo<?>> handlers;
 
 	private final CorsConfiguration corsConfiguration;
 
@@ -88,48 +90,54 @@ public class WebMvcEndpointRequestMappingHandlerMapping
 		Assert.notNull(endpoints, "Endpoints must not be null");
 		this.endpointMapping = endpointMapping;
 		this.endpointPathResolver = endpointPathResolver;
-		this.handlers = endpoints.stream().filter(AnnotatedEndpointInfo.class::isInstance)
-				.map(this::getSource).filter(this::isWebMvcEndpoint)
-				.collect(Collectors.toSet());
+		this.handlers = getHandlers(endpoints);
 		this.corsConfiguration = corsConfiguration;
 		setOrder(-100);
 		setUseSuffixPatternMatch(false);
 	}
 
-	private Object getSource(EndpointInfo<?> info) {
-		return ((AnnotatedEndpointInfo<?>) info).getSource();
+	private Map<Object, AnnotatedEndpointInfo<?>> getHandlers(
+			Collection<EndpointInfo<WebOperation>> endpoints) {
+		Map<Object, AnnotatedEndpointInfo<?>> handlers = new LinkedHashMap<>();
+		endpoints.stream().filter(this::isWebMvcEndpoint)
+				.map(AnnotatedEndpointInfo.class::cast)
+				.forEach((endpoint) -> handlers.put(endpoint.getSource(), endpoint));
+		return Collections.unmodifiableMap(handlers);
 	}
 
-	private boolean isWebMvcEndpoint(Object source) {
-		return AnnotatedElementUtils.hasAnnotation(source.getClass(),
+	private boolean isWebMvcEndpoint(EndpointInfo<?> endpoint) {
+		Object source = (endpoint instanceof AnnotatedEndpointInfo
+				? ((AnnotatedEndpointInfo<?>) endpoint).getSource() : null);
+		return (source != null) && AnnotatedElementUtils.hasAnnotation(source.getClass(),
 				WebMvcEndpoint.class);
 	}
 
 	@Override
 	protected void initHandlerMethods() {
-		getHandlers().forEach(this::detectHandlerMethods);
-	}
-
-	public Set<Object> getHandlers() {
-		return this.handlers;
+		this.handlers.keySet().forEach(this::detectHandlerMethods);
 	}
 
 	@Override
 	protected void registerHandlerMethod(Object handler, Method method,
 			RequestMappingInfo mapping) {
-		mapping = updateMapping(handler, mapping);
-		super.registerHandlerMethod(handler, method, withEndpointMappedPath(mapping));
+		AnnotatedEndpointInfo<?> endpoint = this.handlers.get(handler);
+		mapping = withEndpointMappedPatterns(endpoint, mapping);
+		super.registerHandlerMethod(handler, method, mapping);
 	}
 
-	private RequestMappingInfo updateMapping(Object handler, RequestMappingInfo mapping) {
-		String[] subPathPatterns = mapping.getPatternsCondition().getPatterns().stream()
-				.map(this.endpointMapping::createSubPath).toArray(String[]::new);
-		return withNewPatterns(mapping, subPathPatterns);
+	private RequestMappingInfo withEndpointMappedPatterns(
+			AnnotatedEndpointInfo<?> endpoint, RequestMappingInfo mapping) {
+		Set<String> patterns = mapping.getPatternsCondition().getPatterns();
+		String[] endpointMappedPatterns = patterns.stream()
+				.map((pattern) -> getEndpointMappedPattern(endpoint, pattern))
+				.toArray(String[]::new);
+		return withNewPatterns(mapping, endpointMappedPatterns);
 	}
 
-	private String getEndpointMappedPath(String pattern) {
-		this.endpointMapping.endpointMapping.createSubPath(path);
-
+	private String getEndpointMappedPattern(AnnotatedEndpointInfo<?> endpoint,
+			String pattern) {
+		String endpointPath = this.endpointPathResolver.resolvePath(endpoint.getId());
+		return this.endpointMapping.createSubPath(endpointPath + pattern);
 	}
 
 	private RequestMappingInfo withNewPatterns(RequestMappingInfo mapping,

@@ -103,7 +103,7 @@ public class WebMvcEndpointRequestMappingHandlerMappingIntegrationTests {
 				Environment environment,
 				EndpointDiscoverer<WebOperation> webEndpointDiscoverer) {
 			return new WebMvcEndpointRequestMappingHandlerMapping(
-					new EndpointMapping("actuator"),
+					new EndpointMapping("actuator"), EndpointPathResolver.useEndpointId(),
 					webEndpointDiscoverer.discoverEndpoints());
 		}
 
