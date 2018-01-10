@@ -14,11 +14,13 @@
  * limitations under the License.
  */
 
-package sample.actuator.ui;
+package sample.actuator.customsecurity;
 
 import org.springframework.boot.actuate.endpoint.web.servlet.annotation.WebMvcEndpoint;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 @Component
@@ -26,9 +28,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @ResponseBody
 public class ExampleMvcEndpoint {
 
-	@GetMapping("call")
-	public String call() {
-		return "Example";
+	@GetMapping("/echo")
+	public ResponseEntity<String> echo(@RequestParam("text") String text) {
+		return ResponseEntity.ok().header("echo", text).body(text);
 	}
-
 }
