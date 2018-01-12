@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.springframework.boot.actuate.endpoint.reflect;
 
 import java.util.Set;
 
+import org.springframework.boot.actuate.endpoint.InvalidEndpointRequestException;
 import org.springframework.util.StringUtils;
 
 /**
@@ -27,14 +28,16 @@ import org.springframework.util.StringUtils;
  * @author Madhura Bhave
  * @since 2.0.0
  */
-public class ParametersMissingException extends RuntimeException {
+public final class ParametersMissingException extends InvalidEndpointRequestException {
 
 	private final Set<String> parameters;
 
 	public ParametersMissingException(Set<String> parameters) {
-		super("Failed to invoke operation because the following required "
-				+ "parameters were missing: "
-				+ StringUtils.collectionToCommaDelimitedString(parameters));
+		super(String.format("Failed to invoke operation because the following required "
+						+ "parameters were missing: %s",
+				StringUtils.collectionToCommaDelimitedString(parameters)),
+				"Missing parameters: "
+						+ StringUtils.collectionToCommaDelimitedString(parameters));
 		this.parameters = parameters;
 	}
 

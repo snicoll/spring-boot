@@ -277,7 +277,7 @@ public class EndpointMBeanTests {
 				assertThat(ex.getCause())
 						.isExactlyInstanceOf(IllegalArgumentException.class);
 				assertThat(ex.getCause().getMessage()).isEqualTo(
-						String.format("Failed to map wrong of type " + "%s to type %s",
+						String.format("Failed to map 'wrong' of type " + "%s to type %s",
 								String.class, FooName.class));
 			}
 		});

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,9 +26,8 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.boot.actuate.endpoint.EndpointInfo;
+import org.springframework.boot.actuate.endpoint.InvalidEndpointRequestException;
 import org.springframework.boot.actuate.endpoint.OperationInvoker;
-import org.springframework.boot.actuate.endpoint.reflect.ParameterMappingException;
-import org.springframework.boot.actuate.endpoint.reflect.ParametersMissingException;
 import org.springframework.boot.actuate.endpoint.web.EndpointLinksResolver;
 import org.springframework.boot.actuate.endpoint.web.EndpointMediaTypes;
 import org.springframework.boot.actuate.endpoint.web.Link;
@@ -41,6 +40,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.servlet.HandlerMapping;
 
@@ -132,8 +132,8 @@ public class WebMvcEndpointHandlerMapping extends AbstractWebMvcEndpointHandlerM
 			try {
 				return handleResult(this.operationInvoker.invoke(arguments), httpMethod);
 			}
-			catch (ParametersMissingException | ParameterMappingException ex) {
-				return new ResponseEntity<Void>(HttpStatus.BAD_REQUEST);
+			catch (InvalidEndpointRequestException ex) {
+				throw new BadOperationRequestException(ex.getReason());
 			}
 		}
 
@@ -150,6 +150,14 @@ public class WebMvcEndpointHandlerMapping extends AbstractWebMvcEndpointHandlerM
 					HttpStatus.valueOf(response.getStatus()));
 		}
 
+	}
+
+	@ResponseStatus(code = HttpStatus.BAD_REQUEST)
+	private static class BadOperationRequestException extends RuntimeException {
+
+		BadOperationRequestException(String message) {
+			super(message);
+		}
 	}
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,9 +39,8 @@ import org.glassfish.jersey.server.model.Resource.Builder;
 import reactor.core.publisher.Mono;
 
 import org.springframework.boot.actuate.endpoint.EndpointInfo;
+import org.springframework.boot.actuate.endpoint.InvalidEndpointRequestException;
 import org.springframework.boot.actuate.endpoint.OperationInvoker;
-import org.springframework.boot.actuate.endpoint.reflect.ParameterMappingException;
-import org.springframework.boot.actuate.endpoint.reflect.ParametersMissingException;
 import org.springframework.boot.actuate.endpoint.web.EndpointLinksResolver;
 import org.springframework.boot.actuate.endpoint.web.EndpointMediaTypes;
 import org.springframework.boot.actuate.endpoint.web.Link;
@@ -156,7 +155,7 @@ public class JerseyEndpointResourceFactory {
 				Object response = this.operationInvoker.invoke(arguments);
 				return convertToJaxRsResponse(response, data.getRequest().getMethod());
 			}
-			catch (ParametersMissingException | ParameterMappingException ex) {
+			catch (InvalidEndpointRequestException ex) {
 				return Response.status(Status.BAD_REQUEST).build();
 			}
 		}

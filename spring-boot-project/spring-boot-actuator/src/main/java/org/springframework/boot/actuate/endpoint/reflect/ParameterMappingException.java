@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,8 @@
 
 package org.springframework.boot.actuate.endpoint.reflect;
 
+import org.springframework.boot.actuate.endpoint.InvalidEndpointRequestException;
+
 /**
  * A {@code ParameterMappingException} is thrown when a failure occurs during
  * {@link ParameterMapper#mapParameter(Object, Class) operation parameter mapping}.
@@ -23,7 +25,7 @@ package org.springframework.boot.actuate.endpoint.reflect;
  * @author Andy Wilkinson
  * @since 2.0.0
  */
-public class ParameterMappingException extends RuntimeException {
+public final class ParameterMappingException extends InvalidEndpointRequestException {
 
 	private final Object input;
 
@@ -38,8 +40,8 @@ public class ParameterMappingException extends RuntimeException {
 	 * @param cause the cause of the mapping failure
 	 */
 	public ParameterMappingException(Object input, Class<?> type, Throwable cause) {
-		super("Failed to map " + input + " of type " + input.getClass() + " to type "
-				+ type, cause);
+		super(String.format("Failed to map '%s' of type %s to type %s",
+				input, input.getClass(), type), "Parameter mapping failure", cause);
 		this.input = input;
 		this.type = type;
 	}
