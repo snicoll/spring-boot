@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -237,6 +237,21 @@ public class ConfigurationPropertiesBindingPostProcessorTests {
 	}
 
 	@Test
+	public void validationEnableWithValidatedOnFactoryMethod() {
+		this.context = new AnnotationConfigApplicationContext();
+		MutablePropertySources sources = this.context.getEnvironment()
+				.getPropertySources();
+		Map<String, Object> source = new LinkedHashMap<>();
+		source.put("example.city", "Brussels");
+		sources.addFirst(new MapPropertySource("test-source", source));
+		this.context.register(AddressBeanConfig.class);
+
+		this.thrown.expect(BeanCreationException.class);
+		this.thrown.expectCause(instanceOf(BindException.class));
+		this.context.refresh();
+	}
+
+	@Test
 	public void converterIsFound() {
 		prepareConverterContext(ConverterConfiguration.class, PersonProperty.class);
 		this.context.refresh();
@@ -431,6 +446,45 @@ public class ConfigurationPropertiesBindingPostProcessorTests {
 
 		public void setTwo(String two) {
 			this.two = two;
+		}
+
+	}
+
+	@Configuration
+	@EnableConfigurationProperties
+	public static class AddressBeanConfig {
+
+		@Bean
+		@ConfigurationProperties("example")
+		@Validated
+		public AddressBean addressBean() {
+			return new AddressBean();
+		}
+
+	}
+
+	public static class AddressBean {
+
+		@NotNull
+		private String street;
+
+		@NotNull
+		private String city;
+
+		public String getStreet() {
+			return this.street;
+		}
+
+		public void setStreet(String street) {
+			this.street = street;
+		}
+
+		public String getCity() {
+			return this.city;
+		}
+
+		public void setCity(String city) {
+			this.city = city;
 		}
 
 	}

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -66,7 +66,12 @@ public class ValidationBindHandler extends AbstractBindHandler {
 		return super.onStart(name, target, context);
 	}
 
-	private boolean shouldValidate(Bindable<?> target) {
+	/**
+	 * Specifies whether this {@link Bindable} should be validated.
+	 * @param target the target bindable
+	 * @return {@code true} if the {@code target} object should be validated
+	 */
+	protected boolean shouldValidate(Bindable<?> target) {
 		Validated annotation = AnnotationUtils
 				.findAnnotation(target.getBoxedType().resolve(), Validated.class);
 		return (annotation != null);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -76,7 +76,8 @@ public class BindValidationFailureAnalyzerTests {
 	@Test
 	public void bindExceptionWithOriginDueToValidationFailure() {
 		FailureAnalysis analysis = performAnalysis(
-				FieldValidationFailureConfiguration.class, "test.foo.value=4");
+				FieldValidationFailureConfiguration.class, "test.foo.value=4",
+				"test.foo.nested.bar=something");
 		assertThat(analysis.getDescription())
 				.contains("Origin: \"test.foo.value\" from property source \"test\"");
 	}

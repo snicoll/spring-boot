@@ -16,6 +16,8 @@
 
 package org.springframework.boot.context.properties;
 
+import java.util.function.Function;
+
 import org.springframework.boot.context.properties.bind.BindHandler;
 import org.springframework.boot.context.properties.bind.Bindable;
 import org.springframework.boot.context.properties.bind.Binder;
@@ -61,32 +63,34 @@ class ConfigurationPropertiesBinder {
 		this.binder = new Binder(this.configurationSources,
 				new PropertySourcesPlaceholdersResolver(this.propertySources),
 				this.conversionService);
-
 	}
 
 	/**
 	 * Bind the specified {@code target} object using the configuration defined by the
-	 * specified {@code annotation}.
+	 * specified {@link ConfigurationPropertiesBindingOptions binding options}.
 	 * @param target the target to bind the configuration property sources to
-	 * @param annotation the binding configuration
+	 * @param options the binding configuration
 	 * @throws ConfigurationPropertiesBindingException if the binding failed
 	 */
-	void bind(Object target, ConfigurationProperties annotation) {
-		Validator validator = determineValidator(target);
-		BindHandler handler = getBindHandler(annotation, validator);
+	void bind(Object target, ConfigurationPropertiesBindingOptions options) {
+		Validator validator = determineValidator(target, options.isValidated());
+		BindHandler handler = getBindHandler(options, validator);
 		Bindable<?> bindable = Bindable.ofInstance(target);
 		try {
-			this.binder.bind(annotation.prefix(), bindable, handler);
+			this.binder.bind(options.getPrefix(), bindable, handler);
 		}
 		catch (Exception ex) {
 			String message = "Could not bind properties to '"
 					+ ClassUtils.getShortName(target.getClass()) + "': "
-					+ getAnnotationDetails(annotation);
+					+ options.toString();
 			throw new ConfigurationPropertiesBindingException(message, ex);
 		}
 	}
 
-	private Validator determineValidator(Object bean) {
+	private Validator determineValidator(Object bean, boolean validated) {
+		if (!validated) {
+			return null;
+		}
 		boolean supportsBean = (this.validator != null
 				&& this.validator.supports(bean.getClass()));
 		if (ClassUtils.isAssignable(Validator.class, bean.getClass())) {
@@ -98,31 +102,43 @@ class ConfigurationPropertiesBinder {
 		return (supportsBean ? this.validator : null);
 	}
 
-	private BindHandler getBindHandler(ConfigurationProperties annotation,
+	private BindHandler getBindHandler(ConfigurationPropertiesBindingOptions options,
 			Validator validator) {
 		BindHandler handler = BindHandler.DEFAULT;
-		if (annotation.ignoreInvalidFields()) {
+		if (options.isIgnoreInvalidFields()) {
 			handler = new IgnoreErrorsBindHandler(handler);
 		}
-		if (!annotation.ignoreUnknownFields()) {
+		if (!options.isIgnoreUnknownFields()) {
 			UnboundElementsSourceFilter filter = new UnboundElementsSourceFilter();
 			handler = new NoUnboundElementsBindHandler(handler, filter);
 		}
 		if (validator != null) {
-			handler = new ValidationBindHandler(handler, validator);
+			handler = new ConfigurationPropertiesValidationBindHandler(
+					b -> options.isValidated(), handler, validator);
 		}
 		return handler;
 	}
 
-	private String getAnnotationDetails(ConfigurationProperties annotation) {
-		if (annotation == null) {
-			return "";
+	/**
+	 * A {@link ValidationBindHandler} that uses a configurable validated logic.
+	 */
+	private static class ConfigurationPropertiesValidationBindHandler
+			extends ValidationBindHandler {
+
+		private final Function<Bindable<?>, Boolean> validated;
+
+		ConfigurationPropertiesValidationBindHandler(
+				Function<Bindable<?>, Boolean> validated,
+				BindHandler parent, Validator... validators) {
+			super(parent, validators);
+			this.validated = validated;
 		}
-		StringBuilder details = new StringBuilder();
-		details.append("prefix=").append(annotation.prefix());
-		details.append(", ignoreInvalidFields=").append(annotation.ignoreInvalidFields());
-		details.append(", ignoreUnknownFields=").append(annotation.ignoreUnknownFields());
-		return details.toString();
+
+		@Override
+		protected boolean shouldValidate(Bindable<?> target) {
+			return this.validated.apply(target);
+		}
+
 	}
 
 	/**

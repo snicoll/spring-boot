@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package org.springframework.boot.context.properties;
 
+import java.lang.reflect.AnnotatedElement;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
@@ -27,19 +28,24 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.ListableBeanFactory;
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.beans.factory.support.RootBeanDefinition;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.EnvironmentAware;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.core.Ordered;
 import org.springframework.core.PriorityOrdered;
+import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.Environment;
 import org.springframework.core.env.MutablePropertySources;
 import org.springframework.core.env.PropertySources;
 import org.springframework.core.env.StandardEnvironment;
+import org.springframework.validation.annotation.Validated;
 
 /**
  * {@link BeanPostProcessor} to bind {@link PropertySources} to beans annotated with
@@ -161,10 +167,10 @@ public class ConfigurationPropertiesBindingPostProcessor
 	@Override
 	public Object postProcessBeforeInitialization(Object bean, String beanName)
 			throws BeansException {
-		ConfigurationProperties annotation = getAnnotation(bean, beanName);
-		if (annotation != null) {
+		ConfigurationPropertiesBindingOptions options = determineOptions(bean, beanName);
+		if (options != null) {
 			try {
-				getBinder().bind(bean, annotation);
+				getBinder().bind(bean, options);
 			}
 			catch (ConfigurationPropertiesBindingException ex) {
 				throw new BeanCreationException(beanName, ex.getMessage(), ex.getCause());
@@ -179,6 +185,18 @@ public class ConfigurationPropertiesBindingPostProcessor
 		return bean;
 	}
 
+	private ConfigurationPropertiesBindingOptions determineOptions(Object bean,
+			String beanName) {
+		ConfigurationProperties annotation = getAnnotation(bean, beanName);
+		if (annotation != null) {
+			boolean validated = isValidated(bean, beanName);
+			return new ConfigurationPropertiesBindingOptions(annotation.prefix(),
+					annotation.ignoreInvalidFields(), annotation.ignoreUnknownFields(),
+					validated);
+		}
+		return null;
+	}
+
 	private ConfigurationProperties getAnnotation(Object bean, String beanName) {
 		ConfigurationProperties annotation = this.beans.findFactoryAnnotation(beanName,
 				ConfigurationProperties.class);
@@ -187,6 +205,26 @@ public class ConfigurationPropertiesBindingPostProcessor
 					ConfigurationProperties.class);
 		}
 		return annotation;
+	}
+
+	private boolean isValidated(Object bean, String beanName) {
+		if (isAnnotatedWithValidated(bean.getClass())) {
+			return true;
+		}
+		if (this.beanFactory instanceof ConfigurableBeanFactory) {
+			BeanDefinition bd = ((ConfigurableBeanFactory) this.beanFactory)
+					.getMergedBeanDefinition(beanName);
+			if (bd instanceof RootBeanDefinition) {
+				RootBeanDefinition rbd = (RootBeanDefinition) bd;
+				return isAnnotatedWithValidated(rbd.getResolvedFactoryMethod());
+			}
+		}
+		return false;
+	}
+
+	private boolean isAnnotatedWithValidated(AnnotatedElement element) {
+		return element != null
+				&& AnnotatedElementUtils.hasAnnotation(element, Validated.class);
 	}
 
 	private ConfigurationPropertiesBinder getBinder() {

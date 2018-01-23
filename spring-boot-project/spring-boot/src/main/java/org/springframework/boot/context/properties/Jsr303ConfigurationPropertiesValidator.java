@@ -18,7 +18,6 @@ package org.springframework.boot.context.properties;
 
 import org.springframework.boot.validation.MessageInterpolatorFactory;
 import org.springframework.context.ApplicationContext;
-import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 import org.springframework.validation.annotation.Validated;
@@ -40,8 +39,7 @@ class Jsr303ConfigurationPropertiesValidator implements Validator {
 
 	@Override
 	public boolean supports(Class<?> type) {
-		return AnnotatedElementUtils.hasAnnotation(type, Validated.class)
-				&& this.delegate.supports(type);
+		return this.delegate.supports(type);
 	}
 
 	@Override
