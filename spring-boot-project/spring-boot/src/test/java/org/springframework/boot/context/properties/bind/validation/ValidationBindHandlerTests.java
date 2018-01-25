@@ -37,6 +37,7 @@ import org.springframework.boot.context.properties.source.ConfigurationPropertyN
 import org.springframework.boot.context.properties.source.ConfigurationPropertySource;
 import org.springframework.boot.context.properties.source.MockConfigurationPropertySource;
 import org.springframework.boot.origin.Origin;
+import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
 import org.springframework.validation.annotation.Validated;
@@ -67,7 +68,8 @@ public class ValidationBindHandlerTests {
 		this.binder = new Binder(this.sources);
 		LocalValidatorFactoryBean validator = new LocalValidatorFactoryBean();
 		validator.afterPropertiesSet();
-		this.handler = new ValidationBindHandler(validator);
+		this.handler = new ValidationBindHandler(t -> (AnnotationUtils.findAnnotation(
+				t.getBoxedType().resolve(), Validated.class) != null), validator);
 	}
 
 	@Test

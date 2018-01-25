@@ -269,7 +269,7 @@ public class BinderTests {
 		Validator validator = new SpringValidatorAdapter(Validation.byDefaultProvider()
 				.configure().buildValidatorFactory().getValidator());
 		this.binder.bind("foo", Bindable.of(ResourceBean.class),
-				new ValidationBindHandler(validator));
+				new ValidationBindHandler(b -> true, validator));
 	}
 
 	@Test

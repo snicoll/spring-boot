@@ -16,8 +16,6 @@
 
 package org.springframework.boot.context.properties;
 
-import java.util.function.Function;
-
 import org.springframework.boot.context.properties.bind.BindHandler;
 import org.springframework.boot.context.properties.bind.Bindable;
 import org.springframework.boot.context.properties.bind.Binder;
@@ -88,18 +86,13 @@ class ConfigurationPropertiesBinder {
 	}
 
 	private Validator determineValidator(Object bean, boolean validated) {
-		if (!validated) {
-			return null;
-		}
-		boolean supportsBean = (this.validator != null
-				&& this.validator.supports(bean.getClass()));
 		if (ClassUtils.isAssignable(Validator.class, bean.getClass())) {
-			if (supportsBean) {
+			if (this.validator != null) {
 				return new ChainingValidator(this.validator, (Validator) bean);
 			}
 			return (Validator) bean;
 		}
-		return (supportsBean ? this.validator : null);
+		return (validated ? this.validator : null);
 	}
 
 	private BindHandler getBindHandler(ConfigurationPropertiesBindingOptions options,
@@ -113,33 +106,12 @@ class ConfigurationPropertiesBinder {
 			handler = new NoUnboundElementsBindHandler(handler, filter);
 		}
 		if (validator != null) {
-			handler = new ConfigurationPropertiesValidationBindHandler(
-					b -> options.isValidated(), handler, validator);
+			handler = new ValidationBindHandler(b -> options.isValidated(), handler,
+					validator);
 		}
 		return handler;
 	}
 
-	/**
-	 * A {@link ValidationBindHandler} that uses a configurable validated logic.
-	 */
-	private static class ConfigurationPropertiesValidationBindHandler
-			extends ValidationBindHandler {
-
-		private final Function<Bindable<?>, Boolean> validated;
-
-		ConfigurationPropertiesValidationBindHandler(
-				Function<Bindable<?>, Boolean> validated,
-				BindHandler parent, Validator... validators) {
-			super(parent, validators);
-			this.validated = validated;
-		}
-
-		@Override
-		protected boolean shouldValidate(Bindable<?> target) {
-			return this.validated.apply(target);
-		}
-
-	}
 
 	/**
 	 * {@link Validator} implementation that wraps {@link Validator} instances and chains

@@ -19,6 +19,7 @@ package org.springframework.boot.context.properties.bind.validation;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.springframework.boot.context.properties.bind.AbstractBindHandler;
@@ -27,11 +28,9 @@ import org.springframework.boot.context.properties.bind.BindHandler;
 import org.springframework.boot.context.properties.bind.Bindable;
 import org.springframework.boot.context.properties.source.ConfigurationProperty;
 import org.springframework.boot.context.properties.source.ConfigurationPropertyName;
-import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.Validator;
-import org.springframework.validation.annotation.Validated;
 
 /**
  * {@link BindHandler} to apply {@link Validator Validators} to bound results.
@@ -42,18 +41,24 @@ import org.springframework.validation.annotation.Validated;
  */
 public class ValidationBindHandler extends AbstractBindHandler {
 
-	private final Validator[] validators;
+	private final Function<Bindable<?>, Boolean> validateFunction;
 
-	private boolean validate;
+	private final Validator[] validators;
 
 	private final Set<ConfigurationProperty> boundProperties = new LinkedHashSet<>();
 
-	public ValidationBindHandler(Validator... validators) {
+	private boolean validate;
+
+	public ValidationBindHandler(Function<Bindable<?>, Boolean> validateFunction,
+			Validator... validators) {
+		this.validateFunction = validateFunction;
 		this.validators = validators;
 	}
 
-	public ValidationBindHandler(BindHandler parent, Validator... validators) {
+	public ValidationBindHandler(Function<Bindable<?>, Boolean> validateFunction,
+			BindHandler parent, Validator... validators) {
 		super(parent);
+		this.validateFunction = validateFunction;
 		this.validators = validators;
 	}
 
@@ -61,20 +66,9 @@ public class ValidationBindHandler extends AbstractBindHandler {
 	public boolean onStart(ConfigurationPropertyName name, Bindable<?> target,
 			BindContext context) {
 		if (context.getDepth() == 0) {
-			this.validate = shouldValidate(target);
+			this.validate = this.validateFunction.apply(target);
 		}
 		return super.onStart(name, target, context);
-	}
-
-	/**
-	 * Specifies whether this {@link Bindable} should be validated.
-	 * @param target the target bindable
-	 * @return {@code true} if the {@code target} object should be validated
-	 */
-	protected boolean shouldValidate(Bindable<?> target) {
-		Validated annotation = AnnotationUtils
-				.findAnnotation(target.getBoxedType().resolve(), Validated.class);
-		return (annotation != null);
 	}
 
 	@Override
