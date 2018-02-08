@@ -15,14 +15,14 @@
  */
 package sample.kafka;
 
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+
+import org.springframework.boot.SpringApplication;
 import org.springframework.boot.test.rule.OutputCapture;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.kafka.test.rule.KafkaEmbedded;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -30,32 +30,28 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Integration tests for demo application.
  *
  * @author hcxin
+ * @author Stephane Nicoll
  */
-@RunWith(SpringRunner.class)
-@SpringBootTest
 public class SampleKafkaApplicationTests {
+
+	@ClassRule
+	public static final KafkaEmbedded kafkaEmbedded = new KafkaEmbedded(1, true,
+			"testTopic");
 
 	@Rule
 	public OutputCapture outputCapture = new OutputCapture();
 
-	@Autowired
-	private Producer producer;
 
 	@Test
 	public void sendSimpleMessage() throws Exception {
-		initKafkaEmbedded();
-		SampleMessage message = new SampleMessage(1, "Test message");
-		producer.send(message);
-		Thread.sleep(1000L);
-		assertThat(this.outputCapture.toString().contains("Test message")).isTrue();
+		ConfigurableApplicationContext context = SpringApplication.run(
+				SampleKafkaApplication.class,
+				"--spring.kafka.bootstrap-servers=" + kafkaEmbedded.getBrokersAsString(),
+				"spring.kafka.consumer.auto-offset-reset=earliest");
+		Thread.sleep(5000L);
+		assertThat(this.outputCapture.toString().contains("Received sample message"))
+				.isTrue();
+		context.close();
 	}
 
-	public void initKafkaEmbedded() throws Exception {
-		KafkaEmbedded embeddedKafka = new KafkaEmbedded(1, true);
-		embeddedKafka.setKafkaPorts(9092);
-		embeddedKafka.afterPropertiesSet();
-		//Need 10s, waiting for the Kafka server start.
-		Thread.sleep(10000L);
-
-	}
 }

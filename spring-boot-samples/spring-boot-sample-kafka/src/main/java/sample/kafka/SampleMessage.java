@@ -16,11 +16,18 @@
 package sample.kafka;
 
 public class SampleMessage {
+
 	private Integer id;
+
 	private String message;
 
+	public SampleMessage(Integer id, String message) {
+		this.id = id;
+		this.message = message;
+	}
+
 	public Integer getId() {
-		return id;
+		return this.id;
 	}
 
 	public void setId(Integer id) {
@@ -28,26 +35,20 @@ public class SampleMessage {
 	}
 
 	public String getMessage() {
-		return message;
+		return this.message;
 	}
 
 	public void setMessage(String message) {
 		this.message = message;
 	}
 
-	public SampleMessage() {
-	}
-
-	public SampleMessage(Integer id, String message) {
-		this.id = id;
-		this.message = message;
-	}
-
 	@Override
 	public String toString() {
-		return "SampleMessage{" +
-				"id=" + id +
-				", message='" + message + '\'' +
-				'}';
+		final StringBuilder sb = new StringBuilder("SampleMessage{");
+		sb.append("id=").append(this.id);
+		sb.append(", message='").append(this.message).append('\'');
+		sb.append('}');
+		return sb.toString();
 	}
+
 }
