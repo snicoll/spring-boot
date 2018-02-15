@@ -38,7 +38,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 public class PropertyEditorConverterTests {
 
-	private final PropertyEditorConverter converter = new PropertyEditorConverter();
+	private final PropertyEditorConverter converter = new PropertyEditorConverter(
+			new SimpleTypeConverter());
 
 	@Test
 	public void matchesShouldLimitToPropertyEditor() {

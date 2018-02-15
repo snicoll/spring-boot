@@ -17,16 +17,19 @@
 package org.springframework.boot.context.properties;
 
 import java.time.Duration;
+import java.util.List;
 
 import javax.validation.constraints.NotNull;
 
 import org.junit.Test;
 
+import org.springframework.boot.context.properties.bind.convert.BinderConversionService;
 import org.springframework.boot.context.properties.bind.validation.BindValidationException;
 import org.springframework.boot.context.properties.bind.validation.ValidationErrors;
 import org.springframework.context.support.StaticApplicationContext;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.mock.env.MockEnvironment;
 import org.springframework.test.context.support.TestPropertySourceUtils;
@@ -58,8 +61,13 @@ public class ConfigurationPropertiesBinderBuilderTests {
 		this.applicationContext.registerSingleton("conversionService",
 				DefaultConversionService.class);
 		ConfigurationPropertiesBinder binder = builderWithSources().build();
-		assertThat(ReflectionTestUtils.getField(binder, "conversionService"))
-				.isSameAs(this.applicationContext.getBean("conversionService"));
+		Object conversionService = ReflectionTestUtils.getField(binder, "conversionService");
+		assertThat(conversionService).isInstanceOf(BinderConversionService.class);
+		List<ConversionService> conversionServices = (List<ConversionService>) ReflectionTestUtils.getField(
+				conversionService, "conversionServices");
+		assertThat(conversionServices).hasSize(3);
+		assertThat(conversionServices.get(1)).isSameAs(
+				this.applicationContext.getBean("conversionService"));
 	}
 
 	@Test

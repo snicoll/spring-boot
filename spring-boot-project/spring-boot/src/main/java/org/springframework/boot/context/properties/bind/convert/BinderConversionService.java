@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 
+import org.springframework.beans.SimpleTypeConverter;
 import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.core.convert.ConversionException;
 import org.springframework.core.convert.ConversionService;
@@ -50,11 +51,21 @@ public class BinderConversionService implements ConversionService {
 	 * @param conversionService and option root conversion service
 	 */
 	public BinderConversionService(ConversionService conversionService) {
+		this(conversionService, null);
+	}
+
+	/**
+	 * Create a new {@link BinderConversionService} instance.
+	 * @param conversionService and option root conversion service
+	 * @param typeConverter an optional {@link SimpleTypeConverter}
+	 */
+	public BinderConversionService(ConversionService conversionService,
+			SimpleTypeConverter typeConverter) {
 		List<ConversionService> conversionServices = new ArrayList<>();
 		conversionServices.add(createOverrideConversionService());
 		conversionServices.add(
 				conversionService != null ? conversionService : defaultConversionService);
-		conversionServices.add(createAdditionalConversionService());
+		conversionServices.add(createAdditionalConversionService(typeConverter));
 		this.conversionServices = Collections.unmodifiableList(conversionServices);
 	}
 
@@ -64,14 +75,17 @@ public class BinderConversionService implements ConversionService {
 		return service;
 	}
 
-	private ConversionService createAdditionalConversionService() {
+	private ConversionService createAdditionalConversionService(
+			SimpleTypeConverter typeConverter) {
 		DefaultFormattingConversionService service = new DefaultFormattingConversionService();
 		DefaultConversionService.addCollectionConverters(service);
 		service.addConverterFactory(new StringToEnumConverterFactory());
 		service.addConverter(new StringToCharArrayConverter());
 		service.addConverter(new StringToInetAddressConverter());
 		service.addConverter(new InetAddressToStringConverter());
-		service.addConverter(new PropertyEditorConverter());
+		if (typeConverter  != null) {
+			service.addConverter(new PropertyEditorConverter(typeConverter));
+		}
 		service.addConverter(new DurationConverter());
 		DateFormatterRegistrar registrar = new DateFormatterRegistrar();
 		DateFormatter formatter = new DateFormatter();

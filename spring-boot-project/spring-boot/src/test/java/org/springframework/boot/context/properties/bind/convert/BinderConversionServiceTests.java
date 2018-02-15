@@ -24,6 +24,7 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.springframework.beans.SimpleTypeConverter;
 import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.TypeDescriptor;
@@ -139,7 +140,7 @@ public class BinderConversionServiceTests {
 
 	@Test
 	public void conversionServiceShouldSupportStringToResource() {
-		this.service = new BinderConversionService(null);
+		this.service = new BinderConversionService(null, new SimpleTypeConverter());
 		Resource resource = this.service.convert(
 				"org/springframework/boot/context/properties/bind/convert/resource.txt",
 				Resource.class);
@@ -148,7 +149,7 @@ public class BinderConversionServiceTests {
 
 	@Test
 	public void conversionServiceShouldSupportStringToClass() {
-		this.service = new BinderConversionService(null);
+		this.service = new BinderConversionService(null, new SimpleTypeConverter());
 		Class<?> converted = this.service.convert(InputStream.class.getName(),
 				Class.class);
 		assertThat(converted).isEqualTo(InputStream.class);

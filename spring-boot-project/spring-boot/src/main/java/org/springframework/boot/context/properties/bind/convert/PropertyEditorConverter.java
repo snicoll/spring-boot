@@ -24,7 +24,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.PropertyEditorRegistrySupport;
 import org.springframework.beans.SimpleTypeConverter;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.converter.ConditionalConverter;
@@ -33,6 +32,8 @@ import org.springframework.core.convert.converter.GenericConverter;
 /**
  * {@link GenericConverter} that delegates to Java bean {@link PropertyEditor
  * PropertyEditors}.
+ * <p>
+ * This converter is not thread safe.
  *
  * @author Phillip Webb
  */
@@ -47,12 +48,11 @@ class PropertyEditorConverter implements GenericConverter, ConditionalConverter 
 		SKIPPED = Collections.unmodifiableSet(skipped);
 	}
 
-	/**
-	 * Registry that can be used to check if conversion is supported. Since
-	 * {@link PropertyEditor PropertyEditors} are not thread safe this can't be used for
-	 * actual conversion.
-	 */
-	private final PropertyEditorRegistrySupport registry = new SimpleTypeConverter();
+	private final SimpleTypeConverter typeConverter;
+
+	PropertyEditorConverter(SimpleTypeConverter typeConverter) {
+		this.typeConverter = typeConverter;
+	}
 
 	@Override
 	public Set<ConvertiblePair> getConvertibleTypes() {
@@ -65,7 +65,7 @@ class PropertyEditorConverter implements GenericConverter, ConditionalConverter 
 		if (isSkipped(type)) {
 			return false;
 		}
-		PropertyEditor editor = this.registry.getDefaultEditor(type);
+		PropertyEditor editor = this.typeConverter.getDefaultEditor(type);
 		editor = (editor != null ? editor : BeanUtils.findEditorByConvention(type));
 		return editor != null;
 	}
@@ -77,7 +77,7 @@ class PropertyEditorConverter implements GenericConverter, ConditionalConverter 
 	@Override
 	public Object convert(Object source, TypeDescriptor sourceType,
 			TypeDescriptor targetType) {
-		return new SimpleTypeConverter().convertIfNecessary(source, targetType.getType());
+		return this.typeConverter.convertIfNecessary(source, targetType.getType());
 	}
 
 }

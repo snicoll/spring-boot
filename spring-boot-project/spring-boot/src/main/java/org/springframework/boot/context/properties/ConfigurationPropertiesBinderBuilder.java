@@ -19,8 +19,11 @@ package org.springframework.boot.context.properties;
 import java.util.Collections;
 import java.util.List;
 
+import org.springframework.beans.SimpleTypeConverter;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.support.ResourceEditorRegistrar;
+import org.springframework.boot.context.properties.bind.convert.BinderConversionService;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.convert.ConversionService;
@@ -107,7 +110,15 @@ class ConfigurationPropertiesBinderBuilder {
 		return null;
 	}
 
-	private ConversionService determineConversionService() {
+	private BinderConversionService determineConversionService() {
+		ResourceEditorRegistrar resourceEditorRegistrar = new ResourceEditorRegistrar(
+				this.applicationContext, this.applicationContext.getEnvironment());
+		SimpleTypeConverter typeConverter = new SimpleTypeConverter();
+		resourceEditorRegistrar.registerCustomEditors(typeConverter);
+		return new BinderConversionService(getOrCreateConversionService(), typeConverter);
+	}
+
+	private ConversionService getOrCreateConversionService() {
 		if (this.conversionService != null) {
 			return this.conversionService;
 		}
