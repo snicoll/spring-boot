@@ -43,7 +43,7 @@ public class SimplePropertiesConfigAdapter
 
 	@Override
 	public boolean enabled() {
-		return get(SimpleProperties::getEnabled, SimpleConfig.super::enabled);
+		return get(SimpleProperties::isEnabled, SimpleConfig.super::enabled);
 	}
 
 	@Override

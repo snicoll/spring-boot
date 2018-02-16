@@ -16,6 +16,8 @@
 
 package org.springframework.boot.actuate.autoconfigure.metrics.export.signalfx;
 
+import java.time.Duration;
+
 import org.springframework.boot.actuate.autoconfigure.metrics.export.properties.StepRegistryProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
@@ -24,10 +26,16 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *
  * @author Jon Schneider
  * @author Andy Wilkinson
+ * @author Stephane Nicoll
  * @since 2.0.0
  */
 @ConfigurationProperties(prefix = "management.metrics.export.signalfx")
 public class SignalFxProperties extends StepRegistryProperties {
+
+	/**
+	 * Step size (i.e. reporting frequency) to use.
+	 */
+	private Duration step = Duration.ofSeconds(10);
 
 	/**
 	 * SignalFX access token.
@@ -37,7 +45,17 @@ public class SignalFxProperties extends StepRegistryProperties {
 	/**
 	 * Optional custom URI for the SignalFX API.
 	 */
-	private String uri;
+	private String uri = "https://ingest.signalfx.com";
+
+	@Override
+	public Duration getStep() {
+		return this.step;
+	}
+
+	@Override
+	public void setStep(Duration step) {
+		this.step = step;
+	}
 
 	public String getAccessToken() {
 		return this.accessToken;

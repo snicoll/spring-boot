@@ -24,6 +24,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *
  * @author Jon Schneider
  * @author Andy Wilkinson
+ * @author Stephane Nicoll
  * @since 2.0.0
  */
 @ConfigurationProperties(prefix = "management.metrics.export.newrelic")
@@ -42,7 +43,7 @@ public class NewRelicProperties extends StepRegistryProperties {
 	/**
 	 * Optional custom URI for the New Relic Insights API.
 	 */
-	private String uri;
+	private String uri = "https://insights-collector.newrelic.com";
 
 	public String getApiKey() {
 		return this.apiKey;

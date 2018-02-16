@@ -27,6 +27,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * {@link ConfigurationProperties} for configuring Graphite metrics export.
  *
  * @author Jon Schneider
+ * @author Stephane Nicoll
  * @since 2.0.0
  */
 @ConfigurationProperties(prefix = "management.metrics.export.graphite")
@@ -35,37 +36,37 @@ public class GraphiteProperties {
 	/**
 	 * Whether exporting of metrics to this backend is enabled.
 	 */
-	private Boolean enabled;
+	private boolean enabled = true;
 
 	/**
 	 * Step size (i.e. reporting frequency) to use.
 	 */
-	private Duration step;
+	private Duration step = Duration.ofMinutes(1);
 
 	/**
 	 * Base time unit used to report rates.
 	 */
-	private TimeUnit rateUnits;
+	private TimeUnit rateUnits = TimeUnit.SECONDS;
 
 	/**
 	 * Base time unit used to report durations.
 	 */
-	private TimeUnit durationUnits;
+	private TimeUnit durationUnits = TimeUnit.MILLISECONDS;
 
 	/**
 	 * Host of the Graphite server to receive exported metrics.
 	 */
-	private String host;
+	private String host = "localhost";
 
 	/**
 	 * Port of the Graphite server to receive exported metrics.
 	 */
-	private Integer port;
+	private Integer port = 2004;
 
 	/**
 	 * Protocol to use while shipping data to Graphite.
 	 */
-	private GraphiteProtocol protocol;
+	private GraphiteProtocol protocol = GraphiteProtocol.PICKLED;
 
 	/**
 	 * For the default naming convention, turn the specified tag keys into part of the
@@ -73,11 +74,11 @@ public class GraphiteProperties {
 	 */
 	private String[] tagsAsPrefix;
 
-	public Boolean getEnabled() {
+	public boolean isEnabled() {
 		return this.enabled;
 	}
 
-	public void setEnabled(Boolean enabled) {
+	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;
 	}
 

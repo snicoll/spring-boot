@@ -33,9 +33,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class StatsdProperties {
 
 	/**
-	 * Whether exporting of metrics to this backend is enabled.
+	 * Whether exporting of metrics to StatsD is enabled.
 	 */
-	private Boolean enabled;
+	private boolean enabled = true;
 
 	/**
 	 * StatsD line protocol to use.
@@ -72,13 +72,13 @@ public class StatsdProperties {
 	/**
 	 * Send unchanged meters to the StatsD server.
 	 */
-	private Boolean publishUnchangedMeters;
+	private boolean publishUnchangedMeters = true;
 
-	public Boolean getEnabled() {
+	public boolean isEnabled() {
 		return this.enabled;
 	}
 
-	public void setEnabled(Boolean enabled) {
+	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;
 	}
 
@@ -130,11 +130,11 @@ public class StatsdProperties {
 		this.queueSize = queueSize;
 	}
 
-	public Boolean getPublishUnchangedMeters() {
+	public boolean isPublishUnchangedMeters() {
 		return this.publishUnchangedMeters;
 	}
 
-	public void setPublishUnchangedMeters(Boolean publishUnchangedMeters) {
+	public void setPublishUnchangedMeters(boolean publishUnchangedMeters) {
 		this.publishUnchangedMeters = publishUnchangedMeters;
 	}
 

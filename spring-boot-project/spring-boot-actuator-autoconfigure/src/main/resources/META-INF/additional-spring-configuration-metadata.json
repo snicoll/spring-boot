@@ -216,6 +216,18 @@
       "defaultValue": true
     },
     {
+      "name": "management.metrics.export.jmx.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Whether exporting of metrics to JMX is enabled.",
+      "defaultValue": true
+    },
+    {
+      "name": "management.metrics.export.prometheus.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Whether exporting of metrics to Prometheus is enabled.",
+      "defaultValue": true
+    },
+    {
       "name": "management.trace.http.enabled",
       "type": "java.lang.Boolean",
       "description": "Whether to enable HTTP request-response tracing.",
