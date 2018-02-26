@@ -18,6 +18,7 @@ package org.springframework.boot.actuate.autoconfigure.kafka;
 
 import java.time.Duration;
 import java.util.Map;
+import java.util.function.Function;
 
 import org.springframework.boot.actuate.autoconfigure.health.CompositeHealthIndicatorConfiguration;
 import org.springframework.boot.actuate.autoconfigure.health.ConditionalOnEnabledHealthIndicator;
@@ -40,6 +41,7 @@ import org.springframework.kafka.core.KafkaAdmin;
  * {@link EnableAutoConfiguration Auto-configuration} for {@link KafkaHealthIndicator}.
  *
  * @author Juan Rada
+ * @author Stephane Nicoll
  * @since 2.0.0
  */
 @Configuration
@@ -56,10 +58,14 @@ public class KafkaHealthIndicatorAutoConfiguration
 
 	private final KafkaHealthIndicatorProperties properties;
 
+	private final ConsiderReplicationFactoryFunction considerReplicationFactory;
+
 	public KafkaHealthIndicatorAutoConfiguration(Map<String, KafkaAdmin> admins,
 			KafkaHealthIndicatorProperties properties) {
 		this.admins = admins;
 		this.properties = properties;
+		this.considerReplicationFactory = new ConsiderReplicationFactoryFunction(
+				properties.getBrokers());
 	}
 
 	@Bean
@@ -71,7 +77,26 @@ public class KafkaHealthIndicatorAutoConfiguration
 	@Override
 	protected KafkaHealthIndicator createHealthIndicator(KafkaAdmin source) {
 		Duration responseTimeout = this.properties.getResponseTimeout();
-		return new KafkaHealthIndicator(source, responseTimeout.toMillis());
+		return new KafkaHealthIndicator(source, responseTimeout.toMillis(),
+				this.considerReplicationFactory);
+	}
+
+	private static class ConsiderReplicationFactoryFunction
+			implements Function<String, Boolean> {
+
+		private final Map<String, KafkaHealthIndicatorProperties.Broker> brokers;
+
+		public ConsiderReplicationFactoryFunction(
+				Map<String, KafkaHealthIndicatorProperties.Broker> brokers) {
+			this.brokers = brokers;
+		}
+
+		@Override
+		public Boolean apply(String brokerId) {
+			KafkaHealthIndicatorProperties.Broker broker = this.brokers.get(brokerId);
+			return (broker != null && broker.isConsiderReplicationFactory());
+		}
+
 	}
 
 }

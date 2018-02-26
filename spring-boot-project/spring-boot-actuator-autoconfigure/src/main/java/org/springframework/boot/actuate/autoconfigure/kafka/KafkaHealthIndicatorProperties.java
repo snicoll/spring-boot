@@ -17,6 +17,8 @@
 package org.springframework.boot.actuate.autoconfigure.kafka;
 
 import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.springframework.boot.actuate.kafka.KafkaHealthIndicator;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -25,6 +27,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * Configuration properties for {@link KafkaHealthIndicator}.
  *
  * @author Juan Rada
+ * @author Stephane Nicoll
  * @since 2.0.0
  */
 @ConfigurationProperties(prefix = "management.health.kafka", ignoreUnknownFields = false)
@@ -35,12 +38,36 @@ public class KafkaHealthIndicatorProperties {
 	 */
 	private Duration responseTimeout = Duration.ofMillis(1000);
 
+	private final Map<String, Broker> brokers = new HashMap<>();
+
 	public Duration getResponseTimeout() {
 		return this.responseTimeout;
 	}
 
 	public void setResponseTimeout(Duration responseTimeout) {
 		this.responseTimeout = responseTimeout;
+	}
+
+	public Map<String, Broker> getBrokers() {
+		return this.brokers;
+	}
+
+
+	public static class Broker {
+
+		/**
+		 * Use the replication factor of the broker to validate there are enough nodes.
+		 */
+		private boolean considerReplicationFactory = false;
+
+		public boolean isConsiderReplicationFactory() {
+			return this.considerReplicationFactory;
+		}
+
+		public void setConsiderReplicationFactory(boolean considerReplicationFactory) {
+			this.considerReplicationFactory = considerReplicationFactory;
+		}
+
 	}
 
 }

@@ -17,7 +17,6 @@
 package org.springframework.boot.actuate.kafka;
 
 import java.util.Collections;
-import java.util.Map;
 
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.junit.After;
@@ -30,6 +29,7 @@ import org.springframework.kafka.test.rule.KafkaEmbedded;
 import org.springframework.util.SocketUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.entry;
 
 /**
  * Tests for {@link KafkaHealthIndicator}.
@@ -57,7 +57,10 @@ public class KafkaHealthIndicatorTests {
 				1000L);
 		Health health = healthIndicator.health();
 		assertThat(health.getStatus()).isEqualTo(Status.UP);
-		assertDetails(health.getDetails());
+		assertThat(health.getDetails()).containsOnlyKeys(
+				"brokerId", "clusterId", "nodes", "requiredNodes");
+		assertThat(health.getDetails()).contains(entry("nodes", 1));
+		assertThat(health.getDetails()).contains(entry("requiredNodes", 1));
 	}
 
 	@Test
@@ -79,13 +82,22 @@ public class KafkaHealthIndicatorTests {
 				1000L);
 		Health health = healthIndicator.health();
 		assertThat(health.getStatus()).isEqualTo(Status.DOWN);
-		assertDetails(health.getDetails());
+		assertThat(health.getDetails()).containsOnlyKeys(
+				"brokerId", "clusterId", "nodes", "requiredNodes");
+		assertThat(health.getDetails()).contains(entry("nodes", 1));
+		assertThat(health.getDetails()).contains(entry("requiredNodes", 2));
 	}
 
-	private void assertDetails(Map<String, Object> details) {
-		assertThat(details).containsEntry("brokerId", "0");
-		assertThat(details).containsKey("clusterId");
-		assertThat(details).containsEntry("nodes", 1);
+	@Test
+	public void notEnoughNodesForReplicationFactorWhenNotConsidered() throws Exception {
+		startKafka(2);
+		KafkaHealthIndicator healthIndicator = new KafkaHealthIndicator(this.kafkaAdmin,
+				1000L, (brokerId) -> false);
+		Health health = healthIndicator.health();
+		assertThat(health.getStatus()).isEqualTo(Status.UP);
+		assertThat(health.getDetails()).containsOnlyKeys(
+				"brokerId", "clusterId", "nodes");
+		assertThat(health.getDetails()).contains(entry("nodes", 1));
 	}
 
 	private void startKafka(int replicationFactor) throws Exception {
