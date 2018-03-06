@@ -19,12 +19,15 @@ package org.springframework.boot.test.autoconfigure.web.reactive;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.http.codec.CodecsAutoConfiguration;
+import org.springframework.boot.autoconfigure.web.reactive.WebFluxAutoConfiguration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.codec.CodecCustomizer;
@@ -33,6 +36,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.server.WebHandler;
 
 /**
  * Auto-configuration for {@link WebTestClient}.
@@ -43,14 +47,17 @@ import org.springframework.web.reactive.function.client.WebClient;
  */
 @Configuration
 @ConditionalOnClass({ WebClient.class, WebTestClient.class })
-@AutoConfigureAfter(CodecsAutoConfiguration.class)
+@AutoConfigureAfter({ CodecsAutoConfiguration.class, WebFluxAutoConfiguration.class })
 @EnableConfigurationProperties
 public class WebTestClientAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
+	@ConditionalOnBean(WebHandler.class) // This make WebTestClientSpringBootTestIntegrationTests fail
 	public WebTestClient webTestClient(ApplicationContext applicationContext,
 			List<WebTestClientBuilderCustomizer> customizers) {
+		// If you remove the condition, this map contains the bean.
+		Map<String, WebHandler> beansOfType = applicationContext.getBeansOfType(WebHandler.class);
 		WebTestClient.Builder builder = WebTestClient
 				.bindToApplicationContext(applicationContext).configureClient();
 		for (WebTestClientBuilderCustomizer customizer : customizers) {
