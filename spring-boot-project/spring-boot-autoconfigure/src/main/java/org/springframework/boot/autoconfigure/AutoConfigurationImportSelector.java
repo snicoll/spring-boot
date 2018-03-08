@@ -19,7 +19,9 @@ package org.springframework.boot.autoconfigure;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -50,6 +52,7 @@ import org.springframework.core.type.classreading.CachingMetadataReaderFactory;
 import org.springframework.core.type.classreading.MetadataReaderFactory;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -68,6 +71,8 @@ public class AutoConfigurationImportSelector
 		implements DeferredImportSelector, BeanClassLoaderAware, ResourceLoaderAware,
 		BeanFactoryAware, EnvironmentAware, Ordered {
 
+	static final String REGISTRAR_BEAN_NAME = Registrar.class.getName();
+
 	private static final String[] NO_IMPORTS = {};
 
 	private static final Log logger = LogFactory
@@ -84,28 +89,36 @@ public class AutoConfigurationImportSelector
 	private ResourceLoader resourceLoader;
 
 	@Override
-	public String[] selectImports(AnnotationMetadata annotationMetadata) {
+	public final String[] selectImports(AnnotationMetadata annotationMetadata) {
 		if (!isEnabled(annotationMetadata)) {
 			return NO_IMPORTS;
 		}
-		try {
-			AutoConfigurationMetadata autoConfigurationMetadata = AutoConfigurationMetadataLoader
-					.loadMetadata(this.beanClassLoader);
-			AnnotationAttributes attributes = getAttributes(annotationMetadata);
-			List<String> configurations = getCandidateConfigurations(annotationMetadata,
-					attributes);
-			configurations = removeDuplicates(configurations);
-			configurations = sort(configurations, autoConfigurationMetadata);
-			Set<String> exclusions = getExclusions(annotationMetadata, attributes);
-			checkExcludedClasses(configurations, exclusions);
-			configurations.removeAll(exclusions);
-			configurations = filter(configurations, autoConfigurationMetadata);
-			fireAutoConfigurationImportEvents(configurations, exclusions);
-			return StringUtils.toStringArray(configurations);
+		AutoConfigurationMetadata autoConfigurationMetadata = AutoConfigurationMetadataLoader
+				.loadMetadata(this.beanClassLoader);
+		AnnotationAttributes attributes = getAttributes(annotationMetadata);
+		List<String> configurations = getCandidateConfigurations(annotationMetadata,
+				attributes);
+		configurations = removeDuplicates(configurations);
+		Set<String> exclusions = getExclusions(annotationMetadata, attributes);
+		checkExcludedClasses(configurations, exclusions);
+		configurations.removeAll(exclusions);
+		configurations = filter(configurations, autoConfigurationMetadata);
+		fireAutoConfigurationImportEvents(configurations, exclusions);
+		if (!ObjectUtils.isEmpty(configurations)) {
+			getRegistrar(autoConfigurationMetadata)
+					.registerAutoConfigurations(configurations);
 		}
-		catch (IOException ex) {
-			throw new IllegalStateException(ex);
+		return new String[0];
+	}
+
+	private Registrar getRegistrar(
+			AutoConfigurationMetadata autoConfigurationMetadata) {
+		if (!this.beanFactory.containsSingleton(REGISTRAR_BEAN_NAME)) {
+			Registrar bean = new Registrar(this.beanFactory, this.resourceLoader,
+					autoConfigurationMetadata);
+			this.beanFactory.registerSingleton(REGISTRAR_BEAN_NAME, bean);
 		}
+		return (Registrar) this.beanFactory.getSingleton(REGISTRAR_BEAN_NAME);
 	}
 
 	protected boolean isEnabled(AnnotationMetadata metadata) {
@@ -368,6 +381,56 @@ public class AutoConfigurationImportSelector
 	@Override
 	public int getOrder() {
 		return Ordered.LOWEST_PRECEDENCE - 1;
+	}
+
+
+	static class Registrar {
+
+		private final BeanFactory beanFactory;
+
+		private final ResourceLoader resourceLoader;
+
+		private final AutoConfigurationMetadata autoConfigurationMetadata;
+
+		private final Set<String> autoConfigurations = new HashSet<>();
+
+		Registrar(BeanFactory beanFactory, ResourceLoader resourceLoader,
+				AutoConfigurationMetadata autoConfigurationMetadata) {
+			this.beanFactory = beanFactory;
+			this.resourceLoader = resourceLoader;
+			this.autoConfigurationMetadata = autoConfigurationMetadata;
+		}
+
+		public List<String> determineImports() {
+			List<String> configurations = new ArrayList<>(this.autoConfigurations);
+			configurations = sort(configurations, this.autoConfigurationMetadata);
+			return configurations;
+		}
+
+		public void registerAutoConfigurations(Collection<String> autoConfigurations) {
+			if (!ObjectUtils.isEmpty(autoConfigurations)) {
+				this.autoConfigurations.addAll(autoConfigurations);
+			}
+		}
+
+		private List<String> sort(List<String> configurations,
+				AutoConfigurationMetadata autoConfigurationMetadata) {
+			configurations = new AutoConfigurationSorter(getMetadataReaderFactory(),
+					autoConfigurationMetadata).getInPriorityOrder(configurations);
+			return configurations;
+		}
+
+		private MetadataReaderFactory getMetadataReaderFactory() {
+			try {
+				return this.beanFactory.getBean(
+						SharedMetadataReaderFactoryContextInitializer.BEAN_NAME,
+						MetadataReaderFactory.class);
+			}
+			catch (NoSuchBeanDefinitionException ex) {
+				return new CachingMetadataReaderFactory(this.resourceLoader);
+			}
+		}
+
 	}
 
 }
