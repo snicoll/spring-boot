@@ -335,10 +335,17 @@ public class SpringApplication {
 			callRunners(context, applicationArguments);
 		}
 		catch (Throwable ex) {
-			handleRunFailure(context, listeners, exceptionReporters, ex);
+			handleRunFailure(context, listeners, exceptionReporters, ex, true);
 			throw new IllegalStateException(ex);
 		}
-		listeners.running(context);
+
+		try {
+			listeners.running(context);
+		}
+		catch (Throwable ex) {
+			handleRunFailure(context, listeners, exceptionReporters, ex, false);
+			throw new IllegalStateException(ex);
+		}
 		return context;
 	}
 
@@ -797,11 +804,13 @@ public class SpringApplication {
 	private void handleRunFailure(ConfigurableApplicationContext context,
 			SpringApplicationRunListeners listeners,
 			Collection<SpringBootExceptionReporter> exceptionReporters,
-			Throwable exception) {
+			Throwable exception, boolean invokeFailedListeners) {
 		try {
 			try {
 				handleExitCode(context, exception);
-				listeners.failed(context, exception);
+				if (invokeFailedListeners) {
+					listeners.failed(context, exception);
+				}
 			}
 			finally {
 				reportFailure(exceptionReporters, exception);
