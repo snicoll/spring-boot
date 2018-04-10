@@ -34,6 +34,7 @@ import org.apache.maven.shared.artifact.filter.collection.FilterArtifacts;
  *
  * @author Stephane Nicoll
  * @author David Turanski
+ * @author Dmytro Nosan
  * @since 1.1
  */
 public abstract class AbstractDependencyFilterMojo extends AbstractMojo {
@@ -62,6 +63,20 @@ public abstract class AbstractDependencyFilterMojo extends AbstractMojo {
 	 */
 	@Parameter(property = "spring-boot.excludeGroupIds", defaultValue = "")
 	private String excludeGroupIds;
+
+	/**
+	 * Comma separated list of groupId names to include (exact match).
+	 *
+	 */
+	@Parameter(property = "spring-boot.includeGroupIds", defaultValue = "")
+	private String includeGroupIds;
+
+
+
+	protected void setIncludeGroupIds(String includeGroupIds) {
+		this.includeGroupIds = includeGroupIds;
+	}
+
 
 	protected void setExcludes(List<Exclude> excludes) {
 		this.excludes = excludes;
@@ -98,7 +113,8 @@ public abstract class AbstractDependencyFilterMojo extends AbstractMojo {
 			filters.addFilter(additionalFilter);
 		}
 		filters.addFilter(
-				new MatchingGroupIdFilter(cleanFilterConfig(this.excludeGroupIds)));
+				new MatchingGroupIdFilter(cleanFilterConfig(this.includeGroupIds), cleanFilterConfig(this.excludeGroupIds)));
+
 		if (this.includes != null && !this.includes.isEmpty()) {
 			filters.addFilter(new IncludeFilter(this.includes));
 		}

@@ -50,6 +50,8 @@ Spring Boot Maven Plugin
 
   * {{{./examples/exclude-dependency.html}Exclude a dependency}}
 
+  * {{{./examples/include-dependency.html}Include a dependency}}
+
   * {{{./examples/run-debug.html}Debug the application}}
 
   * {{{./examples/run-system-properties.html}Using system properties}}
