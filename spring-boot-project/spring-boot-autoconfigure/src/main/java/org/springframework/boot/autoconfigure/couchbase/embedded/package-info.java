@@ -14,16 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.boot.test.autoconfigure.data.couchbase;
-
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-
 /**
- * Example {@link SpringBootApplication} used with {@link DataCouchbaseTest} tests.
- *
- * @author Alex Derkach
+ * Auto-configuration for embedded Couchbase.
  */
-@SpringBootApplication
-public class ExampleCouchbaseApplication {
-
-}
+package org.springframework.boot.autoconfigure.couchbase.embedded;

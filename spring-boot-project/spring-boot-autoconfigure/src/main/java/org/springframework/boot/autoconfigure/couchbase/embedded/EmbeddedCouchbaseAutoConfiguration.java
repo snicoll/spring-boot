@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,18 +18,20 @@ package org.springframework.boot.autoconfigure.couchbase.embedded;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.List;
 
 import com.couchbase.client.java.CouchbaseBucket;
+import com.couchbase.client.java.env.DefaultCouchbaseEnvironment;
 import com.couchbase.mock.Bucket;
 import com.couchbase.mock.BucketConfiguration;
 import com.couchbase.mock.CouchbaseMock;
 
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.couchbase.CouchbaseAutoConfiguration;
+import org.springframework.boot.autoconfigure.couchbase.CouchbaseConfiguration;
 import org.springframework.boot.autoconfigure.couchbase.CouchbaseProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -39,20 +41,20 @@ import org.springframework.context.annotation.Configuration;
  * {@link EnableAutoConfiguration Auto-configuration} for Embedded Couchbase.
  *
  * @author Alex Derkach
- * @since 2.0.0
+ * @author Stephane Nicoll
+ * @since 2.1.0
  */
 @Configuration
-@EnableConfigurationProperties({CouchbaseProperties.class})
 @AutoConfigureBefore(CouchbaseAutoConfiguration.class)
-@ConditionalOnClass({CouchbaseBucket.class, CouchbaseMock.class})
+@ConditionalOnClass({ CouchbaseBucket.class, CouchbaseMock.class })
+@EnableConfigurationProperties({ CouchbaseProperties.class })
 public class EmbeddedCouchbaseAutoConfiguration {
 
 	@Bean(destroyMethod = "stop")
 	@ConditionalOnMissingBean
-	public CouchbaseMock couchbaseMock(CouchbaseProperties properties) throws IOException, InterruptedException {
-
+	public CouchbaseMock couchbaseMock(CouchbaseProperties properties)
+			throws IOException, InterruptedException {
 		CouchbaseProperties.Bucket bucketProperties = properties.getBucket();
-
 		BucketConfiguration bucketConfiguration = new BucketConfiguration();
 		bucketConfiguration.name = bucketProperties.getName();
 		bucketConfiguration.password = bucketProperties.getPassword();
@@ -60,28 +62,41 @@ public class EmbeddedCouchbaseAutoConfiguration {
 		bucketConfiguration.numReplicas = 1;
 		bucketConfiguration.numNodes = 1;
 
-		CouchbaseMock couchbaseMock = new CouchbaseMock(0, Collections.singletonList(bucketConfiguration));
+		CouchbaseMock couchbaseMock = new CouchbaseMock(0,
+				Collections.singletonList(bucketConfiguration));
 		couchbaseMock.start();
 		couchbaseMock.waitForStartup();
-
-		String host = couchbaseMock.getHttpHost();
-		int bootstrapHttpDirectPort = couchbaseMock.getHttpPort();
-		int bootstrapCarrierDirectPort = couchbaseMock.getBuckets().get(properties.getBucket().getName()).getServers()[0].getPort();
-
-		couchbaseMock.startHarakiriMonitor(host + ":" + bootstrapHttpDirectPort, false);
-
-		properties.setBootstrapHosts(Collections.singletonList(host));
-		properties.setBootstrapHttpDirectPort(bootstrapHttpDirectPort);
-		properties.setBootstrapCarrierDirectPort(bootstrapCarrierDirectPort);
-
 		return couchbaseMock;
 	}
 
 	@Configuration
-	public static class EmbeddedCouchbaseConfiguration extends CouchbaseAutoConfiguration.CouchbaseConfiguration {
+	static class EmbeddedCouchbaseConfiguration extends CouchbaseConfiguration {
 
-		public EmbeddedCouchbaseConfiguration(CouchbaseMock couchbaseMock, CouchbaseProperties properties) {
+		private final CouchbaseMock couchbaseMock;
+
+		EmbeddedCouchbaseConfiguration(CouchbaseProperties properties,
+				CouchbaseMock couchbaseMock) {
 			super(properties);
+			this.couchbaseMock = couchbaseMock;
 		}
+
+		@Override
+		protected List<String> determineBootstrapHosts() {
+			return Collections.singletonList(this.couchbaseMock.getHttpHost());
+		}
+
+		@Override
+		protected DefaultCouchbaseEnvironment.Builder initializeEnvironmentBuilder(
+				CouchbaseProperties properties) {
+			DefaultCouchbaseEnvironment.Builder builder = super.initializeEnvironmentBuilder(properties);
+
+			int httpPort = this.couchbaseMock.getHttpPort();
+			int bootstrapCarrierDirectPort = this.couchbaseMock.getBuckets().get(
+					properties.getBucket().getName()).getServers()[0].getPort();
+			return builder.bootstrapHttpDirectPort(httpPort)
+					.bootstrapCarrierDirectPort(bootstrapCarrierDirectPort);
+		}
+
 	}
+
 }

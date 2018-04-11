@@ -37,6 +37,11 @@
 			<optional>true</optional>
 		</dependency>
 		<dependency>
+			<groupId>com.couchbase.mock</groupId>
+			<artifactId>CouchbaseMock</artifactId>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
 			<optional>true</optional>
@@ -99,11 +104,6 @@
 		<dependency>
 			<groupId>de.flapdoodle.embed</groupId>
 			<artifactId>de.flapdoodle.embed.mongo</artifactId>
-			<optional>true</optional>
-		</dependency>
-		<dependency>
-			<groupId>com.couchbase.mock</groupId>
-			<artifactId>CouchbaseMock</artifactId>
 			<optional>true</optional>
 		</dependency>
 		<dependency>

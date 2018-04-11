@@ -28,7 +28,6 @@ import org.junit.Test;
 
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
-import org.springframework.boot.autoconfigure.couchbase.CouchbaseAutoConfiguration.CouchbaseConfiguration;
 import org.springframework.boot.autoconfigure.data.couchbase.CouchbaseDataAutoConfiguration;
 import org.springframework.boot.test.context.assertj.AssertableApplicationContext;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
@@ -190,9 +189,7 @@ public class CouchbaseAutoConfigurationTests {
 
 	@Test
 	public void customizeEnvWithCustomCouchbaseConfiguration() {
-		this.contextRunner.withUserConfiguration(CustomCouchbaseConfiguration.class)
-				.withPropertyValues("spring.couchbase.bootstrap-hosts=localhost",
-						"spring.couchbase.env.timeouts.connect=100")
+		this.contextRunner.withUserConfiguration(MockCouchbaseConfiguration.class)
 				.run((context) -> {
 					assertThat(context).hasSingleBean(CouchbaseConfiguration.class);
 					DefaultCouchbaseEnvironment env = context
@@ -204,10 +201,10 @@ public class CouchbaseAutoConfigurationTests {
 
 	@Configuration
 	@Import(CouchbaseDataAutoConfiguration.class)
-	static class CustomCouchbaseConfiguration extends CouchbaseConfiguration {
+	static class MockCouchbaseConfiguration extends CouchbaseConfiguration {
 
-		CustomCouchbaseConfiguration(CouchbaseProperties properties) {
-			super(properties);
+		MockCouchbaseConfiguration() {
+			super(new CouchbaseProperties());
 		}
 
 		@Override

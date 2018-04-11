@@ -580,6 +580,11 @@
 				<version>${couchbase-cache-client.version}</version>
 			</dependency>
 			<dependency>
+				<groupId>com.couchbase.mock</groupId>
+				<artifactId>CouchbaseMock</artifactId>
+				<version>${couchbase-mock.version}</version>
+			</dependency>
+			<dependency>
 				<groupId>com.datastax.cassandra</groupId>
 				<artifactId>cassandra-driver-core</artifactId>
 				<version>${cassandra-driver.version}</version>
@@ -746,11 +751,6 @@
 				<groupId>de.flapdoodle.embed</groupId>
 				<artifactId>de.flapdoodle.embed.mongo</artifactId>
 				<version>${embedded-mongo.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.couchbase.mock</groupId>
-				<artifactId>CouchbaseMock</artifactId>
-				<version>${couchbase-mock.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>dom4j</groupId>
