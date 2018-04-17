@@ -56,7 +56,6 @@ import static org.mockito.Mockito.mock;
  * @author Artem Bilan
  * @author Stephane Nicoll
  * @author Vedran Pavic
- * @author Tim Ysewyn
  */
 public class IntegrationAutoConfigurationTests {
 
@@ -70,7 +69,6 @@ public class IntegrationAutoConfigurationTests {
 	@Test
 	public void integrationIsAvailable() {
 		this.contextRunner.run((context) -> {
-			assertThat(context).hasSingleBean(IntegrationGraphServer.class);
 			assertThat(context).hasSingleBean(TestGateway.class);
 			assertThat(context)
 					.hasSingleBean(IntegrationComponentScanAutoConfiguration.class);
