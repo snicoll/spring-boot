@@ -31,6 +31,60 @@ import org.springframework.core.env.Environment;
  * according to the endpoints specific {@link Environment} property, falling back to
  * {@code management.endpoints.enabled-by-default} or failing that
  * {@link Endpoint#enableByDefault()}.
+ * <p>
+ * When placed on a {@code @Bean} method, the endpoint defaults to the return type of the
+ * factory method:
+ *
+ * <pre class="code">
+ * &#064;Configuration
+ * public class MyConfiguration {
+ *
+ *     &#064;ConditionalOnEnableEndpoint
+ *     &#064;Bean
+ *     public MyEndpoint myEndpoint() {
+ *         ...
+ *     }
+ *
+ * }</pre>
+ * <p>
+ * It is also possible to use the same mechanism for extensions:
+ *
+ * <pre class="code">
+ * &#064;Configuration
+ * public class MyConfiguration {
+ *
+ *     &#064;ConditionalOnEnableEndpoint
+ *     &#064;Bean
+ *     public MyEndpointWebExtension myEndpointWebExtension() {
+ *         ...
+ *     }
+ *
+ * }</pre>
+ * <p>
+ * In the sample above, {@code MyEndpointWebExtension} will be created if the endpoint is
+ * enabled as defined by the rules above. {@code MyEndpointWebExtension} must be a regular
+ * extension that refers to an endpoint, something like:
+ *
+ * <pre class="code">
+ * &#064;EndpointWebExtension(endpoint = MyEndpoint.class)
+ * class MyEndpointWebExtension {
+ *
+ * }</pre>
+ * <p>
+ * Alternatively, the target endpoint can be manually specified for components that should
+ * only be created when a given endpoint is enabled:
+ *
+ * <pre class="code">
+ * &#064;Configuration
+ * public class MyConfiguration {
+ *
+ *     &#064;ConditionalOnEnableEndpoint(endpoint = MyEndpoint.class)
+ *     &#064;Bean
+ *     public MyComponent myComponent() {
+ *         ...
+ *     }
+ *
+ * }</pre>
  *
  * @author Stephane Nicoll
  * @since 2.0.0
@@ -41,5 +95,13 @@ import org.springframework.core.env.Environment;
 @Documented
 @Conditional(OnEnabledEndpointCondition.class)
 public @interface ConditionalOnEnabledEndpoint {
+
+	/**
+	 * The endpoint type that should be checked. Inferred when the condition is placed
+	 * on {@code @Bean} methods.
+	 * @return the endpoint type to check
+	 * @since 2.1.0
+	 */
+	Class<?> endpoint() default Endpoint.class;
 
 }
