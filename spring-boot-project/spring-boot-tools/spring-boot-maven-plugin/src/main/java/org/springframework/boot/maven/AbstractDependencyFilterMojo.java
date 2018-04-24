@@ -66,17 +66,10 @@ public abstract class AbstractDependencyFilterMojo extends AbstractMojo {
 
 	/**
 	 * Comma separated list of groupId names to include (exact match).
-	 *
+	 * @since 2.1
 	 */
 	@Parameter(property = "spring-boot.includeGroupIds", defaultValue = "")
 	private String includeGroupIds;
-
-
-
-	protected void setIncludeGroupIds(String includeGroupIds) {
-		this.includeGroupIds = includeGroupIds;
-	}
-
 
 	protected void setExcludes(List<Exclude> excludes) {
 		this.excludes = excludes;
@@ -88,6 +81,10 @@ public abstract class AbstractDependencyFilterMojo extends AbstractMojo {
 
 	protected void setExcludeGroupIds(String excludeGroupIds) {
 		this.excludeGroupIds = excludeGroupIds;
+	}
+
+	protected void setIncludeGroupIds(String includeGroupIds) {
+		this.includeGroupIds = includeGroupIds;
 	}
 
 	protected Set<Artifact> filterDependencies(Set<Artifact> dependencies,
@@ -112,8 +109,9 @@ public abstract class AbstractDependencyFilterMojo extends AbstractMojo {
 		for (ArtifactsFilter additionalFilter : additionalFilters) {
 			filters.addFilter(additionalFilter);
 		}
-		filters.addFilter(
-				new MatchingGroupIdFilter(cleanFilterConfig(this.includeGroupIds), cleanFilterConfig(this.excludeGroupIds)));
+		filters.addFilter(new MatchingGroupIdFilter(
+				cleanFilterConfig(this.includeGroupIds),
+				cleanFilterConfig(this.excludeGroupIds)));
 
 		if (this.includes != null && !this.includes.isEmpty()) {
 			filters.addFilter(new IncludeFilter(this.includes));

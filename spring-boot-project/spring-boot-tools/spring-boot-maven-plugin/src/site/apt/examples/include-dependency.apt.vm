@@ -6,14 +6,11 @@
  2018-04-17
  -----
 
-  By default, both the <<<repackage>>> and the <<<run>>> goals will include any <<<provided>>>
-  dependencies that are defined in the project. A Spring Boot project should consider <<<provided>>>
-  dependencies as <<container>> dependencies that are required to run the application.
+  If some dependencies of an application are managed separately (for instance when the app
+  is running in a container or with a custom loader), you may want to only list the
+  dependencies that should be included.
 
-  In some cases, you don't need all those dependencies, hence you can use <<include>> or <<includeGroupIds>>
-  for including only particular dependencies.
-
-   There are two ways to include a dependency on being packaged/used at runtime
+  There are two ways to include the dependency on being packaged/used at runtime:
 
     * Include a specific artifact identified by <<<groupId>>> and <<<artifactId>>>
       (optionally with a <<<classifier>>> if needed)
@@ -53,7 +50,8 @@
 </project>
 ---
 
-  This example includes any artifact belonging to the <<<com.foo>>> and  <<<com.bar>>> groups
+  This example includes any artifact belonging to the <<<com.foo>>> and <<<com.bar>>>
+  groups:
 
 ---
 <project>
@@ -67,7 +65,7 @@
         <artifactId>${project.artifactId}</artifactId>
         <version>${project.version}</version>
         <configuration>
-          <includeGroupIds>com.foo, com.bar</includeGroupIds>
+          <includeGroupIds>com.foo,com.bar</includeGroupIds>
         </configuration>
         ...
       </plugin>
