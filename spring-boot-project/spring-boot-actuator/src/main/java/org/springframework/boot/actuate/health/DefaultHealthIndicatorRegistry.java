@@ -18,6 +18,7 @@ package org.springframework.boot.actuate.health;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.springframework.util.Assert;
@@ -26,11 +27,49 @@ import org.springframework.util.Assert;
  * Default implementation of {@link HealthIndicatorRegistry}.
  *
  * @author Vedran Pavic
+ * @author Stephane Nicoll
  * @since 2.1.0
  */
 public class DefaultHealthIndicatorRegistry implements HealthIndicatorRegistry {
 
-	private final Map<String, HealthIndicator> healthIndicators = new HashMap<>();
+	private final HealthAggregator healthAggregator;
+
+	private final Map<String, HealthIndicator> healthIndicators;
+
+	/**
+	 * Create a new {@link DefaultHealthIndicatorRegistry}.
+	 * @param healthAggregator the health aggregator
+	 */
+	public DefaultHealthIndicatorRegistry(HealthAggregator healthAggregator) {
+		this(healthAggregator, new LinkedHashMap<>());
+	}
+
+	/**
+	 * Create a new {@link DefaultHealthIndicatorRegistry} from the specified indicators.
+	 * @param healthAggregator the health aggregator
+	 * @param healthIndicators a map of {@link HealthIndicator}s with the key being used
+	 * as an indicator name.
+	 */
+	public DefaultHealthIndicatorRegistry(HealthAggregator healthAggregator,
+			Map<String, HealthIndicator> healthIndicators) {
+		Assert.notNull(healthAggregator, "HealthAggregator must not be null");
+		Assert.notNull(healthIndicators, "HealthIndicators must not be null");
+		this.healthAggregator = healthAggregator;
+		this.healthIndicators = new LinkedHashMap<>(healthIndicators);
+	}
+
+	@Override
+	public Health health() {
+		Map<String, HealthIndicator> currentIndicators;
+		synchronized (this.healthIndicators) {
+			currentIndicators = new LinkedHashMap<>(this.healthIndicators);
+		}
+		Map<String, Health> healths = new LinkedHashMap<>();
+		for (Map.Entry<String, HealthIndicator> entry : currentIndicators.entrySet()) {
+			healths.put(entry.getKey(), entry.getValue().health());
+		}
+		return this.healthAggregator.aggregate(healths);
+	}
 
 	@Override
 	public void register(String name, HealthIndicator healthIndicator) {

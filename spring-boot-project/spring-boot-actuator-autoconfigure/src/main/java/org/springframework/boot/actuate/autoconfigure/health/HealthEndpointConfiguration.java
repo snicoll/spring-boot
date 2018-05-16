@@ -16,13 +16,11 @@
 
 package org.springframework.boot.actuate.autoconfigure.health;
 
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnEnabledEndpoint;
-import org.springframework.boot.actuate.health.HealthAggregator;
 import org.springframework.boot.actuate.health.HealthEndpoint;
 import org.springframework.boot.actuate.health.HealthIndicatorRegistry;
-import org.springframework.boot.actuate.health.OrderedHealthAggregator;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnSingleCandidate;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -30,27 +28,16 @@ import org.springframework.context.annotation.Configuration;
  * Configuration for {@link HealthEndpoint}.
  *
  * @author Stephane Nicoll
- * @author Vedran Pavic
  */
 @Configuration
+@ConditionalOnSingleCandidate(HealthIndicatorRegistry.class)
 class HealthEndpointConfiguration {
-
-	private final HealthAggregator healthAggregator;
-
-	private final HealthIndicatorRegistry healthIndicatorRegistry;
-
-	HealthEndpointConfiguration(ObjectProvider<HealthAggregator> healthAggregator,
-			ObjectProvider<HealthIndicatorRegistry> healthIndicatorRegistry) {
-		this.healthAggregator = healthAggregator
-				.getIfAvailable(OrderedHealthAggregator::new);
-		this.healthIndicatorRegistry = healthIndicatorRegistry.getObject();
-	}
 
 	@Bean
 	@ConditionalOnMissingBean
 	@ConditionalOnEnabledEndpoint
-	public HealthEndpoint healthEndpoint() {
-		return new HealthEndpoint(this.healthAggregator, this.healthIndicatorRegistry);
+	public HealthEndpoint healthEndpoint(HealthIndicatorRegistry registry) {
+		return new HealthEndpoint(registry);
 	}
 
 }

@@ -29,8 +29,9 @@ import static org.mockito.Mockito.mock;
  * Tests for {@link DefaultHealthIndicatorRegistry}.
  *
  * @author Vedran Pavic
+ * @author Stephane Nicoll
  */
-public class DefaultHealthIndicatorRegistryTest {
+public class DefaultHealthIndicatorRegistryTests {
 
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();
@@ -39,14 +40,17 @@ public class DefaultHealthIndicatorRegistryTest {
 
 	private HealthIndicator two = mock(HealthIndicator.class);
 
+	private final HealthAggregator healthAggregator = new OrderedHealthAggregator();
+
 	private DefaultHealthIndicatorRegistry registry;
 
 	@Before
 	public void setUp() {
-		given(this.one.health()).willReturn(new Health.Builder().up().build());
-		given(this.two.health()).willReturn(new Health.Builder().unknown().build());
-
-		this.registry = new DefaultHealthIndicatorRegistry();
+		given(this.one.health())
+				.willReturn(new Health.Builder().unknown().withDetail("1", "1").build());
+		given(this.two.health())
+				.willReturn(new Health.Builder().unknown().withDetail("2", "2").build());
+		this.registry = new DefaultHealthIndicatorRegistry(this.healthAggregator);
 	}
 
 	@Test
@@ -60,9 +64,9 @@ public class DefaultHealthIndicatorRegistryTest {
 
 	@Test
 	public void registerAlreadyUsedName() {
+		this.registry.register("one", this.one);
 		this.thrown.expect(IllegalStateException.class);
 		this.thrown.expectMessage("HealthIndicator with name 'one' already registered");
-		this.registry.register("one", this.one);
 		this.registry.register("one", this.two);
 	}
 
@@ -77,12 +81,42 @@ public class DefaultHealthIndicatorRegistryTest {
 	}
 
 	@Test
-	public void unregisterNotKnown() {
+	public void unregisterUnknown() {
 		this.registry.register("one", this.one);
 		assertThat(this.registry.getAll()).hasSize(1);
 		HealthIndicator two = this.registry.unregister("two");
 		assertThat(two).isNull();
 		assertThat(this.registry.getAll()).hasSize(1);
+	}
+
+	@Test
+	public void healthWithIndicators() {
+		this.registry.register("one", this.one);
+		this.registry.register("two", this.two);
+		Health result = this.registry.health();
+		assertThat(result.getDetails()).hasSize(2);
+		assertThat(result.getDetails()).containsEntry("one",
+				new Health.Builder().unknown().withDetail("1", "1").build());
+		assertThat(result.getDetails()).containsEntry("two",
+				new Health.Builder().unknown().withDetail("2", "2").build());
+	}
+
+	@Test
+	public void healthWithNoIndicator() {
+		Health result = this.registry.health();
+		assertThat(result.getDetails()).isEmpty();
+	}
+
+	@Test
+	public void healthWithRemovedIndicator() {
+		this.registry.register("one", this.one);
+		this.registry.register("two", this.two);
+		HealthIndicator one = this.registry.unregister("one");
+		assertThat(one).isEqualTo(this.one);
+		Health result = this.registry.health();
+		assertThat(result.getDetails()).hasSize(1);
+		assertThat(result.getDetails()).containsEntry("two",
+				new Health.Builder().unknown().withDetail("2", "2").build());
 	}
 
 }

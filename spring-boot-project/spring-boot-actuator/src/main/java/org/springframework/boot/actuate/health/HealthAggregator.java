@@ -19,8 +19,7 @@ package org.springframework.boot.actuate.health;
 import java.util.Map;
 
 /**
- * Strategy interface used by {@link CompositeHealthIndicator} to aggregate {@link Health}
- * instances into a final one.
+ * Strategy interface used to aggregate {@link Health} instances into a final one.
  * <p>
  * This is especially useful to combine subsystem states expressed through
  * {@link Health#getStatus()} into one state for the entire system. The default

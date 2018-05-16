@@ -23,10 +23,9 @@ import javax.sql.DataSource;
 
 import org.junit.Test;
 
-import org.springframework.boot.actuate.health.DefaultHealthIndicatorRegistry;
+import org.springframework.boot.actuate.health.CompositeHealthIndicator;
 import org.springframework.boot.actuate.health.HealthEndpoint;
 import org.springframework.boot.actuate.health.HealthIndicator;
-import org.springframework.boot.actuate.health.HealthIndicatorRegistry;
 import org.springframework.boot.actuate.health.OrderedHealthAggregator;
 import org.springframework.boot.actuate.jdbc.DataSourceHealthIndicator;
 import org.springframework.boot.actuate.system.DiskSpaceHealthIndicator;
@@ -73,9 +72,8 @@ public class HealthEndpointDocumentationTests extends MockMvcEndpointDocumentati
 
 		@Bean
 		public HealthEndpoint endpoint(Map<String, HealthIndicator> healthIndicators) {
-			HealthIndicatorRegistry registry = new DefaultHealthIndicatorRegistry();
-			healthIndicators.forEach(registry::register);
-			return new HealthEndpoint(new OrderedHealthAggregator(), registry);
+			return new HealthEndpoint(new CompositeHealthIndicator(
+					new OrderedHealthAggregator(), healthIndicators));
 		}
 
 		@Bean

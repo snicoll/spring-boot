@@ -19,15 +19,22 @@ package org.springframework.boot.actuate.health;
 import java.util.Map;
 
 /**
- * A registry of {@link HealthIndicator}s.
+ * A registry of {@link HealthIndicator}s that provides an aggregated {@link Health}.
  * <p>
  * Implementations <strong>must</strong> be thread-safe.
  *
  * @author Andy Wilkinson
  * @author Vedran Pavic
+ * @author Stephane Nicoll
  * @since 2.1.0
  */
 public interface HealthIndicatorRegistry {
+
+	/**
+	 * Return an indication of health of the current indicators managed by this registry.
+	 * @return the aggregated health of the current indicators managed by this registry
+	 */
+	Health health();
 
 	/**
 	 * Registers the given {@code healthIndicator}, associating it with the given

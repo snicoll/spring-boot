@@ -16,10 +16,7 @@
 
 package org.springframework.boot.actuate.health;
 
-import java.util.LinkedHashMap;
 import java.util.Map;
-
-import org.springframework.util.Assert;
 
 /**
  * {@link HealthIndicator} that returns health indications from all registered delegates.
@@ -29,18 +26,15 @@ import org.springframework.util.Assert;
  * @author Christian Dupuis
  * @since 1.1.0
  */
-public class CompositeHealthIndicator implements HealthIndicator {
-
-	private final Map<String, HealthIndicator> indicators;
-
-	private final HealthAggregator healthAggregator;
+public class CompositeHealthIndicator
+		extends DefaultHealthIndicatorRegistry implements HealthIndicator {
 
 	/**
 	 * Create a new {@link CompositeHealthIndicator}.
 	 * @param healthAggregator the health aggregator
 	 */
 	public CompositeHealthIndicator(HealthAggregator healthAggregator) {
-		this(healthAggregator, new LinkedHashMap<>());
+		super(healthAggregator);
 	}
 
 	/**
@@ -51,23 +45,21 @@ public class CompositeHealthIndicator implements HealthIndicator {
 	 */
 	public CompositeHealthIndicator(HealthAggregator healthAggregator,
 			Map<String, HealthIndicator> indicators) {
-		Assert.notNull(healthAggregator, "HealthAggregator must not be null");
-		Assert.notNull(indicators, "Indicators must not be null");
-		this.indicators = new LinkedHashMap<>(indicators);
-		this.healthAggregator = healthAggregator;
+		super(healthAggregator, indicators);
 	}
 
+	/**
+	 * Registers the given {@code healthIndicator}, associating it with the given
+	 * {@code name}.
+	 * @param name the name of the indicator
+	 * @param indicator the indicator
+	 * @throws IllegalStateException if an indicator with the given {@code name} is
+	 * already registered.
+	 * @deprecated as of 2.1.0 in favour of {@link #register(String, HealthIndicator)}
+	 */
+	@Deprecated
 	public void addHealthIndicator(String name, HealthIndicator indicator) {
-		this.indicators.put(name, indicator);
-	}
-
-	@Override
-	public Health health() {
-		Map<String, Health> healths = new LinkedHashMap<>();
-		for (Map.Entry<String, HealthIndicator> entry : this.indicators.entrySet()) {
-			healths.put(entry.getKey(), entry.getValue().health());
-		}
-		return this.healthAggregator.aggregate(healths);
+		register(name, indicator);
 	}
 
 }

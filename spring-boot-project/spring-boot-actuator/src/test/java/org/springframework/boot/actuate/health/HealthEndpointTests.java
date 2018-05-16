@@ -30,7 +30,6 @@ import static org.assertj.core.api.Assertions.entry;
  * @author Phillip Webb
  * @author Christian Dupuis
  * @author Andy Wilkinson
- * @author Vedran Pavic
  */
 public class HealthEndpointTests {
 
@@ -41,7 +40,7 @@ public class HealthEndpointTests {
 				.withDetail("first", "1").build());
 		healthIndicators.put("upAgain", () -> new Health.Builder().status(Status.UP)
 				.withDetail("second", "2").build());
-		HealthEndpoint endpoint = new HealthEndpoint(new OrderedHealthAggregator(),
+		HealthEndpoint endpoint = new HealthEndpoint(
 				createHealthIndicatorRegistry(healthIndicators));
 		Health health = endpoint.health();
 		assertThat(health.getStatus()).isEqualTo(Status.UP);
@@ -54,7 +53,8 @@ public class HealthEndpointTests {
 
 	private HealthIndicatorRegistry createHealthIndicatorRegistry(
 			Map<String, HealthIndicator> healthIndicators) {
-		HealthIndicatorRegistry registry = new DefaultHealthIndicatorRegistry();
+		HealthIndicatorRegistry registry = new DefaultHealthIndicatorRegistry(
+				new OrderedHealthAggregator());
 		healthIndicators.forEach(registry::register);
 		return registry;
 	}
