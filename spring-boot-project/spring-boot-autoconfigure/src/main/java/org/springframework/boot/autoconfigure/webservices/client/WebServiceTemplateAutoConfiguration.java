@@ -59,7 +59,7 @@ public class WebServiceTemplateAutoConfiguration {
 		if (!CollectionUtils.isEmpty(customizers)) {
 			customizers = new ArrayList<>(customizers);
 			AnnotationAwareOrderComparator.sort(customizers);
-			builder = builder.setCustomizers(customizers);
+			builder = builder.customizers(customizers);
 		}
 		return builder;
 	}
