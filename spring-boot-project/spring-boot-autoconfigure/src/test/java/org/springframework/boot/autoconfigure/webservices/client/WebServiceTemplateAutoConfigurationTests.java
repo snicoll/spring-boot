@@ -120,7 +120,7 @@ public class WebServiceTemplateAutoConfigurationTests {
 		}
 
 		private void breakBuilderOnNextCall(WebServiceTemplateBuilder builder) {
-			builder.addCustomizers((webServiceTemplate) -> {
+			builder.additionalCustomizers((webServiceTemplate) -> {
 				throw new IllegalStateException();
 			});
 		}

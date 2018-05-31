@@ -42,7 +42,7 @@ public class WebServiceTemplateBuilderHttpComponentsClientHttpRequestFactoryTest
 				new BufferingClientHttpRequestFactory(factory));
 
 		this.builder.setConnectionTimeout(5000).setReadTimeout(2000)
-				.setWebServiceMessageSender(() -> sender).build();
+				.messageSenders(sender).build();
 
 		RequestConfig requestConfig = (RequestConfig) ReflectionTestUtils
 				.getField(factory, "requestConfig");

@@ -41,7 +41,7 @@ public class WebServiceTemplateBuilderSimpleClientHttpRequestFactoryTests {
 				new BufferingClientHttpRequestFactory(factory));
 
 		this.builder.setConnectionTimeout(5000).setReadTimeout(2000)
-				.setWebServiceMessageSender(() -> sender).build();
+				.messageSenders(sender).build();
 
 		assertThat(ReflectionTestUtils.getField(factory, "connectTimeout"))
 				.isEqualTo(5000);

@@ -58,7 +58,7 @@ public class WebServiceTemplateBuilderHttpUrlConnectionMessageSenderTests {
 		HttpUrlConnectionMessageSender sender = new HttpUrlConnectionMessageSender();
 
 		this.builder.setConnectionTimeout(5000).setReadTimeout(2000)
-				.setWebServiceMessageSender(() -> sender).build();
+				.messageSenders(sender).build();
 
 		assertThat(ReflectionTestUtils.getField(sender, "connectionTimeout"))
 				.isEqualTo(Duration.ofMillis(5000));

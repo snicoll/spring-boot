@@ -67,7 +67,7 @@ public class WebServiceTemplateBuilderOkHttp3ClientHttpRequestFactoryTests {
 				new BufferingClientHttpRequestFactory(factory));
 
 		this.builder.setConnectionTimeout(5000).setReadTimeout(2000)
-				.setWebServiceMessageSender(() -> sender).build();
+				.messageSenders(sender).build();
 
 		OkHttpClient client = (OkHttpClient) ReflectionTestUtils.getField(factory,
 				"client");

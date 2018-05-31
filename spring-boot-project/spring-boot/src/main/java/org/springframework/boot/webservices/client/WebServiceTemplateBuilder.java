@@ -56,16 +56,20 @@ import org.springframework.ws.transport.http.HttpComponentsMessageSender;
 import org.springframework.ws.transport.http.HttpUrlConnectionMessageSender;
 
 /**
- * Builder that can be used to configure and create a
- * {@link org.springframework.ws.client.core.WebServiceTemplate}. By default the built
- * {@link org.springframework.ws.client.core.WebServiceTemplate} will attempt to use the
- * most suitable {@link org.springframework.ws.transport.WebServiceMessageSender}, call
- * {@link #detectWebServiceMessageSender(boolean) detectWebServiceMessageSender(false)} if
- * you prefer to keep the default. In a typical auto-configured Spring Boot application
- * this builder is available as a bean and can be injected whenever a
- * {@link WebServiceTemplate} is needed.
+ * Builder that can be used to configure and create a {@link WebServiceTemplate}. Provides
+ * convenience methods to register {@link #messageSenders(WebServiceMessageSender...)
+ * message senders}, {@link #interceptors(ClientInterceptor...) client interceptors} and
+ * {@link #customizers(Collection) customizers}.
+ * <p>
+ * By default the built {@link WebServiceTemplate} will attempt to use the most suitable
+ * {@link WebServiceMessageSender}, call {@link #detectWebServiceMessageSender(boolean)
+ * detectWebServiceMessageSender(false)} if you prefer to keep the default. In a typical
+ * auto-configured Spring Boot application this builder is available as a bean and can be
+ * injected whenever a {@link WebServiceTemplate} is needed.
  *
  * @author Dmytro Nosan
+ * @author Stephane Nicoll
+ * @since 2.1.0
  */
 public class WebServiceTemplateBuilder {
 
@@ -86,7 +90,7 @@ public class WebServiceTemplateBuilder {
 
 	private final Set<WebServiceTemplateCustomizer> customizers;
 
-	private final Set<Supplier<? extends WebServiceMessageSender>> webServiceMessageSenderSuppliers;
+	private final Set<WebServiceMessageSender> webServiceMessageSenders;
 
 	private final Set<WebServiceMessageSenderCustomizer> webServiceMessageSenderCustomizers;
 
@@ -112,7 +116,7 @@ public class WebServiceTemplateBuilder {
 	private WebServiceTemplateBuilder(Set<ClientInterceptor> interceptors,
 			Set<WebServiceTemplateCustomizer> internalCustomizers,
 			Set<WebServiceTemplateCustomizer> customizers,
-			Set<Supplier<? extends WebServiceMessageSender>> webServiceMessageSenderSuppliers,
+			Set<WebServiceMessageSender> webServiceMessageSenders,
 			Set<WebServiceMessageSenderCustomizer> webServiceMessageSenderCustomizers,
 			Marshaller marshaller, Unmarshaller unmarshaller,
 			DestinationProvider destinationProvider,
@@ -122,7 +126,7 @@ public class WebServiceTemplateBuilder {
 		this.interceptors = interceptors;
 		this.internalCustomizers = internalCustomizers;
 		this.customizers = customizers;
-		this.webServiceMessageSenderSuppliers = webServiceMessageSenderSuppliers;
+		this.webServiceMessageSenders = webServiceMessageSenders;
 		this.webServiceMessageSenderCustomizers = webServiceMessageSenderCustomizers;
 		this.marshaller = marshaller;
 		this.unmarshaller = unmarshaller;
@@ -133,37 +137,32 @@ public class WebServiceTemplateBuilder {
 	}
 
 	/**
-	 * Set {@link ClientInterceptor ClientInterceptors} that should be used with the
-	 * {@link WebServiceTemplate}. Interceptors are applied in the order that they were
-	 * added after builder configuration has been applied.
-	 *
-	 * <b>Note!</b> Override existing interceptors
+	 * Set the {@link ClientInterceptor ClientInterceptors} that should be used with the
+	 * {@link WebServiceTemplate}. Setting this value will replace any previously defined
+	 * interceptors.
 	 * @param interceptors the interceptors to set
 	 * @return a new builder instance
-	 * @see WebServiceTemplate#setInterceptors(ClientInterceptor[])
+	 * @see #additionalInterceptors(ClientInterceptor...)
 	 */
-	public WebServiceTemplateBuilder setInterceptors(ClientInterceptor... interceptors) {
-		Assert.notNull(interceptors, "interceptors must not be null");
-		return setInterceptors(Arrays.asList(interceptors));
+	public WebServiceTemplateBuilder interceptors(ClientInterceptor... interceptors) {
+		Assert.notNull(interceptors, "Interceptors must not be null");
+		return interceptors(Arrays.asList(interceptors));
 	}
 
 	/**
-	 * Set {@link ClientInterceptor ClientInterceptors} that should be used with the
-	 * {@link WebServiceTemplate}. Interceptors are applied in the order that they were
-	 * added after builder configuration has been applied.
-	 *
-	 * <b>Note!</b> Override existing interceptors
+	 * Set the {@link ClientInterceptor ClientInterceptors} that should be used with the
+	 * {@link WebServiceTemplate}. Setting this value will replace any previously defined
+	 * interceptors.
 	 * @param interceptors the interceptors to set
 	 * @return a new builder instance
-	 * @see WebServiceTemplate#setInterceptors(ClientInterceptor[])
+	 * @see #additionalInterceptors(Collection)
 	 */
-	public WebServiceTemplateBuilder setInterceptors(
+	public WebServiceTemplateBuilder interceptors(
 			Collection<? extends ClientInterceptor> interceptors) {
-		Assert.notNull(interceptors, "interceptors must not be null");
+		Assert.notNull(interceptors, "Interceptors must not be null");
 		return new WebServiceTemplateBuilder(
 				append(Collections.<ClientInterceptor>emptySet(), interceptors),
-				this.internalCustomizers, this.customizers,
-				this.webServiceMessageSenderSuppliers,
+				this.internalCustomizers, this.customizers, this.webServiceMessageSenders,
 				this.webServiceMessageSenderCustomizers, this.marshaller,
 				this.unmarshaller, this.destinationProvider, this.transformerFactoryClass,
 				this.messageFactory, this.detectWebServiceMessageSender);
@@ -171,31 +170,29 @@ public class WebServiceTemplateBuilder {
 
 	/**
 	 * Add additional {@link ClientInterceptor ClientInterceptors} that should be used
-	 * with the {@link WebServiceTemplate}. Interceptors are applied in the order that
-	 * they were added after builder configuration has been applied.
+	 * with the {@link WebServiceTemplate}.
 	 * @param interceptors the interceptors to add
 	 * @return a new builder instance
-	 * @see WebServiceTemplate#setInterceptors(ClientInterceptor[])
+	 * @see #interceptors(ClientInterceptor...)
 	 */
-	public WebServiceTemplateBuilder addInterceptors(ClientInterceptor... interceptors) {
-		Assert.notNull(interceptors, "interceptors must not be null");
-		return addInterceptors(Arrays.asList(interceptors));
+	public WebServiceTemplateBuilder additionalInterceptors(
+			ClientInterceptor... interceptors) {
+		Assert.notNull(interceptors, "Interceptors must not be null");
+		return additionalInterceptors(Arrays.asList(interceptors));
 	}
 
 	/**
 	 * Add additional {@link ClientInterceptor ClientInterceptors} that should be used
-	 * with the {@link WebServiceTemplate}. Interceptors are applied in the order that
-	 * they were added after builder configuration has been applied.
+	 * with the {@link WebServiceTemplate}.
 	 * @param interceptors the interceptors to add
 	 * @return a new builder instance
-	 * @see WebServiceTemplate#setInterceptors(ClientInterceptor[])
+	 * @see #interceptors(Collection)
 	 */
-	public WebServiceTemplateBuilder addInterceptors(
+	public WebServiceTemplateBuilder additionalInterceptors(
 			Collection<? extends ClientInterceptor> interceptors) {
-		Assert.notNull(interceptors, "interceptors must not be null");
+		Assert.notNull(interceptors, "Interceptors must not be null");
 		return new WebServiceTemplateBuilder(append(this.interceptors, interceptors),
-				this.internalCustomizers, this.customizers,
-				this.webServiceMessageSenderSuppliers,
+				this.internalCustomizers, this.customizers, this.webServiceMessageSenders,
 				this.webServiceMessageSenderCustomizers, this.marshaller,
 				this.unmarshaller, this.destinationProvider, this.transformerFactoryClass,
 				this.messageFactory, this.detectWebServiceMessageSender);
@@ -204,37 +201,36 @@ public class WebServiceTemplateBuilder {
 	/**
 	 * Set {@link WebServiceTemplateCustomizer WebServiceTemplateCustomizers} that should
 	 * be applied to the {@link WebServiceTemplate}. Customizers are applied in the order
-	 * that they were added after builder configuration has been applied.
-	 *
-	 * <b>Note!</b> Override existing customizers
+	 * that they were added after builder configuration has been applied. Setting this
+	 * value will replace any previously configured customizers.
 	 * @param customizers the customizers to set
 	 * @return a new builder instance
+	 * @see #additionalCustomizers(WebServiceTemplateCustomizer...)
 	 */
+	public WebServiceTemplateBuilder customizers(
+			WebServiceTemplateCustomizer... customizers) {
+		Assert.notNull(customizers, "Customizers must not be null");
+		return customizers(Arrays.asList(customizers));
+	}
 
-	public WebServiceTemplateBuilder setCustomizers(
+	/**
+	 * Set {@link WebServiceTemplateCustomizer WebServiceTemplateCustomizers} that should
+	 * be applied to the {@link WebServiceTemplate}. Customizers are applied in the order
+	 * that they were added after builder configuration has been applied. Setting this
+	 * value will replace any previously configured customizers.
+	 * @param customizers the customizers to set
+	 * @return a new builder instance
+	 * @see #additionalCustomizers(Collection)
+	 */
+	public WebServiceTemplateBuilder customizers(
 			Collection<? extends WebServiceTemplateCustomizer> customizers) {
-		Assert.notNull(customizers, "customizers must not be null");
+		Assert.notNull(customizers, "Customizers must not be null");
 		return new WebServiceTemplateBuilder(this.interceptors, this.internalCustomizers,
 				append(Collections.<WebServiceTemplateCustomizer>emptySet(), customizers),
-				this.webServiceMessageSenderSuppliers,
-				this.webServiceMessageSenderCustomizers, this.marshaller,
-				this.unmarshaller, this.destinationProvider, this.transformerFactoryClass,
-				this.messageFactory, this.detectWebServiceMessageSender);
-	}
-
-	/**
-	 * Set {@link WebServiceTemplateCustomizer WebServiceTemplateCustomizers} that should
-	 * be applied to the {@link WebServiceTemplate}. Customizers are applied in the order
-	 * that they were added after builder configuration has been applied.
-	 *
-	 * <b>Note!</b> Override existing customizers
-	 * @param customizers the customizers to set
-	 * @return a new builder instance
-	 */
-	public WebServiceTemplateBuilder setCustomizers(
-			WebServiceTemplateCustomizer... customizers) {
-		Assert.notNull(customizers, "customizers must not be null");
-		return setCustomizers(Arrays.asList(customizers));
+				this.webServiceMessageSenders, this.webServiceMessageSenderCustomizers,
+				this.marshaller, this.unmarshaller, this.destinationProvider,
+				this.transformerFactoryClass, this.messageFactory,
+				this.detectWebServiceMessageSender);
 	}
 
 	/**
@@ -243,11 +239,12 @@ public class WebServiceTemplateBuilder {
 	 * in the order that they were added after builder configuration has been applied.
 	 * @param customizers the customizers to add
 	 * @return a new builder instance
+	 * @see #customizers(WebServiceTemplateCustomizer...)
 	 */
-	public WebServiceTemplateBuilder addCustomizers(
+	public WebServiceTemplateBuilder additionalCustomizers(
 			WebServiceTemplateCustomizer... customizers) {
-		Assert.notNull(customizers, "customizers must not be null");
-		return addCustomizers(Arrays.asList(customizers));
+		Assert.notNull(customizers, "Customizers must not be null");
+		return additionalCustomizers(Arrays.asList(customizers));
 	}
 
 	/**
@@ -256,58 +253,77 @@ public class WebServiceTemplateBuilder {
 	 * in the order that they were added after builder configuration has been applied.
 	 * @param customizers the customizers to add
 	 * @return a new builder instance
+	 * @see #customizers(Collection)
 	 */
-
-	public WebServiceTemplateBuilder addCustomizers(
+	public WebServiceTemplateBuilder additionalCustomizers(
 			Collection<? extends WebServiceTemplateCustomizer> customizers) {
-		Assert.notNull(customizers, "customizers must not be null");
+		Assert.notNull(customizers, "Customizers must not be null");
 		return new WebServiceTemplateBuilder(this.interceptors, this.internalCustomizers,
-				append(this.customizers, customizers),
-				this.webServiceMessageSenderSuppliers,
+				append(this.customizers, customizers), this.webServiceMessageSenders,
 				this.webServiceMessageSenderCustomizers, this.marshaller,
 				this.unmarshaller, this.destinationProvider, this.transformerFactoryClass,
 				this.messageFactory, this.detectWebServiceMessageSender);
 	}
 
 	/**
-	 * Sets the {@code Suppliers} of {@link WebServiceMessageSender} that should be called
-	 * each time when {@link #configure(WebServiceTemplate)} method is called.
-	 *
-	 * <b>Note!</b> Override existing WebServiceMessageSender {@code suppliers}
-	 * @param webServiceMessageSenderSuppliers Suppliers for the messageSenders
+	 * Sets the {@link WebServiceMessageSender WebServiceMessageSenders} that should be
+	 * used with the {@link WebServiceTemplate}. Setting this value will replace any
+	 * previously defined message senders.
+	 * @param messageSenders the message senders to set
 	 * @return a new builder instance.
-	 * @see WebServiceTemplate#setMessageSenders(WebServiceMessageSender[])
+	 * @see #additionalMessageSenders(WebServiceMessageSender...)
 	 */
+	public WebServiceTemplateBuilder messageSenders(
+			WebServiceMessageSender... messageSenders) {
+		Assert.notNull(messageSenders, "MessageSenders must not be null");
+		return messageSenders(Arrays.asList(messageSenders));
+	}
 
-	public WebServiceTemplateBuilder setWebServiceMessageSenders(
-			Collection<? extends Supplier<? extends WebServiceMessageSender>> webServiceMessageSenderSuppliers) {
-		Assert.notNull(webServiceMessageSenderSuppliers,
-				"webServiceMessageSenderSuppliers must not be null");
+	/**
+	 * Sets the {@link WebServiceMessageSender WebServiceMessageSenders} that should be
+	 * used with the {@link WebServiceTemplate}. Setting this value will replace any
+	 * previously defined message senders.
+	 * @param messageSenders the message senders to set
+	 * @return a new builder instance.
+	 * @see #additionalMessageSenders(Collection)
+	 */
+	public WebServiceTemplateBuilder messageSenders(
+			Collection<? extends WebServiceMessageSender> messageSenders) {
+		Assert.notNull(messageSenders, "MessageSenders must not be null");
 		return new WebServiceTemplateBuilder(this.interceptors, this.internalCustomizers,
 				this.customizers,
-				append(Collections
-						.<Supplier<? extends WebServiceMessageSender>>emptySet(),
-						webServiceMessageSenderSuppliers),
+				append(Collections.<WebServiceMessageSender>emptySet(), messageSenders),
 				this.webServiceMessageSenderCustomizers, this.marshaller,
 				this.unmarshaller, this.destinationProvider, this.transformerFactoryClass,
 				this.messageFactory, this.detectWebServiceMessageSender);
 	}
 
 	/**
-	 * Add additional {@code Suppliers} of {@link WebServiceMessageSender} that should be
-	 * called each time when {@link #configure(WebServiceTemplate)} method is called.
-	 * @param webServiceMessageSenderSuppliers Suppliers for the messageSenders
+	 * Add additional {@link WebServiceMessageSender WebServiceMessageSenders} that should
+	 * be used with the {@link WebServiceTemplate}.
+	 * @param messageSenders the message senders to add
 	 * @return a new builder instance.
-	 * @see WebServiceTemplate#setMessageSenders(WebServiceMessageSender[])
+	 * @see #messageSenders(WebServiceMessageSender...)
 	 */
-	public WebServiceTemplateBuilder addWebServiceMessageSenders(
-			Collection<? extends Supplier<? extends WebServiceMessageSender>> webServiceMessageSenderSuppliers) {
-		Assert.notNull(webServiceMessageSenderSuppliers,
+	public WebServiceTemplateBuilder additionalMessageSenders(
+			WebServiceMessageSender... messageSenders) {
+		Assert.notNull(messageSenders, "MessageSenders must not be null");
+		return additionalMessageSenders(Arrays.asList(messageSenders));
+	}
+
+	/**
+	 * Add additional {@link WebServiceMessageSender WebServiceMessageSenders} that should
+	 * be used with the {@link WebServiceTemplate}.
+	 * @param messageSenders the message senders to add
+	 * @return a new builder instance.
+	 * @see #messageSenders(Collection)
+	 */
+	public WebServiceTemplateBuilder additionalMessageSenders(
+			Collection<? extends WebServiceMessageSender> messageSenders) {
+		Assert.notNull(messageSenders,
 				"webServiceMessageSenderSuppliers must not be null");
 		return new WebServiceTemplateBuilder(this.interceptors, this.internalCustomizers,
-				this.customizers,
-				append(this.webServiceMessageSenderSuppliers,
-						webServiceMessageSenderSuppliers),
+				this.customizers, append(this.webServiceMessageSenders, messageSenders),
 				this.webServiceMessageSenderCustomizers, this.marshaller,
 				this.unmarshaller, this.destinationProvider, this.transformerFactoryClass,
 				this.messageFactory, this.detectWebServiceMessageSender);
@@ -319,13 +335,13 @@ public class WebServiceTemplateBuilder {
 	 * @param checkConnectionForFault Specify whether checkConnectionForFault should be
 	 * enabled or not.
 	 * @return a new builder instance.
-	 **/
+	 */
 	public WebServiceTemplateBuilder setCheckConnectionForFault(
 			boolean checkConnectionForFault) {
 		return new WebServiceTemplateBuilder(this.interceptors,
 				append(this.internalCustomizers,
 						new CheckConnectionFaultCustomizer(checkConnectionForFault)),
-				this.customizers, this.webServiceMessageSenderSuppliers,
+				this.customizers, this.webServiceMessageSenders,
 				this.webServiceMessageSenderCustomizers, this.marshaller,
 				this.unmarshaller, this.destinationProvider, this.transformerFactoryClass,
 				this.messageFactory, this.detectWebServiceMessageSender);
@@ -337,91 +353,16 @@ public class WebServiceTemplateBuilder {
 	 * @param checkConnectionForError Specify whether checkConnectionForError should be
 	 * enabled or not.
 	 * @return a new builder instance.
-	 **/
-
+	 */
 	public WebServiceTemplateBuilder setCheckConnectionForError(
 			boolean checkConnectionForError) {
 		return new WebServiceTemplateBuilder(this.interceptors,
 				append(this.internalCustomizers,
 						new CheckConnectionForErrorCustomizer(checkConnectionForError)),
-				this.customizers, this.webServiceMessageSenderSuppliers,
+				this.customizers, this.webServiceMessageSenders,
 				this.webServiceMessageSenderCustomizers, this.marshaller,
 				this.unmarshaller, this.destinationProvider, this.transformerFactoryClass,
 				this.messageFactory, this.detectWebServiceMessageSender);
-	}
-
-	/**
-	 * Sets the {@code Supplier} of {@link WebServiceMessageSender} that should be called
-	 * each time when {@link #configure(WebServiceTemplate)} method is called.
-	 *
-	 * <b>Note!</b> Override existing WebServiceMessageSender {@code suppliers}
-	 * @param webServiceMessageSenderSupplier Supplier for the messageSender
-	 * @return a new builder instance.
-	 * @see WebServiceTemplate#setMessageSenders(WebServiceMessageSender[])
-	 * @see #setWebServiceMessageSenders(Collection)
-	 */
-
-	public WebServiceTemplateBuilder setWebServiceMessageSender(
-			Supplier<? extends WebServiceMessageSender> webServiceMessageSenderSupplier) {
-		Assert.notNull(webServiceMessageSenderSupplier,
-				"webServiceMessageSenderSupplier must not be null");
-		return setWebServiceMessageSenders(
-				Collections.singleton(webServiceMessageSenderSupplier));
-	}
-
-	/**
-	 * Add additional {@code Supplier} of {@link WebServiceMessageSender} that should be
-	 * called each time when {@link #configure(WebServiceTemplate)} method is called.
-	 * @param webServiceMessageSenderSupplier Supplier for the messageSender
-	 * @return a new builder instance.
-	 * @see WebServiceTemplate#setMessageSenders(WebServiceMessageSender[])
-	 * @see #addWebServiceMessageSenders(Collection)
-	 */
-	public WebServiceTemplateBuilder addWebServiceMessageSender(
-			Supplier<? extends WebServiceMessageSender> webServiceMessageSenderSupplier) {
-		Assert.notNull(webServiceMessageSenderSupplier,
-				"webServiceMessageSenderSupplier must not be null");
-		return addWebServiceMessageSenders(
-				Collections.singleton(webServiceMessageSenderSupplier));
-	}
-
-	/**
-	 * Sets the {@code Class} of {@link WebServiceMessageSender} that should be created
-	 * each time when {@link #configure(WebServiceTemplate)} method is called.
-	 *
-	 * <b>Note!</b> Override existing WebServiceMessageSender {@code suppliers}
-	 * @param webServiceMessageSenderClass {@code Class} of
-	 * {@link WebServiceMessageSender}
-	 * @return a new builder instance.
-	 * @see WebServiceTemplate#setMessageSenders(WebServiceMessageSender[])
-	 * @see #setWebServiceMessageSender(Supplier)
-	 * @see BeanUtils#instantiateClass(Class)
-	 */
-
-	public WebServiceTemplateBuilder setWebServiceMessageSender(
-			Class<? extends WebServiceMessageSender> webServiceMessageSenderClass) {
-		Assert.notNull(webServiceMessageSenderClass,
-				"webServiceMessageSenderClass must not be null");
-		return setWebServiceMessageSender(
-				supplier(webServiceMessageSenderClass, BeanUtils::instantiateClass));
-	}
-
-	/**
-	 * Add additional {@code Class} of {@link WebServiceMessageSender} that should be
-	 * created each time when {@link #configure(WebServiceTemplate)} method is called.
-	 * @param webServiceMessageSenderClass {@code Class} of
-	 * {@link WebServiceMessageSender}
-	 * @return a new builder instance.
-	 * @see WebServiceTemplate#setMessageSenders(WebServiceMessageSender[])
-	 * @see #addWebServiceMessageSender(Supplier)
-	 * @see BeanUtils#instantiateClass(Class)
-	 */
-	public WebServiceTemplateBuilder addWebServiceMessageSender(
-			Class<? extends WebServiceMessageSender> webServiceMessageSenderClass) {
-		Assert.notNull(webServiceMessageSenderClass,
-				"webServiceMessageSenderClass must not be null");
-		return addWebServiceMessageSender(
-				supplier(webServiceMessageSenderClass, BeanUtils::instantiateClass));
 	}
 
 	/**
@@ -430,12 +371,11 @@ public class WebServiceTemplateBuilder {
 	 * @return a new builder instance.
 	 * @see WebServiceTemplate#setMessageFactory(WebServiceMessageFactory)
 	 **/
-
 	public WebServiceTemplateBuilder setWebServiceMessageFactory(
 			WebServiceMessageFactory messageFactory) {
 		Assert.notNull(messageFactory, "messageFactory must not be null");
 		return new WebServiceTemplateBuilder(this.interceptors, this.internalCustomizers,
-				this.customizers, this.webServiceMessageSenderSuppliers,
+				this.customizers, this.webServiceMessageSenders,
 				this.webServiceMessageSenderCustomizers, this.marshaller,
 				this.unmarshaller, this.destinationProvider, this.transformerFactoryClass,
 				messageFactory, this.detectWebServiceMessageSender);
@@ -451,7 +391,7 @@ public class WebServiceTemplateBuilder {
 	public WebServiceTemplateBuilder setUnmarshaller(Unmarshaller unmarshaller) {
 		Assert.notNull(unmarshaller, "unmarshaller must not be null");
 		return new WebServiceTemplateBuilder(this.interceptors, this.internalCustomizers,
-				this.customizers, this.webServiceMessageSenderSuppliers,
+				this.customizers, this.webServiceMessageSenders,
 				this.webServiceMessageSenderCustomizers, this.marshaller, unmarshaller,
 				this.destinationProvider, this.transformerFactoryClass,
 				this.messageFactory, this.detectWebServiceMessageSender);
@@ -467,7 +407,7 @@ public class WebServiceTemplateBuilder {
 	public WebServiceTemplateBuilder setMarshaller(Marshaller marshaller) {
 		Assert.notNull(marshaller, "marshaller must not be null");
 		return new WebServiceTemplateBuilder(this.interceptors, this.internalCustomizers,
-				this.customizers, this.webServiceMessageSenderSuppliers,
+				this.customizers, this.webServiceMessageSenders,
 				this.webServiceMessageSenderCustomizers, marshaller, this.unmarshaller,
 				this.destinationProvider, this.transformerFactoryClass,
 				this.messageFactory, this.detectWebServiceMessageSender);
@@ -482,7 +422,7 @@ public class WebServiceTemplateBuilder {
 	 */
 	public WebServiceTemplateBuilder setConnectionTimeout(int connectionTimeout) {
 		return new WebServiceTemplateBuilder(this.interceptors, this.internalCustomizers,
-				this.customizers, this.webServiceMessageSenderSuppliers,
+				this.customizers, this.webServiceMessageSenders,
 				append(this.webServiceMessageSenderCustomizers,
 						new ConnectionTimeoutWebServiceMessageSenderCustomizer(
 								connectionTimeout)),
@@ -500,7 +440,7 @@ public class WebServiceTemplateBuilder {
 	 */
 	public WebServiceTemplateBuilder setReadTimeout(int readTimeout) {
 		return new WebServiceTemplateBuilder(this.interceptors, this.internalCustomizers,
-				this.customizers, this.webServiceMessageSenderSuppliers,
+				this.customizers, this.webServiceMessageSenders,
 				append(this.webServiceMessageSenderCustomizers,
 						new ReadTimeoutWebServiceMessageSenderCustomizer(readTimeout)),
 				this.marshaller, this.unmarshaller, this.destinationProvider,
@@ -520,7 +460,7 @@ public class WebServiceTemplateBuilder {
 		return new WebServiceTemplateBuilder(this.interceptors,
 				append(this.internalCustomizers,
 						new FaultMessageResolverCustomizer(faultMessageResolver)),
-				this.customizers, this.webServiceMessageSenderSuppliers,
+				this.customizers, this.webServiceMessageSenders,
 				this.webServiceMessageSenderCustomizers, this.marshaller,
 				this.unmarshaller, this.destinationProvider, this.transformerFactoryClass,
 				this.messageFactory, this.detectWebServiceMessageSender);
@@ -538,7 +478,7 @@ public class WebServiceTemplateBuilder {
 		Assert.notNull(transformerFactoryClass,
 				"transformerFactoryClass must not be null");
 		return new WebServiceTemplateBuilder(this.interceptors, this.internalCustomizers,
-				this.customizers, this.webServiceMessageSenderSuppliers,
+				this.customizers, this.webServiceMessageSenders,
 				this.webServiceMessageSenderCustomizers, this.marshaller,
 				this.unmarshaller, this.destinationProvider, transformerFactoryClass,
 				this.messageFactory, this.detectWebServiceMessageSender);
@@ -572,7 +512,7 @@ public class WebServiceTemplateBuilder {
 			DestinationProvider destinationProvider) {
 		Assert.notNull(destinationProvider, "destinationProvider must not be null");
 		return new WebServiceTemplateBuilder(this.interceptors, this.internalCustomizers,
-				this.customizers, this.webServiceMessageSenderSuppliers,
+				this.customizers, this.webServiceMessageSenders,
 				this.webServiceMessageSenderCustomizers, this.marshaller,
 				this.unmarshaller, destinationProvider, this.transformerFactoryClass,
 				this.messageFactory, this.detectWebServiceMessageSender);
@@ -588,7 +528,7 @@ public class WebServiceTemplateBuilder {
 	public WebServiceTemplateBuilder detectWebServiceMessageSender(
 			boolean detectWebServiceMessageSender) {
 		return new WebServiceTemplateBuilder(this.interceptors, this.internalCustomizers,
-				this.customizers, this.webServiceMessageSenderSuppliers,
+				this.customizers, this.webServiceMessageSenders,
 				this.webServiceMessageSenderCustomizers, this.marshaller,
 				this.unmarshaller, this.destinationProvider, this.transformerFactoryClass,
 				this.messageFactory, detectWebServiceMessageSender);
@@ -676,12 +616,9 @@ public class WebServiceTemplateBuilder {
 	}
 
 	private <T extends WebServiceTemplate> void configureSenders(T webServiceTemplate) {
-
-		if (!CollectionUtils.isEmpty(this.webServiceMessageSenderSuppliers)) {
-			Set<WebServiceMessageSender> webServiceMessageSenders = new LinkedHashSet<>();
-			for (Supplier<? extends WebServiceMessageSender> webServiceMessageSenderSupplier : this.webServiceMessageSenderSuppliers) {
-				webServiceMessageSenders.add(webServiceMessageSenderSupplier.get());
-			}
+		if (!CollectionUtils.isEmpty(this.webServiceMessageSenders)) {
+			Set<WebServiceMessageSender> webServiceMessageSenders = new LinkedHashSet<>(
+					this.webServiceMessageSenders);
 			webServiceTemplate.setMessageSenders(
 					webServiceMessageSenders.toArray(new WebServiceMessageSender[0]));
 		}

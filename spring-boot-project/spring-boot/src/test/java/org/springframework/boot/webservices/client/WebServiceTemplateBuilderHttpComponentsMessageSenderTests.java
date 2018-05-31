@@ -55,7 +55,7 @@ public class WebServiceTemplateBuilderHttpComponentsMessageSenderTests {
 		HttpClient httpClient = sender.getHttpClient();
 
 		this.builder.setConnectionTimeout(5000).setReadTimeout(2000)
-				.setWebServiceMessageSender(() -> sender).build();
+				.messageSenders(sender).build();
 
 		assertThat(HttpConnectionParams.getConnectionTimeout(httpClient.getParams()))
 				.isEqualTo(5000);

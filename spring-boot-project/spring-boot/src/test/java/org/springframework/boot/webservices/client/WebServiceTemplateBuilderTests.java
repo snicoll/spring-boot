@@ -19,7 +19,6 @@ package org.springframework.boot.webservices.client;
 import java.net.URI;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.function.Supplier;
 
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.sax.SAXTransformerFactory;
@@ -34,8 +33,6 @@ import org.springframework.ws.client.support.interceptor.ClientInterceptor;
 import org.springframework.ws.soap.client.core.SoapFaultMessageResolver;
 import org.springframework.ws.soap.saaj.SaajSoapMessageFactory;
 import org.springframework.ws.transport.WebServiceMessageSender;
-import org.springframework.ws.transport.http.ClientHttpRequestMessageSender;
-import org.springframework.ws.transport.http.HttpUrlConnectionMessageSender;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -53,8 +50,8 @@ public class WebServiceTemplateBuilderTests {
 		ClientInterceptor f1 = Mockito.mock(ClientInterceptor.class);
 		ClientInterceptor f2 = Mockito.mock(ClientInterceptor.class);
 
-		WebServiceTemplate webServiceTemplate = this.builder.addInterceptors(f1)
-				.addInterceptors(f2).build();
+		WebServiceTemplate webServiceTemplate = this.builder.additionalInterceptors(f1)
+				.additionalInterceptors(f2).build();
 
 		assertThat(webServiceTemplate.getInterceptors()).containsExactlyInAnyOrder(f1,
 				f2);
@@ -66,8 +63,8 @@ public class WebServiceTemplateBuilderTests {
 		ClientInterceptor f2 = Mockito.mock(ClientInterceptor.class);
 
 		WebServiceTemplate webServiceTemplate = this.builder
-				.addInterceptors(Collections.singletonList(f1))
-				.addInterceptors(Collections.singleton(f2)).build();
+				.additionalInterceptors(Collections.singletonList(f1))
+				.additionalInterceptors(Collections.singleton(f2)).build();
 
 		assertThat(webServiceTemplate.getInterceptors()).containsExactlyInAnyOrder(f1,
 				f2);
@@ -79,8 +76,8 @@ public class WebServiceTemplateBuilderTests {
 		ClientInterceptor f1 = Mockito.mock(ClientInterceptor.class);
 		ClientInterceptor f2 = Mockito.mock(ClientInterceptor.class);
 
-		WebServiceTemplate webServiceTemplate = this.builder.setInterceptors(f1)
-				.setInterceptors(f2).build();
+		WebServiceTemplate webServiceTemplate = this.builder.interceptors(f1)
+				.interceptors(f2).build();
 
 		assertThat(webServiceTemplate.getInterceptors()).doesNotContain(f1).contains(f2);
 	}
@@ -91,8 +88,8 @@ public class WebServiceTemplateBuilderTests {
 		ClientInterceptor f2 = Mockito.mock(ClientInterceptor.class);
 
 		WebServiceTemplate webServiceTemplate = this.builder
-				.setInterceptors(Collections.singletonList(f1))
-				.setInterceptors(Collections.singleton(f2)).build();
+				.interceptors(Collections.singletonList(f1))
+				.interceptors(Collections.singleton(f2)).build();
 
 		assertThat(webServiceTemplate.getInterceptors()).doesNotContain(f1).contains(f2);
 
@@ -106,8 +103,9 @@ public class WebServiceTemplateBuilderTests {
 		WebServiceTemplateCustomizer customizer1 = (ws) -> ws
 				.setUnmarshaller(jaxb2Marshaller);
 
-		WebServiceTemplate webServiceTemplate = this.builder.addCustomizers(customizer)
-				.addCustomizers(customizer1).build();
+		WebServiceTemplate webServiceTemplate = this.builder
+				.additionalCustomizers(customizer).additionalCustomizers(customizer1)
+				.build();
 
 		assertThat(webServiceTemplate.getMarshaller()).isEqualTo(jaxb2Marshaller);
 		assertThat(webServiceTemplate.getUnmarshaller()).isEqualTo(jaxb2Marshaller);
@@ -123,8 +121,8 @@ public class WebServiceTemplateBuilderTests {
 				.setUnmarshaller(jaxb2Marshaller);
 
 		WebServiceTemplate webServiceTemplate = this.builder
-				.addCustomizers(Collections.singleton(customizer))
-				.addCustomizers(Collections.singletonList(customizer1)).build();
+				.additionalCustomizers(Collections.singleton(customizer))
+				.additionalCustomizers(Collections.singletonList(customizer1)).build();
 
 		assertThat(webServiceTemplate.getMarshaller()).isEqualTo(jaxb2Marshaller);
 		assertThat(webServiceTemplate.getUnmarshaller()).isEqualTo(jaxb2Marshaller);
@@ -138,8 +136,8 @@ public class WebServiceTemplateBuilderTests {
 		WebServiceTemplateCustomizer customizer1 = (ws) -> ws
 				.setUnmarshaller(jaxb2Marshaller);
 
-		WebServiceTemplate webServiceTemplate = this.builder.setCustomizers(customizer)
-				.setCustomizers(customizer1).build();
+		WebServiceTemplate webServiceTemplate = this.builder.customizers(customizer)
+				.customizers(customizer1).build();
 
 		assertThat(webServiceTemplate.getMarshaller()).isNull();
 		assertThat(webServiceTemplate.getUnmarshaller()).isEqualTo(jaxb2Marshaller);
@@ -155,8 +153,8 @@ public class WebServiceTemplateBuilderTests {
 				.setUnmarshaller(jaxb2Marshaller);
 
 		WebServiceTemplate webServiceTemplate = this.builder
-				.setCustomizers(Collections.singleton(customizer))
-				.setCustomizers(Collections.singletonList(customizer1)).build();
+				.customizers(Collections.singleton(customizer))
+				.customizers(Collections.singletonList(customizer1)).build();
 
 		assertThat(webServiceTemplate.getMarshaller()).isNull();
 		assertThat(webServiceTemplate.getUnmarshaller()).isEqualTo(jaxb2Marshaller);
@@ -168,8 +166,7 @@ public class WebServiceTemplateBuilderTests {
 		WebServiceMessageSender sender1 = Mockito.mock(WebServiceMessageSender.class);
 
 		WebServiceTemplate webServiceTemplate = this.builder
-				.addWebServiceMessageSenders(Collections.singleton(() -> sender))
-				.addWebServiceMessageSenders(Collections.singletonList(() -> sender1))
+				.additionalMessageSenders(sender).additionalMessageSenders(sender1)
 				.build();
 
 		assertThat(webServiceTemplate.getMessageSenders())
@@ -181,41 +178,11 @@ public class WebServiceTemplateBuilderTests {
 		WebServiceMessageSender sender = Mockito.mock(WebServiceMessageSender.class);
 		WebServiceMessageSender sender1 = Mockito.mock(WebServiceMessageSender.class);
 
-		WebServiceTemplate webServiceTemplate = this.builder
-				.setWebServiceMessageSenders(Collections.singleton(() -> sender))
-				.setWebServiceMessageSenders(Collections.singletonList(() -> sender1))
-				.build();
+		WebServiceTemplate webServiceTemplate = this.builder.messageSenders(sender)
+				.messageSenders(sender1).build();
 
 		assertThat(webServiceTemplate.getMessageSenders()).doesNotContain(sender)
 				.contains(sender1);
-
-	}
-
-	@Test
-	public void addWebServiceMessageSenderClass() {
-
-		WebServiceTemplate webServiceTemplate = this.builder
-				.addWebServiceMessageSender(ClientHttpRequestMessageSender.class)
-				.addWebServiceMessageSender(HttpUrlConnectionMessageSender.class).build();
-
-		assertThat(webServiceTemplate.getMessageSenders()).hasSize(2);
-
-		assertThat(webServiceTemplate.getMessageSenders()[0])
-				.isInstanceOf(ClientHttpRequestMessageSender.class);
-		assertThat(webServiceTemplate.getMessageSenders()[1])
-				.isInstanceOf(HttpUrlConnectionMessageSender.class);
-	}
-
-	@Test
-	public void setWebServiceMessageSenderClass() {
-
-		WebServiceTemplate webServiceTemplate = this.builder
-				.setWebServiceMessageSender(ClientHttpRequestMessageSender.class)
-				.setWebServiceMessageSender(HttpUrlConnectionMessageSender.class).build();
-
-		assertThat(webServiceTemplate.getMessageSenders()).hasSize(1);
-		assertThat(webServiceTemplate.getMessageSenders()[0])
-				.isInstanceOf(HttpUrlConnectionMessageSender.class);
 
 	}
 
@@ -225,8 +192,8 @@ public class WebServiceTemplateBuilderTests {
 		WebServiceMessageSender sender1 = Mockito.mock(WebServiceMessageSender.class);
 
 		WebServiceTemplate webServiceTemplate = this.builder
-				.addWebServiceMessageSender(() -> sender)
-				.addWebServiceMessageSender(() -> sender1).build();
+				.additionalMessageSenders(sender).additionalMessageSenders(sender1)
+				.build();
 
 		assertThat(webServiceTemplate.getMessageSenders())
 				.containsExactlyInAnyOrder(sender, sender1);
@@ -237,9 +204,8 @@ public class WebServiceTemplateBuilderTests {
 		WebServiceMessageSender sender = Mockito.mock(WebServiceMessageSender.class);
 		WebServiceMessageSender sender1 = Mockito.mock(WebServiceMessageSender.class);
 
-		WebServiceTemplate webServiceTemplate = this.builder
-				.setWebServiceMessageSender(() -> sender)
-				.setWebServiceMessageSender(() -> sender1).build();
+		WebServiceTemplate webServiceTemplate = this.builder.messageSenders(sender)
+				.messageSenders(sender1).build();
 
 		assertThat(webServiceTemplate.getMessageSenders()).doesNotContain(sender)
 				.contains(sender1);
@@ -361,7 +327,7 @@ public class WebServiceTemplateBuilderTests {
 		WebServiceTemplate webServiceTemplate = new WebServiceTemplate();
 		webServiceTemplate.setInterceptors(new ClientInterceptor[] { f1 });
 
-		this.builder.addInterceptors(f2).configure(webServiceTemplate);
+		this.builder.additionalInterceptors(f2).configure(webServiceTemplate);
 
 		assertThat(webServiceTemplate.getInterceptors()).containsExactlyInAnyOrder(f2,
 				f1);
@@ -369,84 +335,64 @@ public class WebServiceTemplateBuilderTests {
 
 	@Test(expected = IllegalArgumentException.class)
 	public void setInterceptorsArrayNull() {
-		this.builder.setInterceptors((ClientInterceptor[]) null).build();
+		this.builder.interceptors((ClientInterceptor[]) null).build();
 	}
 
 	@Test(expected = IllegalArgumentException.class)
 	public void setInterceptorsCollectionNull() {
-		this.builder.setInterceptors((Collection<? extends ClientInterceptor>) null)
-				.build();
+		this.builder.interceptors((Collection<? extends ClientInterceptor>) null).build();
 	}
 
 	@Test(expected = IllegalArgumentException.class)
 	public void addInterceptorsArrayNull() {
-		this.builder.addInterceptors((ClientInterceptor[]) null).build();
+		this.builder.additionalInterceptors((ClientInterceptor[]) null).build();
 	}
 
 	@Test(expected = IllegalArgumentException.class)
 	public void addInterceptorsCollectionNull() {
-		this.builder.addInterceptors((Collection<? extends ClientInterceptor>) null)
+		this.builder
+				.additionalInterceptors((Collection<? extends ClientInterceptor>) null)
 				.build();
 	}
 
 	@Test(expected = IllegalArgumentException.class)
 	public void setCustomizersArrayNull() {
-		this.builder.setCustomizers((WebServiceTemplateCustomizer[]) null).build();
+		this.builder.customizers((WebServiceTemplateCustomizer[]) null).build();
 	}
 
 	@Test(expected = IllegalArgumentException.class)
 	public void setCustomizersCollectionNull() {
 		this.builder
-				.setCustomizers((Collection<? extends WebServiceTemplateCustomizer>) null)
+				.customizers((Collection<? extends WebServiceTemplateCustomizer>) null)
 				.build();
 	}
 
 	@Test(expected = IllegalArgumentException.class)
 	public void addCustomizersArrayNull() {
 		this.builder
-				.addCustomizers((Collection<? extends WebServiceTemplateCustomizer>) null)
+				.additionalCustomizers(
+						(Collection<? extends WebServiceTemplateCustomizer>) null)
 				.build();
 	}
 
 	@Test(expected = IllegalArgumentException.class)
 	public void addCustomizersCollectionNull() {
 		this.builder
-				.addCustomizers((Collection<? extends WebServiceTemplateCustomizer>) null)
+				.additionalCustomizers(
+						(Collection<? extends WebServiceTemplateCustomizer>) null)
 				.build();
 	}
 
 	@Test(expected = IllegalArgumentException.class)
 	public void setWebServiceMessageSendersNull() {
-		this.builder.setWebServiceMessageSenders(null).build();
+		this.builder.messageSenders((Collection<? extends WebServiceMessageSender>) null)
+				.build();
 	}
 
 	@Test(expected = IllegalArgumentException.class)
 	public void addWebServiceMessageSendersNull() {
-		this.builder.addWebServiceMessageSenders(null).build();
-	}
-
-	@Test(expected = IllegalArgumentException.class)
-	public void setWebServiceMessageSenderClassNull() {
-		this.builder.setWebServiceMessageSender(
-				(Class<? extends WebServiceMessageSender>) null).build();
-	}
-
-	@Test(expected = IllegalArgumentException.class)
-	public void addWebServiceMessageSenderClassNull() {
-		this.builder.addWebServiceMessageSender(
-				(Class<? extends WebServiceMessageSender>) null).build();
-	}
-
-	@Test(expected = IllegalArgumentException.class)
-	public void setWebServiceMessageSenderSupplierNull() {
-		this.builder.setWebServiceMessageSender(
-				(Supplier<? extends WebServiceMessageSender>) null).build();
-	}
-
-	@Test(expected = IllegalArgumentException.class)
-	public void addWebServiceMessageSenderSupplierNull() {
-		this.builder.addWebServiceMessageSender(
-				(Supplier<? extends WebServiceMessageSender>) null).build();
+		this.builder.additionalMessageSenders(
+				(Collection<? extends WebServiceMessageSender>) null).build();
 	}
 
 	@Test(expected = IllegalArgumentException.class)
