@@ -16,6 +16,8 @@
 
 package org.springframework.boot.webservices.client;
 
+import java.time.Duration;
+
 import org.apache.http.client.HttpClient;
 import org.apache.http.params.HttpConnectionParams;
 import org.junit.Test;
@@ -54,8 +56,8 @@ public class WebServiceTemplateBuilderHttpComponentsMessageSenderTests {
 		HttpComponentsMessageSender sender = new HttpComponentsMessageSender();
 		HttpClient httpClient = sender.getHttpClient();
 
-		this.builder.setConnectionTimeout(5000).setReadTimeout(2000)
-				.messageSenders(sender).build();
+		this.builder.setConnectionTimeout(Duration.ofSeconds(5))
+				.setReadTimeout(Duration.ofMillis(2000)).messageSenders(sender).build();
 
 		assertThat(HttpConnectionParams.getConnectionTimeout(httpClient.getParams()))
 				.isEqualTo(5000);

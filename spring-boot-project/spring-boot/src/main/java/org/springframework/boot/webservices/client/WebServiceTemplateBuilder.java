@@ -16,42 +16,29 @@
 
 package org.springframework.boot.webservices.client;
 
-import java.lang.reflect.Field;
 import java.net.URI;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
-import java.util.function.Supplier;
 
 import javax.xml.transform.TransformerFactory;
 
 import org.springframework.beans.BeanUtils;
-import org.springframework.http.client.AbstractClientHttpRequestFactoryWrapper;
-import org.springframework.http.client.ClientHttpRequestFactory;
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
-import org.springframework.http.client.OkHttp3ClientHttpRequestFactory;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.oxm.Marshaller;
 import org.springframework.oxm.Unmarshaller;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
-import org.springframework.util.ReflectionUtils;
 import org.springframework.ws.WebServiceMessageFactory;
 import org.springframework.ws.client.core.FaultMessageResolver;
 import org.springframework.ws.client.core.WebServiceTemplate;
 import org.springframework.ws.client.support.destination.DestinationProvider;
 import org.springframework.ws.client.support.interceptor.ClientInterceptor;
 import org.springframework.ws.transport.WebServiceMessageSender;
-import org.springframework.ws.transport.http.ClientHttpRequestMessageSender;
 import org.springframework.ws.transport.http.HttpComponentsMessageSender;
 import org.springframework.ws.transport.http.HttpUrlConnectionMessageSender;
 
@@ -72,17 +59,6 @@ import org.springframework.ws.transport.http.HttpUrlConnectionMessageSender;
  * @since 2.1.0
  */
 public class WebServiceTemplateBuilder {
-
-	private static final Map<String, Class<? extends WebServiceMessageSenderFactory>> MESSAGE_SENDER_FACTORY_CLASSES;
-
-	static {
-		Map<String, Class<? extends WebServiceMessageSenderFactory>> candidates = new LinkedHashMap<>();
-		candidates.put("org.apache.http.client.HttpClient",
-				HttpComponentsMessageSenderFactory.class);
-		candidates.put("org.springframework.http.client.ClientHttpRequestFactory",
-				ClientHttpRequestMessageSenderFactory.class);
-		MESSAGE_SENDER_FACTORY_CLASSES = Collections.unmodifiableMap(candidates);
-	}
 
 	private final Set<ClientInterceptor> interceptors;
 
@@ -414,13 +390,14 @@ public class WebServiceTemplateBuilder {
 	}
 
 	/**
-	 * Sets the connection timeout in milliseconds on the underlying.
-	 * @param connectionTimeout the connection timeout in milliseconds
+	 * Sets the connection timeout on the underlying.
+	 * @param connectionTimeout the connection timeout.
 	 * @return a new builder instance.
 	 * @throws java.lang.IllegalStateException if the underlying source doesn't support a
 	 * connection timeout.
 	 */
-	public WebServiceTemplateBuilder setConnectionTimeout(int connectionTimeout) {
+	public WebServiceTemplateBuilder setConnectionTimeout(Duration connectionTimeout) {
+		Assert.notNull(connectionTimeout, "connectionTimeout must not be null");
 		return new WebServiceTemplateBuilder(this.interceptors, this.internalCustomizers,
 				this.customizers, this.webServiceMessageSenders,
 				append(this.webServiceMessageSenderCustomizers,
@@ -432,13 +409,14 @@ public class WebServiceTemplateBuilder {
 	}
 
 	/**
-	 * Sets the read timeout in milliseconds on the underlying.
-	 * @param readTimeout the read timeout in milliseconds
+	 * Sets the read timeout on the underlying.
+	 * @param readTimeout the read timeout
 	 * @return a new builder instance.
 	 * @throws java.lang.IllegalStateException if the underlying source doesn't support a
 	 * read timeout.
 	 */
-	public WebServiceTemplateBuilder setReadTimeout(int readTimeout) {
+	public WebServiceTemplateBuilder setReadTimeout(Duration readTimeout) {
+		Assert.notNull(readTimeout, "readTimeout must not be null");
 		return new WebServiceTemplateBuilder(this.interceptors, this.internalCustomizers,
 				this.customizers, this.webServiceMessageSenders,
 				append(this.webServiceMessageSenderCustomizers,
@@ -600,16 +578,16 @@ public class WebServiceTemplateBuilder {
 			webServiceTemplate.setMessageFactory(this.messageFactory);
 		}
 
-		if (!CollectionUtils.isEmpty(this.customizers)) {
-			for (WebServiceTemplateCustomizer customizer : this.customizers) {
-				customizer.customize(webServiceTemplate);
-			}
-		}
-
 		if (!CollectionUtils.isEmpty(this.interceptors)) {
 			webServiceTemplate.setInterceptors(
 					append(this.interceptors, webServiceTemplate.getInterceptors())
 							.toArray(new ClientInterceptor[0]));
+		}
+
+		if (!CollectionUtils.isEmpty(this.customizers)) {
+			for (WebServiceTemplateCustomizer customizer : this.customizers) {
+				customizer.customize(webServiceTemplate);
+			}
 		}
 
 		return webServiceTemplate;
@@ -642,23 +620,10 @@ public class WebServiceTemplateBuilder {
 
 	private WebServiceMessageSender detectMessageSender() {
 		ClassLoader classLoader = getClass().getClassLoader();
-		for (Map.Entry<String, Class<? extends WebServiceMessageSenderFactory>> candidate : MESSAGE_SENDER_FACTORY_CLASSES
-				.entrySet()) {
-			if (ClassUtils.isPresent(candidate.getKey(), classLoader)) {
-				WebServiceMessageSenderFactory webServiceMessageSenderFactory = BeanUtils
-						.instantiateClass(candidate.getValue());
-				Optional<WebServiceMessageSender> webServiceMessageSender = webServiceMessageSenderFactory
-						.create();
-				if (webServiceMessageSender.isPresent()) {
-					return webServiceMessageSender.get();
-				}
-			}
+		if (ClassUtils.isPresent("org.apache.http.client.HttpClient", classLoader)) {
+			return new HttpComponentsMessageSender();
 		}
 		return new HttpUrlConnectionMessageSender();
-	}
-
-	private static <T, F> Supplier<F> supplier(T value, Function<T, F> mapper) {
-		return () -> mapper.apply(value);
 	}
 
 	private static <T> Set<T> append(Set<T> set, T[] additions) {
@@ -678,56 +643,9 @@ public class WebServiceTemplateBuilder {
 		return Collections.unmodifiableSet(result);
 	}
 
-	private interface WebServiceMessageSenderFactory {
-
-		Optional<WebServiceMessageSender> create();
-
-	}
-
 	private interface WebServiceMessageSenderCustomizer {
 
 		void customize(WebServiceMessageSender webServiceMessageSender);
-
-	}
-
-	private static final class ClientHttpRequestMessageSenderFactory
-			implements WebServiceMessageSenderFactory {
-
-		private static final Map<String, String> REQUEST_FACTORY_CANDIDATES;
-
-		static {
-			Map<String, String> candidates = new LinkedHashMap<>();
-			candidates.put("okhttp3.OkHttpClient",
-					"org.springframework.http.client.OkHttp3ClientHttpRequestFactory");
-			REQUEST_FACTORY_CANDIDATES = Collections.unmodifiableMap(candidates);
-		}
-
-		@Override
-		public Optional<WebServiceMessageSender> create() {
-			ClassLoader classLoader = getClass().getClassLoader();
-			for (Map.Entry<String, String> candidate : REQUEST_FACTORY_CANDIDATES
-					.entrySet()) {
-				if (ClassUtils.isPresent(candidate.getKey(), classLoader)) {
-					Class<?> factoryClass = ClassUtils
-							.resolveClassName(candidate.getValue(), classLoader);
-					ClientHttpRequestFactory clientHttpRequestFactory = (ClientHttpRequestFactory) BeanUtils
-							.instantiateClass(factoryClass);
-					return Optional.of(
-							new ClientHttpRequestMessageSender(clientHttpRequestFactory));
-				}
-			}
-			return Optional.empty();
-		}
-
-	}
-
-	private static final class HttpComponentsMessageSenderFactory
-			implements WebServiceMessageSenderFactory {
-
-		@Override
-		public Optional<WebServiceMessageSender> create() {
-			return Optional.of(new HttpComponentsMessageSender());
-		}
 
 	}
 
@@ -796,10 +714,30 @@ public class WebServiceTemplateBuilder {
 	 * {@link WebServiceMessageSenderCustomizer} to set connection timeout.
 	 */
 	private static final class ConnectionTimeoutWebServiceMessageSenderCustomizer
-			extends TimeoutWebServiceMessageSenderCustomizer {
+			implements WebServiceMessageSenderCustomizer {
 
-		private ConnectionTimeoutWebServiceMessageSenderCustomizer(int connectTimeout) {
-			super(connectTimeout, Timeout.CONNECTION);
+		private final Duration timeout;
+
+		private ConnectionTimeoutWebServiceMessageSenderCustomizer(Duration timeout) {
+			this.timeout = timeout;
+		}
+
+		@Override
+		public void customize(WebServiceMessageSender webServiceMessageSender) {
+			if (webServiceMessageSender instanceof HttpComponentsMessageSender) {
+				((HttpComponentsMessageSender) webServiceMessageSender)
+						.setConnectionTimeout(Math.toIntExact(this.timeout.toMillis()));
+
+			}
+			else if (webServiceMessageSender instanceof HttpUrlConnectionMessageSender) {
+				((HttpUrlConnectionMessageSender) webServiceMessageSender)
+						.setConnectionTimeout(this.timeout);
+			}
+			else {
+				throw new IllegalStateException("There is no way to customize '"
+						+ webServiceMessageSender.getClass() + "' with '"
+						+ "connectionTimeout'. Please use a custom " + "customizer.");
+			}
 		}
 
 	}
@@ -808,232 +746,29 @@ public class WebServiceTemplateBuilder {
 	 * {@link WebServiceMessageSenderCustomizer} to set read timeout.
 	 */
 	private static final class ReadTimeoutWebServiceMessageSenderCustomizer
-			extends TimeoutWebServiceMessageSenderCustomizer {
-
-		private ReadTimeoutWebServiceMessageSenderCustomizer(int readTimeout) {
-			super(readTimeout, Timeout.READ);
-		}
-
-	}
-
-	private abstract static class TimeoutWebServiceMessageSenderCustomizer
 			implements WebServiceMessageSenderCustomizer {
 
-		private static final Map<String, Class<? extends TimeoutCustomizer<? extends WebServiceMessageSender>>> CUSTOMIZERS;
+		private final Duration timeout;
 
-		static {
-			Map<String, Class<? extends TimeoutCustomizer<? extends WebServiceMessageSender>>> candidates = new LinkedHashMap<>();
-			candidates.put(
-					"org.springframework.ws.transport.http.HttpComponentsMessageSender",
-					HttpComponentsTimeoutCustomizer.class);
-			candidates.put(
-					"org.springframework.ws.transport.http.ClientHttpRequestMessageSender",
-					ClientHttpRequestTimeoutCustomizer.class);
-			candidates.put(
-					"org.springframework.ws.transport.http.HttpUrlConnectionMessageSender",
-					HttpUrlConnectionTimeoutCustomizer.class);
-			CUSTOMIZERS = Collections.unmodifiableMap(candidates);
-		}
-
-		private final Timeout type;
-
-		private final int timeout;
-
-		TimeoutWebServiceMessageSenderCustomizer(int timeout, Timeout type) {
+		private ReadTimeoutWebServiceMessageSenderCustomizer(Duration timeout) {
 			this.timeout = timeout;
-			this.type = type;
 		}
 
 		@Override
-		public final void customize(WebServiceMessageSender webServiceMessageSender) {
-			ClassLoader classLoader = getClass().getClassLoader();
-			customize(CUSTOMIZERS, webServiceMessageSender, this.type, this.timeout,
-					classLoader);
-
-		}
-
-		@SuppressWarnings("unchecked")
-		private static <T> void customize(
-				Map<String, Class<? extends TimeoutCustomizer<? extends T>>> customizers,
-				T target, Timeout type, int timeout, ClassLoader classLoader) {
-			for (Map.Entry<String, Class<? extends TimeoutCustomizer<? extends T>>> candidate : customizers
-					.entrySet()) {
-				if (ClassUtils.isPresent(candidate.getKey(), classLoader)) {
-					Class<?> candidateClass = ClassUtils
-							.resolveClassName(candidate.getKey(), classLoader);
-					if (ClassUtils.isAssignable(candidateClass, target.getClass())) {
-						TimeoutCustomizer timeoutCustomizer = BeanUtils
-								.instantiateClass(candidate.getValue());
-						customize(timeoutCustomizer, target, type, timeout);
-						return;
-					}
-				}
-			}
-			throw new IllegalStateException("There is no way to customize '"
-					+ target.getClass() + "' " + "with '" + type.name().toLowerCase()
-					+ "Timeout'. Please use a custom " + "customizer.");
-
-		}
-
-		private static <T> void customize(TimeoutCustomizer<T> customizer, T target,
-				Timeout type, int timeout) {
-			if (type == Timeout.CONNECTION) {
-				customizer.setConnectionTimeout(target, timeout);
-			}
-			else if (type == Timeout.READ) {
-				customizer.setReadTimeout(target, timeout);
-			}
-		}
-
-		interface TimeoutCustomizer<T> {
-
-			void setReadTimeout(T source, int timeout);
-
-			void setConnectionTimeout(T source, int timeout);
-
-		}
-
-		enum Timeout {
-
-			READ, CONNECTION
-
-		}
-
-		private static final class HttpComponentsTimeoutCustomizer
-				implements TimeoutCustomizer<HttpComponentsMessageSender> {
-
-			@Override
-			public void setReadTimeout(HttpComponentsMessageSender source, int timeout) {
-				source.setReadTimeout(timeout);
-			}
-
-			@Override
-			public void setConnectionTimeout(HttpComponentsMessageSender source,
-					int timeout) {
-				source.setConnectionTimeout(timeout);
-			}
-
-		}
-
-		private static final class HttpUrlConnectionTimeoutCustomizer
-				implements TimeoutCustomizer<HttpUrlConnectionMessageSender> {
-
-			@Override
-			public void setReadTimeout(HttpUrlConnectionMessageSender source,
-					int timeout) {
-				source.setReadTimeout(Duration.ofMillis(timeout));
-			}
-
-			@Override
-			public void setConnectionTimeout(HttpUrlConnectionMessageSender source,
-					int timeout) {
-				source.setConnectionTimeout(Duration.ofMillis(timeout));
-			}
-
-		}
-
-		private static final class ClientHttpRequestTimeoutCustomizer
-				implements TimeoutCustomizer<ClientHttpRequestMessageSender> {
-
-			private static final Map<String, Class<? extends TimeoutCustomizer<? extends ClientHttpRequestFactory>>> CUSTOMIZERS;
-
-			static {
-				Map<String, Class<? extends TimeoutCustomizer<? extends ClientHttpRequestFactory>>> candidates = new LinkedHashMap<>();
-				candidates.put(
-						"org.springframework.http.client.HttpComponentsClientHttpRequestFactory",
-						HttpComponentsClientHttpRequestFactoryTimeoutCustomizer.class);
-				candidates.put(
-						"org.springframework.http.client.OkHttp3ClientHttpRequestFactory",
-						OkHttp3ClientHttpRequestFactoryTimeoutCustomizer.class);
-				candidates.put(
-						"org.springframework.http.client.SimpleClientHttpRequestFactory",
-						SimpleClientHttpRequestFactoryTimeoutCustomizer.class);
-				CUSTOMIZERS = Collections.unmodifiableMap(candidates);
-			}
-
-			@Override
-			public void setReadTimeout(ClientHttpRequestMessageSender source,
-					int timeout) {
-				ClassLoader classLoader = getClass().getClassLoader();
-				customize(CUSTOMIZERS, getRequestFactory(source), Timeout.READ, timeout,
-						classLoader);
-			}
-
-			@Override
-			public void setConnectionTimeout(ClientHttpRequestMessageSender source,
-					int timeout) {
-				ClassLoader classLoader = getClass().getClassLoader();
-				customize(CUSTOMIZERS, getRequestFactory(source), Timeout.CONNECTION,
-						timeout, classLoader);
-			}
-
-			private ClientHttpRequestFactory getRequestFactory(
-					ClientHttpRequestMessageSender source) {
-				ClientHttpRequestFactory requestFactory = source.getRequestFactory();
-				if (!(requestFactory instanceof AbstractClientHttpRequestFactoryWrapper)) {
-					return requestFactory;
-				}
-				Field field = ReflectionUtils.findField(
-						AbstractClientHttpRequestFactoryWrapper.class, "requestFactory");
-				Assert.notNull(field, "Field must not be null");
-				ReflectionUtils.makeAccessible(field);
-				do {
-					requestFactory = (ClientHttpRequestFactory) ReflectionUtils
-							.getField(field, requestFactory);
-				}
-				while (requestFactory instanceof AbstractClientHttpRequestFactoryWrapper);
-				return requestFactory;
-			}
-
-			private static final class SimpleClientHttpRequestFactoryTimeoutCustomizer
-					implements TimeoutCustomizer<SimpleClientHttpRequestFactory> {
-
-				@Override
-				public void setReadTimeout(SimpleClientHttpRequestFactory source,
-						int timeout) {
-					source.setReadTimeout(timeout);
-				}
-
-				@Override
-				public void setConnectionTimeout(SimpleClientHttpRequestFactory source,
-						int timeout) {
-					source.setConnectTimeout(timeout);
-				}
+		public void customize(WebServiceMessageSender webServiceMessageSender) {
+			if (webServiceMessageSender instanceof HttpComponentsMessageSender) {
+				((HttpComponentsMessageSender) webServiceMessageSender)
+						.setReadTimeout(Math.toIntExact(this.timeout.toMillis()));
 
 			}
-
-			private static final class HttpComponentsClientHttpRequestFactoryTimeoutCustomizer
-					implements TimeoutCustomizer<HttpComponentsClientHttpRequestFactory> {
-
-				@Override
-				public void setReadTimeout(HttpComponentsClientHttpRequestFactory source,
-						int timeout) {
-					source.setReadTimeout(timeout);
-				}
-
-				@Override
-				public void setConnectionTimeout(
-						HttpComponentsClientHttpRequestFactory source, int timeout) {
-					source.setConnectTimeout(timeout);
-				}
-
+			else if (webServiceMessageSender instanceof HttpUrlConnectionMessageSender) {
+				((HttpUrlConnectionMessageSender) webServiceMessageSender)
+						.setReadTimeout(this.timeout);
 			}
-
-			private static final class OkHttp3ClientHttpRequestFactoryTimeoutCustomizer
-					implements TimeoutCustomizer<OkHttp3ClientHttpRequestFactory> {
-
-				@Override
-				public void setReadTimeout(OkHttp3ClientHttpRequestFactory source,
-						int timeout) {
-					source.setReadTimeout(timeout);
-				}
-
-				@Override
-				public void setConnectionTimeout(OkHttp3ClientHttpRequestFactory source,
-						int timeout) {
-					source.setConnectTimeout(timeout);
-				}
-
+			else {
+				throw new IllegalStateException("There is no way to customize '"
+						+ webServiceMessageSender.getClass() + "' with '"
+						+ "readTimeout'. Please use a custom " + "customizer.");
 			}
 
 		}

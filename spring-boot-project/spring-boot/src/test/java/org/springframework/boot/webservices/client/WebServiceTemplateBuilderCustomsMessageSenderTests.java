@@ -16,6 +16,8 @@
 
 package org.springframework.boot.webservices.client;
 
+import java.time.Duration;
+
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -44,7 +46,7 @@ public class WebServiceTemplateBuilderCustomsMessageSenderTests {
 		this.thrown.expectMessage("with 'readTimeout'. Please use a custom customizer.");
 		this.thrown.expectMessage("There is no way to customize");
 
-		this.builder.setReadTimeout(3000)
+		this.builder.setReadTimeout(Duration.ofSeconds(3))
 				.messageSenders(Mockito.mock(WebServiceMessageSender.class)).build();
 	}
 
@@ -55,7 +57,7 @@ public class WebServiceTemplateBuilderCustomsMessageSenderTests {
 				"with 'connectionTimeout'. Please use a custom customizer.");
 		this.thrown.expectMessage("There is no way to customize");
 
-		this.builder.setConnectionTimeout(3000)
+		this.builder.setConnectionTimeout(Duration.ofSeconds(3))
 				.messageSenders(Mockito.mock(WebServiceMessageSender.class)).build();
 	}
 
@@ -65,7 +67,7 @@ public class WebServiceTemplateBuilderCustomsMessageSenderTests {
 		this.thrown.expectMessage("with 'readTimeout'. Please use a custom customizer.");
 		this.thrown.expectMessage("There is no way to customize");
 
-		this.builder.setReadTimeout(3000)
+		this.builder.setReadTimeout(Duration.ofSeconds(3))
 				.messageSenders(new ClientHttpRequestMessageSender(
 						Mockito.mock(ClientHttpRequestFactory.class)))
 				.build();
@@ -78,7 +80,7 @@ public class WebServiceTemplateBuilderCustomsMessageSenderTests {
 				"with 'connectionTimeout'. Please use a custom customizer.");
 		this.thrown.expectMessage("There is no way to customize");
 
-		this.builder.setConnectionTimeout(3000)
+		this.builder.setConnectionTimeout(Duration.ofSeconds(3))
 				.messageSenders(new ClientHttpRequestMessageSender(
 						Mockito.mock(ClientHttpRequestFactory.class)))
 				.build();

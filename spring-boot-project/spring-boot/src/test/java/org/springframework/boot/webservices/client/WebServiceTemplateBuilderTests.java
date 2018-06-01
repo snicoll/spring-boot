@@ -425,6 +425,16 @@ public class WebServiceTemplateBuilderTests {
 		this.builder.setDestinationProvider(null).build();
 	}
 
+	@Test(expected = IllegalArgumentException.class)
+	public void setConnectionTimeoutNull() {
+		this.builder.setConnectionTimeout(null).build();
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void setReadTimeoutNull() {
+		this.builder.setReadTimeout(null).build();
+	}
+
 	private static class MockWebServiceTemplate extends WebServiceTemplate {
 
 		private boolean checkConnectionForError;

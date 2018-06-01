@@ -37,7 +37,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Dmytro Nosan
  */
 @RunWith(ModifiedClassPathRunner.class)
-@ClassPathExclusions({ "httpclient-*.jar", "okhttp-*.jar" })
+@ClassPathExclusions("httpclient-*.jar")
 public class WebServiceTemplateBuilderHttpUrlConnectionMessageSenderTests {
 
 	private WebServiceTemplateBuilder builder = new WebServiceTemplateBuilder();
@@ -57,13 +57,13 @@ public class WebServiceTemplateBuilderHttpUrlConnectionMessageSenderTests {
 	public void setTimeout() {
 		HttpUrlConnectionMessageSender sender = new HttpUrlConnectionMessageSender();
 
-		this.builder.setConnectionTimeout(5000).setReadTimeout(2000)
-				.messageSenders(sender).build();
+		this.builder.setConnectionTimeout(Duration.ofSeconds(5))
+				.setReadTimeout(Duration.ofMillis(2000)).messageSenders(sender).build();
 
 		assertThat(ReflectionTestUtils.getField(sender, "connectionTimeout"))
-				.isEqualTo(Duration.ofMillis(5000));
+				.isEqualTo(Duration.ofSeconds(5));
 		assertThat(ReflectionTestUtils.getField(sender, "readTimeout"))
-				.isEqualTo(Duration.ofMillis(2000));
+				.isEqualTo(Duration.ofSeconds(2));
 
 	}
 
