@@ -31,8 +31,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
-import org.springframework.http.client.ClientHttpRequestFactory;
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.oxm.Marshaller;
 import org.springframework.oxm.Unmarshaller;
 import org.springframework.ws.WebServiceMessageFactory;
@@ -42,7 +40,6 @@ import org.springframework.ws.client.support.destination.DestinationProvider;
 import org.springframework.ws.client.support.interceptor.ClientInterceptor;
 import org.springframework.ws.transport.WebServiceMessageSender;
 import org.springframework.ws.transport.http.ClientHttpRequestMessageSender;
-import org.springframework.ws.transport.http.HttpUrlConnectionMessageSender;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -81,23 +78,6 @@ public class WebServiceTemplateBuilderTests {
 				WebServiceTemplateCustomizer.class);
 		WebServiceTemplate template = new WebServiceTemplateBuilder(customizer).build();
 		verify(customizer).customize(template);
-	}
-
-	@Test
-	public void buildShouldDetectHttpMessageConverter() {
-		WebServiceTemplate webServiceTemplate = this.builder.build();
-		assertThat(webServiceTemplate.getMessageSenders()).hasSize(1);
-		WebServiceMessageSender messageSender = webServiceTemplate.getMessageSenders()[0];
-		assertHttpComponentsRequestFactory(messageSender);
-	}
-
-	@Test
-	public void detectHttpMessageSenderWhenFalseShouldDisableDetection() {
-		WebServiceTemplate webServiceTemplate = this.builder
-				.detectHttpMessageSender(false).build();
-		assertThat(webServiceTemplate.getMessageSenders()).hasSize(1);
-		assertThat(webServiceTemplate.getMessageSenders()[0])
-				.isInstanceOf(HttpUrlConnectionMessageSender.class);
 	}
 
 	@Test
@@ -358,15 +338,6 @@ public class WebServiceTemplateBuilderTests {
 				.setDestinationProvider(destinationProvider).build();
 		assertThat(webServiceTemplate.getDestinationProvider())
 				.isEqualTo(destinationProvider);
-	}
-
-	private void assertHttpComponentsRequestFactory(
-			WebServiceMessageSender messageSender) {
-		assertThat(messageSender).isInstanceOf(ClientHttpRequestMessageSender.class);
-		ClientHttpRequestMessageSender sender = (ClientHttpRequestMessageSender) messageSender;
-		ClientHttpRequestFactory requestFactory = sender.getRequestFactory();
-		assertThat(requestFactory)
-				.isInstanceOf(HttpComponentsClientHttpRequestFactory.class);
 	}
 
 }

@@ -17,6 +17,7 @@
 package org.springframework.boot.webservices.client;
 
 import java.lang.reflect.Method;
+import java.time.Duration;
 import java.util.function.Supplier;
 
 import org.springframework.boot.web.client.ClientHttpRequestFactorySupplier;
@@ -31,35 +32,48 @@ import org.springframework.ws.transport.http.ClientHttpRequestMessageSender;
  * on the classpath.
  *
  * @author Stephane Nicoll
+ * @author Dmytro Nosan
  * @since 2.1.0
  */
 public class HttpWebServiceMessageSenderBuilder {
 
-	private Integer connectionTimeout;
+	private final Duration connectionTimeout;
 
-	private Integer readTimeout;
+	private final Duration readTimeout;
 
-	private Supplier<ClientHttpRequestFactory> requestFactorySupplier;
+	private final Supplier<ClientHttpRequestFactory> requestFactorySupplier;
 
-	/**
-	 * Set the connection timeout in milliseconds.
-	 * @param connectionTimeout the connection timeout in milliseconds
-	 * @return a new builder instance
-	 */
-	public HttpWebServiceMessageSenderBuilder setConnectionTimeout(
-			int connectionTimeout) {
+	private HttpWebServiceMessageSenderBuilder(Duration connectionTimeout,
+			Duration readTimeout,
+			Supplier<ClientHttpRequestFactory> requestFactorySupplier) {
 		this.connectionTimeout = connectionTimeout;
-		return this;
+		this.readTimeout = readTimeout;
+		this.requestFactorySupplier = requestFactorySupplier;
+	}
+
+	public HttpWebServiceMessageSenderBuilder() {
+		this(null, null, new ClientHttpRequestFactorySupplier());
 	}
 
 	/**
-	 * Set the read timeout in milliseconds.
-	 * @param readTimeout the read timeout in milliseconds
+	 * Set the connection timeout.
+	 * @param connectionTimeout the connection timeout.
 	 * @return a new builder instance
 	 */
-	public HttpWebServiceMessageSenderBuilder setReadTimeout(int readTimeout) {
-		this.readTimeout = readTimeout;
-		return this;
+	public HttpWebServiceMessageSenderBuilder setConnectionTimeout(
+			Duration connectionTimeout) {
+		return new HttpWebServiceMessageSenderBuilder(connectionTimeout, this.readTimeout,
+				this.requestFactorySupplier);
+	}
+
+	/**
+	 * Set the read timeout.
+	 * @param readTimeout the read timeout.
+	 * @return a new builder instance
+	 */
+	public HttpWebServiceMessageSenderBuilder setReadTimeout(Duration readTimeout) {
+		return new HttpWebServiceMessageSenderBuilder(this.connectionTimeout, readTimeout,
+				this.requestFactorySupplier);
 	}
 
 	/**
@@ -72,21 +86,28 @@ public class HttpWebServiceMessageSenderBuilder {
 			Supplier<ClientHttpRequestFactory> requestFactorySupplier) {
 		Assert.notNull(requestFactorySupplier,
 				"RequestFactory Supplier must not be null");
-		this.requestFactorySupplier = requestFactorySupplier;
-		return this;
+		return new HttpWebServiceMessageSenderBuilder(this.connectionTimeout,
+				this.readTimeout, requestFactorySupplier);
 	}
 
+	/**
+	 * Set if a suitable HTTP-based {@link WebServiceMessageSender} should be detected
+	 * based on the classpath. Default is {@code true}.
+	 * @return a new builder instance
+	 * @see HttpWebServiceMessageSenderBuilder
+	 */
 	public WebServiceMessageSender build() {
-		ClientHttpRequestFactory requestFactory = (this.requestFactorySupplier != null
-				? this.requestFactorySupplier.get()
-				: new ClientHttpRequestFactorySupplier().get());
+		ClientHttpRequestFactory requestFactory = this.requestFactorySupplier.get();
+		Assert.notNull(requestFactory, "requestFactory must not be null");
 		if (this.connectionTimeout != null) {
-			new TimeoutRequestFactoryCustomizer(this.connectionTimeout,
-					"setConnectTimeout").customize(requestFactory);
+			TimeoutRequestFactoryCustomizer customizer = new TimeoutRequestFactoryCustomizer(
+					this.connectionTimeout, "setConnectTimeout");
+			customizer.customize(requestFactory);
 		}
 		if (this.readTimeout != null) {
-			new TimeoutRequestFactoryCustomizer(this.readTimeout, "setReadTimeout")
-					.customize(requestFactory);
+			TimeoutRequestFactoryCustomizer customizer = new TimeoutRequestFactoryCustomizer(
+					this.readTimeout, "setReadTimeout");
+			customizer.customize(requestFactory);
 		}
 		return new ClientHttpRequestMessageSender(requestFactory);
 	}
@@ -96,17 +117,18 @@ public class HttpWebServiceMessageSenderBuilder {
 	 */
 	private static class TimeoutRequestFactoryCustomizer {
 
-		private final int timeout;
+		private final Duration timeout;
 
 		private final String methodName;
 
-		TimeoutRequestFactoryCustomizer(int timeout, String methodName) {
+		TimeoutRequestFactoryCustomizer(Duration timeout, String methodName) {
 			this.timeout = timeout;
 			this.methodName = methodName;
 		}
 
 		public void customize(ClientHttpRequestFactory factory) {
-			ReflectionUtils.invokeMethod(findMethod(factory), factory, this.timeout);
+			ReflectionUtils.invokeMethod(findMethod(factory), factory,
+					Math.toIntExact(this.timeout.toMillis()));
 		}
 
 		private Method findMethod(ClientHttpRequestFactory factory) {
