@@ -16,8 +16,6 @@
 
 package org.springframework.boot.webservices.client;
 
-import java.time.Duration;
-
 import okhttp3.OkHttpClient;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -27,39 +25,33 @@ import org.springframework.boot.testsupport.runner.classpath.ModifiedClassPathRu
 import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.OkHttp3ClientHttpRequestFactory;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.ws.client.core.WebServiceTemplate;
 import org.springframework.ws.transport.WebServiceMessageSender;
 import org.springframework.ws.transport.http.ClientHttpRequestMessageSender;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Tests for {@link WebServiceTemplateBuilder} when Http Components is not available.
+ * Tests for {@link HttpWebServiceMessageSenderBuilder} when Http Components is not
+ * available.
  *
- * @author Dmytro Nosan
  * @author Stephane Nicoll
  */
 @RunWith(ModifiedClassPathRunner.class)
 @ClassPathExclusions("httpclient-*.jar")
-public class WebServiceTemplateBuilderOkHttp3IntegrationTests {
+public class HttpWebServiceMessageSenderBuilderOkHttp3IntegrationTests {
 
-	private final WebServiceTemplateBuilder builder = new WebServiceTemplateBuilder();
+	private final HttpWebServiceMessageSenderBuilder builder = new HttpWebServiceMessageSenderBuilder();
 
 	@Test
-	public void detectHttpMessageSenderUseOkHttp3() {
-		WebServiceTemplate webServiceTemplate = this.builder.build();
-		assertThat(webServiceTemplate.getMessageSenders()).hasSize(1);
-		WebServiceMessageSender messageSender = webServiceTemplate.getMessageSenders()[0];
+	public void buildUseOkHttp3ByDefault() {
+		WebServiceMessageSender messageSender = this.builder.build();
 		assertOkHttp3RequestFactory(messageSender);
 	}
 
 	@Test
-	public void detectHttpMessageSenderWithTimeout() {
-		WebServiceTemplate webServiceTemplate = this.builder
-				.detectHttpMessageSender(Duration.ofMillis(5000), Duration.ofMillis(2000))
-				.build();
-		assertThat(webServiceTemplate.getMessageSenders()).hasSize(1);
-		WebServiceMessageSender messageSender = webServiceTemplate.getMessageSenders()[0];
+	public void buildWithCustomTimeouts() {
+		WebServiceMessageSender messageSender = this.builder.setConnectionTimeout(5000)
+				.setReadTimeout(2000).build();
 		OkHttp3ClientHttpRequestFactory factory = assertOkHttp3RequestFactory(
 				messageSender);
 		OkHttpClient client = (OkHttpClient) ReflectionTestUtils.getField(factory,

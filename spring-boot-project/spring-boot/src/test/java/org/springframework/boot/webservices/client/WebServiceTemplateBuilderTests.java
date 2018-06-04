@@ -17,14 +17,12 @@
 package org.springframework.boot.webservices.client;
 
 import java.net.URI;
-import java.time.Duration;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 
 import javax.xml.transform.sax.SAXTransformerFactory;
 
-import org.apache.http.client.config.RequestConfig;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -37,7 +35,6 @@ import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.oxm.Marshaller;
 import org.springframework.oxm.Unmarshaller;
-import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.ws.WebServiceMessageFactory;
 import org.springframework.ws.client.core.FaultMessageResolver;
 import org.springframework.ws.client.core.WebServiceTemplate;
@@ -62,10 +59,10 @@ import static org.mockito.Mockito.verifyZeroInteractions;
  */
 public class WebServiceTemplateBuilderTests {
 
+	private final WebServiceTemplateBuilder builder = new WebServiceTemplateBuilder();
+
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();
-
-	private final WebServiceTemplateBuilder builder = new WebServiceTemplateBuilder();
 
 	@Mock
 	private WebServiceMessageSender messageSender;
@@ -95,22 +92,6 @@ public class WebServiceTemplateBuilderTests {
 	}
 
 	@Test
-	public void buildCanDetectHttpMessageSenderWithTimeout() {
-		WebServiceTemplate webServiceTemplate = this.builder
-				.detectHttpMessageSender(Duration.ofMillis(5000), Duration.ofMillis(2000))
-				.build();
-		assertThat(webServiceTemplate.getMessageSenders()).hasSize(1);
-		WebServiceMessageSender messageSender = webServiceTemplate.getMessageSenders()[0];
-		HttpComponentsClientHttpRequestFactory requestFactory = assertHttpComponentsRequestFactory(
-				messageSender);
-		RequestConfig requestConfig = (RequestConfig) ReflectionTestUtils
-				.getField(requestFactory, "requestConfig");
-		assertThat(requestConfig).isNotNull();
-		assertThat(requestConfig.getConnectTimeout()).isEqualTo(5000);
-		assertThat(requestConfig.getSocketTimeout()).isEqualTo(2000);
-	}
-
-	@Test
 	public void detectHttpMessageSenderWhenFalseShouldDisableDetection() {
 		WebServiceTemplate webServiceTemplate = this.builder
 				.detectHttpMessageSender(false).build();
@@ -135,14 +116,14 @@ public class WebServiceTemplateBuilderTests {
 
 	@Test
 	public void messageSendersShouldApply() {
-		WebServiceTemplate template = this.builder.detectHttpMessageSender(false)
-				.messageSenders(this.messageSender).build();
+		WebServiceTemplate template = this.builder.messageSenders(this.messageSender)
+				.build();
 		assertThat(template.getMessageSenders()).containsOnly(this.messageSender);
 	}
 
 	@Test
 	public void messageSendersShouldReplaceExisting() {
-		WebServiceTemplate template = this.builder.detectHttpMessageSender(false)
+		WebServiceTemplate template = this.builder
 				.messageSenders(new ClientHttpRequestMessageSender())
 				.messageSenders(this.messageSender).build();
 		assertThat(template.getMessageSenders()).containsOnly(this.messageSender);
@@ -166,8 +147,7 @@ public class WebServiceTemplateBuilderTests {
 	@Test
 	public void additionalMessageConvertersShouldAddToExisting() {
 		ClientHttpRequestMessageSender httpMessageSender = new ClientHttpRequestMessageSender();
-		WebServiceTemplate template = this.builder.detectHttpMessageSender(false)
-				.messageSenders(httpMessageSender)
+		WebServiceTemplate template = this.builder.messageSenders(httpMessageSender)
 				.additionalMessageSenders(this.messageSender).build();
 		assertThat(template.getMessageSenders()).containsOnly(httpMessageSender,
 				this.messageSender);
@@ -380,14 +360,13 @@ public class WebServiceTemplateBuilderTests {
 				.isEqualTo(destinationProvider);
 	}
 
-	private HttpComponentsClientHttpRequestFactory assertHttpComponentsRequestFactory(
+	private void assertHttpComponentsRequestFactory(
 			WebServiceMessageSender messageSender) {
 		assertThat(messageSender).isInstanceOf(ClientHttpRequestMessageSender.class);
 		ClientHttpRequestMessageSender sender = (ClientHttpRequestMessageSender) messageSender;
 		ClientHttpRequestFactory requestFactory = sender.getRequestFactory();
 		assertThat(requestFactory)
 				.isInstanceOf(HttpComponentsClientHttpRequestFactory.class);
-		return (HttpComponentsClientHttpRequestFactory) requestFactory;
 	}
 
 }

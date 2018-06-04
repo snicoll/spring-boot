@@ -16,8 +16,6 @@
 
 package org.springframework.boot.webservices.client;
 
-import java.time.Duration;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -26,39 +24,33 @@ import org.springframework.boot.testsupport.runner.classpath.ModifiedClassPathRu
 import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.ws.client.core.WebServiceTemplate;
 import org.springframework.ws.transport.WebServiceMessageSender;
 import org.springframework.ws.transport.http.ClientHttpRequestMessageSender;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Tests for {@link WebServiceTemplateBuilder} when no preferred HTTP clients are
+ * Tests for {@link HttpWebServiceMessageSenderBuilder} when no preferred HTTP clients are
  * available
  *
  * @author Stephane Nicoll
  */
 @RunWith(ModifiedClassPathRunner.class)
 @ClassPathExclusions({ "httpclient-*.jar", "okhttp*.jar" })
-public class WebServiceTemplateBuilderSimpleIntegrationTests {
+public class HttpWebServiceMessageSenderBuilderSimpleIntegrationTests {
 
-	private final WebServiceTemplateBuilder builder = new WebServiceTemplateBuilder();
+	private final HttpWebServiceMessageSenderBuilder builder = new HttpWebServiceMessageSenderBuilder();
 
 	@Test
-	public void detectHttpMessageSenderUseSimpleClient() {
-		WebServiceTemplate webServiceTemplate = this.builder.build();
-		assertThat(webServiceTemplate.getMessageSenders()).hasSize(1);
-		WebServiceMessageSender messageSender = webServiceTemplate.getMessageSenders()[0];
+	public void buildUseUseSimpleClientByDefault() {
+		WebServiceMessageSender messageSender = this.builder.build();
 		assertSimpleClientRequestFactory(messageSender);
 	}
 
 	@Test
-	public void detectHttpMessageSenderWithTimeout() {
-		WebServiceTemplate webServiceTemplate = this.builder
-				.detectHttpMessageSender(Duration.ofMillis(5000), Duration.ofMillis(2000))
-				.build();
-		assertThat(webServiceTemplate.getMessageSenders()).hasSize(1);
-		WebServiceMessageSender messageSender = webServiceTemplate.getMessageSenders()[0];
+	public void buildWithCustomTimeouts() {
+		WebServiceMessageSender messageSender = this.builder.setConnectionTimeout(5000)
+				.setReadTimeout(2000).build();
 		SimpleClientHttpRequestFactory requestFactory = assertSimpleClientRequestFactory(
 				messageSender);
 		assertThat(ReflectionTestUtils.getField(requestFactory, "connectTimeout"))
