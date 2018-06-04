@@ -16,6 +16,8 @@
 
 package org.springframework.boot.webservices.client;
 
+import java.time.Duration;
+
 import org.apache.http.client.config.RequestConfig;
 import org.junit.Test;
 
@@ -50,7 +52,8 @@ public class HttpWebServiceMessageSenderBuilderTests {
 		ClientHttpRequestMessageSender messageSender = build(
 				new HttpWebServiceMessageSenderBuilder()
 						.requestFactory(SimpleClientHttpRequestFactory::new)
-						.setConnectionTimeout(5000).setReadTimeout(2000));
+						.setConnectionTimeout(Duration.ofSeconds(5))
+						.setReadTimeout(Duration.ofSeconds(2)));
 		SimpleClientHttpRequestFactory requestFactory = (SimpleClientHttpRequestFactory) messageSender
 				.getRequestFactory();
 		assertThat(ReflectionTestUtils.getField(requestFactory, "connectTimeout"))
@@ -60,10 +63,11 @@ public class HttpWebServiceMessageSenderBuilderTests {
 	}
 
 	@Test
-	public void buildUsesHttpComponentsBydefault() {
+	public void buildUsesHttpComponentsByDefault() {
 		ClientHttpRequestMessageSender messageSender = build(
-				new HttpWebServiceMessageSenderBuilder().setConnectionTimeout(5000)
-						.setReadTimeout(2000));
+				new HttpWebServiceMessageSenderBuilder()
+						.setConnectionTimeout(Duration.ofSeconds(5))
+						.setReadTimeout(Duration.ofSeconds(2)));
 		ClientHttpRequestFactory requestFactory = messageSender.getRequestFactory();
 		assertThat(requestFactory)
 				.isInstanceOf(HttpComponentsClientHttpRequestFactory.class);
