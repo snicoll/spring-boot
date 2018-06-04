@@ -16,33 +16,26 @@
 
 package org.springframework.boot.webservices.client;
 
-import java.lang.reflect.Method;
 import java.net.URI;
-import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.function.Supplier;
 
 import javax.xml.transform.TransformerFactory;
 
 import org.springframework.beans.BeanUtils;
-import org.springframework.boot.web.client.ClientHttpRequestFactorySupplier;
-import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.oxm.Marshaller;
 import org.springframework.oxm.Unmarshaller;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.ReflectionUtils;
 import org.springframework.ws.WebServiceMessageFactory;
 import org.springframework.ws.client.core.FaultMessageResolver;
 import org.springframework.ws.client.core.WebServiceTemplate;
 import org.springframework.ws.client.support.destination.DestinationProvider;
 import org.springframework.ws.client.support.interceptor.ClientInterceptor;
 import org.springframework.ws.transport.WebServiceMessageSender;
-import org.springframework.ws.transport.http.ClientHttpRequestMessageSender;
 
 /**
  * Builder that can be used to configure and create a {@link WebServiceTemplate}. Provides
@@ -62,7 +55,7 @@ import org.springframework.ws.transport.http.ClientHttpRequestMessageSender;
  */
 public class WebServiceTemplateBuilder {
 
-	private final Supplier<WebServiceMessageSender> httpMessageSenderSupplier;
+	private final boolean detectHttpMessageSender;
 
 	private final Set<ClientInterceptor> interceptors;
 
@@ -83,14 +76,12 @@ public class WebServiceTemplateBuilder {
 	private final WebServiceMessageFactory messageFactory;
 
 	public WebServiceTemplateBuilder(WebServiceTemplateCustomizer... customizers) {
-		this(new HttpMessageSenderSupplier(), Collections.emptySet(),
-				Collections.emptySet(),
+		this(true, Collections.emptySet(), Collections.emptySet(),
 				append(Collections.<WebServiceTemplateCustomizer>emptySet(), customizers),
 				Collections.emptySet(), null, null, null, null, null);
 	}
 
-	private WebServiceTemplateBuilder(
-			Supplier<WebServiceMessageSender> httpMessageSenderSupplier,
+	private WebServiceTemplateBuilder(boolean detectHttpMessageSender,
 			Set<ClientInterceptor> interceptors,
 			Set<WebServiceTemplateCustomizer> internalCustomizers,
 			Set<WebServiceTemplateCustomizer> customizers,
@@ -102,7 +93,7 @@ public class WebServiceTemplateBuilder {
 		this.internalCustomizers = internalCustomizers;
 		this.customizers = customizers;
 		this.messageSenders = messageSenders;
-		this.httpMessageSenderSupplier = httpMessageSenderSupplier;
+		this.detectHttpMessageSender = detectHttpMessageSender;
 		this.marshaller = marshaller;
 		this.unmarshaller = unmarshaller;
 		this.destinationProvider = destinationProvider;
@@ -112,39 +103,18 @@ public class WebServiceTemplateBuilder {
 
 	/**
 	 * Set if a suitable HTTP-based {@link WebServiceMessageSender} should be detected
-	 * based on the classpath and added to the list of configured message senders. Default
-	 * is {@code true}.
+	 * based on the classpath. Default is {@code true}.
 	 * @param detectHttpMessageSender if a HTTP-based {@link WebServiceMessageSender}
 	 * should be detected
 	 * @return a new builder instance
-	 * @see #detectHttpMessageSender(Duration, Duration)
+	 * @see HttpWebServiceMessageSenderBuilder
 	 */
 	public WebServiceTemplateBuilder detectHttpMessageSender(
 			boolean detectHttpMessageSender) {
-		Supplier<WebServiceMessageSender> supplier = (detectHttpMessageSender
-				? new HttpMessageSenderSupplier() : null);
-		return new WebServiceTemplateBuilder(supplier, this.interceptors,
+		return new WebServiceTemplateBuilder(detectHttpMessageSender, this.interceptors,
 				this.internalCustomizers, this.customizers, this.messageSenders,
 				this.marshaller, this.unmarshaller, this.destinationProvider,
 				this.transformerFactoryClass, this.messageFactory);
-	}
-
-	/**
-	 * Detect a suitable HTTP-based {@link WebServiceMessageSender} based on the classpath
-	 * with the specified configuration and add it to the list of configured message
-	 * senders.
-	 * @param connectionTimeout the connection timeout or {@code null} to use the default
-	 * @param readTimeout the read timeout or {@code null} to use the default
-	 * @return a new builder instance
-	 */
-	public WebServiceTemplateBuilder detectHttpMessageSender(Duration connectionTimeout,
-			Duration readTimeout) {
-		return new WebServiceTemplateBuilder(
-				new HttpMessageSenderSupplier(connectionTimeout, readTimeout),
-				this.interceptors, this.internalCustomizers, this.customizers,
-				this.messageSenders, this.marshaller, this.unmarshaller,
-				this.destinationProvider, this.transformerFactoryClass,
-				this.messageFactory);
 	}
 
 	/**
@@ -174,7 +144,7 @@ public class WebServiceTemplateBuilder {
 	public WebServiceTemplateBuilder messageSenders(
 			Collection<? extends WebServiceMessageSender> messageSenders) {
 		Assert.notNull(messageSenders, "MessageSenders must not be null");
-		return new WebServiceTemplateBuilder(this.httpMessageSenderSupplier,
+		return new WebServiceTemplateBuilder(this.detectHttpMessageSender,
 				this.interceptors, this.internalCustomizers, this.customizers,
 				append(Collections.<WebServiceMessageSender>emptySet(), messageSenders),
 				this.marshaller, this.unmarshaller, this.destinationProvider,
@@ -204,7 +174,7 @@ public class WebServiceTemplateBuilder {
 	public WebServiceTemplateBuilder additionalMessageSenders(
 			Collection<? extends WebServiceMessageSender> messageSenders) {
 		Assert.notNull(messageSenders, "MessageSenders must not be null");
-		return new WebServiceTemplateBuilder(this.httpMessageSenderSupplier,
+		return new WebServiceTemplateBuilder(this.detectHttpMessageSender,
 				this.interceptors, this.internalCustomizers, this.customizers,
 				append(this.messageSenders, messageSenders), this.marshaller,
 				this.unmarshaller, this.destinationProvider, this.transformerFactoryClass,
@@ -235,7 +205,7 @@ public class WebServiceTemplateBuilder {
 	public WebServiceTemplateBuilder interceptors(
 			Collection<? extends ClientInterceptor> interceptors) {
 		Assert.notNull(interceptors, "Interceptors must not be null");
-		return new WebServiceTemplateBuilder(this.httpMessageSenderSupplier,
+		return new WebServiceTemplateBuilder(this.detectHttpMessageSender,
 				append(Collections.<ClientInterceptor>emptySet(), interceptors),
 				this.internalCustomizers, this.customizers, this.messageSenders,
 				this.marshaller, this.unmarshaller, this.destinationProvider,
@@ -265,7 +235,7 @@ public class WebServiceTemplateBuilder {
 	public WebServiceTemplateBuilder additionalInterceptors(
 			Collection<? extends ClientInterceptor> interceptors) {
 		Assert.notNull(interceptors, "Interceptors must not be null");
-		return new WebServiceTemplateBuilder(this.httpMessageSenderSupplier,
+		return new WebServiceTemplateBuilder(this.detectHttpMessageSender,
 				append(this.interceptors, interceptors), this.internalCustomizers,
 				this.customizers, this.messageSenders, this.marshaller, this.unmarshaller,
 				this.destinationProvider, this.transformerFactoryClass,
@@ -299,7 +269,7 @@ public class WebServiceTemplateBuilder {
 	public WebServiceTemplateBuilder customizers(
 			Collection<? extends WebServiceTemplateCustomizer> customizers) {
 		Assert.notNull(customizers, "Customizers must not be null");
-		return new WebServiceTemplateBuilder(this.httpMessageSenderSupplier,
+		return new WebServiceTemplateBuilder(this.detectHttpMessageSender,
 				this.interceptors, this.internalCustomizers,
 				append(Collections.<WebServiceTemplateCustomizer>emptySet(), customizers),
 				this.messageSenders, this.marshaller, this.unmarshaller,
@@ -332,7 +302,7 @@ public class WebServiceTemplateBuilder {
 	public WebServiceTemplateBuilder additionalCustomizers(
 			Collection<? extends WebServiceTemplateCustomizer> customizers) {
 		Assert.notNull(customizers, "Customizers must not be null");
-		return new WebServiceTemplateBuilder(this.httpMessageSenderSupplier,
+		return new WebServiceTemplateBuilder(this.detectHttpMessageSender,
 				this.interceptors, this.internalCustomizers,
 				append(this.customizers, customizers), this.messageSenders,
 				this.marshaller, this.unmarshaller, this.destinationProvider,
@@ -348,7 +318,7 @@ public class WebServiceTemplateBuilder {
 	 */
 	public WebServiceTemplateBuilder setCheckConnectionForFault(
 			boolean checkConnectionForFault) {
-		return new WebServiceTemplateBuilder(this.httpMessageSenderSupplier,
+		return new WebServiceTemplateBuilder(this.detectHttpMessageSender,
 				this.interceptors,
 				append(this.internalCustomizers,
 						new CheckConnectionFaultCustomizer(checkConnectionForFault)),
@@ -366,7 +336,7 @@ public class WebServiceTemplateBuilder {
 	 */
 	public WebServiceTemplateBuilder setCheckConnectionForError(
 			boolean checkConnectionForError) {
-		return new WebServiceTemplateBuilder(this.httpMessageSenderSupplier,
+		return new WebServiceTemplateBuilder(this.detectHttpMessageSender,
 				this.interceptors,
 				append(this.internalCustomizers,
 						new CheckConnectionForErrorCustomizer(checkConnectionForError)),
@@ -384,7 +354,7 @@ public class WebServiceTemplateBuilder {
 	public WebServiceTemplateBuilder setWebServiceMessageFactory(
 			WebServiceMessageFactory messageFactory) {
 		Assert.notNull(messageFactory, "messageFactory must not be null");
-		return new WebServiceTemplateBuilder(this.httpMessageSenderSupplier,
+		return new WebServiceTemplateBuilder(this.detectHttpMessageSender,
 				this.interceptors, this.internalCustomizers, this.customizers,
 				this.messageSenders, this.marshaller, this.unmarshaller,
 				this.destinationProvider, this.transformerFactoryClass, messageFactory);
@@ -397,7 +367,7 @@ public class WebServiceTemplateBuilder {
 	 * @see WebServiceTemplate#setUnmarshaller(Unmarshaller)
 	 **/
 	public WebServiceTemplateBuilder setUnmarshaller(Unmarshaller unmarshaller) {
-		return new WebServiceTemplateBuilder(this.httpMessageSenderSupplier,
+		return new WebServiceTemplateBuilder(this.detectHttpMessageSender,
 				this.interceptors, this.internalCustomizers, this.customizers,
 				this.messageSenders, this.marshaller, unmarshaller,
 				this.destinationProvider, this.transformerFactoryClass,
@@ -411,7 +381,7 @@ public class WebServiceTemplateBuilder {
 	 * @see WebServiceTemplate#setMarshaller(Marshaller)
 	 **/
 	public WebServiceTemplateBuilder setMarshaller(Marshaller marshaller) {
-		return new WebServiceTemplateBuilder(this.httpMessageSenderSupplier,
+		return new WebServiceTemplateBuilder(this.detectHttpMessageSender,
 				this.interceptors, this.internalCustomizers, this.customizers,
 				this.messageSenders, marshaller, this.unmarshaller,
 				this.destinationProvider, this.transformerFactoryClass,
@@ -426,7 +396,7 @@ public class WebServiceTemplateBuilder {
 	 */
 	public WebServiceTemplateBuilder setFaultMessageResolver(
 			FaultMessageResolver faultMessageResolver) {
-		return new WebServiceTemplateBuilder(this.httpMessageSenderSupplier,
+		return new WebServiceTemplateBuilder(this.detectHttpMessageSender,
 				this.interceptors,
 				append(this.internalCustomizers,
 						new FaultMessageResolverCustomizer(faultMessageResolver)),
@@ -443,7 +413,7 @@ public class WebServiceTemplateBuilder {
 	 */
 	public WebServiceTemplateBuilder setTransformerFactoryClass(
 			Class<? extends TransformerFactory> transformerFactoryClass) {
-		return new WebServiceTemplateBuilder(this.httpMessageSenderSupplier,
+		return new WebServiceTemplateBuilder(this.detectHttpMessageSender,
 				this.interceptors, this.internalCustomizers, this.customizers,
 				this.messageSenders, this.marshaller, this.unmarshaller,
 				this.destinationProvider, transformerFactoryClass, this.messageFactory);
@@ -477,7 +447,7 @@ public class WebServiceTemplateBuilder {
 	public WebServiceTemplateBuilder setDestinationProvider(
 			DestinationProvider destinationProvider) {
 		Assert.notNull(destinationProvider, "destinationProvider must not be null");
-		return new WebServiceTemplateBuilder(this.httpMessageSenderSupplier,
+		return new WebServiceTemplateBuilder(this.detectHttpMessageSender,
 				this.interceptors, this.internalCustomizers, this.customizers,
 				this.messageSenders, this.marshaller, this.unmarshaller,
 				destinationProvider, this.transformerFactoryClass, this.messageFactory);
@@ -519,7 +489,7 @@ public class WebServiceTemplateBuilder {
 	 */
 	public <T extends WebServiceTemplate> T configure(T webServiceTemplate) {
 		Assert.notNull(webServiceTemplate, "webServiceTemplate must not be null");
-		configureSenders(webServiceTemplate);
+		configureMessageSenders(webServiceTemplate);
 		if (!CollectionUtils.isEmpty(this.internalCustomizers)) {
 			for (WebServiceTemplateCustomizer internalCustomizer : this.internalCustomizers) {
 				internalCustomizer.customize(webServiceTemplate);
@@ -553,16 +523,17 @@ public class WebServiceTemplateBuilder {
 		return webServiceTemplate;
 	}
 
-	private <T extends WebServiceTemplate> void configureSenders(T webServiceTemplate) {
+	private <T extends WebServiceTemplate> void configureMessageSenders(
+			T webServiceTemplate) {
 		if (!CollectionUtils.isEmpty(this.messageSenders)) {
 			Set<WebServiceMessageSender> webServiceMessageSenders = new LinkedHashSet<>(
 					this.messageSenders);
 			webServiceTemplate.setMessageSenders(
 					webServiceMessageSenders.toArray(new WebServiceMessageSender[0]));
 		}
-		else if (this.httpMessageSenderSupplier != null) {
+		else if (this.detectHttpMessageSender) {
 			webServiceTemplate.setMessageSenders(new WebServiceMessageSender[] {
-					this.httpMessageSenderSupplier.get() });
+					new HttpWebServiceMessageSenderBuilder().build() });
 		}
 
 	}
@@ -641,70 +612,6 @@ public class WebServiceTemplateBuilder {
 		@Override
 		public void customize(WebServiceTemplate webServiceTemplate) {
 			webServiceTemplate.setFaultMessageResolver(this.faultMessageResolver);
-		}
-
-	}
-
-	private static class HttpMessageSenderSupplier
-			implements Supplier<WebServiceMessageSender> {
-
-		private final Duration connectionTimeout;
-
-		private final Duration readTimeout;
-
-		HttpMessageSenderSupplier(Duration connectionTimeout, Duration readTimeout) {
-			this.connectionTimeout = connectionTimeout;
-			this.readTimeout = readTimeout;
-		}
-
-		HttpMessageSenderSupplier() {
-			this(null, null);
-		}
-
-		@Override
-		public WebServiceMessageSender get() {
-			ClientHttpRequestFactory requestFactory = new ClientHttpRequestFactorySupplier()
-					.get();
-			if (this.connectionTimeout != null) {
-				new TimeoutRequestFactoryCustomizer(this.connectionTimeout.toMillis(),
-						"setConnectTimeout").customize(requestFactory);
-			}
-			if (this.readTimeout != null) {
-				new TimeoutRequestFactoryCustomizer(this.readTimeout.toMillis(),
-						"setReadTimeout").customize(requestFactory);
-			}
-			return new ClientHttpRequestMessageSender(requestFactory);
-		}
-
-		/**
-		 * {@link ClientHttpRequestFactory} customizer to call a "set timeout" method.
-		 */
-		private static class TimeoutRequestFactoryCustomizer {
-
-			private final long timeout;
-
-			private final String methodName;
-
-			TimeoutRequestFactoryCustomizer(long timeout, String methodName) {
-				this.timeout = timeout;
-				this.methodName = methodName;
-			}
-
-			public void customize(ClientHttpRequestFactory factory) {
-				ReflectionUtils.invokeMethod(findMethod(factory), factory,
-						(int) this.timeout);
-			}
-
-			private Method findMethod(ClientHttpRequestFactory factory) {
-				Method method = ReflectionUtils.findMethod(factory.getClass(),
-						this.methodName, int.class);
-				if (method != null) {
-					return method;
-				}
-				throw new IllegalStateException("Request factory " + factory.getClass()
-						+ " does not have a " + this.methodName + "(int) method");
-			}
-
 		}
 
 	}
