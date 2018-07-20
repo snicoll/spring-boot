@@ -32,4 +32,56 @@ public interface DispatcherServletPathProvider {
 
 	Set<String> getServletPaths();
 
+	/**
+	 * Return a full path from the specified {@code pattern} using the specified
+	 * {@code servletPath}.
+	 * @param servletPath the servlet path
+	 * @param pattern the pattern
+	 * @return the path for the specified pattern
+	 */
+	default String getPath(String servletPath, String pattern) {
+		String prefix = getServletPrefix(servletPath);
+		if (!pattern.startsWith("/")) {
+			pattern = "/" + pattern;
+		}
+		return prefix + pattern;
+	}
+
+	/**
+	 * Return the servlet mapping of the specified {@code path}.
+	 * @param path the path of a servlet
+	 * @return the servlet mapping
+	 * @see #getServletPaths()
+	 */
+	default String getServletMapping(String path) {
+		if (path.equals("") || path.equals("/")) {
+			return "/";
+		}
+		if (path.contains("*")) {
+			return path;
+		}
+		if (path.endsWith("/")) {
+			return path + "*";
+		}
+		return path + "/*";
+	}
+
+	/**
+	 * Return the servlet prefix of the specified {@code path}, i.e. without trailing
+	 * slash or `*`.
+	 * @param path a path
+	 * @return the servlet prefix for that path
+	 */
+	default String getServletPrefix(String path) {
+		String result = path;
+		int index = result.indexOf('*');
+		if (index != -1) {
+			result = result.substring(0, index);
+		}
+		if (result.endsWith("/")) {
+			result = result.substring(0, result.length() - 1);
+		}
+		return result;
+	}
+
 }

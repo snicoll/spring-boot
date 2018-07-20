@@ -16,6 +16,8 @@
 
 package org.springframework.boot.autoconfigure.security.servlet;
 
+import java.util.Collections;
+
 import javax.servlet.http.HttpServletRequest;
 
 import org.assertj.core.api.AssertDelegateTarget;
@@ -24,7 +26,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import org.springframework.boot.autoconfigure.security.StaticResourceLocation;
-import org.springframework.boot.autoconfigure.web.ServerProperties;
+import org.springframework.boot.autoconfigure.web.servlet.DispatcherServletPathProvider;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockServletContext;
 import org.springframework.security.web.util.matcher.RequestMatcher;
@@ -74,11 +76,11 @@ public class StaticResourceRequestTests {
 
 	@Test
 	public void atLocationWhenHasServletPathShouldMatchLocation() {
-		ServerProperties serverProperties = new ServerProperties();
-		serverProperties.getServlet().setPath("/foo");
+		DispatcherServletPathProvider servletPathProvider = () -> Collections
+				.singleton("/foo");
 		RequestMatcher matcher = this.resourceRequest.at(StaticResourceLocation.CSS);
-		assertMatcher(matcher, serverProperties).matches("/foo", "/css/file.css");
-		assertMatcher(matcher, serverProperties).doesNotMatch("/foo", "/js/file.js");
+		assertMatcher(matcher, servletPathProvider).matches("/foo", "/css/file.css");
+		assertMatcher(matcher, servletPathProvider).doesNotMatch("/foo", "/js/file.js");
 	}
 
 	@Test
@@ -96,15 +98,14 @@ public class StaticResourceRequestTests {
 	}
 
 	private RequestMatcherAssert assertMatcher(RequestMatcher matcher) {
-		StaticWebApplicationContext context = new StaticWebApplicationContext();
-		context.registerBean(ServerProperties.class);
-		return assertThat(new RequestMatcherAssert(context, matcher));
+		return assertMatcher(matcher, () -> Collections.singleton("/"));
 	}
 
 	private RequestMatcherAssert assertMatcher(RequestMatcher matcher,
-			ServerProperties serverProperties) {
+			DispatcherServletPathProvider servletPathProvider) {
 		StaticWebApplicationContext context = new StaticWebApplicationContext();
-		context.registerBean(ServerProperties.class, () -> serverProperties);
+		context.registerBean(DispatcherServletPathProvider.class,
+				() -> servletPathProvider);
 		return assertThat(new RequestMatcherAssert(context, matcher));
 	}
 

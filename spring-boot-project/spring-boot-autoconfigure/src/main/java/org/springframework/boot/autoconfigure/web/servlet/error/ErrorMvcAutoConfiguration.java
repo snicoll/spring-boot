@@ -33,6 +33,7 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionMessage;
@@ -41,6 +42,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnSingleCandidate;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication.Type;
 import org.springframework.boot.autoconfigure.condition.SearchStrategy;
@@ -49,6 +51,8 @@ import org.springframework.boot.autoconfigure.template.TemplateAvailabilityProvi
 import org.springframework.boot.autoconfigure.template.TemplateAvailabilityProviders;
 import org.springframework.boot.autoconfigure.web.ResourceProperties;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
+import org.springframework.boot.autoconfigure.web.servlet.DispatcherServletAutoConfiguration;
+import org.springframework.boot.autoconfigure.web.servlet.DispatcherServletPathProvider;
 import org.springframework.boot.autoconfigure.web.servlet.WebMvcAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.server.ErrorPage;
@@ -88,6 +92,7 @@ import org.springframework.web.util.HtmlUtils;
 @ConditionalOnWebApplication(type = Type.SERVLET)
 @ConditionalOnClass({ Servlet.class, DispatcherServlet.class })
 // Load before the main WebMvcAutoConfiguration so that the error View is available
+@AutoConfigureAfter(DispatcherServletAutoConfiguration.class)
 @AutoConfigureBefore(WebMvcAutoConfiguration.class)
 @EnableConfigurationProperties({ ServerProperties.class, ResourceProperties.class })
 public class ErrorMvcAutoConfiguration {
@@ -117,8 +122,10 @@ public class ErrorMvcAutoConfiguration {
 	}
 
 	@Bean
-	public ErrorPageCustomizer errorPageCustomizer() {
-		return new ErrorPageCustomizer(this.serverProperties);
+	@ConditionalOnSingleCandidate(DispatcherServletPathProvider.class)
+	public ErrorPageCustomizer errorPageCustomizer(
+			DispatcherServletPathProvider servletPathProvider) {
+		return new ErrorPageCustomizer(this.serverProperties, servletPathProvider);
 	}
 
 	@Bean
@@ -327,15 +334,21 @@ public class ErrorMvcAutoConfiguration {
 
 		private final ServerProperties properties;
 
-		protected ErrorPageCustomizer(ServerProperties properties) {
+		private final DispatcherServletPathProvider servletPathProvider;
+
+		protected ErrorPageCustomizer(ServerProperties properties,
+				DispatcherServletPathProvider servletPathProvider) {
 			this.properties = properties;
+			this.servletPathProvider = servletPathProvider;
 		}
 
 		@Override
 		public void registerErrorPages(ErrorPageRegistry errorPageRegistry) {
-			ErrorPage errorPage = new ErrorPage(
-					this.properties.getServlet().getServletPrefix()
-							+ this.properties.getError().getPath());
+			// TODO: assuming single path
+			String servletPath = this.servletPathProvider.getServletPaths().iterator()
+					.next();
+			ErrorPage errorPage = new ErrorPage(this.servletPathProvider
+					.getPath(servletPath, this.properties.getError().getPath()));
 			errorPageRegistry.addErrorPages(errorPage);
 		}
 

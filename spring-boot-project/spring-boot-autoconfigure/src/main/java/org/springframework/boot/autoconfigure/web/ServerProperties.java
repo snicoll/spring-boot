@@ -269,6 +269,12 @@ public class ServerProperties {
 			return this.session;
 		}
 
+		/**
+		 * Return the servlet mapping of the auto-configured dispatcher servlet.
+		 * @return the servlet mapping
+		 * @deprecated as of 2.0.4 in favour of {@code DispatcherServletProvider}.
+		 */
+		@Deprecated
 		public String getServletMapping() {
 			if (this.path.equals("") || this.path.equals("/")) {
 				return "/";
@@ -282,14 +288,28 @@ public class ServerProperties {
 			return this.path + "/*";
 		}
 
-		public String getPath(String path) {
+		/**
+		 * Return a full path from the specified {@code pattern}.
+		 * @param pattern the pattern
+		 * @return the path for the specified pattern
+		 * @deprecated as of 2.0.4 in favour of {@code DispatcherServletProvider}.
+		 */
+		@Deprecated
+		public String getPath(String pattern) {
 			String prefix = getServletPrefix();
-			if (!path.startsWith("/")) {
-				path = "/" + path;
+			if (!pattern.startsWith("/")) {
+				pattern = "/" + pattern;
 			}
-			return prefix + path;
+			return prefix + pattern;
 		}
 
+		/**
+		 * Return the servlet prefix of the auto-configured dispatcher servlet., i.e.
+		 * without trailing slash or `*`.
+		 * @return the servlet prefix for that path
+		 * @deprecated as of 2.0.4 in favour of {@code DispatcherServletProvider}.
+		 */
+		@Deprecated
 		public String getServletPrefix() {
 			String result = this.path;
 			int index = result.indexOf('*');
@@ -302,19 +322,33 @@ public class ServerProperties {
 			return result;
 		}
 
-		public String[] getPathsArray(Collection<String> paths) {
-			String[] result = new String[paths.size()];
+		/**
+		 * Apply {@link #getPath()} to the specified collection.
+		 * @param patterns the patterns to handle
+		 * @return an array of paths
+		 * @see #getPath()
+		 */
+		@Deprecated
+		public String[] getPathsArray(Collection<String> patterns) {
+			String[] result = new String[patterns.size()];
 			int i = 0;
-			for (String path : paths) {
+			for (String path : patterns) {
 				result[i++] = getPath(path);
 			}
 			return result;
 		}
 
-		public String[] getPathsArray(String[] paths) {
-			String[] result = new String[paths.length];
+		/**
+		 * Apply {@link #getPath()} to the specified array.
+		 * @param patterns the patterns to handle
+		 * @return an array of paths
+		 * @see #getPath()
+		 */
+		@Deprecated
+		public String[] getPathsArray(String[] patterns) {
+			String[] result = new String[patterns.length];
 			int i = 0;
-			for (String path : paths) {
+			for (String path : patterns) {
 				result[i++] = getPath(path);
 			}
 			return result;

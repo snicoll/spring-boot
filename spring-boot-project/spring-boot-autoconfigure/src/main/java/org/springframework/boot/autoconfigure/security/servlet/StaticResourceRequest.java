@@ -27,7 +27,7 @@ import java.util.stream.Stream;
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.boot.autoconfigure.security.StaticResourceLocation;
-import org.springframework.boot.autoconfigure.web.ServerProperties;
+import org.springframework.boot.autoconfigure.web.servlet.DispatcherServletPathProvider;
 import org.springframework.boot.security.servlet.ApplicationContextRequestMatcher;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.OrRequestMatcher;
@@ -96,14 +96,14 @@ public final class StaticResourceRequest {
 	 * Locations}.
 	 */
 	public static final class StaticResourceRequestMatcher
-			extends ApplicationContextRequestMatcher<ServerProperties> {
+			extends ApplicationContextRequestMatcher<DispatcherServletPathProvider> {
 
 		private final Set<StaticResourceLocation> locations;
 
 		private volatile RequestMatcher delegate;
 
 		private StaticResourceRequestMatcher(Set<StaticResourceLocation> locations) {
-			super(ServerProperties.class);
+			super(DispatcherServletPathProvider.class);
 			this.locations = locations;
 		}
 
@@ -134,25 +134,31 @@ public final class StaticResourceRequest {
 		}
 
 		@Override
-		protected void initialized(Supplier<ServerProperties> serverProperties) {
+		protected void initialized(
+				Supplier<DispatcherServletPathProvider> dispatcherServletPathProvider) {
 			this.delegate = new OrRequestMatcher(
-					getDelegateMatchers(serverProperties.get()));
+					getDelegateMatchers(dispatcherServletPathProvider.get()));
 		}
 
 		private List<RequestMatcher> getDelegateMatchers(
-				ServerProperties serverProperties) {
+				DispatcherServletPathProvider serverProperties) {
 			return getPatterns(serverProperties).map(AntPathRequestMatcher::new)
 					.collect(Collectors.toList());
 		}
 
-		private Stream<String> getPatterns(ServerProperties serverProperties) {
+		private Stream<String> getPatterns(
+				DispatcherServletPathProvider dispatcherServletPathProvider) {
+			// TODO: assuming single path
+			String servletPath = dispatcherServletPathProvider.getServletPaths()
+					.iterator().next();
 			return this.locations.stream().flatMap(StaticResourceLocation::getPatterns)
-					.map(serverProperties.getServlet()::getPath);
+					.map((pattern) -> dispatcherServletPathProvider.getPath(servletPath,
+							pattern));
 		}
 
 		@Override
 		protected boolean matches(HttpServletRequest request,
-				Supplier<ServerProperties> context) {
+				Supplier<DispatcherServletPathProvider> context) {
 			return this.delegate.matches(request);
 		}
 
