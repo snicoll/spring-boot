@@ -26,6 +26,7 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.BeanDescription;
+import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationConfig;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -172,6 +173,7 @@ public class ConfigurationPropertiesReportEndpoint implements ApplicationContext
 	 */
 	protected void configureObjectMapper(ObjectMapper mapper) {
 		mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+		mapper.configure(MapperFeature.USE_STD_BEAN_NAMING, true);
 		mapper.setSerializationInclusion(Include.NON_NULL);
 		applyConfigurationPropertiesFilter(mapper);
 		applySerializationModifier(mapper);
@@ -375,7 +377,7 @@ public class ConfigurationPropertiesReportEndpoint implements ApplicationContext
 
 		private AnnotatedMethod findSetter(BeanDescription beanDesc,
 				BeanPropertyWriter writer) {
-			String name = "set" + StringUtils.capitalize(writer.getName());
+			String name = "set" + capitalizeIfNecessary(writer.getName());
 			Class<?> type = writer.getType().getRawClass();
 			AnnotatedMethod setter = beanDesc.findMethod(name, new Class<?>[] { type });
 			// The enabled property of endpoints returns a boolean primitive but is set
@@ -384,6 +386,15 @@ public class ConfigurationPropertiesReportEndpoint implements ApplicationContext
 				setter = beanDesc.findMethod(name, new Class<?>[] { Boolean.class });
 			}
 			return setter;
+		}
+
+		private String capitalizeIfNecessary(String propertyName) {
+			if (propertyName.length() > 1 && Character.isUpperCase(propertyName.charAt(1))) {
+				return propertyName;
+			}
+			else {
+				return StringUtils.capitalize(propertyName);
+			}
 		}
 
 	}
