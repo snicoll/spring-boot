@@ -75,14 +75,6 @@ class HibernateJpaConfiguration extends JpaBaseConfiguration {
 			"org.hibernate.engine.transaction.jta.platform.internal.NoJtaPlatform",
 			"org.hibernate.service.jta.platform.internal.NoJtaPlatform" };
 
-	/**
-	 * {@code WebSphereExtendedJtaPlatform} implementations for various Hibernate
-	 * versions.
-	 */
-	private static final String[] WEBSPHERE_JTA_PLATFORM_CLASSES = {
-			"org.hibernate.engine.transaction.jta.platform.internal.WebSphereExtendedJtaPlatform",
-			"org.hibernate.service.jta.platform.internal.WebSphereExtendedJtaPlatform" };
-
 	private final HibernateProperties hibernateProperties;
 
 	private final HibernateDefaultDdlAutoProvider defaultDdlAutoProvider;
@@ -158,13 +150,9 @@ class HibernateJpaConfiguration extends JpaBaseConfiguration {
 			throws LinkageError {
 		JtaTransactionManager jtaTransactionManager = getJtaTransactionManager();
 		if (jtaTransactionManager != null) {
-			if (runningOnWebSphere()) {
-				// We can never use SpringJtaPlatform on WebSphere as
-				// WebSphereUowTransactionManager has a null TransactionManager
-				// which will cause Hibernate to NPE
-				configureWebSphereTransactionPlatform(vendorProperties);
-			}
-			else {
+			// As of Hibernate 5.2, Hibernate can fully integrate with the WebSphere
+			// transaction manager on its own.
+			if (!runningOnWebSphere()) {
 				configureSpringJtaPlatform(vendorProperties, jtaTransactionManager);
 			}
 		}
@@ -191,15 +179,6 @@ class HibernateJpaConfiguration extends JpaBaseConfiguration {
 		return ClassUtils.isPresent(
 				"com.ibm.websphere.jtaextensions.ExtendedJTATransaction",
 				getClass().getClassLoader());
-	}
-
-	private void configureWebSphereTransactionPlatform(
-			Map<String, Object> vendorProperties) {
-		vendorProperties.put(JTA_PLATFORM, getWebSphereJtaPlatformManager());
-	}
-
-	private Object getWebSphereJtaPlatformManager() {
-		return getJtaPlatformManager(WEBSPHERE_JTA_PLATFORM_CLASSES);
 	}
 
 	private void configureSpringJtaPlatform(Map<String, Object> vendorProperties,
