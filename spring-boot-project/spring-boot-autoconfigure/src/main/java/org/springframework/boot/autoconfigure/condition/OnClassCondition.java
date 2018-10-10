@@ -19,6 +19,7 @@ package org.springframework.boot.autoconfigure.condition;
 import java.security.AccessControlException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
@@ -124,6 +125,7 @@ class OnClassCondition extends FilteringSpringBootCondition {
 		List<String> candidates = new ArrayList<>();
 		addAll(candidates, attributes.get("value"));
 		addAll(candidates, attributes.get("name"));
+		candidates.sort(CandidatesComparator.INSTANCE);
 		return candidates;
 	}
 
@@ -212,7 +214,9 @@ class OnClassCondition extends FilteringSpringBootCondition {
 
 		private ConditionOutcome getOutcome(Set<String> candidates) {
 			try {
-				List<String> missing = filter(candidates, ClassNameFilter.MISSING,
+				ArrayList<String> sortedCandidates = new ArrayList<>(candidates);
+				sortedCandidates.sort(CandidatesComparator.INSTANCE);
+				List<String> missing = filter(sortedCandidates, ClassNameFilter.MISSING,
 						this.beanClassLoader);
 				if (!missing.isEmpty()) {
 					return ConditionOutcome.noMatch(
@@ -227,6 +231,29 @@ class OnClassCondition extends FilteringSpringBootCondition {
 			return null;
 		}
 
+	}
+
+
+	private static class CandidatesComparator implements Comparator<String> {
+
+		private static final CandidatesComparator INSTANCE = new CandidatesComparator();
+
+		@Override
+		public int compare(String o1, String o2) {
+			boolean o1Spring = isSpringClass(o1);
+			boolean o2Spring = isSpringClass(o2);
+			if (o1Spring && !o2Spring) {
+				return 1;
+			}
+			else if (o2Spring && !o1Spring) {
+				return -1;
+			}
+			return 0;
+		}
+
+		private boolean isSpringClass(String type) {
+			return type.startsWith("org.springframework");
+		}
 	}
 
 }

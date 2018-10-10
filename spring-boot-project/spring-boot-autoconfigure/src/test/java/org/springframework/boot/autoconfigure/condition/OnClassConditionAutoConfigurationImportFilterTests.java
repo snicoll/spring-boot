@@ -16,7 +16,10 @@
 
 package org.springframework.boot.autoconfigure.condition;
 
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -72,14 +75,30 @@ public class OnClassConditionAutoConfigurationImportFilterTests {
 				.containsKey("test.nomatch");
 	}
 
+	@Test
+	public void matchShouldPreferThirdPartyClassesFirst() {
+		String[] autoConfigurationClasses = new String[] { "test.match", "test.nomatch" };
+		this.filter.match(autoConfigurationClasses, getAutoConfigurationMetadata());
+		ConditionEvaluationReport report = ConditionEvaluationReport
+				.get(this.beanFactory);
+		ConditionEvaluationReport.ConditionAndOutcome outcome = report
+				.getConditionAndOutcomesBySource().get("test.nomatch").iterator().next();
+		assertThat(outcome.getOutcome().getMessage()).containsSubsequence(
+				"org.assertj.does.not.exist.Assert",
+				"org.springframework.does.not.exist.ApplicationContext");
+	}
+
 	private AutoConfigurationMetadata getAutoConfigurationMetadata() {
 		AutoConfigurationMetadata metadata = mock(AutoConfigurationMetadata.class);
 		given(metadata.wasProcessed("test.match")).willReturn(true);
 		given(metadata.getSet("test.match", "ConditionalOnClass"))
 				.willReturn(Collections.singleton("java.io.InputStream"));
+		Set<String> nonMatchingClasses = new LinkedHashSet<>(
+				Arrays.asList("org.springframework.does.not.exist.ApplicationContext",
+						"org.assertj.does.not.exist.Assert"));
 		given(metadata.wasProcessed("test.nomatch")).willReturn(true);
 		given(metadata.getSet("test.nomatch", "ConditionalOnClass"))
-				.willReturn(Collections.singleton("java.io.DoesNotExist"));
+				.willReturn(nonMatchingClasses);
 		return metadata;
 	}
 
