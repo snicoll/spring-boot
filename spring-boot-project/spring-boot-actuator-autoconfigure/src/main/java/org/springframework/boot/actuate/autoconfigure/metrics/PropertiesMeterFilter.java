@@ -87,26 +87,26 @@ public class PropertiesMeterFilter implements MeterFilter {
 						distribution.getPercentilesHistogram(), id, null))
 				.percentiles(
 						lookupWithFallbackToAll(distribution.getPercentiles(), id, null))
-				.sla(convertSla(id.getType(), lookup(distribution.getSla(), id, null)))
-				.minimumExpectedValue(convertSla(id.getType(),
+				.sla(convertValue(id.getType(), lookup(distribution.getSla(), id, null)))
+				.minimumExpectedValue(convertValue(id.getType(),
 						lookup(distribution.getMinimumExpectedValue(), id, null)))
-				.maximumExpectedValue(convertSla(id.getType(),
+				.maximumExpectedValue(convertValue(id.getType(),
 						lookup(distribution.getMaximumExpectedValue(), id, null)))
 				.build().merge(config);
 	}
 
-	private long[] convertSla(Meter.Type meterType, ServiceLevelAgreementBoundary[] sla) {
-		if (sla == null) {
+	private long[] convertValue(Meter.Type meterType, MeterValue[] values) {
+		if (values == null) {
 			return null;
 		}
-		long[] converted = Arrays.stream(sla)
+		long[] converted = Arrays.stream(values)
 				.map((candidate) -> candidate.getValue(meterType))
 				.filter(Objects::nonNull).mapToLong(Long::longValue).toArray();
 		return (converted.length != 0) ? converted : null;
 	}
 
-	private Long convertSla(Meter.Type meterType, ServiceLevelAgreementBoundary sla) {
-		return (sla != null) ? sla.getValue(meterType) : null;
+	private Long convertValue(Meter.Type meterType, MeterValue value) {
+		return (value != null) ? value.getValue(meterType) : null;
 	}
 
 	private <T> T lookup(Map<String, T> values, Id id, T defaultValue) {

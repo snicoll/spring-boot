@@ -197,23 +197,21 @@ public class MetricsProperties {
 		 * Values can be specified as a long or as a Duration value (for timer meters,
 		 * defaulting to ms if no unit specified).
 		 */
-		private final Map<String, ServiceLevelAgreementBoundary[]> sla = new LinkedHashMap<>();
+		private final Map<String, MeterValue[]> sla = new LinkedHashMap<>();
 
 		/**
-		 * The minimum value that this distribution summary is expected to observe.
-		 * Controls the number of buckets shipped by percentilesHistogram. Can be
-		 * specified as a long or as a Duration value (for timer meters, defaulting to ms
-		 * if no unit specified).
+		 * Minimum value that meter IDs starting-with the specified name are expected to
+		 * observe. The longest match wins. Values can be specified as a long or as a
+		 * Duration value (for timer meters, defaulting to ms if no unit specified).
 		 */
-		private final Map<String, ServiceLevelAgreementBoundary> minimumExpectedValue = new LinkedHashMap<>();
+		private final Map<String, MeterValue> minimumExpectedValue = new LinkedHashMap<>();
 
 		/**
-		 * The maximum value that this distribution summary is expected to observe.
-		 * Controls the number of buckets shipped by percentilesHistogram. Can be
-		 * specified as a long or as a Duration value (for timer meters, defaulting to ms
-		 * if no unit specified).
+		 * Maximum value that meter IDs starting-with the specified name are expected to
+		 * observe. The longest match wins. Values can be specified as a long or as a
+		 * Duration value (for timer meters, defaulting to ms if no unit specified).
 		 */
-		private final Map<String, ServiceLevelAgreementBoundary> maximumExpectedValue = new LinkedHashMap<>();
+		private final Map<String, MeterValue> maximumExpectedValue = new LinkedHashMap<>();
 
 		public Map<String, Boolean> getPercentilesHistogram() {
 			return this.percentilesHistogram;
@@ -223,15 +221,15 @@ public class MetricsProperties {
 			return this.percentiles;
 		}
 
-		public Map<String, ServiceLevelAgreementBoundary[]> getSla() {
+		public Map<String, MeterValue[]> getSla() {
 			return this.sla;
 		}
 
-		public Map<String, ServiceLevelAgreementBoundary> getMinimumExpectedValue() {
+		public Map<String, MeterValue> getMinimumExpectedValue() {
 			return this.minimumExpectedValue;
 		}
 
-		public Map<String, ServiceLevelAgreementBoundary> getMaximumExpectedValue() {
+		public Map<String, MeterValue> getMaximumExpectedValue() {
 			return this.maximumExpectedValue;
 		}
 

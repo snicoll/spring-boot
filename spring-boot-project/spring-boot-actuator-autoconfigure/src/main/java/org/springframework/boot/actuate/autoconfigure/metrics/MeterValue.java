@@ -25,28 +25,29 @@ import io.micrometer.core.instrument.Meter.Type;
 import org.springframework.boot.convert.DurationStyle;
 
 /**
- * A service level agreement boundary for use when configuring micrometer. Can be
- * specified as either a {@link Long} (applicable to timers and distribution summaries) or
- * a {@link Duration} (applicable to only timers).
+ * A meter value for use when configuring micrometer. Can be specified as either a
+ * {@link Long} (applicable to timers and distribution summaries) or a {@link Duration}
+ * (applicable to only timers).
  *
  * @author Phillip Webb
- * @since 2.0.0
+ * @author Stephane Nicoll
+ * @since 2.1.0
  */
-public final class ServiceLevelAgreementBoundary {
+public final class MeterValue {
 
 	private final Object value;
 
-	ServiceLevelAgreementBoundary(long value) {
+	MeterValue(long value) {
 		this.value = value;
 	}
 
-	ServiceLevelAgreementBoundary(Duration value) {
+	MeterValue(Duration value) {
 		this.value = value;
 	}
 
 	/**
-	 * Return the underlying value of the SLA in form suitable to apply to the given meter
-	 * type.
+	 * Return the underlying value of the meter in form suitable to apply to the given
+	 * meter type.
 	 * @param meterType the meter type
 	 * @return the value or {@code null} if the value cannot be applied
 	 */
@@ -77,29 +78,27 @@ public final class ServiceLevelAgreementBoundary {
 		return null;
 	}
 
-	public static ServiceLevelAgreementBoundary valueOf(String value) {
+	public static MeterValue valueOf(String value) {
 		if (isNumber(value)) {
-			return new ServiceLevelAgreementBoundary(Long.parseLong(value));
+			return new MeterValue(Long.parseLong(value));
 		}
-		return new ServiceLevelAgreementBoundary(DurationStyle.detectAndParse(value));
+		return new MeterValue(DurationStyle.detectAndParse(value));
 	}
 
 	/**
-	 * Return a new {@link ServiceLevelAgreementBoundary} instance for the given long
-	 * value.
+	 * Return a new {@link MeterValue} instance for the given long value.
 	 * @param value the source value
-	 * @return a {@link ServiceLevelAgreementBoundary} instance
+	 * @return a {@link MeterValue} instance
 	 */
-	public static ServiceLevelAgreementBoundary valueOf(long value) {
-		return new ServiceLevelAgreementBoundary(value);
+	public static MeterValue valueOf(long value) {
+		return new MeterValue(value);
 	}
 
 	/**
-	 * Return a new {@link ServiceLevelAgreementBoundary} instance for the given String
-	 * value. The value may contain a simple number, or a {@link DurationStyle duration
-	 * style string}.
+	 * Return a new {@link MeterValue} instance for the given String value. The value may
+	 * contain a simple number, or a {@link DurationStyle duration style string}.
 	 * @param value the source value
-	 * @return a {@link ServiceLevelAgreementBoundary} instance
+	 * @return a {@link MeterValue} instance
 	 */
 	private static boolean isNumber(String value) {
 		return value.chars().allMatch(Character::isDigit);
