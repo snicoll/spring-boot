@@ -16,9 +16,9 @@
 
 package org.springframework.boot.autoconfigure.web.client;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.autoconfigure.condition.NoneNestedConditions;
 import org.springframework.boot.autoconfigure.condition.SpringBootCondition;
+import org.springframework.boot.autoconfigure.web.ConditionalOnWebApplication;
 
 /**
  * {@link SpringBootCondition} that applies only when running in a non-reactive web

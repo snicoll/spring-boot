@@ -14,11 +14,15 @@
  * limitations under the License.
  */
 
-package org.springframework.boot.autoconfigure.condition;
+package org.springframework.boot.autoconfigure.web;
 
 import java.util.Map;
 
 import org.springframework.boot.autoconfigure.AutoConfigurationMetadata;
+import org.springframework.boot.autoconfigure.condition.ConditionMessage;
+import org.springframework.boot.autoconfigure.condition.ConditionOutcome;
+import org.springframework.boot.autoconfigure.condition.FilteringSpringBootCondition;
+import org.springframework.boot.autoconfigure.web.ConditionalOnWebApplication.Type;
 import org.springframework.boot.web.reactive.context.ConfigurableReactiveWebEnvironment;
 import org.springframework.boot.web.reactive.context.ReactiveWebApplicationContext;
 import org.springframework.context.annotation.Condition;
@@ -40,8 +44,6 @@ import org.springframework.web.context.WebApplicationContext;
  * @see ConditionalOnNotWebApplication
  */
 @Order(Ordered.HIGHEST_PRECEDENCE + 20)
-@Deprecated(since = "3.4.0", forRemoval = true)
-@SuppressWarnings("removal")
 class OnWebApplicationCondition extends FilteringSpringBootCondition {
 
 	private static final String SERVLET_WEB_APPLICATION_CLASS = "org.springframework.web.context.support.GenericWebApplicationContext";
@@ -156,14 +158,12 @@ class OnWebApplicationCondition extends FilteringSpringBootCondition {
 		return ConditionOutcome.noMatch(message.because("not a reactive web application"));
 	}
 
-	private org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication.Type deduceType(
-			AnnotatedTypeMetadata metadata) {
+	private Type deduceType(AnnotatedTypeMetadata metadata) {
 		Map<String, Object> attributes = metadata.getAnnotationAttributes(ConditionalOnWebApplication.class.getName());
 		if (attributes != null) {
-			return (org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication.Type) attributes
-				.get("type");
+			return (Type) attributes.get("type");
 		}
-		return org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication.Type.ANY;
+		return Type.ANY;
 	}
 
 }

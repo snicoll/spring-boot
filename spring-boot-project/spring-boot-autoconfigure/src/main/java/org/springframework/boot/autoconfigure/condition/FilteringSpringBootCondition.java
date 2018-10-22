@@ -35,8 +35,9 @@ import org.springframework.util.CollectionUtils;
  * {@link AutoConfigurationImportFilter}.
  *
  * @author Phillip Webb
+ * @since 3.4.0
  */
-abstract class FilteringSpringBootCondition extends SpringBootCondition
+public abstract class FilteringSpringBootCondition extends SpringBootCondition
 		implements AutoConfigurationImportFilter, BeanFactoryAware, BeanClassLoaderAware {
 
 	private BeanFactory beanFactory;
@@ -110,8 +111,14 @@ abstract class FilteringSpringBootCondition extends SpringBootCondition
 		return Class.forName(className);
 	}
 
-	protected enum ClassNameFilter {
+	/**
+	 * Filters that checks the presence of a {@link Class} by its fully qualified name.
+	 */
+	public enum ClassNameFilter {
 
+		/**
+		 * Matches if the class is present.
+		 */
 		PRESENT {
 
 			@Override
@@ -121,6 +128,9 @@ abstract class FilteringSpringBootCondition extends SpringBootCondition
 
 		},
 
+		/**
+		 * Matches if the class is <em>not</em> present.
+		 */
 		MISSING {
 
 			@Override
@@ -130,7 +140,7 @@ abstract class FilteringSpringBootCondition extends SpringBootCondition
 
 		};
 
-		abstract boolean matches(String className, ClassLoader classLoader);
+		public abstract boolean matches(String className, ClassLoader classLoader);
 
 		private static boolean isPresent(String className, ClassLoader classLoader) {
 			if (classLoader == null) {

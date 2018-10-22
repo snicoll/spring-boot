@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package org.springframework.boot.autoconfigure.condition;
+package org.springframework.boot.autoconfigure.web;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
 
+import org.springframework.boot.autoconfigure.web.ConditionalOnWebApplication.Type;
 import org.springframework.boot.autoconfigure.web.reactive.MockReactiveWebServerFactory;
 import org.springframework.boot.web.reactive.context.AnnotationConfigReactiveWebApplicationContext;
 import org.springframework.boot.web.reactive.server.ReactiveWebServerFactory;
@@ -40,8 +41,6 @@ import static org.assertj.core.api.Assertions.entry;
  * @author Dave Syer
  * @author Stephane Nicoll
  */
-@Deprecated(since = "3.4.0")
-@SuppressWarnings("removal")
 class ConditionalOnWebApplicationTests {
 
 	private ConfigurableApplicationContext context;
@@ -56,8 +55,9 @@ class ConditionalOnWebApplicationTests {
 	@Test
 	void testWebApplicationWithServletContext() {
 		AnnotationConfigServletWebApplicationContext ctx = new AnnotationConfigServletWebApplicationContext();
-		ctx.register(AnyWebApplicationConfiguration.class, ServletWebApplicationConfiguration.class,
-				ReactiveWebApplicationConfiguration.class);
+		ctx.register(ConditionalOnWebApplicationTests.AnyWebApplicationConfiguration.class,
+				ConditionalOnWebApplicationTests.ServletWebApplicationConfiguration.class,
+				ConditionalOnWebApplicationTests.ReactiveWebApplicationConfiguration.class);
 		ctx.setServletContext(new MockServletContext());
 		ctx.refresh();
 		this.context = ctx;
@@ -68,8 +68,9 @@ class ConditionalOnWebApplicationTests {
 	@Test
 	void testWebApplicationWithReactiveContext() {
 		AnnotationConfigReactiveWebApplicationContext context = new AnnotationConfigReactiveWebApplicationContext();
-		context.register(AnyWebApplicationConfiguration.class, ServletWebApplicationConfiguration.class,
-				ReactiveWebApplicationConfiguration.class);
+		context.register(ConditionalOnWebApplicationTests.AnyWebApplicationConfiguration.class,
+				ConditionalOnWebApplicationTests.ServletWebApplicationConfiguration.class,
+				ConditionalOnWebApplicationTests.ReactiveWebApplicationConfiguration.class);
 		context.refresh();
 		this.context = context;
 		assertThat(this.context.getBeansOfType(String.class)).containsExactly(entry("any", "any"),
@@ -79,8 +80,9 @@ class ConditionalOnWebApplicationTests {
 	@Test
 	void testNonWebApplication() {
 		AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext();
-		ctx.register(AnyWebApplicationConfiguration.class, ServletWebApplicationConfiguration.class,
-				ReactiveWebApplicationConfiguration.class);
+		ctx.register(ConditionalOnWebApplicationTests.AnyWebApplicationConfiguration.class,
+				ConditionalOnWebApplicationTests.ServletWebApplicationConfiguration.class,
+				ConditionalOnWebApplicationTests.ReactiveWebApplicationConfiguration.class);
 		ctx.refresh();
 		this.context = ctx;
 		assertThat(this.context.getBeansOfType(String.class)).isEmpty();
@@ -98,8 +100,7 @@ class ConditionalOnWebApplicationTests {
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@ConditionalOnWebApplication(
-			type = org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication.Type.SERVLET)
+	@ConditionalOnWebApplication(type = Type.SERVLET)
 	static class ServletWebApplicationConfiguration {
 
 		@Bean
@@ -110,8 +111,7 @@ class ConditionalOnWebApplicationTests {
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@ConditionalOnWebApplication(
-			type = org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication.Type.REACTIVE)
+	@ConditionalOnWebApplication(type = Type.REACTIVE)
 	static class ReactiveWebApplicationConfiguration {
 
 		@Bean

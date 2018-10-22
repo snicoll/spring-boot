@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.boot.autoconfigure.condition;
+package org.springframework.boot.autoconfigure.web;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -25,20 +25,46 @@ import java.lang.annotation.Target;
 import org.springframework.context.annotation.Conditional;
 
 /**
- * {@link Conditional @Conditional} that only matches when the application context is a
- * not a web application context.
+ * {@link Conditional @Conditional} that matches when the application is a web
+ * application. By default, any web application will match but it can be narrowed using
+ * the {@link #type()} attribute.
  *
  * @author Dave Syer
+ * @author Stephane Nicoll
  * @since 1.0.0
- * @deprecated since 3.4.0 in favor of
- * {@link org.springframework.boot.autoconfigure.web.ConditionalOnNotWebApplication}
  */
 @Target({ ElementType.TYPE, ElementType.METHOD })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Conditional(OnWebApplicationCondition.class)
-@Deprecated(since = "3.4.0", forRemoval = true)
-@SuppressWarnings("removal")
-public @interface ConditionalOnNotWebApplication {
+public @interface ConditionalOnWebApplication {
+
+	/**
+	 * The required type of the web application.
+	 * @return the required web application type
+	 */
+	Type type() default Type.ANY;
+
+	/**
+	 * Available application types.
+	 */
+	enum Type {
+
+		/**
+		 * Any web application will match.
+		 */
+		ANY,
+
+		/**
+		 * Only servlet-based web application will match.
+		 */
+		SERVLET,
+
+		/**
+		 * Only reactive-based web application will match.
+		 */
+		REACTIVE
+
+	}
 
 }
