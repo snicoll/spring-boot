@@ -19,8 +19,7 @@ package org.springframework.boot.autoconfigure.mustache;
 import java.util.Collections;
 
 import com.samskivert.mustache.Mustache;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
@@ -29,7 +28,6 @@ import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -42,7 +40,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DirtiesContext
 @SpringBootTest(webEnvironment = WebEnvironment.NONE,
 		properties = { "env.FOO=There", "foo=World" })
-@RunWith(SpringRunner.class)
 public class MustacheStandaloneIntegrationTests {
 
 	@Autowired
