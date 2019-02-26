@@ -67,6 +67,9 @@ public class ConfigurationMetadataAnnotationProcessor extends AbstractProcessor 
 	static final String CONFIGURATION_PROPERTIES_ANNOTATION = "org.springframework.boot."
 			+ "context.properties.ConfigurationProperties";
 
+	static final String CONFIGURATION_PROPERTY_ANNOTATION = "org.springframework.boot."
+			+ "context.properties.ConfigurationProperty";
+
 	static final String NESTED_CONFIGURATION_PROPERTY_ANNOTATION = "org.springframework.boot."
 			+ "context.properties.NestedConfigurationProperty";
 
@@ -89,6 +92,10 @@ public class ConfigurationMetadataAnnotationProcessor extends AbstractProcessor 
 	private MetadataGenerationEnvironment metadataEnv;
 
 	protected String configurationPropertiesAnnotation() {
+		return CONFIGURATION_PROPERTIES_ANNOTATION;
+	}
+
+	protected String configurationPropertyAnnotation() {
 		return CONFIGURATION_PROPERTIES_ANNOTATION;
 	}
 
@@ -125,7 +132,7 @@ public class ConfigurationMetadataAnnotationProcessor extends AbstractProcessor 
 		this.metadataCollector = new MetadataCollector(env,
 				this.metadataStore.readMetadata());
 		this.metadataEnv = new MetadataGenerationEnvironment(env,
-				configurationPropertiesAnnotation(),
+				configurationPropertiesAnnotation(), configurationPropertyAnnotation(),
 				nestedConfigurationPropertyAnnotation(),
 				deprecatedConfigurationPropertyAnnotation(), endpointAnnotation(),
 				readOperationAnnotation());

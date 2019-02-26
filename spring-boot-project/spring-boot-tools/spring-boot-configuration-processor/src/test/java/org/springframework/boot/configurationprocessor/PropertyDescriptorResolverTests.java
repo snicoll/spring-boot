@@ -34,6 +34,7 @@ import org.junit.rules.TemporaryFolder;
 import org.springframework.boot.configurationprocessor.metadata.ItemMetadata;
 import org.springframework.boot.configurationprocessor.test.RoundEnvironmentTester;
 import org.springframework.boot.configurationprocessor.test.TestableAnnotationProcessor;
+import org.springframework.boot.configurationsample.immutable.ImmutableSimpleProperties;
 import org.springframework.boot.configurationsample.lombok.LombokExplicitProperties;
 import org.springframework.boot.configurationsample.lombok.LombokSimpleDataProperties;
 import org.springframework.boot.configurationsample.lombok.LombokSimpleProperties;
@@ -98,6 +99,13 @@ public class PropertyDescriptorResolverTests {
 		process(LombokSimpleDataProperties.class,
 				propertyNames((stream) -> assertThat(stream).containsExactly("name",
 						"description", "counter", "number", "items")));
+	}
+
+	@Test
+	public void propertiesWithConstructorParameters() throws IOException {
+		process(ImmutableSimpleProperties.class,
+				propertyNames((stream) -> assertThat(stream).containsExactly("theName",
+						"flag", "comparator", "counter")));
 	}
 
 	private BiConsumer<TypeElement, MetadataGenerationEnvironment> properties(

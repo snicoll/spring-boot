@@ -16,14 +16,17 @@
 
 package org.springframework.boot.configurationprocessor;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
@@ -57,6 +60,8 @@ class MetadataGenerationEnvironment {
 
 	private final String configurationPropertiesAnnotation;
 
+	private final String configurationPropertyAnnotation;
+
 	private final String nestedConfigurationPropertyAnnotation;
 
 	private final String deprecatedConfigurationPropertyAnnotation;
@@ -67,6 +72,7 @@ class MetadataGenerationEnvironment {
 
 	MetadataGenerationEnvironment(ProcessingEnvironment environment,
 			String configurationPropertiesAnnotation,
+			String configurationPropertyAnnotation,
 			String nestedConfigurationPropertyAnnotation,
 			String deprecatedConfigurationPropertyAnnotation, String endpointAnnotation,
 			String readOperationAnnotation) {
@@ -75,6 +81,7 @@ class MetadataGenerationEnvironment {
 		this.elements = environment.getElementUtils();
 		this.fieldValuesParser = resolveFieldValuesParser(environment);
 		this.configurationPropertiesAnnotation = configurationPropertiesAnnotation;
+		this.configurationPropertyAnnotation = configurationPropertyAnnotation;
 		this.nestedConfigurationPropertyAnnotation = nestedConfigurationPropertyAnnotation;
 		this.deprecatedConfigurationPropertyAnnotation = deprecatedConfigurationPropertyAnnotation;
 		this.endpointAnnotation = endpointAnnotation;
@@ -112,7 +119,14 @@ class MetadataGenerationEnvironment {
 		return this.typeUtils;
 	}
 
-	public Object getDefaultValue(TypeElement type, String name) {
+	/**
+	 * Return the default value of the field with the specified {@code name}.
+	 * @param type the type to consider
+	 * @param name the name of the field
+	 * @return the default value or {@code null} if the field does not exist or no default
+	 * value has been detected
+	 */
+	public Object getFieldDefaultValue(TypeElement type, String name) {
 		return this.defaultValues.computeIfAbsent(type, this::resolveFieldValues)
 				.get(name);
 	}
@@ -171,8 +185,20 @@ class MetadataGenerationEnvironment {
 	public Map<String, Object> getAnnotationElementValues(AnnotationMirror annotation) {
 		Map<String, Object> values = new LinkedHashMap<>();
 		annotation.getElementValues().forEach((name, value) -> values
-				.put(name.getSimpleName().toString(), value.getValue()));
+				.put(name.getSimpleName().toString(), getAnnotationValue(value)));
 		return values;
+	}
+
+	private Object getAnnotationValue(AnnotationValue annotationValue) {
+		Object value = annotationValue.getValue();
+		if (value instanceof List) {
+			List<Object> values = new ArrayList<>();
+			((List<?>) value).forEach((v) -> {
+				values.add(((AnnotationValue) v).getValue());
+			});
+			return values;
+		}
+		return value;
 	}
 
 	public TypeElement getConfigurationPropertiesAnnotationElement() {
@@ -181,6 +207,10 @@ class MetadataGenerationEnvironment {
 
 	public AnnotationMirror getConfigurationPropertiesAnnotation(Element element) {
 		return getAnnotation(element, this.configurationPropertiesAnnotation);
+	}
+
+	public AnnotationMirror getConfigurationPropertyAnnotation(Element element) {
+		return getAnnotation(element, this.configurationPropertyAnnotation);
 	}
 
 	public AnnotationMirror getNestedConfigurationPropertyAnnotation(Element element) {

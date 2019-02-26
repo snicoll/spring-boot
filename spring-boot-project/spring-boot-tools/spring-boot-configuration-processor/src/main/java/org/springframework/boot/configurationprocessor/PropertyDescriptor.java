@@ -16,6 +16,9 @@
 
 package org.springframework.boot.configurationprocessor;
 
+import java.util.List;
+
+import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
@@ -33,7 +36,7 @@ import org.springframework.boot.configurationprocessor.metadata.ItemMetadata;
  * @param <S> the type of the source element that determines the property
  * @author Stephane Nicoll
  */
-abstract class PropertyDescriptor<S> {
+abstract class PropertyDescriptor<S extends Element> {
 
 	private final TypeElement ownerElement;
 
@@ -165,7 +168,30 @@ abstract class PropertyDescriptor<S> {
 	}
 
 	private Object resolveDefaultValue(MetadataGenerationEnvironment environment) {
-		return environment.getDefaultValue(getOwnerElement(), getName());
+		Object defaultValueFromSource = getDefaultValueFromAnnotation(environment,
+				getSource());
+		if (defaultValueFromSource != null) {
+			return defaultValueFromSource;
+		}
+		return environment.getFieldDefaultValue(getOwnerElement(), getName());
+	}
+
+	private Object getDefaultValueFromAnnotation(
+			MetadataGenerationEnvironment environment, Element element) {
+		AnnotationMirror configurationPropertiesAnnotation = environment
+				.getConfigurationPropertyAnnotation(element);
+		if (configurationPropertiesAnnotation != null) {
+			List<Object> defaultValue = (List<Object>) environment
+					.getAnnotationElementValues(configurationPropertiesAnnotation)
+					.get("defaultValue");
+			if (defaultValue != null) {
+				if (defaultValue.size() == 1) {
+					return defaultValue.get(0);
+				}
+				return defaultValue;
+			}
+		}
+		return null;
 	}
 
 	private boolean isCyclePresent(Element returnType, Element element) {

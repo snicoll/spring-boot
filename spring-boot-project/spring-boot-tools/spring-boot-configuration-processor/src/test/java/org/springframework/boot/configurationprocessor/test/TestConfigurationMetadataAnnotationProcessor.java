@@ -43,6 +43,8 @@ public class TestConfigurationMetadataAnnotationProcessor
 
 	public static final String CONFIGURATION_PROPERTIES_ANNOTATION = "org.springframework.boot.configurationsample.ConfigurationProperties";
 
+	public static final String CONFIGURATION_PROPERTY_ANNOTATION = "org.springframework.boot.configurationsample.ConfigurationProperty";
+
 	public static final String NESTED_CONFIGURATION_PROPERTY_ANNOTATION = "org.springframework.boot.configurationsample.NestedConfigurationProperty";
 
 	public static final String DEPRECATED_CONFIGURATION_PROPERTY_ANNOTATION = "org.springframework.boot.configurationsample.DeprecatedConfigurationProperty";
@@ -62,6 +64,11 @@ public class TestConfigurationMetadataAnnotationProcessor
 	@Override
 	protected String configurationPropertiesAnnotation() {
 		return CONFIGURATION_PROPERTIES_ANNOTATION;
+	}
+
+	@Override
+	protected String configurationPropertyAnnotation() {
+		return CONFIGURATION_PROPERTY_ANNOTATION;
 	}
 
 	@Override

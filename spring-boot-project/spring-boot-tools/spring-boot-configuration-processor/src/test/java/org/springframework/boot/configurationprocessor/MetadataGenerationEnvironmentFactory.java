@@ -34,6 +34,7 @@ class MetadataGenerationEnvironmentFactory
 	public MetadataGenerationEnvironment apply(ProcessingEnvironment environment) {
 		return new MetadataGenerationEnvironment(environment,
 				TestConfigurationMetadataAnnotationProcessor.CONFIGURATION_PROPERTIES_ANNOTATION,
+				TestConfigurationMetadataAnnotationProcessor.CONFIGURATION_PROPERTY_ANNOTATION,
 				TestConfigurationMetadataAnnotationProcessor.NESTED_CONFIGURATION_PROPERTY_ANNOTATION,
 				TestConfigurationMetadataAnnotationProcessor.DEPRECATED_CONFIGURATION_PROPERTY_ANNOTATION,
 				TestConfigurationMetadataAnnotationProcessor.ENDPOINT_ANNOTATION,
