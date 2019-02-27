@@ -62,6 +62,7 @@ public class Binder {
 
 	static {
 		List<BeanBinder> binders = new ArrayList<>();
+		binders.add(new ConstructorParametersBinder());
 		binders.add(new JavaBeanBinder());
 		BEAN_BINDERS = Collections.unmodifiableList(binders);
 	}
