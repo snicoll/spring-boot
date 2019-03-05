@@ -35,11 +35,10 @@ import org.springframework.core.ResolvableType;
 class ConstructorParametersBinder implements BeanBinder {
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <T> T bind(ConfigurationPropertyName name, Bindable<T> target,
 			Binder.Context context, BeanPropertyBinder propertyBinder) {
 		try {
-			Bean<T> bean = Bean.get(target);
+			Bean bean = Bean.get(target);
 			List<Object> bound = bind(propertyBinder, bean, context.getConverter());
 			return (T) BeanUtils.instantiateClass(bean.getConstructor(), bound.toArray());
 		}
@@ -48,7 +47,7 @@ class ConstructorParametersBinder implements BeanBinder {
 		}
 	}
 
-	private <T> List<Object> bind(BeanPropertyBinder propertyBinder, Bean<T> bean,
+	private List<Object> bind(BeanPropertyBinder propertyBinder, Bean bean,
 			BindConverter converter) {
 		List<Object> boundParams = new ArrayList<>();
 		for (ConstructorParameter parameter : bean.getParameters().values()) {
@@ -67,21 +66,23 @@ class ConstructorParametersBinder implements BeanBinder {
 			bound = converter.convert(parameter.getDefaultValue(), parameter.getType(),
 					parameter.getAnnotations());
 		}
-		else if (parameter.getType().resolve() != null
-				&& parameter.getType().resolve().isPrimitive()) {
-			bound = 0;
+		else {
+			Class<?> resolve = parameter.getType().resolve();
+			if (resolve != null && resolve.isPrimitive()) {
+				bound = 0;
+			}
 		}
 		return bound;
 	}
 
-	private <T> Object bind(BeanPropertyBinder propertyBinder,
+	private Object bind(BeanPropertyBinder propertyBinder,
 			ConstructorParameter parameter) {
 		String propertyName = parameter.getName();
 		ResolvableType type = parameter.getType();
 		return propertyBinder.bindProperty(propertyName, Bindable.of(type));
 	}
 
-	private static class Bean<T> {
+	private static class Bean {
 
 		private final Map<String, ConstructorParameter> parameters = new LinkedHashMap<>();
 
@@ -107,15 +108,21 @@ class ConstructorParametersBinder implements BeanBinder {
 			}
 		}
 
-		@SuppressWarnings("unchecked")
-		public static <T> Bean<T> get(Bindable<T> bindable) {
+		public static <T> Bean get(Bindable<T> bindable) {
 			Class<?> type = bindable.getType().resolve(Object.class);
+			return new Bean(findPrimaryConstructor(type));
+		}
+
+		private static Constructor<?> findPrimaryConstructor(Class<?> type) {
+			Constructor<?> primaryConstructor = BeanUtils.findPrimaryConstructor(type);
+			if (primaryConstructor != null) {
+				return primaryConstructor;
+			}
 			Constructor<?>[] constructors = type.getDeclaredConstructors();
 			if (constructors.length != 1 || constructors[0].getParameterCount() == 0) {
 				throw new InvalidConstructorCountException();
 			}
-			Bean<?> bean = new Bean<>(constructors[0]);
-			return (Bean<T>) bean;
+			return constructors[0];
 		}
 
 		public Map<String, ConstructorParameter> getParameters() {
