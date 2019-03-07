@@ -16,12 +16,15 @@
 
 package org.springframework.boot.context.properties;
 
+import java.lang.reflect.Constructor;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.GenericBeanDefinition;
@@ -29,7 +32,6 @@ import org.springframework.context.annotation.ImportBeanDefinitionRegistrar;
 import org.springframework.context.annotation.ImportSelector;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.core.type.AnnotationMetadata;
-import org.springframework.util.Assert;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 
@@ -89,7 +91,7 @@ class EnableConfigurationPropertiesImportSelector implements ImportSelector {
 				ConfigurableListableBeanFactory beanFactory, Class<?> type) {
 			String name = getName(type);
 			if (!containsBeanDefinition(beanFactory, name)) {
-				registerBeanDefinition(registry, name, type);
+				registerBeanDefinition(registry, beanFactory, name, type);
 			}
 		}
 
@@ -114,19 +116,35 @@ class EnableConfigurationPropertiesImportSelector implements ImportSelector {
 			return false;
 		}
 
-		private void registerBeanDefinition(BeanDefinitionRegistry registry, String name,
-				Class<?> type) {
-			assertHasAnnotation(type);
-			GenericBeanDefinition definition = new GenericBeanDefinition();
-			definition.setBeanClass(type);
-			registry.registerBeanDefinition(name, definition);
+		private void registerBeanDefinition(BeanDefinitionRegistry registry,
+				ConfigurableListableBeanFactory beanFactory, String name, Class<?> type) {
+			registry.registerBeanDefinition(name,
+					createBeanDefinition(beanFactory, name, type));
 		}
 
-		private void assertHasAnnotation(Class<?> type) {
-			Assert.notNull(
-					AnnotationUtils.findAnnotation(type, ConfigurationProperties.class),
-					() -> "No " + ConfigurationProperties.class.getSimpleName()
-							+ " annotation found on  '" + type.getName() + "'.");
+		private BeanDefinition createBeanDefinition(
+				ConfigurableListableBeanFactory beanFactory, String name, Class<?> type) {
+			if (useImmediateBinding(type)) {
+				return ConfigurationPropertiesBeanDefinition.from(beanFactory, name,
+						type);
+			}
+			else {
+				GenericBeanDefinition definition = new GenericBeanDefinition();
+				definition.setBeanClass(type);
+				return definition;
+			}
+		}
+
+		private boolean useImmediateBinding(Class<?> type) {
+			Constructor<?>[] constructors = type.getDeclaredConstructors();
+			boolean autowiredPresent = Arrays.stream(constructors).anyMatch(
+					(c) -> AnnotationUtils.findAnnotation(c, Autowired.class) != null);
+			if (autowiredPresent) {
+				return false;
+			}
+			return (constructors.length == 1 && constructors[0].getParameterCount() > 0
+					|| Arrays.stream(constructors)
+							.anyMatch((c) -> c.getParameterCount() == 0));
 		}
 
 	}
