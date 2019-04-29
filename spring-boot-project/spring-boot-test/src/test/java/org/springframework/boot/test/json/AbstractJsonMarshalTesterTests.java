@@ -29,8 +29,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.support.io.TempDirectory;
+import org.junit.jupiter.api.io.TempDir;
 
 import org.springframework.core.ResolvableType;
 import org.springframework.core.io.ByteArrayResource;
@@ -46,7 +45,6 @@ import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException
  *
  * @author Phillip Webb
  */
-@ExtendWith(TempDirectory.class)
 public abstract class AbstractJsonMarshalTesterTests {
 
 	private static final String JSON = "{\"name\":\"Spring\",\"age\":123}";
@@ -124,8 +122,7 @@ public abstract class AbstractJsonMarshalTesterTests {
 	}
 
 	@Test
-	public void readFileShouldReturnObject(@TempDirectory.TempDir Path temp)
-			throws Exception {
+	public void readFileShouldReturnObject(@TempDir Path temp) throws Exception {
 		File file = new File(temp.toFile(), "example.json");
 		FileCopyUtils.copy(JSON.getBytes(), file);
 		AbstractJsonMarshalTester<Object> tester = createTester(TYPE);

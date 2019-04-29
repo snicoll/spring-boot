@@ -31,7 +31,7 @@ import liquibase.logging.core.Slf4jLogger;
 import org.junit.Before;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.support.io.TempDirectory;
+import org.junit.jupiter.api.io.TempDir;
 
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.boot.SpringApplication;
@@ -63,7 +63,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Stephane Nicoll
  * @author Dominic Gunn
  */
-@ExtendWith({ OutputCapture.class, TempDirectory.class })
+@ExtendWith(OutputCapture.class)
 public class LiquibaseAutoConfigurationTests {
 
 	@Before
@@ -273,7 +273,7 @@ public class LiquibaseAutoConfigurationTests {
 	}
 
 	@Test
-	public void rollbackFile(@TempDirectory.TempDir Path temp) throws IOException {
+	public void rollbackFile(@TempDir Path temp) throws IOException {
 		File file = Files.createTempFile(temp, "rollback-file", "sql").toFile();
 		this.contextRunner.withUserConfiguration(EmbeddedDataSourceConfiguration.class)
 				.withPropertyValues(

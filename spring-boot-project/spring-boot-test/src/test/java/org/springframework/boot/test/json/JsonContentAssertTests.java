@@ -23,9 +23,9 @@ import java.io.InputStream;
 import java.nio.file.Path;
 
 import org.assertj.core.api.AssertProvider;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.support.io.TempDirectory;
+import org.junit.jupiter.api.io.TempDir;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.skyscreamer.jsonassert.comparator.DefaultComparator;
 import org.skyscreamer.jsonassert.comparator.JSONComparator;
@@ -46,7 +46,6 @@ import static org.assertj.core.api.Assertions.entry;
  *
  * @author Phillip Webb
  */
-@ExtendWith(TempDirectory.class)
 public class JsonContentAssertTests {
 
 	private static final String SOURCE = loadJson("source.json");
@@ -62,10 +61,14 @@ public class JsonContentAssertTests {
 	private static JSONComparator COMPARATOR = new DefaultComparator(
 			JSONCompareMode.LENIENT);
 
-	private final File temp;
+	@TempDir
+	public Path tempDir;
 
-	public JsonContentAssertTests(@TempDirectory.TempDir Path temp) throws IOException {
-		this.temp = new File(temp.toFile(), "file.json");
+	private File temp;
+
+	@BeforeEach
+	public void setup() {
+		this.temp = new File(this.tempDir.toFile(), "file.json");
 	}
 
 	@Test

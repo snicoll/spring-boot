@@ -121,10 +121,10 @@
 		<jstl.version>1.2</jstl.version>
 		<jtds.version>1.3.1</jtds.version>
 		<junit.version>4.12</junit.version>
-		<junit-jupiter.version>5.4.0-SNAPSHOT</junit-jupiter.version>
+		<junit-jupiter.version>5.4.1</junit-jupiter.version>
 		<kafka.version>2.0.1</kafka.version>
 		<kotlin.version>1.2.71</kotlin.version>
-		<lettuce.version>5.1.3.RELEASE</lettuce.version>
+		<lettuce.version>5.1.6.RELEASE</lettuce.version>
 		<liquibase.version>3.6.2</liquibase.version>
 		<log4j2.version>2.11.1</log4j2.version>
 		<logback.version>1.2.3</logback.version>
@@ -163,19 +163,19 @@
 		<solr.version>7.4.0</solr.version>
 		<!-- deprecated in favor of "spring-framework.version" -->
 		<spring.version>5.1.3.RELEASE</spring.version>
-		<spring-amqp.version>2.1.3.BUILD-SNAPSHOT</spring-amqp.version>
+		<spring-amqp.version>2.1.3.RELEASE</spring-amqp.version>
 		<spring-batch.version>4.1.0.RELEASE</spring-batch.version>
 		<spring-cloud-connectors.version>2.0.4.RELEASE</spring-cloud-connectors.version>
-		<spring-data-releasetrain.version>Lovelace-BUILD-SNAPSHOT</spring-data-releasetrain.version>
+		<spring-data-releasetrain.version>Lovelace-SR6</spring-data-releasetrain.version>
 		<spring-framework.version>${spring.version}</spring-framework.version>
 		<spring-hateoas.version>0.25.0.RELEASE</spring-hateoas.version>
-		<spring-integration.version>5.1.2.BUILD-SNAPSHOT</spring-integration.version>
-		<spring-kafka.version>2.2.3.BUILD-SNAPSHOT</spring-kafka.version>
+		<spring-integration.version>5.1.2.RELEASE</spring-integration.version>
+		<spring-kafka.version>2.2.3.RELEASE</spring-kafka.version>
 		<spring-ldap.version>2.3.2.RELEASE</spring-ldap.version>
 		<spring-plugin.version>1.2.0.RELEASE</spring-plugin.version>
 		<spring-restdocs.version>2.0.3.RELEASE</spring-restdocs.version>
 		<spring-retry.version>1.2.2.RELEASE</spring-retry.version>
-		<spring-security.version>5.1.3.BUILD-SNAPSHOT</spring-security.version>
+		<spring-security.version>5.1.3.RELEASE</spring-security.version>
 		<spring-session-bom.version>Bean-SR1</spring-session-bom.version>
 		<spring-ws.version>3.0.4.RELEASE</spring-ws.version>
 		<sqlite-jdbc.version>3.25.2</sqlite-jdbc.version>
@@ -216,7 +216,7 @@
 		<maven-shade-plugin.version>3.2.1</maven-shade-plugin.version>
 		<maven-site-plugin.version>3.7.1</maven-site-plugin.version>
 		<maven-source-plugin.version>3.0.1</maven-source-plugin.version>
-		<maven-surefire-plugin.version>2.22.1</maven-surefire-plugin.version>
+		<maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
 		<maven-war-plugin.version>3.2.2</maven-war-plugin.version>
 		<versions-maven-plugin.version>2.7</versions-maven-plugin.version>
 		<xml-maven-plugin.version>1.0.2</xml-maven-plugin.version>
