@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 the original author or authors.
+ * Copyright 2012-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,32 +28,52 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @author Christian Dupuis
  * @since 2.0.0
  */
-@ConfigurationProperties(prefix = "management.health.status")
+@ConfigurationProperties(prefix = "management.health")
 public class HealthIndicatorProperties {
 
 	/**
-	 * Comma-separated list of health statuses in order of severity.
+	 * Health indicator groups. Each entry maps the name of a group with a list of health
+	 * indicators to associate with the group.
 	 */
-	private List<String> order = null;
+	private final Map<String, List<String>> groups = new HashMap<>();
 
-	/**
-	 * Mapping of health statuses to HTTP status codes. By default, registered health
-	 * statuses map to sensible defaults (for example, UP maps to 200).
-	 */
-	private final Map<String, Integer> httpMapping = new HashMap<>();
+	private final Status status = new Status();
 
-	public List<String> getOrder() {
-		return this.order;
+	public Map<String, List<String>> getGroups() {
+		return this.groups;
 	}
 
-	public void setOrder(List<String> statusOrder) {
-		if (statusOrder != null && !statusOrder.isEmpty()) {
-			this.order = statusOrder;
+	public Status getStatus() {
+		return this.status;
+	}
+
+	public static class Status {
+
+		/**
+		 * Comma-separated list of health statuses in order of severity.
+		 */
+		private List<String> order = null;
+
+		/**
+		 * Mapping of health statuses to HTTP status codes. By default, registered health
+		 * statuses map to sensible defaults (for example, UP maps to 200).
+		 */
+		private final Map<String, Integer> httpMapping = new HashMap<>();
+
+		public List<String> getOrder() {
+			return this.order;
 		}
-	}
 
-	public Map<String, Integer> getHttpMapping() {
-		return this.httpMapping;
+		public void setOrder(List<String> statusOrder) {
+			if (statusOrder != null && !statusOrder.isEmpty()) {
+				this.order = statusOrder;
+			}
+		}
+
+		public Map<String, Integer> getHttpMapping() {
+			return this.httpMapping;
+		}
+
 	}
 
 }

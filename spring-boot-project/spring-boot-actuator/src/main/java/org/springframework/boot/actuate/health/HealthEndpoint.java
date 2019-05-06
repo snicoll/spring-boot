@@ -85,6 +85,9 @@ public class HealthEndpoint {
 		if (healthIndicator instanceof CompositeHealthIndicator) {
 			return ((CompositeHealthIndicator) healthIndicator).getRegistry().get(name);
 		}
+		if (healthIndicator instanceof OverallHealthIndicator) {
+			return ((OverallHealthIndicator) healthIndicator).getRegistry().get(name);
+		}
 		return null;
 	}
 

@@ -89,6 +89,10 @@ public class ReactiveHealthEndpointWebExtension {
 			return ((CompositeReactiveHealthIndicator) healthIndicator).getRegistry()
 					.get(name);
 		}
+		if (healthIndicator instanceof OverallReactiveHealthIndicator) {
+			return ((OverallReactiveHealthIndicator) healthIndicator).getRegistry()
+					.get(name);
+		}
 		return null;
 	}
 
