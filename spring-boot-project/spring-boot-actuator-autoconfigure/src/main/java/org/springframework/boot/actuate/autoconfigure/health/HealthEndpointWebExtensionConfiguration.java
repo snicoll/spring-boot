@@ -16,15 +16,17 @@
 
 package org.springframework.boot.actuate.autoconfigure.health;
 
+import java.util.Map;
+
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnAvailableEndpoint;
-import org.springframework.boot.actuate.health.CompositeReactiveHealthIndicator;
 import org.springframework.boot.actuate.health.HealthAggregator;
 import org.springframework.boot.actuate.health.HealthEndpoint;
 import org.springframework.boot.actuate.health.HealthEndpointWebExtension;
 import org.springframework.boot.actuate.health.HealthStatusHttpMapper;
 import org.springframework.boot.actuate.health.HealthWebEndpointResponseMapper;
 import org.springframework.boot.actuate.health.OrderedHealthAggregator;
+import org.springframework.boot.actuate.health.OverallReactiveHealthIndicator;
 import org.springframework.boot.actuate.health.ReactiveHealthEndpointWebExtension;
 import org.springframework.boot.actuate.health.ReactiveHealthIndicatorRegistry;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -48,10 +50,11 @@ class HealthEndpointWebExtensionConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public HealthStatusHttpMapper createHealthStatusHttpMapper(HealthIndicatorProperties healthIndicatorProperties) {
+	public HealthStatusHttpMapper createHealthStatusHttpMapper(HealthIndicatorProperties properties) {
 		HealthStatusHttpMapper statusHttpMapper = new HealthStatusHttpMapper();
-		if (healthIndicatorProperties.getHttpMapping() != null) {
-			statusHttpMapper.addStatusMapping(healthIndicatorProperties.getHttpMapping());
+		Map<String, Integer> httpMapping = properties.getStatus().getHttpMapping();
+		if (httpMapping != null) {
+			statusHttpMapper.addStatusMapping(httpMapping);
 		}
 		return statusHttpMapper;
 	}
@@ -75,7 +78,7 @@ class HealthEndpointWebExtensionConfiguration {
 		public ReactiveHealthEndpointWebExtension reactiveHealthEndpointWebExtension(
 				ObjectProvider<HealthAggregator> healthAggregator, ReactiveHealthIndicatorRegistry registry,
 				HealthWebEndpointResponseMapper responseMapper) {
-			return new ReactiveHealthEndpointWebExtension(new CompositeReactiveHealthIndicator(
+			return new ReactiveHealthEndpointWebExtension(new OverallReactiveHealthIndicator(
 					healthAggregator.getIfAvailable(OrderedHealthAggregator::new), registry), responseMapper);
 		}
 

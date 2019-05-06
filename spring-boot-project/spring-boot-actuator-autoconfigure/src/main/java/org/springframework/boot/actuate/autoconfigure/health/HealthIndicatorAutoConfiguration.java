@@ -16,11 +16,17 @@
 
 package org.springframework.boot.actuate.autoconfigure.health;
 
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
 
 import reactor.core.publisher.Flux;
 
 import org.springframework.boot.actuate.health.ApplicationHealthIndicator;
+import org.springframework.boot.actuate.health.GroupHealthIndicator;
+import org.springframework.boot.actuate.health.GroupReactiveHealthIndicator;
 import org.springframework.boot.actuate.health.HealthAggregator;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.boot.actuate.health.HealthIndicatorRegistry;
@@ -59,16 +65,40 @@ public class HealthIndicatorAutoConfiguration {
 	@ConditionalOnMissingBean(HealthAggregator.class)
 	public OrderedHealthAggregator healthAggregator(HealthIndicatorProperties properties) {
 		OrderedHealthAggregator healthAggregator = new OrderedHealthAggregator();
-		if (properties.getOrder() != null) {
-			healthAggregator.setStatusOrder(properties.getOrder());
+		if (properties.getStatus().getOrder() != null) {
+			healthAggregator.setStatusOrder(properties.getStatus().getOrder());
 		}
 		return healthAggregator;
 	}
 
 	@Bean
 	@ConditionalOnMissingBean(HealthIndicatorRegistry.class)
-	public HealthIndicatorRegistry healthIndicatorRegistry(ApplicationContext applicationContext) {
-		return HealthIndicatorRegistryBeans.get(applicationContext);
+	public HealthIndicatorRegistry healthIndicatorRegistry(HealthIndicatorProperties properties,
+			HealthAggregator healthAggregator, ApplicationContext applicationContext) {
+		HealthIndicatorRegistry registry = HealthIndicatorRegistryBeans.get(applicationContext);
+		extractGroups(properties, registry::get).forEach((groupName, groupHealthIndicators) -> registry
+				.register(groupName, new GroupHealthIndicator(healthAggregator, registry, groupHealthIndicators)));
+		return registry;
+	}
+
+	private static <T> Map<String, Set<String>> extractGroups(HealthIndicatorProperties properties,
+			Function<String, T> healthIndicatorByName) {
+		Map<String, Set<String>> groupDefinitions = new LinkedHashMap<>();
+		properties.getGroups().forEach((groupName, indicatorNames) -> {
+			if (healthIndicatorByName.apply(groupName) != null) {
+				throw new IllegalArgumentException("Could not register health indicator group named '" + groupName
+						+ "', an health indicator with that name is already registered");
+			}
+			Set<String> groupHealthIndicators = new LinkedHashSet<>();
+			indicatorNames.forEach((name) -> {
+				T healthIndicator = healthIndicatorByName.apply(name);
+				if (healthIndicator != null) {
+					groupHealthIndicators.add(name);
+				}
+			});
+			groupDefinitions.put(groupName, groupHealthIndicators);
+		});
+		return groupDefinitions;
 	}
 
 	@Configuration(proxyBeanMethods = false)
@@ -77,11 +107,15 @@ public class HealthIndicatorAutoConfiguration {
 
 		@Bean
 		@ConditionalOnMissingBean
-		public ReactiveHealthIndicatorRegistry reactiveHealthIndicatorRegistry(
-				Map<String, ReactiveHealthIndicator> reactiveHealthIndicators,
+		public ReactiveHealthIndicatorRegistry reactiveHealthIndicatorRegistry(HealthIndicatorProperties properties,
+				HealthAggregator healthAggregator, Map<String, ReactiveHealthIndicator> reactiveHealthIndicators,
 				Map<String, HealthIndicator> healthIndicators) {
-			return new ReactiveHealthIndicatorRegistryFactory()
+			ReactiveHealthIndicatorRegistry registry = new ReactiveHealthIndicatorRegistryFactory()
 					.createReactiveHealthIndicatorRegistry(reactiveHealthIndicators, healthIndicators);
+			extractGroups(properties, registry::get)
+					.forEach((groupName, groupHealthIndicators) -> registry.register(groupName,
+							new GroupReactiveHealthIndicator(healthAggregator, registry, groupHealthIndicators)));
+			return registry;
 		}
 
 	}
