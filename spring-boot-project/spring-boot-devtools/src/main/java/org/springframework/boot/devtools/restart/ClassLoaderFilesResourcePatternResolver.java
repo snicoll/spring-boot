@@ -31,6 +31,7 @@ import org.springframework.boot.devtools.restart.classloader.ClassLoaderFileURLS
 import org.springframework.boot.devtools.restart.classloader.ClassLoaderFiles;
 import org.springframework.boot.devtools.restart.classloader.ClassLoaderFiles.SourceFolder;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.io.AbstractResource;
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.ProtocolResolver;
@@ -40,10 +41,12 @@ import org.springframework.core.io.UrlResource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.util.AntPathMatcher;
+import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.PathMatcher;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.context.support.GenericWebApplicationContext;
 import org.springframework.web.context.support.ServletContextResource;
 import org.springframework.web.context.support.ServletContextResourcePatternResolver;
 
@@ -67,7 +70,8 @@ final class ClassLoaderFilesResourcePatternResolver implements ResourcePatternRe
 
 	private final ClassLoaderFiles classLoaderFiles;
 
-	ClassLoaderFilesResourcePatternResolver(ApplicationContext applicationContext, ClassLoaderFiles classLoaderFiles) {
+	ClassLoaderFilesResourcePatternResolver(GenericApplicationContext applicationContext,
+			ClassLoaderFiles classLoaderFiles) {
 		this.classLoaderFiles = classLoaderFiles;
 		this.patternResolverDelegate = getResourcePatternResolverFactory()
 				.getResourcePatternResolver(applicationContext, retrieveResourceLoader(applicationContext));
@@ -195,28 +199,11 @@ final class ClassLoaderFilesResourcePatternResolver implements ResourcePatternRe
 	 */
 	private static class ResourcePatternResolverFactory {
 
-		public ResourcePatternResolver getResourcePatternResolver(ApplicationContext applicationContext,
+		public ResourcePatternResolver getResourcePatternResolver(GenericApplicationContext applicationContext,
 				ResourceLoader resourceLoader) {
-			if (resourceLoader == null) {
-				resourceLoader = new DefaultResourceLoader();
-				copyProtocolResolvers(applicationContext, resourceLoader);
-			}
-			return new PathMatchingResourcePatternResolver(resourceLoader);
-		}
-
-		protected final void copyProtocolResolvers(ApplicationContext applicationContext,
-				ResourceLoader resourceLoader) {
-			if (applicationContext instanceof DefaultResourceLoader
-					&& resourceLoader instanceof DefaultResourceLoader) {
-				copyProtocolResolvers((DefaultResourceLoader) applicationContext,
-						(DefaultResourceLoader) resourceLoader);
-			}
-		}
-
-		protected final void copyProtocolResolvers(DefaultResourceLoader source, DefaultResourceLoader destination) {
-			for (ProtocolResolver resolver : source.getProtocolResolvers()) {
-				destination.addProtocolResolver(resolver);
-			}
+			ResourceLoader targetResourceLoader = (resourceLoader != null) ? resourceLoader
+					: new ApplicationContextResourceLoader(applicationContext);
+			return new PathMatchingResourcePatternResolver(targetResourceLoader);
 		}
 
 	}
@@ -228,22 +215,41 @@ final class ClassLoaderFilesResourcePatternResolver implements ResourcePatternRe
 	private static class WebResourcePatternResolverFactory extends ResourcePatternResolverFactory {
 
 		@Override
-		public ResourcePatternResolver getResourcePatternResolver(ApplicationContext applicationContext,
+		public ResourcePatternResolver getResourcePatternResolver(GenericApplicationContext applicationContext,
 				ResourceLoader resourceLoader) {
-			if (applicationContext instanceof WebApplicationContext) {
-				return getResourcePatternResolver((WebApplicationContext) applicationContext, resourceLoader);
+			if (applicationContext instanceof GenericWebApplicationContext) {
+				return getResourcePatternResolver((GenericWebApplicationContext) applicationContext, resourceLoader);
 			}
 			return super.getResourcePatternResolver(applicationContext, resourceLoader);
 		}
 
-		private ResourcePatternResolver getResourcePatternResolver(WebApplicationContext applicationContext,
+		private ResourcePatternResolver getResourcePatternResolver(GenericWebApplicationContext applicationContext,
 				ResourceLoader resourceLoader) {
-			if (resourceLoader == null) {
-				resourceLoader = new WebApplicationContextResourceLoader(applicationContext);
-				copyProtocolResolvers(applicationContext, resourceLoader);
-			}
-			return new ServletContextResourcePatternResolver(resourceLoader);
+			ResourceLoader targetResourceLoader = (resourceLoader != null) ? resourceLoader
+					: new WebApplicationContextResourceLoader(applicationContext);
+			return new ServletContextResourcePatternResolver(targetResourceLoader);
+		}
 
+	}
+
+	private static class ApplicationContextResourceLoader extends DefaultResourceLoader {
+
+		private final GenericApplicationContext applicationContext;
+
+		ApplicationContextResourceLoader(GenericApplicationContext applicationContext) {
+			this.applicationContext = applicationContext;
+		}
+
+		@Override
+		public Resource getResource(String location) {
+			Assert.notNull(location, "Location must not be null");
+			for (ProtocolResolver protocolResolver : this.applicationContext.getProtocolResolvers()) {
+				Resource resource = protocolResolver.resolve(location, this);
+				if (resource != null) {
+					return resource;
+				}
+			}
+			return super.getResource(location);
 		}
 
 	}
@@ -252,11 +258,12 @@ final class ClassLoaderFilesResourcePatternResolver implements ResourcePatternRe
 	 * {@link ResourceLoader} that optionally supports {@link ServletContextResource
 	 * ServletContextResources}.
 	 */
-	private static class WebApplicationContextResourceLoader extends DefaultResourceLoader {
+	private static class WebApplicationContextResourceLoader extends ApplicationContextResourceLoader {
 
-		private final WebApplicationContext applicationContext;
+		private final GenericWebApplicationContext applicationContext;
 
-		WebApplicationContextResourceLoader(WebApplicationContext applicationContext) {
+		WebApplicationContextResourceLoader(GenericWebApplicationContext applicationContext) {
+			super(applicationContext);
 			this.applicationContext = applicationContext;
 		}
 
