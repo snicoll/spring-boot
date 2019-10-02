@@ -16,6 +16,7 @@
 
 package org.springframework.boot.configurationprocessor;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,9 +55,13 @@ class PropertyDescriptorResolver {
 		if (factoryMethod != null) {
 			return resolveJavaBeanProperties(type, factoryMethod, members);
 		}
-		ExecutableElement constructor = resolveConstructor(type);
-		if (constructor != null) {
-			return resolveConstructorProperties(type, factoryMethod, members, constructor);
+		BindMethodHandler bindMethodHandler = BindMethodHandler.of(type, this.environment);
+		if (bindMethodHandler.isConstructorBindingEnabled()) {
+			ExecutableElement constructor = bindMethodHandler.getConstructor();
+			if (constructor != null) {
+				return resolveConstructorProperties(type, factoryMethod, members, constructor);
+			}
+			return Stream.empty();
 		}
 		else {
 			return resolveJavaBeanProperties(type, factoryMethod, members);
@@ -108,12 +113,50 @@ class PropertyDescriptorResolver {
 		return descriptor.isProperty(this.environment) || descriptor.isNested(this.environment);
 	}
 
-	private ExecutableElement resolveConstructor(TypeElement type) {
-		List<ExecutableElement> constructors = ElementFilter.constructorsIn(type.getEnclosedElements());
-		if (constructors.size() == 1 && constructors.get(0).getParameters().size() > 0) {
-			return constructors.get(0);
+	private static class BindMethodHandler {
+
+		private final boolean constructorBindingEnabled;
+
+		private final List<ExecutableElement> candidates;
+
+		private final List<ExecutableElement> annotatedCandidates;
+
+		BindMethodHandler(boolean constructorBindingEnabled, List<ExecutableElement> candidates,
+				List<ExecutableElement> annotatedCandidates) {
+			this.constructorBindingEnabled = constructorBindingEnabled;
+			this.candidates = candidates;
+			this.annotatedCandidates = annotatedCandidates;
 		}
-		return null;
+
+		boolean isConstructorBindingEnabled() {
+			return this.constructorBindingEnabled || !this.annotatedCandidates.isEmpty();
+		}
+
+		ExecutableElement getConstructor() {
+			if (this.annotatedCandidates.size() == 1) {
+				return this.annotatedCandidates.get(0);
+			}
+			if (this.candidates.size() == 1) {
+				return this.candidates.get(0);
+			}
+			return null;
+		}
+
+		static BindMethodHandler of(TypeElement type, MetadataGenerationEnvironment env) {
+			boolean constructorBindingEnabled = env.hasConstructorBinding(type);
+			List<ExecutableElement> candidates = new ArrayList<>();
+			List<ExecutableElement> annotatedCandidates = new ArrayList<>();
+			ElementFilter.constructorsIn(type.getEnclosedElements()).forEach((constructor) -> {
+				if (constructor.getParameters().size() > 0) {
+					candidates.add(constructor);
+					if (env.isConstructorBindingConstructor(constructor)) {
+						annotatedCandidates.add(constructor);
+					}
+				}
+			});
+			return new BindMethodHandler(constructorBindingEnabled, candidates, annotatedCandidates);
+		}
+
 	}
 
 }
