@@ -16,12 +16,15 @@
 
 package org.springframework.boot.actuate.context.properties;
 
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -45,14 +48,19 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.boot.actuate.endpoint.Sanitizer;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.ConfigurationPropertiesBean;
+import org.springframework.boot.context.properties.ConstructorBinding;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.core.KotlinDetector;
+import org.springframework.core.annotation.MergedAnnotations;
+import org.springframework.core.annotation.MergedAnnotations.SearchStrategy;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 
@@ -302,13 +310,28 @@ public class ConfigurationPropertiesReportEndpoint implements ApplicationContext
 		public List<BeanPropertyWriter> changeProperties(SerializationConfig config, BeanDescription beanDesc,
 				List<BeanPropertyWriter> beanProperties) {
 			List<BeanPropertyWriter> result = new ArrayList<>();
+			Constructor<?> bindConstructor = findBindConstructor(beanDesc.getType().getRawClass());
 			for (BeanPropertyWriter writer : beanProperties) {
-				boolean readable = isReadable(beanDesc, writer);
-				if (readable) {
+				if (isCandidate(bindConstructor, beanDesc, writer)) {
 					result.add(writer);
 				}
 			}
 			return result;
+		}
+
+		private boolean isCandidate(Constructor<?> bindConstructor, BeanDescription beanDesc,
+				BeanPropertyWriter writer) {
+			if (bindConstructor != null) {
+				return isConstructorParameter(bindConstructor, writer);
+			}
+			else {
+				return isReadable(beanDesc, writer);
+			}
+		}
+
+		private boolean isConstructorParameter(Constructor<?> bindConstructor, BeanPropertyWriter writer) {
+			return Arrays.stream(bindConstructor.getParameters())
+					.anyMatch((parameter) -> parameter.getName().equals(writer.getName()));
 		}
 
 		private boolean isReadable(BeanDescription beanDesc, BeanPropertyWriter writer) {
@@ -349,6 +372,34 @@ public class ConfigurationPropertiesReportEndpoint implements ApplicationContext
 				return propertyName;
 			}
 			return StringUtils.capitalize(propertyName);
+		}
+
+		private Constructor<?> findBindConstructor(Class<?> type) {
+			boolean classConstructorBinding = MergedAnnotations
+					.from(type, SearchStrategy.TYPE_HIERARCHY_AND_ENCLOSING_CLASSES)
+					.isPresent(ConstructorBinding.class);
+			if (KotlinDetector.isKotlinPresent() && KotlinDetector.isKotlinType(type)) {
+				Constructor<?> constructor = BeanUtils.findPrimaryConstructor(type);
+				if (constructor != null) {
+					return findBindConstructor(classConstructorBinding, constructor);
+				}
+			}
+			return findBindConstructor(classConstructorBinding, type.getDeclaredConstructors());
+		}
+
+		private Constructor<?> findBindConstructor(boolean classConstructorBinding, Constructor<?>... candidates) {
+			List<Constructor<?>> allConstructors = Arrays.stream(candidates)
+					.filter((constructor) -> constructor.getParameterCount() > 0).collect(Collectors.toList());
+			List<Constructor<?>> flaggedConstructors = allConstructors.stream()
+					.filter((candidate) -> MergedAnnotations.from(candidate).isPresent(ConstructorBinding.class))
+					.collect(Collectors.toList());
+			if (flaggedConstructors.size() == 1) {
+				return flaggedConstructors.get(0);
+			}
+			if (classConstructorBinding && allConstructors.size() == 1) {
+				return allConstructors.get(0);
+			}
+			return null;
 		}
 
 	}
