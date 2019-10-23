@@ -25,21 +25,29 @@ import javax.sql.DataSource;
 
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.boot.actuate.autoconfigure.health.CompositeHealthContributorConfiguration;
 import org.springframework.boot.actuate.autoconfigure.health.ConditionalOnEnabledHealthIndicator;
+import org.springframework.boot.actuate.autoconfigure.jdbc.DataSourceHealthContributorAutoConfiguration.DataSourceAvailableCondition;
 import org.springframework.boot.actuate.health.HealthContributor;
 import org.springframework.boot.actuate.jdbc.DataSourceHealthIndicator;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionMessage;
+import org.springframework.boot.autoconfigure.condition.ConditionOutcome;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.SpringBootCondition;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.jdbc.metadata.CompositeDataSourcePoolMetadataProvider;
 import org.springframework.boot.jdbc.metadata.DataSourcePoolMetadata;
 import org.springframework.boot.jdbc.metadata.DataSourcePoolMetadataProvider;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ConditionContext;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.ConfigurationCondition;
+import org.springframework.core.type.AnnotatedTypeMetadata;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.lookup.AbstractRoutingDataSource;
 
@@ -56,7 +64,7 @@ import org.springframework.jdbc.datasource.lookup.AbstractRoutingDataSource;
  */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnClass({ JdbcTemplate.class, AbstractRoutingDataSource.class })
-@ConditionalOnBean(DataSource.class)
+@Conditional(DataSourceAvailableCondition.class)
 @ConditionalOnEnabledHealthIndicator("db")
 @AutoConfigureAfter(DataSourceAutoConfiguration.class)
 public class DataSourceHealthContributorAutoConfiguration extends
@@ -103,6 +111,33 @@ public class DataSourceHealthContributorAutoConfiguration extends
 	private String getValidationQuery(DataSource source) {
 		DataSourcePoolMetadata poolMetadata = this.poolMetadataProvider.getDataSourcePoolMetadata(source);
 		return (poolMetadata != null) ? poolMetadata.getValidationQuery() : null;
+	}
+
+	static class DataSourceAvailableCondition extends SpringBootCondition implements ConfigurationCondition {
+
+		@Override
+		public ConfigurationPhase getConfigurationPhase() {
+			return ConfigurationPhase.REGISTER_BEAN;
+		}
+
+		@Override
+		public ConditionOutcome getMatchOutcome(ConditionContext context, AnnotatedTypeMetadata metadata) {
+			ConditionMessage.Builder message = ConditionMessage.forCondition("DataSource Health Contributor Condition");
+			String[] dataSourceBeanNames = context.getBeanFactory().getBeanNamesForType(DataSource.class);
+			if (dataSourceBeanNames.length == 0) {
+				return ConditionOutcome.noMatch(message.didNotFind("a DataSource bean").atAll());
+			}
+			for (String dataSourceBeanName : dataSourceBeanNames) {
+				BeanDefinition beanDefinition = context.getRegistry().getBeanDefinition(dataSourceBeanName);
+				Class<?> beanType = beanDefinition.getResolvableType().resolve();
+				if (beanType != null && !AbstractRoutingDataSource.class.isAssignableFrom(beanType)) {
+					return ConditionOutcome
+							.match(message.because("found at least one DataSource that is not a routing DataSource"));
+				}
+			}
+			return ConditionOutcome.noMatch(message.didNotFind("non routing DataSource beans").atAll());
+		}
+
 	}
 
 }

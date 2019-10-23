@@ -96,6 +96,12 @@ class DataSourceHealthContributorAutoConfigurationTests {
 						.doesNotHaveBean(CompositeHealthContributor.class));
 	}
 
+	@Test
+	void runWithOnlyRoutingDataSourceShouldNotCreateIndicator() {
+		this.contextRunner.withUserConfiguration(RoutingDatasourceConfig.class).run((context) -> assertThat(context)
+				.doesNotHaveBean(DataSourceHealthIndicator.class).doesNotHaveBean(CompositeHealthContributor.class));
+	}
+
 	@Configuration(proxyBeanMethods = false)
 	@EnableConfigurationProperties
 	static class DataSourceConfig {
