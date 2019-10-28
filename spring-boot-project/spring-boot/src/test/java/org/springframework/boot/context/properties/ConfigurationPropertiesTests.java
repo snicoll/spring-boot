@@ -18,6 +18,7 @@ package org.springframework.boot.context.properties;
 
 import java.beans.PropertyEditorSupport;
 import java.io.File;
+import java.net.InetAddress;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -419,6 +420,14 @@ public class ConfigurationPropertiesTests {
 		load(WithMapProperties.class, "test.map.foo=bar");
 		WithMapProperties bean = this.context.getBean(WithMapProperties.class);
 		assertThat(bean.getMap()).containsOnly(entry("foo", "bar"));
+	}
+
+	@Test
+	public void loadShouldBindToWildCardMap() {
+		load(WithWildcardMapProperties.class, "test.map1.foo=127.0.0.1", "test.map2.foo=127.0.0.1");
+		WithWildcardMapProperties bean = this.context.getBean(WithWildcardMapProperties.class);
+		assertThat(bean.getMap1().get("foo").get(0)).isInstanceOf(InetAddress.class);
+		assertThat(bean.getMap2().get("foo").get(0)).isInstanceOf(InetAddress.class);
 	}
 
 	@Test
@@ -1485,6 +1494,31 @@ public class ConfigurationPropertiesTests {
 			this.map = map;
 		}
 
+	}
+
+	@EnableConfigurationProperties
+	@ConfigurationProperties(prefix = "test")
+	static class WithWildcardMapProperties {
+
+		private Map<String, List<InetAddress>> map1;
+
+		private Map<String, ? extends List<? extends InetAddress>> map2;
+
+		public Map<String, List<InetAddress>> getMap1() {
+			return this.map1;
+		}
+
+		public void setMap1(Map<String, List<InetAddress>> map1) {
+			this.map1 = map1;
+		}
+
+		public Map<String, ? extends List<? extends InetAddress>> getMap2() {
+			return this.map2;
+		}
+
+		public void setMap2(Map<String, ? extends List<? extends InetAddress>> map2) {
+			this.map2 = map2;
+		}
 	}
 
 	@EnableConfigurationProperties
