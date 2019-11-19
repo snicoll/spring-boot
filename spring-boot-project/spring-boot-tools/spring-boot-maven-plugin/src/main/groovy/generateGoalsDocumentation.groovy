@@ -14,14 +14,15 @@ private String format(String input) {
 		.replaceAll('<a href=."(.*?)".>(.*?)</a>', '\$1[\$2]')
 }
 
-private writeParametersTable(PrintWriter writer, def parameters, def configuration) {
-	writer.println '[cols="3,2,2,3,8"]'
-	writer.println '|==='
-	writer.println '| Name | Type | Default | User property | Description'
-	writer.println()
+private writeParameters(PrintWriter writer, def parameters, def configuration, def sectionId) {
 	parameters.each { parameter ->
 		def name = parameter.name.text()
-		writer.println("| $name")
+		writer.println "[[$sectionId-$name]]"
+		writer.println "==== ${name}"
+		writer.println '[cols="10h,90"]'
+		writer.println '|==='
+		writer.println()
+		writer.println '| Type'
 		def type = parameter.type.text()
 		if (type.lastIndexOf('.') >= 0) {
 			type = type.substring(type.lastIndexOf('.') + 1)
@@ -29,27 +30,21 @@ private writeParametersTable(PrintWriter writer, def parameters, def configurati
 		writer.println("| `$type`")
 		def defaultValue = "${configuration[name].@'default-value'}"
 		if (defaultValue) {
+			writer.println '| Default value'
 			writer.println("| `$defaultValue`")
 		}
-		else {
-			writer.println("|")
-		}
 		def userProperty = "${configuration[name].text().replace('${', '`').replace('}', '`')}"
-		if (userProperty) {
-			writer.println("| ${userProperty}")
-		}
-		else {
-			writer.println("|")
-		}
+		writer.println '| User property'
+		userProperty ? writer.println("| ${userProperty}") : writer.println("|")
+		writer.println '| Description'
 		writer.println("| ${format(parameter.description.text())}")
+		writer.println '| Since'
 		def since = parameter.since.text()
-		if (since) {
-			writer.println("")
-			writer.println("Since ${since}.")
-		}
+		since ? writer.println("| `${since}`") : writer.println("|")
+
 		writer.println()
+		writer.println '|==='
 	}
-	writer.println '|==='
 }
 
 def plugin = new XmlSlurper().parse("${project.build.outputDirectory}/META-INF/maven/plugin.xml" as File)
@@ -79,16 +74,18 @@ goalsAdoc.withPrintWriter { writer ->
 		def parameters = mojo.parameters.parameter.findAll { it.editable.text() == 'true' }
 		def requiredParameters =  parameters.findAll { it.required.text() == 'true' }
 		if (requiredParameters.size()) {
-			writer.println("[[$sectionId-required-parameters]]")
+			def parametersSectionId = "$sectionId-required-parameters"
+			writer.println("[[$parametersSectionId]]")
 			writer.println("=== Required parameters")
-			writeParametersTable(writer, requiredParameters, mojo.configuration)
+			writeParameters(writer, requiredParameters, mojo.configuration, parametersSectionId)
 			writer.println()
 		}
 		def optionalParameters = parameters.findAll { it.required.text() == 'false' }
 		if (optionalParameters.size()) {
-			writer.println("[[$sectionId-optional-parameters]]")
+			def parametersSectionId = "$sectionId-optional-parameters"
+			writer.println("[[$parametersSectionId]]")
 			writer.println("=== Optional parameters")
-			writeParametersTable(writer, optionalParameters, mojo.configuration)
+			writeParameters(writer, optionalParameters, mojo.configuration, parametersSectionId)
 			writer.println()
 		}
 	}
