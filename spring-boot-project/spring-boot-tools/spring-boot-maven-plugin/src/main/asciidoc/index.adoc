@@ -1,0 +1,18 @@
+= Spring Boot Maven Plugin Documentation
+Stephane Nicoll, Andy Wilkinson
+:doctype: book
+:toc: left
+:toclevels: 4
+:source-highlighter: prettify
+:numbered:
+:icons: font
+:hide-uri-scheme:
+:docinfo: shared,private
+
+This documentation describes Spring Boot's Maven Plugin.
+
+
+
+[[goals]]
+== Goals
+include::{generated-resources-root}/goals.adoc[leveloffset=+1]
