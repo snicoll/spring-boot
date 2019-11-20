@@ -435,6 +435,9 @@
 							<sourceDocumentName>index.adoc</sourceDocumentName>
 							<attributes>
 								<version>${project.version}</version>
+								<build-helper-maven-plugin-version>${build-helper-maven-plugin.version}</build-helper-maven-plugin-version>
+								<maven-failsafe-plugin-version>${maven-failsafe-plugin.version}</maven-failsafe-plugin-version>
+								<maven-jar-plugin-version>${maven-jar-plugin.version}</maven-jar-plugin-version>
 								<generated-resources-root>${project.basedir}/target/generated-resources</generated-resources-root>
 							</attributes>
 						</configuration>
