@@ -153,7 +153,7 @@ public class RabbitProperties {
 			return getPort();
 		}
 		Address address = this.parsedAddresses.get(0);
-		return address.port;
+		return address.determinePort(getSsl().isEnabled());
 	}
 
 	public void setPort(int port) {
@@ -175,7 +175,7 @@ public class RabbitProperties {
 		}
 		List<String> addressStrings = new ArrayList<>();
 		for (Address parsedAddress : this.parsedAddresses) {
-			addressStrings.add(parsedAddress.host + ":" + parsedAddress.port);
+			addressStrings.add(parsedAddress.host + ":" + parsedAddress.determinePort(getSsl().isEnabled()));
 		}
 		return StringUtils.collectionToCommaDelimitedString(addressStrings);
 	}
@@ -188,7 +188,7 @@ public class RabbitProperties {
 	private List<Address> parseAddresses(String addresses) {
 		List<Address> parsedAddresses = new ArrayList<>();
 		for (String address : StringUtils.commaDelimitedListToStringArray(addresses)) {
-			parsedAddresses.add(new Address(address, getSsl().isEnabled()));
+			parsedAddresses.add(new Address(address));
 		}
 		return parsedAddresses;
 	}
@@ -378,7 +378,7 @@ public class RabbitProperties {
 				return isEnabled();
 			}
 			Address address = RabbitProperties.this.parsedAddresses.get(0);
-			return address.secureConnection;
+			return (address.secureConnection != null) ? address.secureConnection : isEnabled();
 		}
 
 		public void setEnabled(boolean enabled) {
@@ -958,7 +958,7 @@ public class RabbitProperties {
 
 		private String host;
 
-		private int port;
+		private Integer port;
 
 		private String username;
 
@@ -966,26 +966,31 @@ public class RabbitProperties {
 
 		private String virtualHost;
 
-		private boolean secureConnection;
+		private Boolean secureConnection;
 
-		private Address(String input, boolean sslEnabled) {
+		private Address(String input) {
 			input = input.trim();
-			input = trimPrefix(input, sslEnabled);
+			input = trimPrefix(input);
 			input = parseUsernameAndPassword(input);
 			input = parseVirtualHost(input);
 			parseHostAndPort(input);
 		}
 
-		private String trimPrefix(String input, boolean sslEnabled) {
+		public int determinePort(boolean sslEnabled) {
+			if (this.port != null) {
+				return this.port;
+			}
+			return (sslEnabled) ? DEFAULT_PORT_SECURE : DEFAULT_PORT;
+		}
+
+		private String trimPrefix(String input) {
 			if (input.startsWith(PREFIX_AMQP_SECURE)) {
 				this.secureConnection = true;
 				return input.substring(PREFIX_AMQP_SECURE.length());
 			}
 			if (input.startsWith(PREFIX_AMQP)) {
+				this.secureConnection = false;
 				return input.substring(PREFIX_AMQP.length());
-			}
-			if (sslEnabled) {
-				this.secureConnection = true;
 			}
 			return input;
 		}
@@ -1020,7 +1025,9 @@ public class RabbitProperties {
 			int portIndex = input.indexOf(':');
 			if (portIndex == -1) {
 				this.host = input;
-				this.port = (this.secureConnection) ? DEFAULT_PORT_SECURE : DEFAULT_PORT;
+				if (this.secureConnection != null) {
+					this.port = (this.secureConnection) ? DEFAULT_PORT_SECURE : DEFAULT_PORT;
+				}
 			}
 			else {
 				this.host = input.substring(0, portIndex);
