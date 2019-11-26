@@ -43,6 +43,7 @@ import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.context.EnvironmentAware;
 import org.springframework.context.ResourceLoaderAware;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.ConfigurationClassSelector;
 import org.springframework.context.annotation.DeferredImportSelector;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.AnnotationAttributes;
@@ -69,8 +70,8 @@ import org.springframework.util.StringUtils;
  * @since 1.3.0
  * @see EnableAutoConfiguration
  */
-public class AutoConfigurationImportSelector implements DeferredImportSelector, BeanClassLoaderAware,
-		ResourceLoaderAware, BeanFactoryAware, EnvironmentAware, Ordered {
+public class AutoConfigurationImportSelector implements DeferredImportSelector, ConfigurationClassSelector,
+		BeanClassLoaderAware, ResourceLoaderAware, BeanFactoryAware, EnvironmentAware, Ordered {
 
 	private static final AutoConfigurationEntry EMPTY_ENTRY = new AutoConfigurationEntry();
 
@@ -88,16 +89,33 @@ public class AutoConfigurationImportSelector implements DeferredImportSelector, 
 
 	private ResourceLoader resourceLoader;
 
+	private AutoConfigurationMetadata autoConfigurationMetadata;
+
+	private AutoConfigurationMetadata getAutoConfigurationMetadata() {
+		if (this.autoConfigurationMetadata == null) {
+			this.autoConfigurationMetadata = AutoConfigurationMetadataLoader.loadMetadata(this.beanClassLoader);
+		}
+		return this.autoConfigurationMetadata;
+	}
+
 	@Override
 	public String[] selectImports(AnnotationMetadata annotationMetadata) {
 		if (!isEnabled(annotationMetadata)) {
 			return NO_IMPORTS;
 		}
-		AutoConfigurationMetadata autoConfigurationMetadata = AutoConfigurationMetadataLoader
-				.loadMetadata(this.beanClassLoader);
-		AutoConfigurationEntry autoConfigurationEntry = getAutoConfigurationEntry(autoConfigurationMetadata,
+		AutoConfigurationEntry autoConfigurationEntry = getAutoConfigurationEntry(getAutoConfigurationMetadata(),
 				annotationMetadata);
 		return StringUtils.toStringArray(autoConfigurationEntry.getConfigurations());
+	}
+
+	@Override
+	public boolean select(String configurationClassName) {
+		List<String> filter = filter(Collections.singletonList(configurationClassName), getAutoConfigurationMetadata());
+		if (filter.isEmpty()) {
+			//logger.info("Filtered " + configurationClassName);
+			return false;
+		}
+		return true;
 	}
 
 	/**
@@ -388,6 +406,8 @@ public class AutoConfigurationImportSelector implements DeferredImportSelector, 
 
 		@Override
 		public void process(AnnotationMetadata annotationMetadata, DeferredImportSelector deferredImportSelector) {
+			// YOLO
+			ConfigurationClassSelector.adapter.setSelector((ConfigurationClassSelector) deferredImportSelector);
 			Assert.state(deferredImportSelector instanceof AutoConfigurationImportSelector,
 					() -> String.format("Only %s implementations are supported, got %s",
 							AutoConfigurationImportSelector.class.getSimpleName(),
