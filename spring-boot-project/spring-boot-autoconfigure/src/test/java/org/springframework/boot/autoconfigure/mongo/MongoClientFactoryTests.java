@@ -124,7 +124,7 @@ class MongoClientFactoryTests {
 	}
 
 	private MongoClient createMongoClient(MongoProperties properties, Environment environment) {
-		return new MongoClientFactory(properties, environment, Collections.emptyList()).createMongoClient(null);
+		return new MongoClientFactory(properties, environment).createMongoClient(null);
 	}
 
 	@SuppressWarnings("deprecation")

@@ -48,18 +48,18 @@ import org.springframework.util.StringUtils;
  */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnBean(MongoDatabaseFactory.class)
-class MongoDbFactoryDependentConfiguration {
+class MongoDatabaseFactoryDependentConfiguration {
 
 	private final MongoProperties properties;
 
-	MongoDbFactoryDependentConfiguration(MongoProperties properties) {
+	MongoDatabaseFactoryDependentConfiguration(MongoProperties properties) {
 		this.properties = properties;
 	}
 
 	@Bean
 	@ConditionalOnMissingBean(MongoOperations.class)
-	MongoTemplate mongoTemplate(MongoDatabaseFactory mongoDbFactory, MongoConverter converter) {
-		return new MongoTemplate(mongoDbFactory, converter);
+	MongoTemplate mongoTemplate(MongoDatabaseFactory factory, MongoConverter converter) {
+		return new MongoTemplate(factory, converter);
 	}
 
 	@Bean
@@ -74,9 +74,8 @@ class MongoDbFactoryDependentConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean(GridFsOperations.class)
-	GridFsTemplate gridFsTemplate(MongoDatabaseFactory mongoDbFactory, MongoTemplate mongoTemplate) {
-		return new GridFsTemplate(new GridFsMongoDbFactory(mongoDbFactory, this.properties),
-				mongoTemplate.getConverter());
+	GridFsTemplate gridFsTemplate(MongoDatabaseFactory factory, MongoTemplate mongoTemplate) {
+		return new GridFsTemplate(new GridFsMongoDbFactory(factory, this.properties), mongoTemplate.getConverter());
 	}
 
 	/**
@@ -85,14 +84,14 @@ class MongoDbFactoryDependentConfiguration {
 	 */
 	static class GridFsMongoDbFactory implements MongoDatabaseFactory {
 
-		private final MongoDatabaseFactory mongoDbFactory;
+		private final MongoDatabaseFactory mongoDatabaseFactory;
 
 		private final MongoProperties properties;
 
-		GridFsMongoDbFactory(MongoDatabaseFactory mongoDbFactory, MongoProperties properties) {
-			Assert.notNull(mongoDbFactory, "MongoDbFactory must not be null");
+		GridFsMongoDbFactory(MongoDatabaseFactory mongoDatabaseFactory, MongoProperties properties) {
+			Assert.notNull(mongoDatabaseFactory, "MongoDbFactory must not be null");
 			Assert.notNull(properties, "Properties must not be null");
-			this.mongoDbFactory = mongoDbFactory;
+			this.mongoDatabaseFactory = mongoDatabaseFactory;
 			this.properties = properties;
 		}
 
@@ -100,29 +99,29 @@ class MongoDbFactoryDependentConfiguration {
 		public MongoDatabase getMongoDatabase() throws DataAccessException {
 			String gridFsDatabase = this.properties.getGridFsDatabase();
 			if (StringUtils.hasText(gridFsDatabase)) {
-				return this.mongoDbFactory.getMongoDatabase(gridFsDatabase);
+				return this.mongoDatabaseFactory.getMongoDatabase(gridFsDatabase);
 			}
-			return this.mongoDbFactory.getMongoDatabase();
+			return this.mongoDatabaseFactory.getMongoDatabase();
 		}
 
 		@Override
 		public MongoDatabase getMongoDatabase(String dbName) throws DataAccessException {
-			return this.mongoDbFactory.getMongoDatabase(dbName);
+			return this.mongoDatabaseFactory.getMongoDatabase(dbName);
 		}
 
 		@Override
 		public PersistenceExceptionTranslator getExceptionTranslator() {
-			return this.mongoDbFactory.getExceptionTranslator();
+			return this.mongoDatabaseFactory.getExceptionTranslator();
 		}
 
 		@Override
 		public ClientSession getSession(ClientSessionOptions options) {
-			return this.mongoDbFactory.getSession(options);
+			return this.mongoDatabaseFactory.getSession(options);
 		}
 
 		@Override
 		public MongoDatabaseFactory withSession(ClientSession session) {
-			return this.mongoDbFactory.withSession(session);
+			return this.mongoDatabaseFactory.withSession(session);
 		}
 
 	}

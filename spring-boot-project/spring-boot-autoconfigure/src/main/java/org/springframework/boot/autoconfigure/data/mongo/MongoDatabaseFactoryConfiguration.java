@@ -18,14 +18,10 @@ package org.springframework.boot.autoconfigure.data.mongo;
 
 import com.mongodb.client.MongoClient;
 
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.autoconfigure.condition.AnyNestedCondition;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.data.mongo.MongoDbFactoryConfiguration.AnyMongoClientAvailable;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnSingleCandidate;
 import org.springframework.boot.autoconfigure.mongo.MongoProperties;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.MongoDatabaseFactorySupport;
@@ -35,43 +31,16 @@ import org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory;
  * Configuration for a {@link MongoDatabaseFactory}.
  *
  * @author Andy Wilkinson
+ * @author Stephane Nicoll
  */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnMissingBean(MongoDatabaseFactory.class)
-@Conditional(AnyMongoClientAvailable.class)
-class MongoDbFactoryConfiguration {
+@ConditionalOnSingleCandidate(MongoClient.class)
+class MongoDatabaseFactoryConfiguration {
 
 	@Bean
-	MongoDatabaseFactorySupport<?> mongoDbFactory(ObjectProvider<MongoClient> mongoClient, MongoProperties properties) {
-
-		com.mongodb.client.MongoClient fallbackClient = mongoClient.getIfAvailable();
-		if (fallbackClient != null) {
-			return new SimpleMongoClientDatabaseFactory(fallbackClient, properties.getMongoClientDatabase());
-		}
-		throw new IllegalStateException("Expected to find at least one MongoDB client.");
-	}
-
-	/**
-	 * Check if either a {@link MongoClient com.mongodb.MongoClient} or
-	 * {@link com.mongodb.client.MongoClient com.mongodb.client.MongoClient} bean is
-	 * available.
-	 */
-	static class AnyMongoClientAvailable extends AnyNestedCondition {
-
-		AnyMongoClientAvailable() {
-			super(ConfigurationPhase.REGISTER_BEAN);
-		}
-
-		@ConditionalOnBean(MongoClient.class)
-		static class PreferredClientAvailable {
-
-		}
-
-		@ConditionalOnBean(com.mongodb.client.MongoClient.class)
-		static class FallbackClientAvailable {
-
-		}
-
+	MongoDatabaseFactorySupport<?> mongoDatabaseFactory(MongoClient mongoClient, MongoProperties properties) {
+		return new SimpleMongoClientDatabaseFactory(mongoClient, properties.getMongoClientDatabase());
 	}
 
 }

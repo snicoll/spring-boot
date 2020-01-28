@@ -118,13 +118,13 @@ class ReactiveMongoClientFactoryTests {
 	}
 
 	@Test
-	void uriCanBeSetWithCredentials() {
+	void uriCannotBeSetWithCredentials() {
 		MongoProperties properties = new MongoProperties();
 		properties.setUri("mongodb://127.0.0.1:1234/mydb");
 		properties.setUsername("user");
 		properties.setPassword("secret".toCharArray());
-		MongoCredential credential = extractMongoCredentials(createMongoClient(properties));
-		assertMongoCredential(credential, "user", "secret", "mydb");
+		assertThatIllegalStateException().isThrownBy(() -> createMongoClient(properties)).withMessageContaining(
+				"Invalid mongo configuration, either uri or host/port/credentials must be specified");
 	}
 
 	@Test
