@@ -69,7 +69,6 @@ import org.springframework.jdbc.support.JdbcUtils;
 import org.springframework.jdbc.support.MetaDataAccessException;
 import org.springframework.orm.jpa.AbstractEntityManagerFactoryBean;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
-import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
@@ -118,14 +117,20 @@ public class FlywayAutoConfiguration {
 	public static class FlywayConfiguration {
 
 		@Bean
-		public Flyway flyway(FlywayProperties properties, DataSourceProperties dataSourceProperties,
-				ResourceLoader resourceLoader, ObjectProvider<DataSource> dataSource,
-				@FlywayDataSource ObjectProvider<DataSource> flywayDataSource,
+		public FlywayDataSourceConfigurer flywayDataSourceConfigurer(
+				@FlywayDataSource ObjectProvider<DataSource> flywayDataSource, FlywayProperties flywayProperties,
+				ObjectProvider<DataSource> dataSource, DataSourceProperties dataSourceProperties) {
+			return new FlywayDataSourceConfigurer(flywayDataSource.getIfAvailable(dataSource::getIfAvailable),
+					flywayProperties, dataSourceProperties);
+		}
+
+		@Bean
+		public Flyway flyway(ResourceLoader resourceLoader, FlywayProperties properties,
+				FlywayDataSourceConfigurer flywayDataSourceConfigurer,
 				ObjectProvider<FlywayConfigurationCustomizer> fluentConfigurationCustomizers,
 				ObjectProvider<JavaMigration> javaMigrations, ObjectProvider<Callback> callbacks) {
 			FluentConfiguration configuration = new FluentConfiguration(resourceLoader.getClassLoader());
-			DataSource dataSourceToMigrate = configureDataSource(configuration, properties, dataSourceProperties,
-					flywayDataSource.getIfAvailable(), dataSource.getIfAvailable());
+			DataSource dataSourceToMigrate = flywayDataSourceConfigurer.configureDataSource(configuration);
 			checkLocationExists(dataSourceToMigrate, properties, resourceLoader);
 			configureProperties(configuration, properties);
 			List<Callback> orderedCallbacks = callbacks.orderedStream().collect(Collectors.toList());
@@ -135,27 +140,6 @@ public class FlywayAutoConfiguration {
 			List<JavaMigration> migrations = javaMigrations.stream().collect(Collectors.toList());
 			configureJavaMigrations(configuration, migrations);
 			return configuration.load();
-		}
-
-		private DataSource configureDataSource(FluentConfiguration configuration, FlywayProperties properties,
-				DataSourceProperties dataSourceProperties, DataSource flywayDataSource, DataSource dataSource) {
-			if (properties.isCreateDataSource()) {
-				String url = getProperty(properties::getUrl, dataSourceProperties::determineUrl);
-				String user = getProperty(properties::getUser, dataSourceProperties::determineUsername);
-				String password = getProperty(properties::getPassword, dataSourceProperties::determinePassword);
-				configuration.dataSource(url, user, password);
-				if (!CollectionUtils.isEmpty(properties.getInitSqls())) {
-					String initSql = StringUtils.collectionToDelimitedString(properties.getInitSqls(), "\n");
-					configuration.initSql(initSql);
-				}
-			}
-			else if (flywayDataSource != null) {
-				configuration.dataSource(flywayDataSource);
-			}
-			else {
-				configuration.dataSource(dataSource);
-			}
-			return configuration.getDataSource();
 		}
 
 		private void checkLocationExists(DataSource dataSource, FlywayProperties properties,

@@ -16,8 +16,6 @@
 
 package org.springframework.boot.autoconfigure.liquibase;
 
-import java.util.function.Supplier;
-
 import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
 
@@ -43,7 +41,6 @@ import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfigurati
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration.LiquibaseNamedParameterJdbcOperationsDependsOnPostProcessor;
 import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
@@ -94,11 +91,16 @@ public class LiquibaseAutoConfiguration {
 		}
 
 		@Bean
-		public SpringLiquibase liquibase(DataSourceProperties dataSourceProperties,
-				ObjectProvider<DataSource> dataSource,
-				@LiquibaseDataSource ObjectProvider<DataSource> liquibaseDataSource) {
-			SpringLiquibase liquibase = createSpringLiquibase(liquibaseDataSource.getIfAvailable(),
-					dataSource.getIfUnique(), dataSourceProperties);
+		public SpringLiquibaseFactory springLiquibaseFactory(
+				@LiquibaseDataSource ObjectProvider<DataSource> liquibaseDataSource,
+				ObjectProvider<DataSource> dataSource, DataSourceProperties dataSourceProperties) {
+			return new SpringLiquibaseFactory(liquibaseDataSource.getIfAvailable(), this.properties,
+					dataSource.getIfAvailable(), dataSourceProperties);
+		}
+
+		@Bean
+		public SpringLiquibase liquibase(SpringLiquibaseFactory springLiquibaseFactory) {
+			SpringLiquibase liquibase = springLiquibaseFactory.create();
 			liquibase.setChangeLog(this.properties.getChangeLog());
 			liquibase.setContexts(this.properties.getContexts());
 			liquibase.setDefaultSchema(this.properties.getDefaultSchema());
@@ -113,41 +115,6 @@ public class LiquibaseAutoConfiguration {
 			liquibase.setRollbackFile(this.properties.getRollbackFile());
 			liquibase.setTestRollbackOnUpdate(this.properties.isTestRollbackOnUpdate());
 			return liquibase;
-		}
-
-		private SpringLiquibase createSpringLiquibase(DataSource liquibaseDatasource, DataSource dataSource,
-				DataSourceProperties dataSourceProperties) {
-			DataSource liquibaseDataSource = getDataSource(liquibaseDatasource, dataSource);
-			if (liquibaseDataSource != null) {
-				SpringLiquibase liquibase = new SpringLiquibase();
-				liquibase.setDataSource(liquibaseDataSource);
-				return liquibase;
-			}
-			SpringLiquibase liquibase = new DataSourceClosingSpringLiquibase();
-			liquibase.setDataSource(createNewDataSource(dataSourceProperties));
-			return liquibase;
-		}
-
-		private DataSource getDataSource(DataSource liquibaseDataSource, DataSource dataSource) {
-			if (liquibaseDataSource != null) {
-				return liquibaseDataSource;
-			}
-			if (this.properties.getUrl() == null && this.properties.getUser() == null) {
-				return dataSource;
-			}
-			return null;
-		}
-
-		private DataSource createNewDataSource(DataSourceProperties dataSourceProperties) {
-			String url = getProperty(this.properties::getUrl, dataSourceProperties::determineUrl);
-			String user = getProperty(this.properties::getUser, dataSourceProperties::determineUsername);
-			String password = getProperty(this.properties::getPassword, dataSourceProperties::determinePassword);
-			return DataSourceBuilder.create().url(url).username(user).password(password).build();
-		}
-
-		private String getProperty(Supplier<String> property, Supplier<String> defaultValue) {
-			String value = property.get();
-			return (value != null) ? value : defaultValue.get();
 		}
 
 	}
