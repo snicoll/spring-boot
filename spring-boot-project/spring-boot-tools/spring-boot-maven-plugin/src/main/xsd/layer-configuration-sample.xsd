@@ -76,18 +76,18 @@
 
 	<xsd:complexType name="filterType">
 		<xsd:sequence>
-			<xsd:element type="xsd:string" name="include" minOccurs="0">
-				<xsd:annotation>
-					<xsd:documentation><![CDATA[
-	Pattern of the elements to include.
-			]]></xsd:documentation>
-				</xsd:annotation>
-			</xsd:element>
-			<xsd:element type="xsd:string" name="exclude" minOccurs="0">
+			<xsd:element type="xsd:string" name="exclude" minOccurs="0" maxOccurs="unbounded">
 				<xsd:annotation>
 					<xsd:documentation><![CDATA[
 	Pattern of the elements to exclude. An exclude pattern takes precedence over an
-	include pattern.
+	include pattern and must be declared first.
+			]]></xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element type="xsd:string" name="include" minOccurs="0" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation><![CDATA[
+	Pattern of the elements to include.
 			]]></xsd:documentation>
 				</xsd:annotation>
 			</xsd:element>

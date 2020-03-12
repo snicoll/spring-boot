@@ -128,7 +128,6 @@ class MavenBuild {
 		Invoker invoker = new DefaultInvoker();
 		invoker.setMavenHome(this.home);
 		InvocationRequest request = new DefaultInvocationRequest();
-		request.setDebug(true);
 		try {
 			Path destination = this.temp.toPath();
 			Path source = this.projectDir.toPath();

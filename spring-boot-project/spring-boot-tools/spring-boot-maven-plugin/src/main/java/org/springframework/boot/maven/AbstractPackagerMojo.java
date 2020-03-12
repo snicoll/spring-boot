@@ -134,16 +134,16 @@ public abstract class AbstractPackagerMojo extends AbstractDependencyFilterMojo 
 			packager.setLayout(this.layout.layout());
 		}
 		if (this.layers != null && this.layers.isEnabled()) {
-			try {
-				if (this.layers.getConfigurationFile() != null) {
-					Document document = getDocumentIfAvailable(this.layers.getConfigurationFile());
+			if (this.layers.getConfiguration() != null) {
+				try {
+					Document document = getDocumentIfAvailable(this.layers.getConfiguration());
 					CustomLayersProvider customLayersProvider = new CustomLayersProvider();
-					org.springframework.boot.loader.tools.Layers layers = customLayersProvider.getLayers(document);
-					packager.setLayers(layers);
+					packager.setLayers(customLayersProvider.getLayers(document));
 				}
-			}
-			catch (Exception ex) {
-
+				catch (Exception ex) {
+					throw new IllegalStateException("Failed to process custom layers configuration "
+							+ this.layers.getConfiguration().getAbsolutePath(), ex);
+				}
 			}
 			packager.setLayout(new LayeredJar());
 			packager.setIncludeRelevantJarModeJars(this.layers.isIncludeLayerTools());

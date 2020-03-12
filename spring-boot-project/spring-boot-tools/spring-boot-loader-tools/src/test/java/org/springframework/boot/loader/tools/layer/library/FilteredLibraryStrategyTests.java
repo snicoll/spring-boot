@@ -31,14 +31,11 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
 /**
- *
  * Tests for {@link FilteredLibraryStrategy}.
  *
  * @author Madhura Bhave
  */
 class FilteredLibraryStrategyTests {
-
-	private FilteredLibraryStrategy strategy;
 
 	@Test
 	void createWhenFiltersNullShouldThrowException() {
@@ -53,22 +50,25 @@ class FilteredLibraryStrategyTests {
 
 	@Test
 	void getLayerShouldReturnLayerName() {
-		this.strategy = new FilteredLibraryStrategy("custom", Collections.singletonList(new TestFilter1Library()));
-		assertThat(this.strategy.getLayer().toString()).isEqualTo("custom");
+		FilteredLibraryStrategy strategy = new FilteredLibraryStrategy("custom",
+				Collections.singletonList(new TestFilter1Library()));
+		assertThat(strategy.getLayer().toString()).isEqualTo("custom");
 	}
 
 	@Test
-	void getMatchinLayerWhenFilterMatchesIncludes() {
-		this.strategy = new FilteredLibraryStrategy("custom", Collections.singletonList(new TestFilter1Library()));
+	void getMatchingLayerWhenFilterMatchesIncludes() {
+		FilteredLibraryStrategy strategy = new FilteredLibraryStrategy("custom",
+				Collections.singletonList(new TestFilter1Library()));
 		Library library = mockLibrary("A-Compile", LibraryScope.COMPILE);
-		assertThat(this.strategy.getMatchingLayer(library).toString()).isEqualTo("custom");
+		assertThat(strategy.getMatchingLayer(library).toString()).isEqualTo("custom");
 	}
 
 	@Test
 	void matchesWhenFilterMatchesIncludesAndExcludesFromSameFilter() {
-		this.strategy = new FilteredLibraryStrategy("custom", Collections.singletonList(new TestFilter1Library()));
+		FilteredLibraryStrategy strategy = new FilteredLibraryStrategy("custom",
+				Collections.singletonList(new TestFilter1Library()));
 		Library library = mockLibrary("A-Runtime", LibraryScope.RUNTIME);
-		assertThat(this.strategy.getMatchingLayer(library)).isNull();
+		assertThat(strategy.getMatchingLayer(library)).isNull();
 	}
 
 	@Test
@@ -76,9 +76,9 @@ class FilteredLibraryStrategyTests {
 		List<LibraryFilter> filters = new ArrayList<>();
 		filters.add(new TestFilter1Library());
 		filters.add(new TestFilter2Library());
-		this.strategy = new FilteredLibraryStrategy("custom", filters);
+		FilteredLibraryStrategy strategy = new FilteredLibraryStrategy("custom", filters);
 		Library library = mockLibrary("A-Provided", LibraryScope.PROVIDED);
-		assertThat(this.strategy.getMatchingLayer(library)).isNull();
+		assertThat(strategy.getMatchingLayer(library)).isNull();
 	}
 
 	private Library mockLibrary(String name, LibraryScope runtime) {

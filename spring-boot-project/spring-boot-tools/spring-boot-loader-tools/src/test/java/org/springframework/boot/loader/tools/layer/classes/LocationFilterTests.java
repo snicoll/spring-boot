@@ -17,7 +17,6 @@
 package org.springframework.boot.loader.tools.layer.classes;
 
 import java.util.Collections;
-import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
@@ -27,23 +26,32 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Tests for {@link LocationFilter}.
  *
  * @author Madhura Bhave
+ * @author Stephane Nicoll
  */
 class LocationFilterTests {
 
-	private LocationFilter filter;
-
 	@Test
 	void isResourceIncludedWhenPatternMatchesWithWildcard() {
-		List<String> includes = Collections.singletonList("META-INF/**");
-		this.filter = new LocationFilter(includes, Collections.emptyList());
-		assertThat(this.filter.isResourceIncluded("META-INF/resources/application.yml")).isTrue();
+		LocationFilter filter = new LocationFilter(Collections.singletonList("META-INF/**"), Collections.emptyList());
+		assertThat(filter.isResourceIncluded("META-INF/resources/application.yml")).isTrue();
 	}
 
 	@Test
 	void isResourceIncludedWhenPatternDoesNotMatch() {
-		List<String> includes = Collections.singletonList("META-INF/**");
-		this.filter = new LocationFilter(includes, Collections.emptyList());
-		assertThat(this.filter.isResourceIncluded("src/main/resources/application.yml")).isFalse();
+		LocationFilter filter = new LocationFilter(Collections.singletonList("META-INF/**"), Collections.emptyList());
+		assertThat(filter.isResourceIncluded("src/main/resources/application.yml")).isFalse();
+	}
+
+	@Test
+	void isResourceExcludedWhenPatternMatchesWithWildcard() {
+		LocationFilter filter = new LocationFilter(Collections.emptyList(), Collections.singletonList("META-INF/**"));
+		assertThat(filter.isResourceExcluded("META-INF/resources/application.yml")).isTrue();
+	}
+
+	@Test
+	void isResourceExcludedWhenPatternDoesNotMatch() {
+		LocationFilter filter = new LocationFilter(Collections.emptyList(), Collections.singletonList("META-INF/**"));
+		assertThat(filter.isResourceExcluded("src/main/resources/application.yml")).isFalse();
 	}
 
 }

@@ -36,78 +36,76 @@ import static org.mockito.Mockito.mock;
  */
 class CoordinateFilterTests {
 
-	private CoordinateFilter filter;
-
 	@Test
 	void isLibraryIncludedWhenGroupIdIsNullAndToMatchHasWildcard() {
 		List<String> includes = Collections.singletonList("*:*");
-		this.filter = new CoordinateFilter(includes, Collections.emptyList());
+		CoordinateFilter filter = new CoordinateFilter(includes, Collections.emptyList());
 		Library library = mock(Library.class);
 		given(library.getCoordinates()).willReturn(new LibraryCoordinates(null, null, null));
-		assertThat(this.filter.isLibraryIncluded(library)).isTrue();
+		assertThat(filter.isLibraryIncluded(library)).isTrue();
 	}
 
 	@Test
 	void isLibraryIncludedWhenArtifactIdIsNullAndToMatchHasWildcard() {
 		List<String> includes = Collections.singletonList("org.acme:*");
-		this.filter = new CoordinateFilter(includes, Collections.emptyList());
+		CoordinateFilter filter = new CoordinateFilter(includes, Collections.emptyList());
 		Library library = mock(Library.class);
 		given(library.getCoordinates()).willReturn(new LibraryCoordinates("org.acme", null, null));
-		assertThat(this.filter.isLibraryIncluded(library)).isTrue();
+		assertThat(filter.isLibraryIncluded(library)).isTrue();
 	}
 
 	@Test
 	void isLibraryIncludedWhenVersionIsNullAndToMatchHasWildcard() {
 		List<String> includes = Collections.singletonList("org.acme:something:*");
-		this.filter = new CoordinateFilter(includes, Collections.emptyList());
+		CoordinateFilter filter = new CoordinateFilter(includes, Collections.emptyList());
 		Library library = mock(Library.class);
 		given(library.getCoordinates()).willReturn(new LibraryCoordinates("org.acme", "something", null));
-		assertThat(this.filter.isLibraryIncluded(library)).isTrue();
+		assertThat(filter.isLibraryIncluded(library)).isTrue();
 	}
 
 	@Test
 	void isLibraryIncludedWhenGroupIdDoesNotMatch() {
 		List<String> includes = Collections.singletonList("org.acme:*");
-		this.filter = new CoordinateFilter(includes, Collections.emptyList());
+		CoordinateFilter filter = new CoordinateFilter(includes, Collections.emptyList());
 		Library library = mock(Library.class);
 		given(library.getCoordinates()).willReturn(new LibraryCoordinates("other.foo", null, null));
-		assertThat(this.filter.isLibraryIncluded(library)).isFalse();
+		assertThat(filter.isLibraryIncluded(library)).isFalse();
 	}
 
 	@Test
 	void isLibraryIncludedWhenArtifactIdDoesNotMatch() {
 		List<String> includes = Collections.singletonList("org.acme:test:*");
-		this.filter = new CoordinateFilter(includes, Collections.emptyList());
+		CoordinateFilter filter = new CoordinateFilter(includes, Collections.emptyList());
 		Library library = mock(Library.class);
 		given(library.getCoordinates()).willReturn(new LibraryCoordinates("org.acme", "other", null));
-		assertThat(this.filter.isLibraryIncluded(library)).isFalse();
+		assertThat(filter.isLibraryIncluded(library)).isFalse();
 	}
 
 	@Test
 	void isLibraryIncludedWhenArtifactIdMatches() {
 		List<String> includes = Collections.singletonList("org.acme:test:*");
-		this.filter = new CoordinateFilter(includes, Collections.emptyList());
+		CoordinateFilter filter = new CoordinateFilter(includes, Collections.emptyList());
 		Library library = mock(Library.class);
 		given(library.getCoordinates()).willReturn(new LibraryCoordinates("org.acme", "test", null));
-		assertThat(this.filter.isLibraryIncluded(library)).isTrue();
+		assertThat(filter.isLibraryIncluded(library)).isTrue();
 	}
 
 	@Test
 	void isLibraryIncludedWhenVersionDoesNotMatch() {
 		List<String> includes = Collections.singletonList("org.acme:test:*SNAPSHOT");
-		this.filter = new CoordinateFilter(includes, Collections.emptyList());
+		CoordinateFilter filter = new CoordinateFilter(includes, Collections.emptyList());
 		Library library = mock(Library.class);
 		given(library.getCoordinates()).willReturn(new LibraryCoordinates("org.acme", "test", "1.0.0"));
-		assertThat(this.filter.isLibraryIncluded(library)).isFalse();
+		assertThat(filter.isLibraryIncluded(library)).isFalse();
 	}
 
 	@Test
 	void isLibraryIncludedWhenVersionMatches() {
 		List<String> includes = Collections.singletonList("org.acme:test:*SNAPSHOT");
-		this.filter = new CoordinateFilter(includes, Collections.emptyList());
+		CoordinateFilter filter = new CoordinateFilter(includes, Collections.emptyList());
 		Library library = mock(Library.class);
 		given(library.getCoordinates()).willReturn(new LibraryCoordinates("org.acme", "test", "1.0.0-SNAPSHOT"));
-		assertThat(this.filter.isLibraryIncluded(library)).isTrue();
+		assertThat(filter.isLibraryIncluded(library)).isTrue();
 	}
 
 }

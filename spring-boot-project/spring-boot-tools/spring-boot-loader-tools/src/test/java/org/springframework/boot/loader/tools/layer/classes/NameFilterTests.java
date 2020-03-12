@@ -17,7 +17,6 @@
 package org.springframework.boot.loader.tools.layer.classes;
 
 import java.util.Collections;
-import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
@@ -27,23 +26,32 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Tests for {@link NameFilter}.
  *
  * @author Madhura Bhave
+ * @author Stephane Nicoll
  */
 class NameFilterTests {
 
-	private NameFilter filter;
-
 	@Test
 	void isResourceIncludedWhenPatternMatches() {
-		List<String> includes = Collections.singletonList("application*.*");
-		this.filter = new NameFilter(includes, Collections.emptyList());
-		assertThat(this.filter.isResourceIncluded("application.yml")).isTrue();
+		NameFilter filter = new NameFilter(Collections.singletonList("application*.*"), Collections.emptyList());
+		assertThat(filter.isResourceIncluded("application.yml")).isTrue();
 	}
 
 	@Test
 	void isResourceIncludedWhenPatternDoesNotMatch() {
-		List<String> includes = Collections.singletonList("other.yml");
-		this.filter = new NameFilter(includes, Collections.emptyList());
-		assertThat(this.filter.isResourceIncluded("application.yml")).isFalse();
+		NameFilter filter = new NameFilter(Collections.singletonList("other.yml"), Collections.emptyList());
+		assertThat(filter.isResourceIncluded("application.yml")).isFalse();
+	}
+
+	@Test
+	void isResourceExcludedWhenPatternMatches() {
+		NameFilter filter = new NameFilter(Collections.emptyList(), Collections.singletonList("application*.*"));
+		assertThat(filter.isResourceExcluded("application.yml")).isTrue();
+	}
+
+	@Test
+	void isResourceExcludedWhenPatternDoesNotMatch() {
+		NameFilter filter = new NameFilter(Collections.emptyList(), Collections.singletonList("other.yml"));
+		assertThat(filter.isResourceExcluded("application.yml")).isFalse();
 	}
 
 }

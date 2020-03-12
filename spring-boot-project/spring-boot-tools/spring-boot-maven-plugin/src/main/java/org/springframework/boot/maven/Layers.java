@@ -30,7 +30,7 @@ public class Layers {
 
 	private boolean includeLayerTools = true;
 
-	private File configurationFile;
+	private File configuration;
 
 	/**
 	 * Whether layered jar layout is enabled.
@@ -49,15 +49,17 @@ public class Layers {
 	}
 
 	/**
-	 * The location of the configuration file for custom layers.
-	 * @return the file
+	 * The location of the layers configuration file. If no file is provided, a default
+	 * configuration is used with four layers: {@code application}, {@code resources},
+	 * {@code snapshot-dependencies} and {@code dependencies}.
+	 * @return the layers configuration file
 	 */
-	public File getConfigurationFile() {
-		return this.configurationFile;
+	public File getConfiguration() {
+		return this.configuration;
 	}
 
-	public void setConfigurationFile(File configurationFile) {
-		this.configurationFile = configurationFile;
+	public void setConfiguration(File configuration) {
+		this.configuration = configuration;
 	}
 
 }

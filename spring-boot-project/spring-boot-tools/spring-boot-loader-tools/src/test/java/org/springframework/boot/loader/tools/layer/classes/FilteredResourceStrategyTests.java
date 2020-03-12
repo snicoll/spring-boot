@@ -32,8 +32,6 @@ import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException
  */
 class FilteredResourceStrategyTests {
 
-	private FilteredResourceStrategy strategy;
-
 	@Test
 	void createWhenFiltersNullShouldThrowException() {
 		assertThatIllegalArgumentException().isThrownBy(() -> new FilteredResourceStrategy("custom", null));
@@ -47,20 +45,23 @@ class FilteredResourceStrategyTests {
 
 	@Test
 	void getLayerShouldReturnLayerName() {
-		this.strategy = new FilteredResourceStrategy("custom", Collections.singletonList(new TestFilter1()));
-		assertThat(this.strategy.getLayer().toString()).isEqualTo("custom");
+		FilteredResourceStrategy strategy = new FilteredResourceStrategy("custom",
+				Collections.singletonList(new TestFilter1()));
+		assertThat(strategy.getLayer().toString()).isEqualTo("custom");
 	}
 
 	@Test
-	void getMatchinLayerWhenFilterMatchesIncludes() {
-		this.strategy = new FilteredResourceStrategy("custom", Collections.singletonList(new TestFilter1()));
-		assertThat(this.strategy.getMatchingLayer("ABCD").toString()).isEqualTo("custom");
+	void getMatchingLayerWhenFilterMatchesIncludes() {
+		FilteredResourceStrategy strategy = new FilteredResourceStrategy("custom",
+				Collections.singletonList(new TestFilter1()));
+		assertThat(strategy.getMatchingLayer("ABCD").toString()).isEqualTo("custom");
 	}
 
 	@Test
 	void matchesWhenFilterMatchesIncludesAndExcludesFromSameFilter() {
-		this.strategy = new FilteredResourceStrategy("custom", Collections.singletonList(new TestFilter1()));
-		assertThat(this.strategy.getMatchingLayer("AZ")).isNull();
+		FilteredResourceStrategy strategy = new FilteredResourceStrategy("custom",
+				Collections.singletonList(new TestFilter1()));
+		assertThat(strategy.getMatchingLayer("AZ")).isNull();
 	}
 
 	@Test
@@ -68,8 +69,8 @@ class FilteredResourceStrategyTests {
 		List<ResourceFilter> filters = new ArrayList<>();
 		filters.add(new TestFilter1());
 		filters.add(new TestFilter2());
-		this.strategy = new FilteredResourceStrategy("custom", filters);
-		assertThat(this.strategy.getMatchingLayer("AY")).isNull();
+		FilteredResourceStrategy strategy = new FilteredResourceStrategy("custom", filters);
+		assertThat(strategy.getMatchingLayer("AY")).isNull();
 	}
 
 	private static class TestFilter1 implements ResourceFilter {

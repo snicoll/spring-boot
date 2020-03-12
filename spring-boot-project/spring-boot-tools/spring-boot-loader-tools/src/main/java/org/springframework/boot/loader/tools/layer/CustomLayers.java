@@ -34,17 +34,17 @@ import org.springframework.boot.loader.tools.layer.library.LibraryStrategy;
  */
 public class CustomLayers implements Layers {
 
-	private final List<LibraryStrategy> libraryStrategies = new ArrayList<>();
+	private final List<Layer> layers;
 
-	private final List<ResourceStrategy> resourceStrategies = new ArrayList<>();
+	private final List<ResourceStrategy> resourceStrategies;
 
-	private final List<Layer> layers = new ArrayList<>();
+	private final List<LibraryStrategy> libraryStrategies;
 
 	public CustomLayers(List<Layer> layers, List<ResourceStrategy> resourceStrategies,
 			List<LibraryStrategy> libraryStrategies) {
-		this.layers.addAll(layers);
-		this.resourceStrategies.addAll(resourceStrategies);
-		this.libraryStrategies.addAll(libraryStrategies);
+		this.layers = new ArrayList<>(layers);
+		this.resourceStrategies = new ArrayList<>(resourceStrategies);
+		this.libraryStrategies = new ArrayList<>(libraryStrategies);
 	}
 
 	@Override

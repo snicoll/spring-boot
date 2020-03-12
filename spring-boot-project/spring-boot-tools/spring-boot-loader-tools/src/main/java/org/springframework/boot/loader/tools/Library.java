@@ -122,16 +122,16 @@ public class Library {
 		return this.unpackRequired;
 	}
 
-	long getLastModified() {
-		return this.file.lastModified();
-	}
-
 	/**
-	 * Return the coordinates of the library.
+	 * Return the {@linkplain LibraryCoordinates coordinates} of the library.
 	 * @return the coordinates
 	 */
 	public LibraryCoordinates getCoordinates() {
 		return this.coordinates;
+	}
+
+	long getLastModified() {
+		return this.file.lastModified();
 	}
 
 }

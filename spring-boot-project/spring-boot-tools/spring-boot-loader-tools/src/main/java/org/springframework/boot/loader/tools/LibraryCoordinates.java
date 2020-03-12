@@ -24,7 +24,7 @@ import org.springframework.util.Assert;
  * @author Scott Frederick
  * @since 2.3.0
  */
-public class LibraryCoordinates {
+public final class LibraryCoordinates {
 
 	private final String groupId;
 
@@ -33,7 +33,7 @@ public class LibraryCoordinates {
 	private final String version;
 
 	/**
-	 * Create a new {@code LibraryCoordinates} from discrete elements.
+	 * Create a new instance from discrete elements.
 	 * @param groupId the group ID
 	 * @param artifactId the artifact ID
 	 * @param version the version
@@ -45,7 +45,8 @@ public class LibraryCoordinates {
 	}
 
 	/**
-	 * Create a new {@code LibraryCoordinates} from a String value.
+	 * Create a new instance from a String value in the form
+	 * {@code groupId:artifactId:version} where the version is optional.
 	 * @param coordinates the coordinates
 	 */
 	public LibraryCoordinates(String coordinates) {
