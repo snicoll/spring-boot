@@ -14,34 +14,29 @@
  * limitations under the License.
  */
 
-package org.springframework.boot.maven;
+package org.springframework.boot.loader.tools.layer.classes;
+
+import java.util.List;
+
+import org.springframework.util.AntPathMatcher;
 
 /**
- * Layer configuration options.
+ * An implementation of {@link ResourceFilter} based on the resource location.
  *
  * @author Madhura Bhave
  * @since 2.3.0
  */
-public class Layered {
+public class LocationFilter extends AbstractResourceFilter {
 
-	private boolean enabled;
+	private static final AntPathMatcher MATCHER = new AntPathMatcher();
 
-	private boolean includeLayerTools = true;
-
-	/**
-	 * Whether layered jar layout is enabled.
-	 * @return true if the layered layout is enabled.
-	 */
-	public boolean isEnabled() {
-		return this.enabled;
+	public LocationFilter(List<String> includes, List<String> excludes) {
+		super(includes, excludes);
 	}
 
-	/**
-	 * Whether to include the layer tools jar.
-	 * @return true if layer tools should be included
-	 */
-	public boolean isIncludeLayerTools() {
-		return this.includeLayerTools;
+	@Override
+	protected boolean isMatch(String resourceName, List<String> toMatch) {
+		return toMatch.stream().anyMatch((pattern) -> MATCHER.match(pattern, resourceName));
 	}
 
 }

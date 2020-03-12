@@ -416,9 +416,9 @@ To use this feature, the layering feature must be enabled:
 					<artifactId>spring-boot-maven-plugin</artifactId>
 					<version>{gradle-project-version}</version>
 					<configuration>
-						<layered>
+						<layers>
 							<enabled>true</enabled>
-						</layered>
+						</layers>
 					</configuration>
 				</plugin>
 			</plugins>
@@ -440,10 +440,10 @@ If you wish to exclude this dependency, you can do so in the following manner:
 					<artifactId>spring-boot-maven-plugin</artifactId>
 					<version>{gradle-project-version}</version>
 					<configuration>
-						<layered>
+						<layers>
 							<enabled>true</enabled>
 							<includeLayerTools>false</enabled>
-						</layered>
+						</layers>
 					</configuration>
 				</plugin>
 			</plugins>
