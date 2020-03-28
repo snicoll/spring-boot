@@ -18,6 +18,7 @@ package org.springframework.boot.autoconfigure.hazelcast;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Arrays;
 
 import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.client.config.ClientConfig;
@@ -27,6 +28,7 @@ import com.hazelcast.core.HazelcastInstance;
 
 import org.springframework.core.io.Resource;
 import org.springframework.util.Assert;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -42,10 +44,13 @@ public class HazelcastClientFactory {
 	/**
 	 * Create a {@link HazelcastClientFactory} for the specified configuration location.
 	 * @param clientConfigLocation the location of the configuration file
+	 * @param clientConfigCustomizers the {@linkplain HazelcastClientConfigCustomizer
+	 * customizers} to apply to the client configuration
 	 * @throws IOException if the configuration location could not be read
 	 */
-	public HazelcastClientFactory(Resource clientConfigLocation) throws IOException {
-		this.clientConfig = getClientConfig(clientConfigLocation);
+	public HazelcastClientFactory(Resource clientConfigLocation,
+			HazelcastClientConfigCustomizer... clientConfigCustomizers) throws IOException {
+		this.clientConfig = getClientConfig(clientConfigLocation, clientConfigCustomizers);
 	}
 
 	/**
@@ -57,13 +62,27 @@ public class HazelcastClientFactory {
 		this.clientConfig = clientConfig;
 	}
 
-	private ClientConfig getClientConfig(Resource clientConfigLocation) throws IOException {
+	private static ClientConfig getClientConfig(Resource clientConfigLocation,
+			HazelcastClientConfigCustomizer... clientConfigCustomizers) throws IOException {
+		ClientConfig clientConfig = createClientConfig(clientConfigLocation);
+		if (!ObjectUtils.isEmpty(clientConfigCustomizers)) {
+			Arrays.stream(clientConfigCustomizers).forEach((customizer) -> customizer.customize(clientConfig));
+		}
+		return clientConfig;
+	}
+
+	private static ClientConfig createClientConfig(Resource clientConfigLocation) throws IOException {
+		Assert.notNull(clientConfigLocation, "ClientConfigLocation must not be null");
 		URL configUrl = clientConfigLocation.getURL();
 		String configFileName = configUrl.getPath();
 		if (configFileName.endsWith(".yaml")) {
 			return new YamlClientConfigBuilder(configUrl).build();
 		}
 		return new XmlClientConfigBuilder(configUrl).build();
+	}
+
+	protected ClientConfig getClientConfig() {
+		return this.clientConfig;
 	}
 
 	/**

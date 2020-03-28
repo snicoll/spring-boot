@@ -16,20 +16,25 @@
 
 package org.springframework.boot.autoconfigure.hazelcast;
 
+import java.io.Serializable;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 import com.hazelcast.config.Config;
 import com.hazelcast.config.QueueConfig;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.spring.context.SpringAware;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.BeanCreationException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.assertj.AssertableApplicationContext;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.boot.test.context.runner.ContextConsumer;
 import org.springframework.boot.testsupport.classpath.ClassPathExclusions;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
@@ -156,6 +161,15 @@ class HazelcastAutoConfigurationServerTests {
 				});
 	}
 
+	@Test
+	void configRegisterSpringManagedContext() {
+		this.contextRunner.run((context) -> {
+			HazelcastInstance hazelcast = context.getBean(HazelcastInstance.class);
+			assertThat(hazelcast.getExecutorService("testExecutorService").submit(new TestCallable()))
+					.isEqualTo(context.getBeanDefinitionCount());
+		});
+	}
+
 	@Configuration(proxyBeanMethods = false)
 	static class HazelcastConfigWithName {
 
@@ -174,6 +188,23 @@ class HazelcastAutoConfigurationServerTests {
 			Config config = new Config();
 			config.addQueueConfig(new QueueConfig("another-queue"));
 			return config;
+		}
+
+	}
+
+	@SpringAware
+	static class TestCallable implements Callable<Integer>, Serializable {
+
+		private ApplicationContext applicationContext;
+
+		@Autowired
+		void setApplicationContext(ApplicationContext applicationContext) {
+			this.applicationContext = applicationContext;
+		}
+
+		@Override
+		public Integer call() {
+			return this.applicationContext.getBeanDefinitionCount();
 		}
 
 	}

@@ -18,15 +18,21 @@ package org.springframework.boot.autoconfigure.hazelcast;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Arrays;
 
 import com.hazelcast.config.Config;
 import com.hazelcast.config.XmlConfigBuilder;
 import com.hazelcast.config.YamlConfigBuilder;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.spring.context.SpringManagedContext;
 
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.util.Assert;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.ResourceUtils;
 import org.springframework.util.StringUtils;
 
@@ -44,11 +50,13 @@ public class HazelcastInstanceFactory {
 	/**
 	 * Create a {@link HazelcastInstanceFactory} for the specified configuration location.
 	 * @param configLocation the location of the configuration file
+	 * @param configCustomizers the {@linkplain HazelcastConfigCustomizer customizers} to
+	 * apply to the configuration
 	 * @throws IOException if the configuration location could not be read
 	 */
-	public HazelcastInstanceFactory(Resource configLocation) throws IOException {
-		Assert.notNull(configLocation, "ConfigLocation must not be null");
-		this.config = getConfig(configLocation);
+	public HazelcastInstanceFactory(Resource configLocation, HazelcastConfigCustomizer... configCustomizers)
+			throws IOException {
+		this.config = getConfig(configLocation, configCustomizers);
 	}
 
 	/**
@@ -60,7 +68,9 @@ public class HazelcastInstanceFactory {
 		this.config = config;
 	}
 
-	private Config getConfig(Resource configLocation) throws IOException {
+	private static Config getConfig(Resource configLocation, HazelcastConfigCustomizer... configCustomizers)
+			throws IOException {
+		Assert.notNull(configLocation, "ConfigLocation must not be null");
 		URL configUrl = configLocation.getURL();
 		Config config = createConfig(configUrl);
 		if (ResourceUtils.isFileURL(configUrl)) {
@@ -68,6 +78,9 @@ public class HazelcastInstanceFactory {
 		}
 		else {
 			config.setConfigurationUrl(configUrl);
+		}
+		if (!ObjectUtils.isEmpty(configCustomizers)) {
+			Arrays.stream(configCustomizers).forEach((customizer) -> customizer.customize(config));
 		}
 		return config;
 	}
@@ -78,6 +91,26 @@ public class HazelcastInstanceFactory {
 			return new YamlConfigBuilder(configUrl).build();
 		}
 		return new XmlConfigBuilder(configUrl).build();
+	}
+
+
+	@Bean
+	public Config hazelcastConfig(ApplicationContext applicationContext) throws IOException {
+		URL configLocation = new ClassPathResource("my-hazelcast-config.xml").getURL();
+		Config config = new XmlConfigBuilder(configLocation).build();
+		config.setConfigurationUrl(configLocation);
+		SpringManagedContext managedContext = new SpringManagedContext();
+		managedContext.setApplicationContext(applicationContext);
+		config.setManagedContext(managedContext);
+		return config;
+	}
+
+	/**
+	 * Return the {@link Config} managed by this instance.
+	 * @return the hazelcast config
+	 */
+	protected Config getConfig() {
+		return this.config;
 	}
 
 	/**
