@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the original author or authors.
+ * Copyright 2012-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,10 +17,14 @@
 package org.springframework.boot.autoconfigure.data.redis;
 
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import io.lettuce.core.ClientOptions;
+import io.lettuce.core.cluster.ClusterClientOptions;
+import io.lettuce.core.cluster.ClusterTopologyRefreshOptions.RefreshTrigger;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.junit.jupiter.api.Test;
 
@@ -30,6 +34,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisClusterConfiguration;
 import org.springframework.data.redis.connection.RedisNode;
+import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration.LettuceClientConfigurationBuilder;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettucePoolingClientConfiguration;
@@ -54,7 +59,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 class RedisAutoConfigurationTests {
 
-	private ApplicationContextRunner contextRunner = new ApplicationContextRunner()
+	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
 			.withConfiguration(AutoConfigurations.of(RedisAutoConfiguration.class));
 
 	@Test
@@ -83,6 +88,17 @@ class RedisAutoConfigurationTests {
 		this.contextRunner.withUserConfiguration(CustomConfiguration.class).run((context) -> {
 			LettuceConnectionFactory cf = context.getBean(LettuceConnectionFactory.class);
 			assertThat(cf.isUseSsl()).isTrue();
+		});
+	}
+
+	@Test
+	void testCustomizeRedisClientOptions() {
+		this.contextRunner.withUserConfiguration(CustomClientOptionsConfiguration.class).run((context) -> {
+			LettuceConnectionFactory cf = context.getBean(LettuceConnectionFactory.class);
+			assertThat(cf.getClientConfiguration().getClientOptions()).isPresent();
+			ClientOptions clientOptions = cf.getClientConfiguration().getClientOptions().get();
+			assertThat(clientOptions).isInstanceOf(ClusterClientOptions.class);
+			assertThat(((ClusterClientOptions) clientOptions).getMaxRedirects()).isEqualTo(2);
 		});
 	}
 
@@ -230,6 +246,34 @@ class RedisAutoConfigurationTests {
 				);
 	}
 
+	@Test
+	void testRedisConfigurationWithClusterRefreshPeriod() {
+		this.contextRunner.withPropertyValues("spring.redis.cluster.nodes=127.0.0.1:27379,127.0.0.1:27380",
+				"spring.redis.cluster.refresh.period=30s").run((context) -> {
+					LettuceClientConfiguration clientConfiguration = context.getBean(LettuceConnectionFactory.class)
+							.getClientConfiguration();
+					assertThat(clientConfiguration.getClientOptions()).isPresent();
+					ClientOptions clientOptions = clientConfiguration.getClientOptions().get();
+					assertThat(clientOptions).isInstanceOf(ClusterClientOptions.class);
+					assertThat(((ClusterClientOptions) clientOptions).getTopologyRefreshOptions().getRefreshPeriod())
+							.hasSeconds(30);
+				});
+	}
+
+	@Test
+	void testRedisConfigurationWithClusterAdaptiveRefresh() {
+		this.contextRunner.withPropertyValues("spring.redis.cluster.nodes=127.0.0.1:27379,127.0.0.1:27380",
+				"spring.redis.cluster.refresh.adaptive=true").run((context) -> {
+					LettuceClientConfiguration clientConfiguration = context.getBean(LettuceConnectionFactory.class)
+							.getClientConfiguration();
+					assertThat(clientConfiguration.getClientOptions()).isPresent();
+					ClientOptions clientOptions = clientConfiguration.getClientOptions().get();
+					assertThat(clientOptions).isInstanceOf(ClusterClientOptions.class);
+					assertThat(((ClusterClientOptions) clientOptions).getTopologyRefreshOptions()
+							.getAdaptiveRefreshTriggers()).isEqualTo(EnumSet.allOf(RefreshTrigger.class));
+				});
+	}
+
 	private LettucePoolingClientConfiguration getPoolingClientConfiguration(LettuceConnectionFactory factory) {
 		return (LettucePoolingClientConfiguration) ReflectionTestUtils.getField(factory, "clientConfiguration");
 	}
@@ -240,6 +284,16 @@ class RedisAutoConfigurationTests {
 		@Bean
 		LettuceClientConfigurationBuilderCustomizer customizer() {
 			return LettuceClientConfigurationBuilder::useSsl;
+		}
+
+	}
+
+	@Configuration(proxyBeanMethods = false)
+	static class CustomClientOptionsConfiguration {
+
+		@Bean
+		LettuceClientOptionsBuilderCustomizer customizer() {
+			return (builder) -> builder.maxRedirects(2);
 		}
 
 	}
