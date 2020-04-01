@@ -247,12 +247,6 @@ class RedisAutoConfigurationTests {
 	}
 
 	@Test
-	void testRedisConfigurationWithClientOptionsCustomizer() {
-		this.contextRunner.withUserConfiguration(CustomClientOptionsConfiguration.class).run(assertClientOptions(
-				ClientOptions.class, (options) -> assertThat(options.getRequestQueueSize()).isEqualTo(42)));
-	}
-
-	@Test
 	void testRedisConfigurationWithClusterRefreshPeriod() {
 		this.contextRunner
 				.withPropertyValues("spring.redis.cluster.nodes=127.0.0.1:27379,127.0.0.1:27380",
@@ -300,16 +294,6 @@ class RedisAutoConfigurationTests {
 		@Bean
 		LettuceClientConfigurationBuilderCustomizer customizer() {
 			return LettuceClientConfigurationBuilder::useSsl;
-		}
-
-	}
-
-	@Configuration(proxyBeanMethods = false)
-	static class CustomClientOptionsConfiguration {
-
-		@Bean
-		LettuceClientOptionsBuilderCustomizer<?> customizer() {
-			return (builder) -> builder.requestQueueSize(42);
 		}
 
 	}

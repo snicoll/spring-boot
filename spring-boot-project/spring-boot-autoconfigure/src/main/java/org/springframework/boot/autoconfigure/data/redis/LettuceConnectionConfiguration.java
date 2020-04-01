@@ -17,7 +17,6 @@
 package org.springframework.boot.autoconfigure.data.redis;
 
 import java.net.UnknownHostException;
-import java.util.stream.Collectors;
 
 import io.lettuce.core.ClientOptions;
 import io.lettuce.core.RedisClient;
@@ -34,7 +33,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.data.redis.RedisProperties.Lettuce.Cluster.Refresh;
 import org.springframework.boot.autoconfigure.data.redis.RedisProperties.Pool;
-import org.springframework.boot.util.LambdaSafe;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisClusterConfiguration;
@@ -72,10 +70,9 @@ class LettuceConnectionConfiguration extends RedisConnectionConfiguration {
 	@ConditionalOnMissingBean(RedisConnectionFactory.class)
 	LettuceConnectionFactory redisConnectionFactory(
 			ObjectProvider<LettuceClientConfigurationBuilderCustomizer> builderCustomizers,
-			ObjectProvider<LettuceClientOptionsBuilderCustomizer<?>> clientOptionsCustomizers,
 			ClientResources clientResources) throws UnknownHostException {
-		LettuceClientConfiguration clientConfig = getLettuceClientConfiguration(builderCustomizers,
-				clientOptionsCustomizers, clientResources, getProperties().getLettuce().getPool());
+		LettuceClientConfiguration clientConfig = getLettuceClientConfiguration(builderCustomizers, clientResources,
+				getProperties().getLettuce().getPool());
 		return createLettuceConnectionFactory(clientConfig);
 	}
 
@@ -91,14 +88,13 @@ class LettuceConnectionConfiguration extends RedisConnectionConfiguration {
 
 	private LettuceClientConfiguration getLettuceClientConfiguration(
 			ObjectProvider<LettuceClientConfigurationBuilderCustomizer> builderCustomizers,
-			ObjectProvider<LettuceClientOptionsBuilderCustomizer<?>> clientOptionsCustomizers,
 			ClientResources clientResources, Pool pool) {
 		LettuceClientConfigurationBuilder builder = createBuilder(pool);
 		applyProperties(builder);
 		if (StringUtils.hasText(getProperties().getUrl())) {
 			customizeConfigurationFromUrl(builder);
 		}
-		builder.clientOptions(createClientOptions(clientOptionsCustomizers));
+		builder.clientOptions(initializeClientOptionsBuilder().timeoutOptions(TimeoutOptions.enabled()).build());
 		builder.clientResources(clientResources);
 		builderCustomizers.orderedStream().forEach((customizer) -> customizer.customize(builder));
 		return builder.build();
@@ -129,17 +125,6 @@ class LettuceConnectionConfiguration extends RedisConnectionConfiguration {
 			builder.clientName(getProperties().getClientName());
 		}
 		return builder;
-	}
-
-	@SuppressWarnings("unchecked")
-	private ClientOptions createClientOptions(
-			ObjectProvider<LettuceClientOptionsBuilderCustomizer<?>> clientOptionsCustomizers) {
-		ClientOptions.Builder builder = initializeClientOptionsBuilder().timeoutOptions(TimeoutOptions.enabled());
-		LambdaSafe
-				.callbacks(LettuceClientOptionsBuilderCustomizer.class,
-						clientOptionsCustomizers.orderedStream().collect(Collectors.toList()), builder)
-				.invoke((customizer) -> customizer.customize(builder));
-		return builder.build();
 	}
 
 	private ClientOptions.Builder initializeClientOptionsBuilder() {
