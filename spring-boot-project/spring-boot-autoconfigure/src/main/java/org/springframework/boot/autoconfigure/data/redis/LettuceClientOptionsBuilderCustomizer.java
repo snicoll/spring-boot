@@ -16,25 +16,25 @@
 
 package org.springframework.boot.autoconfigure.data.redis;
 
+import io.lettuce.core.ClientOptions;
 import io.lettuce.core.cluster.ClusterClientOptions;
-
-import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration.LettuceClientConfigurationBuilder;
 
 /**
  * Callback interface that can be implemented by beans wishing to customize the
  * {@link ClusterClientOptions} via a {@link ClusterClientOptions.Builder} whilst
  * retaining default auto-configuration.
  *
+ * @param <T> the type of the {@link ClientOptions.Builder}
  * @author Stephane Nicoll
  * @since 2.3.0
  */
 @FunctionalInterface
-public interface LettuceClientOptionsBuilderCustomizer {
+public interface LettuceClientOptionsBuilderCustomizer<T extends ClientOptions.Builder> {
 
 	/**
-	 * Customize the {@link LettuceClientConfigurationBuilder}.
+	 * Customize the client options.
 	 * @param clientOptionsBuilder the builder to customize
 	 */
-	void customize(ClusterClientOptions.Builder clientOptionsBuilder);
+	void customize(T clientOptionsBuilder);
 
 }

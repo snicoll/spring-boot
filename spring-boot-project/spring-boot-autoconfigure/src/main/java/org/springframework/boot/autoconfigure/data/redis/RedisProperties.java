@@ -268,11 +268,6 @@ public class RedisProperties {
 		 */
 		private Integer maxRedirects;
 
-		/**
-		 * Cluster refresh options, only supported with Lettuce.
-		 */
-		private final Refresh refresh = new Refresh();
-
 		public List<String> getNodes() {
 			return this.nodes;
 		}
@@ -287,41 +282,6 @@ public class RedisProperties {
 
 		public void setMaxRedirects(Integer maxRedirects) {
 			this.maxRedirects = maxRedirects;
-		}
-
-		public Refresh getRefresh() {
-			return this.refresh;
-		}
-
-		public static class Refresh {
-
-			/**
-			 * Cluster topology refresh period.
-			 */
-			private Duration period;
-
-			/**
-			 * Whether adaptive topology refreshing using all available refresh triggers
-			 * should be used.
-			 */
-			private boolean adaptive;
-
-			public Duration getPeriod() {
-				return this.period;
-			}
-
-			public void setPeriod(Duration period) {
-				this.period = period;
-			}
-
-			public boolean isAdaptive() {
-				return this.adaptive;
-			}
-
-			public void setAdaptive(boolean adaptive) {
-				this.adaptive = adaptive;
-			}
-
 		}
 
 	}
@@ -394,6 +354,8 @@ public class RedisProperties {
 		 */
 		private Pool pool;
 
+		private final Cluster cluster = new Cluster();
+
 		public Duration getShutdownTimeout() {
 			return this.shutdownTimeout;
 		}
@@ -408,6 +370,51 @@ public class RedisProperties {
 
 		public void setPool(Pool pool) {
 			this.pool = pool;
+		}
+
+		public Cluster getCluster() {
+			return this.cluster;
+		}
+
+		public static class Cluster {
+
+			private final Refresh refresh = new Refresh();
+
+			public Refresh getRefresh() {
+				return this.refresh;
+			}
+
+			public static class Refresh {
+
+				/**
+				 * Cluster topology refresh period.
+				 */
+				private Duration period;
+
+				/**
+				 * Whether adaptive topology refreshing using all available refresh
+				 * triggers should be used.
+				 */
+				private boolean adaptive;
+
+				public Duration getPeriod() {
+					return this.period;
+				}
+
+				public void setPeriod(Duration period) {
+					this.period = period;
+				}
+
+				public boolean isAdaptive() {
+					return this.adaptive;
+				}
+
+				public void setAdaptive(boolean adaptive) {
+					this.adaptive = adaptive;
+				}
+
+			}
+
 		}
 
 	}

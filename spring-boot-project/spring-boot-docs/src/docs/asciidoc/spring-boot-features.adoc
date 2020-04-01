@@ -4075,6 +4075,7 @@ The following listing shows an example of such a bean:
 ----
 
 TIP: You can also register an arbitrary number of beans that implement `LettuceClientConfigurationBuilderCustomizer` for more advanced customizations.
+
 If you use Jedis, `JedisClientConfigurationBuilderCustomizer` is also available.
 
 If you add your own `@Bean` of any of the auto-configured types, it replaces the default (except in the case of `RedisTemplate`, when the exclusion is based on the bean name, `redisTemplate`, not its type).
