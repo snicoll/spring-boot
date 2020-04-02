@@ -16,6 +16,7 @@
 
 package org.springframework.boot.actuate.autoconfigure.metrics.export.wavefront;
 
+import com.wavefront.sdk.common.WavefrontSender;
 import io.micrometer.core.instrument.Clock;
 import io.micrometer.wavefront.WavefrontConfig;
 import io.micrometer.wavefront.WavefrontMeterRegistry;
@@ -28,6 +29,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 /**
  * Tests for {@link WavefrontMetricsExportAutoConfiguration}.
@@ -55,7 +57,7 @@ class WavefrontMetricsExportAutoConfigurationTests {
 		this.contextRunner.withUserConfiguration(BaseConfiguration.class)
 				.withPropertyValues("management.metrics.export.wavefront.enabled=false")
 				.run((context) -> assertThat(context).doesNotHaveBean(WavefrontMeterRegistry.class)
-						.doesNotHaveBean(WavefrontConfig.class));
+						.doesNotHaveBean(WavefrontConfig.class).doesNotHaveBean(WavefrontSender.class));
 	}
 
 	@Test
@@ -63,7 +65,15 @@ class WavefrontMetricsExportAutoConfigurationTests {
 		this.contextRunner.withUserConfiguration(CustomConfigConfiguration.class)
 				.run((context) -> assertThat(context).hasSingleBean(Clock.class)
 						.hasSingleBean(WavefrontMeterRegistry.class).hasSingleBean(WavefrontConfig.class)
-						.hasBean("customConfig"));
+						.hasSingleBean(WavefrontSender.class).hasBean("customConfig"));
+	}
+
+	@Test
+	void allowsWavefrontSenderToBeCustomized() {
+		this.contextRunner.withUserConfiguration(CustomSenderConfiguration.class)
+				.run((context) -> assertThat(context).hasSingleBean(Clock.class)
+						.hasSingleBean(WavefrontMeterRegistry.class).hasSingleBean(WavefrontConfig.class)
+						.hasSingleBean(WavefrontSender.class).hasBean("customSender"));
 	}
 
 	@Test
@@ -112,6 +122,17 @@ class WavefrontMetricsExportAutoConfigurationTests {
 					return WavefrontConfig.DEFAULT_PROXY.uri();
 				}
 			};
+		}
+
+	}
+
+	@Configuration(proxyBeanMethods = false)
+	@Import(BaseConfiguration.class)
+	static class CustomSenderConfiguration {
+
+		@Bean
+		WavefrontSender customSender() {
+			return mock(WavefrontSender.class);
 		}
 
 	}

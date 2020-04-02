@@ -16,8 +16,9 @@
 
 package org.springframework.boot.actuate.autoconfigure.metrics.export.wavefront;
 
+import com.wavefront.sdk.common.WavefrontSender;
+import com.wavefront.sdk.direct.ingestion.WavefrontDirectIngestionClient;
 import io.micrometer.core.instrument.Clock;
-import io.micrometer.core.ipc.http.HttpUrlConnectionSender;
 import io.micrometer.wavefront.WavefrontConfig;
 import io.micrometer.wavefront.WavefrontMeterRegistry;
 
@@ -40,13 +41,14 @@ import org.springframework.context.annotation.Configuration;
  *
  * @author Jon Schneider
  * @author Artsiom Yudovin
+ * @author Stephane Nicoll
  * @since 2.0.0
  */
 @Configuration(proxyBeanMethods = false)
 @AutoConfigureBefore({ CompositeMeterRegistryAutoConfiguration.class, SimpleMetricsExportAutoConfiguration.class })
 @AutoConfigureAfter(MetricsAutoConfiguration.class)
 @ConditionalOnBean(Clock.class)
-@ConditionalOnClass(WavefrontMeterRegistry.class)
+@ConditionalOnClass({ WavefrontMeterRegistry.class, WavefrontSender.class })
 @ConditionalOnProperty(prefix = "management.metrics.export.wavefront", name = "enabled", havingValue = "true",
 		matchIfMissing = true)
 @EnableConfigurationProperties(WavefrontProperties.class)
@@ -66,10 +68,24 @@ public class WavefrontMetricsExportAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public WavefrontMeterRegistry wavefrontMeterRegistry(WavefrontConfig wavefrontConfig, Clock clock) {
-		return WavefrontMeterRegistry.builder(wavefrontConfig).clock(clock).httpClient(
-				new HttpUrlConnectionSender(this.properties.getConnectTimeout(), this.properties.getReadTimeout()))
-				.build();
+	public WavefrontSender wavefrontSender(WavefrontConfig wavefrontConfig) {
+		return new WavefrontDirectIngestionClient.Builder(getWavefrontReportingUri(wavefrontConfig),
+				wavefrontConfig.apiToken()).build();
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	public WavefrontMeterRegistry wavefrontMeterRegistry(WavefrontConfig wavefrontConfig, Clock clock,
+			WavefrontSender wavefrontSender) {
+		return WavefrontMeterRegistry.builder(wavefrontConfig).clock(clock).wavefrontSender(wavefrontSender).build();
+	}
+
+	static String getWavefrontReportingUri(WavefrontConfig wavefrontConfig) {
+		// proxy reporting is now http reporting on newer wavefront proxies.
+		if (wavefrontConfig.uri().startsWith("proxy")) {
+			return "http" + wavefrontConfig.uri().substring(5);
+		}
+		return wavefrontConfig.uri();
 	}
 
 }
