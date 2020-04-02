@@ -78,12 +78,12 @@ class BootJarIntegrationTests extends AbstractBootArchiveIntegrationTests {
 		writeResource();
 		assertThat(this.gradleBuild.build("bootJar").task(":bootJar").getOutcome()).isEqualTo(TaskOutcome.SUCCESS);
 		try (JarFile jarFile = new JarFile(new File(this.gradleBuild.getProjectDir(), "build/libs").listFiles()[0])) {
-			assertThat(jarFile.getEntry(jarModeLayerTools())).isNotNull();
-			assertThat(jarFile.getEntry("BOOT-INF/layers/dependencies/lib/commons-lang3-3.9.jar")).isNotNull();
-			assertThat(jarFile.getEntry("BOOT-INF/layers/snapshot-dependencies/lib/commons-io-2.7-SNAPSHOT.jar"))
-					.isNotNull();
-			assertThat(jarFile.getEntry("BOOT-INF/layers/application/classes/example/Main.class")).isNotNull();
-			assertThat(jarFile.getEntry("BOOT-INF/layers/application/classes/static/file.txt")).isNotNull();
+			assertThat(jarFile.getEntry("BOOT-INF/lib/" + JarModeLibrary.LAYER_TOOLS.getName())).isNotNull();
+			assertThat(jarFile.getEntry("BOOT-INF/lib/commons-lang3-3.9.jar")).isNotNull();
+			assertThat(jarFile.getEntry("BOOT-INF/lib/commons-io-2.7-SNAPSHOT.jar")).isNotNull();
+			assertThat(jarFile.getEntry("BOOT-INF/classes/example/Main.class")).isNotNull();
+			assertThat(jarFile.getEntry("BOOT-INF/classes/static/file.txt")).isNotNull();
+			// FIXME check the layer index
 		}
 	}
 
@@ -95,20 +95,13 @@ class BootJarIntegrationTests extends AbstractBootArchiveIntegrationTests {
 		System.out.println(build.getOutput());
 		assertThat(build.task(":bootJar").getOutcome()).isEqualTo(TaskOutcome.SUCCESS);
 		try (JarFile jarFile = new JarFile(new File(this.gradleBuild.getProjectDir(), "build/libs").listFiles()[0])) {
-			assertThat(jarFile.getEntry(jarModeLayerTools())).isNotNull();
-			assertThat(jarFile.getEntry("BOOT-INF/layers/commons-dependencies/lib/commons-lang3-3.9.jar")).isNotNull();
-			assertThat(jarFile.getEntry("BOOT-INF/layers/snapshot-dependencies/lib/commons-io-2.7-SNAPSHOT.jar"))
-					.isNotNull();
-			assertThat(jarFile.getEntry("BOOT-INF/layers/app/classes/example/Main.class")).isNotNull();
-			assertThat(jarFile.getEntry("BOOT-INF/layers/static/classes/static/file.txt")).isNotNull();
+			assertThat(jarFile.getEntry("BOOT-INF/lib/" + JarModeLibrary.LAYER_TOOLS.getName())).isNotNull();
+			assertThat(jarFile.getEntry("BOOT-INF/lib/commons-lang3-3.9.jar")).isNotNull();
+			assertThat(jarFile.getEntry("BOOT-INF/lib/commons-io-2.7-SNAPSHOT.jar")).isNotNull();
+			assertThat(jarFile.getEntry("BOOT-INF/classes/example/Main.class")).isNotNull();
+			assertThat(jarFile.getEntry("BOOT-INF/classes/static/file.txt")).isNotNull();
+			// FIXME check the layer index
 		}
-	}
-
-	private String jarModeLayerTools() {
-		JarModeLibrary library = JarModeLibrary.LAYER_TOOLS;
-		String version = library.getCoordinates().getVersion();
-		String layer = (version == null || !version.contains("SNAPSHOT")) ? "dependencies" : "snapshot-dependencies";
-		return "BOOT-INF/layers/" + layer + "/lib/" + library.getName();
 	}
 
 	private void writeMainClass() {
