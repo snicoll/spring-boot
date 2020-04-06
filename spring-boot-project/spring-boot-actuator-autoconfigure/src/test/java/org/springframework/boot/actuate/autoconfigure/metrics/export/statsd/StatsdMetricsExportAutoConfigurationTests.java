@@ -19,7 +19,6 @@ package org.springframework.boot.actuate.autoconfigure.metrics.export.statsd;
 import io.micrometer.core.instrument.Clock;
 import io.micrometer.statsd.StatsdConfig;
 import io.micrometer.statsd.StatsdMeterRegistry;
-import io.micrometer.statsd.StatsdMetrics;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -47,9 +46,8 @@ class StatsdMetricsExportAutoConfigurationTests {
 
 	@Test
 	void autoConfiguresItsConfigMeterRegistryAndMetrics() {
-		this.contextRunner.withUserConfiguration(BaseConfiguration.class)
-				.run((context) -> assertThat(context).hasSingleBean(StatsdMeterRegistry.class)
-						.hasSingleBean(StatsdConfig.class).hasSingleBean(StatsdMetrics.class));
+		this.contextRunner.withUserConfiguration(BaseConfiguration.class).run((context) -> assertThat(context)
+				.hasSingleBean(StatsdMeterRegistry.class).hasSingleBean(StatsdConfig.class));
 	}
 
 	@Test
