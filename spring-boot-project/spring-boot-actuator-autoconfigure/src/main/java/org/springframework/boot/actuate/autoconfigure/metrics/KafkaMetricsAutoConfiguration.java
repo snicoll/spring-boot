@@ -22,13 +22,17 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.binder.kafka.KafkaClientMetrics;
 
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
+import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnSingleCandidate;
+import org.springframework.boot.autoconfigure.kafka.DefaultKafkaConsumerFactoryCustomizer;
 import org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
+import org.springframework.kafka.core.MicrometerProducerListener;
 import org.springframework.kafka.core.ProducerFactory;
 
 /**
@@ -39,12 +43,20 @@ import org.springframework.kafka.core.ProducerFactory;
  * @since 2.1.0
  */
 @Configuration(proxyBeanMethods = false)
-@AutoConfigureAfter({ MetricsAutoConfiguration.class, KafkaAutoConfiguration.class })
+@AutoConfigureBefore(KafkaAutoConfiguration.class)
+@AutoConfigureAfter(MetricsAutoConfiguration.class)
 @ConditionalOnClass({ KafkaClientMetrics.class, ProducerFactory.class })
 @ConditionalOnBean(MeterRegistry.class)
 public class KafkaMetricsAutoConfiguration {
 
 	@Bean
+	public DefaultKafkaConsumerFactoryCustomizer kafkaConsumerMetrics(MeterRegistry meterRegistry) {
+		return (consumerFactory) -> consumerFactory
+				.addListener(new MicrometerProducerListener<?,?>(meterRegistry, Collections.emptyList()));
+	}
+
+	@Bean
+
 	@ConditionalOnMissingBean
 	@ConditionalOnSingleCandidate(ProducerFactory.class)
 	public KafkaClientMetrics kafkaClientMetrics(ProducerFactory<?, ?> producerFactory) {
