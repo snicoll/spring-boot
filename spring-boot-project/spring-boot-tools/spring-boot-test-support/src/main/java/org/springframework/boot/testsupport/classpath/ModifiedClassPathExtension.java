@@ -26,12 +26,16 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.InvocationInterceptor;
 import org.junit.jupiter.api.extension.ReflectiveInvocationContext;
 import org.junit.platform.engine.discovery.DiscoverySelectors;
+import org.junit.platform.launcher.Launcher;
+import org.junit.platform.launcher.LauncherDiscoveryRequest;
+import org.junit.platform.launcher.TestPlan;
+import org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder;
+import org.junit.platform.launcher.core.LauncherFactory;
+import org.junit.platform.launcher.listeners.SummaryGeneratingListener;
+import org.junit.platform.launcher.listeners.TestExecutionSummary;
 
-import org.springframework.boot.testsupport.junit.platform.Launcher;
-import org.springframework.boot.testsupport.junit.platform.LauncherDiscoveryRequest;
-import org.springframework.boot.testsupport.junit.platform.LauncherDiscoveryRequestBuilder;
-import org.springframework.boot.testsupport.junit.platform.SummaryGeneratingListener;
 import org.springframework.util.Assert;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.ReflectionUtils;
 
 /**
@@ -95,19 +99,19 @@ class ModifiedClassPathExtension implements InvocationInterceptor {
 		}
 	}
 
-	private void runTest(ClassLoader classLoader, String testClassName, String testMethodName)
-			throws ClassNotFoundException, Throwable {
+	private void runTest(ClassLoader classLoader, String testClassName, String testMethodName) throws Throwable {
 		Class<?> testClass = classLoader.loadClass(testClassName);
 		Method testMethod = findMethod(testClass, testMethodName);
-		LauncherDiscoveryRequest request = new LauncherDiscoveryRequestBuilder(classLoader)
+		LauncherDiscoveryRequest request = new LauncherDiscoveryRequestBuilder()
 				.selectors(DiscoverySelectors.selectMethod(testClass, testMethod)).build();
-		Launcher launcher = new Launcher(classLoader);
-		SummaryGeneratingListener listener = new SummaryGeneratingListener(classLoader);
+		Launcher launcher = LauncherFactory.create();
+		TestPlan testPlan = launcher.discover(request);
+		SummaryGeneratingListener listener = new SummaryGeneratingListener();
 		launcher.registerTestExecutionListeners(listener);
-		launcher.execute(request);
-		Throwable failure = listener.getSummary().getFailure();
-		if (failure != null) {
-			throw failure;
+		launcher.execute(testPlan);
+		TestExecutionSummary summary = listener.getSummary();
+		if (!CollectionUtils.isEmpty(summary.getFailures())) {
+			throw summary.getFailures().get(0).getException();
 		}
 	}
 
