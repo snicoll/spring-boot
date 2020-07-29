@@ -20,9 +20,15 @@ import org.neo4j.driver.Driver;
 
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.data.ConditionalOnRepositoryType;
+import org.springframework.boot.autoconfigure.data.RepositoryType;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.neo4j.repository.config.EnableNeo4jRepositories;
+import org.springframework.data.neo4j.repository.config.Neo4jRepositoryConfigurationExtension;
+import org.springframework.data.neo4j.repository.support.Neo4jRepositoryFactoryBean;
 
 /**
  * Shared entry point for the configuration of Spring Data Neo4j repositories in their
@@ -36,9 +42,11 @@ import org.springframework.data.neo4j.repository.config.EnableNeo4jRepositories;
  * @since 1.4.0
  */
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnClass(Driver.class)
+@ConditionalOnClass({ Driver.class, Neo4jRepository.class })
+@ConditionalOnRepositoryType(store = "neo4j", type = RepositoryType.IMPERATIVE)
+@ConditionalOnMissingBean({ Neo4jRepositoryFactoryBean.class, Neo4jRepositoryConfigurationExtension.class })
+@Import(Neo4jRepositoriesRegistrar.class)
 @AutoConfigureAfter(Neo4jDataAutoConfiguration.class)
-@Import({ Neo4jRepositoriesConfiguration.class, Neo4jReactiveRepositoriesConfiguration.class })
 public class Neo4jRepositoriesAutoConfiguration {
 
 }

@@ -1,14 +1,11 @@
 /*
- * Copyright (c) 2019-2020 "Neo4j,"
- * Neo4j Sweden AB [https://neo4j.com]
- *
- * This file is part of Neo4j.
+ * Copyright 2012-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     https://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,14 +15,15 @@
  */
 package org.springframework.boot.test.autoconfigure.data.neo4j;
 
+import java.io.IOException;
+
 import org.junit.jupiter.api.Test;
+
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.core.type.classreading.MetadataReader;
 import org.springframework.core.type.classreading.MetadataReaderFactory;
 import org.springframework.core.type.classreading.SimpleMetadataReaderFactory;
-
-import java.io.IOException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -34,7 +32,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 class DataNeo4jTypeExcludeFilterTests {
 
-	private MetadataReaderFactory metadataReaderFactory = new SimpleMetadataReaderFactory();
+	private final MetadataReaderFactory metadataReaderFactory = new SimpleMetadataReaderFactory();
 
 	@Test
 	void matchWithExcludeFilter() throws Exception {
@@ -50,6 +48,11 @@ class DataNeo4jTypeExcludeFilterTests {
 		assertThat(excludes(filter, ExampleRepository.class)).isFalse();
 	}
 
+	private boolean excludes(DataNeo4jTypeExcludeFilter filter, Class<?> type) throws IOException {
+		MetadataReader metadataReader = this.metadataReaderFactory.getMetadataReader(type.getName());
+		return filter.match(metadataReader, this.metadataReaderFactory);
+	}
+
 	@DataNeo4jTest(
 			excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = ExampleRepository.class))
 	static class WithExcludeFilter {
@@ -59,11 +62,6 @@ class DataNeo4jTypeExcludeFilterTests {
 	@DataNeo4jTest
 	static class WithoutExcludeFilter {
 
-	}
-
-	private boolean excludes(DataNeo4jTypeExcludeFilter filter, Class<?> type) throws IOException {
-		MetadataReader metadataReader = this.metadataReaderFactory.getMetadataReader(type.getName());
-		return filter.match(metadataReader, this.metadataReaderFactory);
 	}
 
 }

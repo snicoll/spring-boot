@@ -19,35 +19,37 @@ package org.springframework.boot.autoconfigure.data.neo4j;
 import java.lang.annotation.Annotation;
 
 import org.springframework.boot.autoconfigure.data.AbstractRepositoryConfigurationSourceSupport;
-import org.springframework.data.neo4j.repository.config.EnableReactiveNeo4jRepositories;
-import org.springframework.data.neo4j.repository.config.ReactiveNeo4jRepositoryConfigurationExtension;
+import org.springframework.context.annotation.ImportBeanDefinitionRegistrar;
+import org.springframework.data.neo4j.repository.config.EnableNeo4jRepositories;
+import org.springframework.data.neo4j.repository.config.Neo4jRepositoryConfigurationExtension;
 import org.springframework.data.repository.config.RepositoryConfigurationExtension;
 
 /**
- * {@link ImportBeanDefinitionRegistrar} used to auto-configure reactive Spring Data Neo4j
+ * {@link ImportBeanDefinitionRegistrar} used to auto-configure Spring Data Neo4j
  * Repositories.
  *
+ * @author Michael Hunger
  * @author Michael J. Simons
  */
-final class Neo4jReactiveRepositoriesConfigureRegistrar extends AbstractRepositoryConfigurationSourceSupport {
+class Neo4jRepositoriesRegistrar extends AbstractRepositoryConfigurationSourceSupport {
 
 	@Override
 	protected Class<? extends Annotation> getAnnotation() {
-		return EnableReactiveNeo4jRepositories.class;
+		return EnableNeo4jRepositories.class;
 	}
 
 	@Override
 	protected Class<?> getConfiguration() {
-		return SpringDataNeo4jConfiguration.class;
+		return EnableNeo4jRepositoriesConfiguration.class;
 	}
 
 	@Override
 	protected RepositoryConfigurationExtension getRepositoryConfigurationExtension() {
-		return new ReactiveNeo4jRepositoryConfigurationExtension();
+		return new Neo4jRepositoryConfigurationExtension();
 	}
 
-	@EnableReactiveNeo4jRepositories
-	private static class SpringDataNeo4jConfiguration {
+	@EnableNeo4jRepositories
+	private static class EnableNeo4jRepositoriesConfiguration {
 
 	}
 
