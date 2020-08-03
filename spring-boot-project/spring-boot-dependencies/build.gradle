@@ -1550,6 +1550,13 @@ bom {
 			]
 		}
 	}
+	library("Spring Data R2DBC", "1.2.0-gh-368-SNAPSHOT") {
+		group("org.springframework.data") {
+			modules = [
+					"spring-data-r2dbc"
+			]
+		}
+	}
 	library("Spring Data Bom", "2020.0.0-SNAPSHOT") {
 		group("org.springframework.data") {
 			imports = [

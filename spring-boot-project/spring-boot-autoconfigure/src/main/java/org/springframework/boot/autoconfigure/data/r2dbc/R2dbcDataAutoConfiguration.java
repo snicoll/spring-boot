@@ -34,15 +34,14 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.r2dbc.convert.MappingR2dbcConverter;
 import org.springframework.data.r2dbc.convert.R2dbcCustomConversions;
-import org.springframework.data.r2dbc.core.DatabaseClient;
 import org.springframework.data.r2dbc.core.DefaultReactiveDataAccessStrategy;
+import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
 import org.springframework.data.r2dbc.core.ReactiveDataAccessStrategy;
 import org.springframework.data.r2dbc.dialect.DialectResolver;
 import org.springframework.data.r2dbc.dialect.R2dbcDialect;
 import org.springframework.data.r2dbc.mapping.R2dbcMappingContext;
-import org.springframework.data.r2dbc.support.R2dbcExceptionSubclassTranslator;
-import org.springframework.data.r2dbc.support.R2dbcExceptionTranslator;
 import org.springframework.data.relational.core.mapping.NamingStrategy;
+import org.springframework.r2dbc.core.DatabaseClient;
 
 /**
  * {@link EnableAutoConfiguration Auto-configuration} for {@link DatabaseClient}.
@@ -66,10 +65,9 @@ public class R2dbcDataAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public DatabaseClient r2dbcDatabaseClient(ReactiveDataAccessStrategy dataAccessStrategy,
-			R2dbcExceptionTranslator exceptionTranslator) {
-		return DatabaseClient.builder().connectionFactory(this.connectionFactory).dataAccessStrategy(dataAccessStrategy)
-				.exceptionTranslator(exceptionTranslator).build();
+	public R2dbcEntityTemplate r2dbcEntityTemplate(DatabaseClient databaseClient,
+			ReactiveDataAccessStrategy reactiveDataAccessStrategy) {
+		return new R2dbcEntityTemplate(databaseClient, reactiveDataAccessStrategy);
 	}
 
 	@Bean
@@ -99,12 +97,6 @@ public class R2dbcDataAutoConfiguration {
 		return new R2dbcCustomConversions(
 				CustomConversions.StoreConversions.of(dialect.getSimpleTypeHolder(), converters),
 				Collections.emptyList());
-	}
-
-	@Bean
-	@ConditionalOnMissingBean
-	public R2dbcExceptionTranslator r2dbcExceptionTranslator() {
-		return new R2dbcExceptionSubclassTranslator();
 	}
 
 }
