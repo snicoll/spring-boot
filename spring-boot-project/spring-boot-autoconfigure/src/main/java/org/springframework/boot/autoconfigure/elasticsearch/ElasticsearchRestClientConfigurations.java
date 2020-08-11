@@ -19,6 +19,7 @@ package org.springframework.boot.autoconfigure.elasticsearch;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.Duration;
+import java.util.Collections;
 
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
@@ -34,6 +35,7 @@ import org.elasticsearch.client.RestHighLevelClient;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnSingleCandidate;
 import org.springframework.boot.context.properties.PropertyMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -105,12 +107,24 @@ class ElasticsearchRestClientConfigurations {
 
 		@Bean
 		@ConditionalOnMissingBean
-		RestHighLevelClient elasticsearchRestHighLevelClient(RestClientBuilder restClientBuilder) {
+		RestHighLevelClient elasticsearchRestHighLevelClient(RestClientBuilder restClientBuilder,
+				ObjectProvider<RestClient> restClient) {
+			RestClient lowLevelClient = restClient.getIfUnique();
+			if (lowLevelClient != null) {
+				return new SpringBootRestHighLevelClient(lowLevelClient);
+			}
 			return new RestHighLevelClient(restClientBuilder);
 		}
 
+	}
+
+	@Configuration(proxyBeanMethods = false)
+	@ConditionalOnClass(RestHighLevelClient.class)
+	@ConditionalOnSingleCandidate(RestHighLevelClient.class)
+	@ConditionalOnMissingBean(RestClient.class)
+	static class RestClientConfiguration {
+
 		@Bean
-		@ConditionalOnMissingBean
 		RestClient elasticsearchRestClient(RestClientBuilder builder,
 				ObjectProvider<RestHighLevelClient> restHighLevelClient) {
 			RestHighLevelClient client = restHighLevelClient.getIfUnique();
@@ -201,6 +215,14 @@ class ElasticsearchRestClientConfigurations {
 			String username = userInfo.substring(0, delimiter);
 			String password = userInfo.substring(delimiter + 1);
 			return new UsernamePasswordCredentials(username, password);
+		}
+
+	}
+
+	private static class SpringBootRestHighLevelClient extends RestHighLevelClient {
+
+		SpringBootRestHighLevelClient(RestClient restClient) {
+			super(restClient, RestClient::close, Collections.emptyList());
 		}
 
 	}

@@ -54,6 +54,7 @@ import static org.mockito.Mockito.mock;
  * @author Brian Clozel
  * @author Vedran Pavic
  * @author Evgeniy Cheban
+ * @author Stephane Nicoll
  */
 @Testcontainers(disabledWithoutDocker = true)
 class ElasticsearchRestClientAutoConfigurationTests {
@@ -75,18 +76,31 @@ class ElasticsearchRestClientAutoConfigurationTests {
 	}
 
 	@Test
-	void configureWhenCustomClientShouldBackOff() {
-		this.contextRunner.withUserConfiguration(CustomRestClientConfiguration.class)
-				.run((context) -> assertThat(context).getBeanNames(RestClient.class).containsOnly("customRestClient"));
+	void configureWhenCustomRestClientShouldCreateHighLevelClientThatUsesIt() {
+		this.contextRunner.withUserConfiguration(CustomRestClientConfiguration.class).run((context) -> {
+			assertThat(context).hasSingleBean(RestClient.class).hasSingleBean(RestHighLevelClient.class)
+					.hasBean("customRestClient");
+			assertThat(context.getBean(RestHighLevelClient.class).getLowLevelClient())
+					.isSameAs(context.getBean("customRestClient"));
+		});
 	}
 
 	@Test
-	void configureWhenCustomRestHighLevelClientShouldBackOff() {
+	void configureWhenCustomRestHighLevelClientShouldExposeUnderlyingRestClient() {
 		this.contextRunner.withUserConfiguration(CustomRestHighLevelClientConfiguration.class).run((context) -> {
 			assertThat(context).hasSingleBean(RestClient.class).hasSingleBean(RestHighLevelClient.class);
-			assertThat(context.getBean(RestClient.class))
-					.isSameAs(context.getBean(RestHighLevelClient.class).getLowLevelClient());
+			assertThat(context.getBean(RestHighLevelClient.class).getLowLevelClient())
+					.isSameAs(context.getBean(RestClient.class));
 		});
+	}
+
+	@Test
+	void configureWhenCustomRestHighLevelClientAndRestClientShouldBackOff() {
+		this.contextRunner
+				.withUserConfiguration(CustomRestClientConfiguration.class,
+						CustomRestHighLevelClientConfiguration.class)
+				.run((context) -> assertThat(context).hasSingleBean(RestClient.class).hasBean("customRestClient")
+						.hasSingleBean(RestHighLevelClient.class).hasBean("customRestHighLevelClient"));
 	}
 
 	@Test

@@ -36,6 +36,7 @@ import org.springframework.context.annotation.Import;
 @EnableConfigurationProperties(ElasticsearchRestClientProperties.class)
 @Import({ ElasticsearchRestClientConfigurations.RestClientBuilderConfiguration.class,
 		ElasticsearchRestClientConfigurations.RestHighLevelClientConfiguration.class,
+		ElasticsearchRestClientConfigurations.RestClientConfiguration.class,
 		ElasticsearchRestClientConfigurations.RestClientFallbackConfiguration.class })
 public class ElasticsearchRestClientAutoConfiguration {
 
