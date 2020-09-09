@@ -35,10 +35,12 @@ import org.springframework.util.Assert;
  */
 public abstract class HazelcastConfigResourceCondition extends ResourceCondition {
 
+	protected static final String HAZELCAST_CONFIG_PROPERTY = "spring.hazelcast.config";
+
 	private final String configSystemProperty;
 
 	protected HazelcastConfigResourceCondition(String configSystemProperty, String... resourceLocations) {
-		super("Hazelcast", "spring.hazelcast.config", resourceLocations);
+		super("Hazelcast", HAZELCAST_CONFIG_PROPERTY, resourceLocations);
 		Assert.notNull(configSystemProperty, "ConfigSystemProperty must not be null");
 		this.configSystemProperty = configSystemProperty;
 	}

@@ -17,18 +17,25 @@
 package org.springframework.boot.autoconfigure.hazelcast;
 
 import java.io.IOException;
+import java.io.InputStream;
 
 import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.client.config.ClientConfig;
+import com.hazelcast.client.config.ClientConfigRecognizer;
+import com.hazelcast.config.ConfigStream;
 import com.hazelcast.core.HazelcastInstance;
 
+import org.springframework.boot.autoconfigure.condition.ConditionMessage.Builder;
+import org.springframework.boot.autoconfigure.condition.ConditionOutcome;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnSingleCandidate;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ConditionContext;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
+import org.springframework.core.type.AnnotatedTypeMetadata;
 
 /**
  * Configuration for Hazelcast client.
@@ -79,6 +86,40 @@ class HazelcastClientConfiguration {
 		ConfigAvailableCondition() {
 			super(CONFIG_SYSTEM_PROPERTY, "file:./hazelcast-client.xml", "classpath:/hazelcast-client.xml",
 					"file:./hazelcast-client.yaml", "classpath:/hazelcast-client.yaml");
+		}
+
+		@Override
+		public ConditionOutcome getMatchOutcome(ConditionContext context, AnnotatedTypeMetadata metadata) {
+			if (context.getEnvironment().containsProperty(HAZELCAST_CONFIG_PROPERTY)) {
+				ConditionOutcome configValidationOutcome = Hazelcast4ClientValidation.clientConfigOutcome(context,
+						HAZELCAST_CONFIG_PROPERTY, startConditionMessage());
+				return (configValidationOutcome != null) ? configValidationOutcome : ConditionOutcome
+						.match(startConditionMessage().foundExactly("property " + HAZELCAST_CONFIG_PROPERTY));
+			}
+			return getResourceOutcome(context, metadata);
+		}
+
+	}
+
+	static class Hazelcast4ClientValidation {
+
+		static ConditionOutcome clientConfigOutcome(ConditionContext context, String propertyName, Builder builder) {
+			String resourcePath = context.getEnvironment().getProperty(propertyName);
+			Resource resource = context.getResourceLoader().getResource(resourcePath);
+			if (!resource.exists()) {
+				return ConditionOutcome.noMatch(
+						builder.because("property '" + propertyName + "' points to a resource that does not exist"));
+			}
+			try (InputStream in = resource.getInputStream()) {
+				boolean clientConfig = new ClientConfigRecognizer().isRecognized(new ConfigStream(in));
+				return (clientConfig)
+						? ConditionOutcome.match(builder.because("Hazelcast client configuration detected"))
+						: ConditionOutcome.noMatch(builder.because("Hazelcast server configuration detected"));
+			}
+			catch (Throwable ex) { // Hazelcast 4 specific API
+				return null;
+			}
+
 		}
 
 	}
