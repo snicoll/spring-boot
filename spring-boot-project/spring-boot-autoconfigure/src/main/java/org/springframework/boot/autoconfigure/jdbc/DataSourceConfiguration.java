@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the original author or authors.
+ * Copyright 2012-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import java.sql.SQLException;
 import javax.sql.DataSource;
 
 import com.zaxxer.hikari.HikariDataSource;
+import oracle.jdbc.OracleConnection;
 import oracle.ucp.jdbc.PoolDataSource;
 import oracle.ucp.jdbc.PoolDataSourceImpl;
 
@@ -31,7 +32,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.jdbc.DatabaseDriver;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.util.StringUtils;
 
 /**
@@ -116,26 +116,22 @@ abstract class DataSourceConfiguration {
 	}
 
 	/**
-	 * UCP DataSource configuration.
+	 * OracleUCP DataSource configuration.
 	 */
 	@Configuration(proxyBeanMethods = false)
-	@ConditionalOnClass(PoolDataSource.class)
+	@ConditionalOnClass({ PoolDataSource.class, OracleConnection.class })
 	@ConditionalOnMissingBean(DataSource.class)
 	@ConditionalOnProperty(name = "spring.datasource.type", havingValue = "oracle.ucp.jdbc.PoolDataSource",
 			matchIfMissing = true)
-	static class Ucp {
+	static class OracleUcp {
 
 		@Bean
-		@ConfigurationProperties(prefix = "spring.datasource.ucp")
-		PoolDataSource dataSource(DataSourceProperties properties) {
+		@ConfigurationProperties(prefix = "spring.datasource.oracleucp")
+		PoolDataSource dataSource(DataSourceProperties properties) throws SQLException {
 			PoolDataSource dataSource = createDataSource(properties, PoolDataSourceImpl.class);
+			dataSource.setValidateConnectionOnBorrow(true);
 			if (StringUtils.hasText(properties.getName())) {
-				try {
-					dataSource.setConnectionPoolName(properties.getName());
-				}
-				catch (SQLException se) {
-					throw new InvalidDataAccessApiUsageException("Error setting property connectionPoolName", se);
-				}
+				dataSource.setConnectionPoolName(properties.getName());
 			}
 			return dataSource;
 		}
