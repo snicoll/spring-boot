@@ -91,7 +91,7 @@ public final class DataSourceBuilder<T extends DataSource> {
 		ConfigurationPropertyNameAliases aliases = new ConfigurationPropertyNameAliases();
 		DataSourceSettings settings = this.dataSourceSettingsResolver.resolve(result);
 		if (settings != null) {
-			settings.aliasesCustomizer.accept(aliases);
+			settings.registerAliases(aliases);
 		}
 		Binder binder = new Binder(source.withAliases(aliases));
 		binder.bind(ConfigurationPropertyName.EMPTY, Bindable.ofInstance(result));
@@ -126,7 +126,7 @@ public final class DataSourceBuilder<T extends DataSource> {
 	public static Class<? extends DataSource> findType(ClassLoader classLoader) {
 		DataSourceSettings preferredDataSourceSettings = new DataSourceSettingsResolver(classLoader)
 				.getPreferredDataSourceSettings();
-		return (preferredDataSourceSettings != null) ? preferredDataSourceSettings.type : null;
+		return (preferredDataSourceSettings != null) ? preferredDataSourceSettings.getType() : null;
 	}
 
 	private Class<? extends DataSource> getType() {
@@ -136,7 +136,7 @@ public final class DataSourceBuilder<T extends DataSource> {
 		DataSourceSettings preferredDataSourceSettings = this.dataSourceSettingsResolver
 				.getPreferredDataSourceSettings();
 		if (preferredDataSourceSettings != null) {
-			return preferredDataSourceSettings.type;
+			return preferredDataSourceSettings.getType();
 		}
 		throw new IllegalStateException("No supported DataSource type found");
 	}
@@ -156,6 +156,14 @@ public final class DataSourceBuilder<T extends DataSource> {
 		public DataSourceSettings(Class<? extends DataSource> type) {
 			this(type, (aliases) -> {
 			});
+		}
+
+		public Class<? extends DataSource> getType() {
+			return this.type;
+		}
+
+		void registerAliases(ConfigurationPropertyNameAliases aliases) {
+			this.aliasesCustomizer.accept(aliases);
 		}
 
 	}
