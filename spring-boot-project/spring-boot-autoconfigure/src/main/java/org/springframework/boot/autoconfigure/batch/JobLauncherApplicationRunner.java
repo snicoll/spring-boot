@@ -89,6 +89,8 @@ public class JobLauncherApplicationRunner implements ApplicationRunner, Ordered,
 
 	private String jobNames;
 
+	private Properties jobParameters;
+
 	private Collection<Job> jobs = Collections.emptySet();
 
 	private int order = DEFAULT_ORDER;
@@ -134,6 +136,10 @@ public class JobLauncherApplicationRunner implements ApplicationRunner, Ordered,
 		this.jobNames = jobNames;
 	}
 
+	public void setJobParameters(Properties jobParameters) {
+		this.jobParameters = jobParameters;
+	}
+
 	@Autowired(required = false)
 	public void setJobParametersConverter(JobParametersConverter converter) {
 		this.converter = converter;
@@ -152,7 +158,12 @@ public class JobLauncherApplicationRunner implements ApplicationRunner, Ordered,
 
 	public void run(String... args) throws JobExecutionException {
 		logger.info("Running default command line with: " + Arrays.asList(args));
-		launchJobFromProperties(StringUtils.splitArrayElementsIntoProperties(args, "="));
+		Properties properties = (this.jobParameters != null) ? this.jobParameters : new Properties();
+		Properties jobParameterArguments = StringUtils.splitArrayElementsIntoProperties(args, "=");
+		if (jobParameterArguments != null) {
+			properties.putAll(jobParameterArguments);
+		}
+		launchJobFromProperties(properties);
 	}
 
 	protected void launchJobFromProperties(Properties properties) throws JobExecutionException {

@@ -111,12 +111,54 @@ class BatchAutoConfigurationTests {
 	}
 
 	@Test
-	void testDefinesAndLaunchesJob() {
+	void runDefinedJobsWithJobParameters() {
+		this.contextRunner.withUserConfiguration(JobConfiguration.class, EmbeddedDataSourceConfiguration.class)
+				.withPropertyValues("spring.batch.job.parameters=jobParam=test,anotherParam(long)=42")
+				.run((context) -> {
+					assertThat(context).hasSingleBean(JobLauncher.class);
+					context.getBean(JobLauncherApplicationRunner.class).run(new DefaultApplicationArguments());
+					JobParameters jobParameters = new JobParametersBuilder().addString("jobParam", "test")
+							.addLong("anotherParam", 42L).toJobParameters();
+					assertThat(context.getBean(JobRepository.class).getLastJobExecution("job", jobParameters))
+							.isNotNull();
+				});
+	}
+
+	@Test
+	void runDefinedJobsWithJobParametersTrimValues() {
+		this.contextRunner.withUserConfiguration(JobConfiguration.class, EmbeddedDataSourceConfiguration.class)
+				.withPropertyValues("spring.batch.job.parameters=jobParam = test, anotherParam(long) =42")
+				.run((context) -> {
+					assertThat(context).hasSingleBean(JobLauncher.class);
+					context.getBean(JobLauncherApplicationRunner.class).run(new DefaultApplicationArguments());
+					JobParameters jobParameters = new JobParametersBuilder().addString("jobParam", "test")
+							.addLong("anotherParam", 42L).toJobParameters();
+					assertThat(context.getBean(JobRepository.class).getLastJobExecution("job", jobParameters))
+							.isNotNull();
+				});
+	}
+
+	@Test
+	void runDefinedJobsWithApplicationArguments() {
 		this.contextRunner.withUserConfiguration(JobConfiguration.class, EmbeddedDataSourceConfiguration.class)
 				.run((context) -> {
 					assertThat(context).hasSingleBean(JobLauncher.class);
 					context.getBean(JobLauncherApplicationRunner.class)
-							.run(new DefaultApplicationArguments("jobParam=test"));
+							.run(new DefaultApplicationArguments("jobParam=test", "anotherParam(long)=42"));
+					JobParameters jobParameters = new JobParametersBuilder().addString("jobParam", "test")
+							.addLong("anotherParam", 42L).toJobParameters();
+					assertThat(context.getBean(JobRepository.class).getLastJobExecution("job", jobParameters))
+							.isNotNull();
+				});
+	}
+
+	@Test
+	void runDefinedJobsWithApplicationArgumentsIgnoreOptionArguments() {
+		this.contextRunner.withUserConfiguration(JobConfiguration.class, EmbeddedDataSourceConfiguration.class)
+				.run((context) -> {
+					assertThat(context).hasSingleBean(JobLauncher.class);
+					context.getBean(JobLauncherApplicationRunner.class)
+							.run(new DefaultApplicationArguments("--spring.property=value", "jobParam=test"));
 					JobParameters jobParameters = new JobParametersBuilder().addString("jobParam", "test")
 							.toJobParameters();
 					assertThat(context.getBean(JobRepository.class).getLastJobExecution("job", jobParameters))
@@ -125,14 +167,19 @@ class BatchAutoConfigurationTests {
 	}
 
 	@Test
-	void testDefinesAndLaunchesJobIgnoreOptionArguments() {
+	void runDefinedJobsWithJobParametersMergeApplicationArguments() {
 		this.contextRunner.withUserConfiguration(JobConfiguration.class, EmbeddedDataSourceConfiguration.class)
+				.withPropertyValues("spring.batch.job.parameters=jobParam=default,anotherParam(long)=42")
 				.run((context) -> {
 					assertThat(context).hasSingleBean(JobLauncher.class);
 					context.getBean(JobLauncherApplicationRunner.class)
-							.run(new DefaultApplicationArguments("--spring.property=value", "jobParam=test"));
+							.run(new DefaultApplicationArguments("jobParam=test"));
+					JobParameters ignoredParameters = new JobParametersBuilder().addString("jobParam", "default")
+							.addLong("anotherParam", 42L).toJobParameters();
+					assertThat(context.getBean(JobRepository.class).getLastJobExecution("job", ignoredParameters))
+							.isNull();
 					JobParameters jobParameters = new JobParametersBuilder().addString("jobParam", "test")
-							.toJobParameters();
+							.addLong("anotherParam", 42L).toJobParameters();
 					assertThat(context.getBean(JobRepository.class).getLastJobExecution("job", jobParameters))
 							.isNotNull();
 				});

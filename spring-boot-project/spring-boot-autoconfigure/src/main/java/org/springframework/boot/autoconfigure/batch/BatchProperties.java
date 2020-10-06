@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the original author or authors.
+ * Copyright 2012-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,12 @@
 
 package org.springframework.boot.autoconfigure.batch;
 
+import java.util.List;
+import java.util.StringJoiner;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.jdbc.DataSourceInitializationMode;
+import org.springframework.util.Assert;
 
 /**
  * Configuration properties for Spring Batch.
@@ -86,12 +90,61 @@ public class BatchProperties {
 		 */
 		private String names = "";
 
+		/**
+		 * Job parameters to use for jobs that are executed on startup. Each parameter is
+		 * of the form 'name=value'.
+		 */
+		private List<JobParameterDescriptor> parameters;
+
 		public String getNames() {
 			return this.names;
 		}
 
 		public void setNames(String names) {
 			this.names = names;
+		}
+
+		public List<JobParameterDescriptor> getParameters() {
+			return this.parameters;
+		}
+
+		public void setParameters(List<JobParameterDescriptor> parameters) {
+			this.parameters = parameters;
+		}
+
+	}
+
+	/**
+	 * A descriptor of a {@code JobParameter}.
+	 */
+	public static class JobParameterDescriptor {
+
+		private final String key;
+
+		private final String value;
+
+		public JobParameterDescriptor(String parameter) {
+			Assert.notNull(parameter, () -> "Job parameter must not be null");
+			int i = parameter.indexOf("=");
+			if (i == -1) {
+				throw new IllegalArgumentException("Invalid Job parameter " + parameter);
+			}
+			this.key = parameter.substring(0, i).trim();
+			this.value = parameter.substring(i + 1).trim();
+		}
+
+		public String getKey() {
+			return this.key;
+		}
+
+		public String getValue() {
+			return this.value;
+		}
+
+		@Override
+		public String toString() {
+			return new StringJoiner(", ", "[", "]").add("key='" + this.key + "'").add("value='" + this.value + "'")
+					.toString();
 		}
 
 	}
