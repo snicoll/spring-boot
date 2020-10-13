@@ -98,12 +98,7 @@ public class MappedObject {
 		if (result.isMissingNode()) {
 			return null;
 		}
-		try {
-			return SharedObjectMapper.get().treeToValue(result, type);
-		}
-		catch (IOException ex) {
-			throw new IllegalStateException(ex);
-		}
+		return SharedObjectMapper.get().treeToValue(result, type);
 	}
 
 	/**
