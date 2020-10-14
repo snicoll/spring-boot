@@ -16,12 +16,16 @@
 
 package org.springframework.boot;
 
+import java.io.IOException;
 import java.lang.reflect.Constructor;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.security.AccessControlException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -580,7 +584,7 @@ public class SpringApplication {
 			return null;
 		}
 		ResourceLoader resourceLoader = (this.resourceLoader != null) ? this.resourceLoader
-				: new DefaultResourceLoader(null);
+				: new DefaultResourceLoader(new LiquibaseBannerAwareClassLoader());
 		SpringApplicationBannerPrinter bannerPrinter = new SpringApplicationBannerPrinter(resourceLoader, this.banner);
 		if (this.bannerMode == Mode.LOG) {
 			return bannerPrinter.print(environment, this.mainApplicationClass, logger);
@@ -1365,6 +1369,32 @@ public class SpringApplication {
 		List<E> list = new ArrayList<>(elements);
 		list.sort(AnnotationAwareOrderComparator.INSTANCE);
 		return new LinkedHashSet<>(list);
+	}
+
+	private static class LiquibaseBannerAwareClassLoader extends URLClassLoader {
+
+		LiquibaseBannerAwareClassLoader() {
+			super(new URL[0], ClassUtils.getDefaultClassLoader());
+		}
+
+		@Override
+		public URL getResource(String name) {
+			try {
+				Enumeration<URL> resourceUrls = getResources(name);
+				while (resourceUrls.hasMoreElements()) {
+					URL url = resourceUrls.nextElement();
+					if (url.toExternalForm().contains("liquibase-core")) {
+						continue;
+					}
+					return url;
+				}
+			}
+			catch (IOException ex) {
+
+			}
+			return null;
+		}
+
 	}
 
 }
