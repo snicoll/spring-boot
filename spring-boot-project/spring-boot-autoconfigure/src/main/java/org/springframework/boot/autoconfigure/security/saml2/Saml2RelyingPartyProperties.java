@@ -57,6 +57,8 @@ public class Saml2RelyingPartyProperties {
 		 */
 		private String relyingPartyEntityId = "{baseUrl}/saml2/service-provider-metadata/{registrationId}";
 
+		private final Assertionconsumerservice assertionconsumerservice = new Assertionconsumerservice();
+
 		private final Signing signing = new Signing();
 
 		/**
@@ -72,12 +74,48 @@ public class Saml2RelyingPartyProperties {
 			this.relyingPartyEntityId = entityId;
 		}
 
+		public Assertionconsumerservice getAssertionconsumerservice() {
+			return this.assertionconsumerservice;
+		}
+
 		public Signing getSigning() {
 			return this.signing;
 		}
 
 		public Identityprovider getIdentityprovider() {
 			return this.identityprovider;
+		}
+
+		public static class Assertionconsumerservice {
+
+			/**
+			 * Assertion Consumer Service location template. Can generate its location
+			 * based on possible variables of "baseUrl", "registrationId", "baseScheme",
+			 * "baseHost", and "basePort".
+			 */
+			private String location = "{baseUrl}/login/saml2/sso/{registrationId}";
+
+			/**
+			 * Assertion Consumer Service binding.
+			 */
+			private Saml2MessageBinding binding = Saml2MessageBinding.POST;
+
+			public String getLocation() {
+				return this.location;
+			}
+
+			public void setLocation(String location) {
+				this.location = location;
+			}
+
+			public Saml2MessageBinding getBinding() {
+				return this.binding;
+			}
+
+			public void setBinding(Saml2MessageBinding binding) {
+				this.binding = binding;
+			}
+
 		}
 
 		public static class Signing {
