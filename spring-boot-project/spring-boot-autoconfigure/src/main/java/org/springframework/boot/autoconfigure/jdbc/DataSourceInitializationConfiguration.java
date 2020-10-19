@@ -20,6 +20,8 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.ImportBeanDefinitionRegistrar;
@@ -31,8 +33,14 @@ import org.springframework.core.type.AnnotationMetadata;
  * @author Stephane Nicoll
  */
 @Configuration(proxyBeanMethods = false)
-@Import({ DataSourceInitializerInvoker.class, DataSourceInitializationConfiguration.Registrar.class })
+@Import(DataSourceInitializationConfiguration.Registrar.class)
 class DataSourceInitializationConfiguration {
+
+	@Bean(name = DataSourceAutoConfiguration.DATASOURCE_INITIALIZER_INVOKER_BEAN_NAME)
+	DataSourceInitializerInvoker dataSourceInitializerInvoker(ApplicationContext applicationContext,
+			DataSourceProperties properties) {
+		return new DataSourceInitializerInvoker(applicationContext, properties);
+	}
 
 	/**
 	 * {@link ImportBeanDefinitionRegistrar} to register the

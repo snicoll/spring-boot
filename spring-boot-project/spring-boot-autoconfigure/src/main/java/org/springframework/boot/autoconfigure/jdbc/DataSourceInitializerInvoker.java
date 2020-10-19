@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the original author or authors.
+ * Copyright 2012-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
 import org.springframework.core.log.LogMessage;
@@ -39,21 +38,17 @@ class DataSourceInitializerInvoker implements ApplicationListener<DataSourceSche
 
 	private static final Log logger = LogFactory.getLog(DataSourceInitializerInvoker.class);
 
-	private final ObjectProvider<DataSource> dataSource;
+	private final ApplicationContext applicationContext;
 
 	private final DataSourceProperties properties;
-
-	private final ApplicationContext applicationContext;
 
 	private DataSourceInitializer dataSourceInitializer;
 
 	private boolean initialized;
 
-	DataSourceInitializerInvoker(ObjectProvider<DataSource> dataSource, DataSourceProperties properties,
-			ApplicationContext applicationContext) {
-		this.dataSource = dataSource;
-		this.properties = properties;
+	DataSourceInitializerInvoker(ApplicationContext applicationContext, DataSourceProperties properties) {
 		this.applicationContext = applicationContext;
+		this.properties = properties;
 	}
 
 	@Override
@@ -95,7 +90,7 @@ class DataSourceInitializerInvoker implements ApplicationListener<DataSourceSche
 
 	private DataSourceInitializer getDataSourceInitializer() {
 		if (this.dataSourceInitializer == null) {
-			DataSource ds = this.dataSource.getIfUnique();
+			DataSource ds = this.applicationContext.getBeanProvider(DataSource.class).getIfUnique();
 			if (ds != null) {
 				this.dataSourceInitializer = new DataSourceInitializer(ds, this.properties, this.applicationContext);
 			}

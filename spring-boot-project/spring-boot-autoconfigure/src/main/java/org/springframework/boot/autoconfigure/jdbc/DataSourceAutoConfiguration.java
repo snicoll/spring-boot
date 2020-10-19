@@ -57,6 +57,11 @@ import org.springframework.util.StringUtils;
 @Import({ DataSourcePoolMetadataProvidersConfiguration.class, DataSourceInitializationConfiguration.class })
 public class DataSourceAutoConfiguration {
 
+	/**
+	 * The name of the bean that initializes the datasource using data.sql and schema.sql.
+	 */
+	public static final String DATASOURCE_INITIALIZER_INVOKER_BEAN_NAME = "dataSourceInitializerInvoker";
+
 	@Configuration(proxyBeanMethods = false)
 	@Conditional(EmbeddedDatabaseCondition.class)
 	@ConditionalOnMissingBean({ DataSource.class, XADataSource.class })
