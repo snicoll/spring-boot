@@ -1,0 +1,398 @@
+{
+  "groups": [
+    {
+      "name": "management.endpoint.auditevents",
+      "type": "org.springframework.boot.actuate.audit.AuditEventsEndpoint",
+      "sourceType": "org.springframework.boot.actuate.audit.AuditEventsEndpoint"
+    },
+    {
+      "name": "management.endpoint.beans",
+      "type": "org.springframework.boot.actuate.beans.BeansEndpoint",
+      "sourceType": "org.springframework.boot.actuate.beans.BeansEndpoint"
+    },
+    {
+      "name": "management.endpoint.caches",
+      "type": "org.springframework.boot.actuate.cache.CachesEndpoint",
+      "sourceType": "org.springframework.boot.actuate.cache.CachesEndpoint"
+    },
+    {
+      "name": "management.endpoint.configprops",
+      "type": "org.springframework.boot.actuate.context.properties.ConfigurationPropertiesReportEndpoint",
+      "sourceType": "org.springframework.boot.actuate.context.properties.ConfigurationPropertiesReportEndpoint"
+    },
+    {
+      "name": "management.endpoint.env",
+      "type": "org.springframework.boot.actuate.env.EnvironmentEndpoint",
+      "sourceType": "org.springframework.boot.actuate.env.EnvironmentEndpoint"
+    },
+    {
+      "name": "management.endpoint.flyway",
+      "type": "org.springframework.boot.actuate.flyway.FlywayEndpoint",
+      "sourceType": "org.springframework.boot.actuate.flyway.FlywayEndpoint"
+    },
+    {
+      "name": "management.endpoint.health",
+      "type": "org.springframework.boot.actuate.health.HealthEndpoint",
+      "sourceType": "org.springframework.boot.actuate.health.HealthEndpoint"
+    },
+    {
+      "name": "management.endpoint.heapdump",
+      "type": "org.springframework.boot.actuate.management.HeapDumpWebEndpoint",
+      "sourceType": "org.springframework.boot.actuate.management.HeapDumpWebEndpoint"
+    },
+    {
+      "name": "management.endpoint.httptrace",
+      "type": "org.springframework.boot.actuate.trace.http.HttpTraceEndpoint",
+      "sourceType": "org.springframework.boot.actuate.trace.http.HttpTraceEndpoint"
+    },
+    {
+      "name": "management.endpoint.info",
+      "type": "org.springframework.boot.actuate.info.InfoEndpoint",
+      "sourceType": "org.springframework.boot.actuate.info.InfoEndpoint"
+    },
+    {
+      "name": "management.endpoint.integrationgraph",
+      "type": "org.springframework.boot.actuate.integration.IntegrationGraphEndpoint",
+      "sourceType": "org.springframework.boot.actuate.integration.IntegrationGraphEndpoint"
+    },
+    {
+      "name": "management.endpoint.liquibase",
+      "type": "org.springframework.boot.actuate.liquibase.LiquibaseEndpoint",
+      "sourceType": "org.springframework.boot.actuate.liquibase.LiquibaseEndpoint"
+    },
+    {
+      "name": "management.endpoint.logfile",
+      "type": "org.springframework.boot.actuate.logging.LogFileWebEndpoint",
+      "sourceType": "org.springframework.boot.actuate.logging.LogFileWebEndpoint"
+    },
+    {
+      "name": "management.endpoint.loggers",
+      "type": "org.springframework.boot.actuate.logging.LoggersEndpoint",
+      "sourceType": "org.springframework.boot.actuate.logging.LoggersEndpoint"
+    },
+    {
+      "name": "management.endpoint.mappings",
+      "type": "org.springframework.boot.actuate.web.mappings.MappingsEndpoint",
+      "sourceType": "org.springframework.boot.actuate.web.mappings.MappingsEndpoint"
+    },
+    {
+      "name": "management.endpoint.metrics",
+      "type": "org.springframework.boot.actuate.metrics.MetricsEndpoint",
+      "sourceType": "org.springframework.boot.actuate.metrics.MetricsEndpoint"
+    },
+    {
+      "name": "management.endpoint.prometheus",
+      "type": "org.springframework.boot.actuate.metrics.export.prometheus.PrometheusScrapeEndpoint",
+      "sourceType": "org.springframework.boot.actuate.metrics.export.prometheus.PrometheusScrapeEndpoint"
+    },
+    {
+      "name": "management.endpoint.scheduledtasks",
+      "type": "org.springframework.boot.actuate.scheduling.ScheduledTasksEndpoint",
+      "sourceType": "org.springframework.boot.actuate.scheduling.ScheduledTasksEndpoint"
+    },
+    {
+      "name": "management.endpoint.sessions",
+      "type": "org.springframework.boot.actuate.session.SessionsEndpoint",
+      "sourceType": "org.springframework.boot.actuate.session.SessionsEndpoint"
+    },
+    {
+      "name": "management.endpoint.shutdown",
+      "type": "org.springframework.boot.actuate.context.ShutdownEndpoint",
+      "sourceType": "org.springframework.boot.actuate.context.ShutdownEndpoint"
+    },
+    {
+      "name": "management.endpoint.threaddump",
+      "type": "org.springframework.boot.actuate.management.ThreadDumpEndpoint",
+      "sourceType": "org.springframework.boot.actuate.management.ThreadDumpEndpoint"
+    }
+  ],
+  "properties": [
+    {
+      "name": "management.endpoint.auditevents.cache.time-to-live",
+      "type": "java.time.Duration",
+      "description": "Maximum time that a response can be cached.",
+      "sourceType": "org.springframework.boot.actuate.audit.AuditEventsEndpoint",
+      "defaultValue": "0ms"
+    },
+    {
+      "name": "management.endpoint.auditevents.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Whether to enable the auditevents endpoint.",
+      "sourceType": "org.springframework.boot.actuate.audit.AuditEventsEndpoint",
+      "defaultValue": true
+    },
+    {
+      "name": "management.endpoint.beans.cache.time-to-live",
+      "type": "java.time.Duration",
+      "description": "Maximum time that a response can be cached.",
+      "sourceType": "org.springframework.boot.actuate.beans.BeansEndpoint",
+      "defaultValue": "0ms"
+    },
+    {
+      "name": "management.endpoint.beans.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Whether to enable the beans endpoint.",
+      "sourceType": "org.springframework.boot.actuate.beans.BeansEndpoint",
+      "defaultValue": true
+    },
+    {
+      "name": "management.endpoint.caches.cache.time-to-live",
+      "type": "java.time.Duration",
+      "description": "Maximum time that a response can be cached.",
+      "sourceType": "org.springframework.boot.actuate.cache.CachesEndpoint",
+      "defaultValue": "0ms"
+    },
+    {
+      "name": "management.endpoint.caches.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Whether to enable the caches endpoint.",
+      "sourceType": "org.springframework.boot.actuate.cache.CachesEndpoint",
+      "defaultValue": true
+    },
+    {
+      "name": "management.endpoint.configprops.cache.time-to-live",
+      "type": "java.time.Duration",
+      "description": "Maximum time that a response can be cached.",
+      "sourceType": "org.springframework.boot.actuate.context.properties.ConfigurationPropertiesReportEndpoint",
+      "defaultValue": "0ms"
+    },
+    {
+      "name": "management.endpoint.configprops.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Whether to enable the configprops endpoint.",
+      "sourceType": "org.springframework.boot.actuate.context.properties.ConfigurationPropertiesReportEndpoint",
+      "defaultValue": true
+    },
+    {
+      "name": "management.endpoint.env.cache.time-to-live",
+      "type": "java.time.Duration",
+      "description": "Maximum time that a response can be cached.",
+      "sourceType": "org.springframework.boot.actuate.env.EnvironmentEndpoint",
+      "defaultValue": "0ms"
+    },
+    {
+      "name": "management.endpoint.env.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Whether to enable the env endpoint.",
+      "sourceType": "org.springframework.boot.actuate.env.EnvironmentEndpoint",
+      "defaultValue": true
+    },
+    {
+      "name": "management.endpoint.flyway.cache.time-to-live",
+      "type": "java.time.Duration",
+      "description": "Maximum time that a response can be cached.",
+      "sourceType": "org.springframework.boot.actuate.flyway.FlywayEndpoint",
+      "defaultValue": "0ms"
+    },
+    {
+      "name": "management.endpoint.flyway.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Whether to enable the flyway endpoint.",
+      "sourceType": "org.springframework.boot.actuate.flyway.FlywayEndpoint",
+      "defaultValue": true
+    },
+    {
+      "name": "management.endpoint.health.cache.time-to-live",
+      "type": "java.time.Duration",
+      "description": "Maximum time that a response can be cached.",
+      "sourceType": "org.springframework.boot.actuate.health.HealthEndpoint",
+      "defaultValue": "0ms"
+    },
+    {
+      "name": "management.endpoint.health.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Whether to enable the health endpoint.",
+      "sourceType": "org.springframework.boot.actuate.health.HealthEndpoint",
+      "defaultValue": true
+    },
+    {
+      "name": "management.endpoint.heapdump.cache.time-to-live",
+      "type": "java.time.Duration",
+      "description": "Maximum time that a response can be cached.",
+      "sourceType": "org.springframework.boot.actuate.management.HeapDumpWebEndpoint",
+      "defaultValue": "0ms"
+    },
+    {
+      "name": "management.endpoint.heapdump.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Whether to enable the heapdump endpoint.",
+      "sourceType": "org.springframework.boot.actuate.management.HeapDumpWebEndpoint",
+      "defaultValue": true
+    },
+    {
+      "name": "management.endpoint.httptrace.cache.time-to-live",
+      "type": "java.time.Duration",
+      "description": "Maximum time that a response can be cached.",
+      "sourceType": "org.springframework.boot.actuate.trace.http.HttpTraceEndpoint",
+      "defaultValue": "0ms"
+    },
+    {
+      "name": "management.endpoint.httptrace.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Whether to enable the httptrace endpoint.",
+      "sourceType": "org.springframework.boot.actuate.trace.http.HttpTraceEndpoint",
+      "defaultValue": true
+    },
+    {
+      "name": "management.endpoint.info.cache.time-to-live",
+      "type": "java.time.Duration",
+      "description": "Maximum time that a response can be cached.",
+      "sourceType": "org.springframework.boot.actuate.info.InfoEndpoint",
+      "defaultValue": "0ms"
+    },
+    {
+      "name": "management.endpoint.info.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Whether to enable the info endpoint.",
+      "sourceType": "org.springframework.boot.actuate.info.InfoEndpoint",
+      "defaultValue": true
+    },
+    {
+      "name": "management.endpoint.integrationgraph.cache.time-to-live",
+      "type": "java.time.Duration",
+      "description": "Maximum time that a response can be cached.",
+      "sourceType": "org.springframework.boot.actuate.integration.IntegrationGraphEndpoint",
+      "defaultValue": "0ms"
+    },
+    {
+      "name": "management.endpoint.integrationgraph.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Whether to enable the integrationgraph endpoint.",
+      "sourceType": "org.springframework.boot.actuate.integration.IntegrationGraphEndpoint",
+      "defaultValue": true
+    },
+    {
+      "name": "management.endpoint.liquibase.cache.time-to-live",
+      "type": "java.time.Duration",
+      "description": "Maximum time that a response can be cached.",
+      "sourceType": "org.springframework.boot.actuate.liquibase.LiquibaseEndpoint",
+      "defaultValue": "0ms"
+    },
+    {
+      "name": "management.endpoint.liquibase.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Whether to enable the liquibase endpoint.",
+      "sourceType": "org.springframework.boot.actuate.liquibase.LiquibaseEndpoint",
+      "defaultValue": true
+    },
+    {
+      "name": "management.endpoint.logfile.cache.time-to-live",
+      "type": "java.time.Duration",
+      "description": "Maximum time that a response can be cached.",
+      "sourceType": "org.springframework.boot.actuate.logging.LogFileWebEndpoint",
+      "defaultValue": "0ms"
+    },
+    {
+      "name": "management.endpoint.logfile.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Whether to enable the logfile endpoint.",
+      "sourceType": "org.springframework.boot.actuate.logging.LogFileWebEndpoint",
+      "defaultValue": true
+    },
+    {
+      "name": "management.endpoint.loggers.cache.time-to-live",
+      "type": "java.time.Duration",
+      "description": "Maximum time that a response can be cached.",
+      "sourceType": "org.springframework.boot.actuate.logging.LoggersEndpoint",
+      "defaultValue": "0ms"
+    },
+    {
+      "name": "management.endpoint.loggers.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Whether to enable the loggers endpoint.",
+      "sourceType": "org.springframework.boot.actuate.logging.LoggersEndpoint",
+      "defaultValue": true
+    },
+    {
+      "name": "management.endpoint.mappings.cache.time-to-live",
+      "type": "java.time.Duration",
+      "description": "Maximum time that a response can be cached.",
+      "sourceType": "org.springframework.boot.actuate.web.mappings.MappingsEndpoint",
+      "defaultValue": "0ms"
+    },
+    {
+      "name": "management.endpoint.mappings.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Whether to enable the mappings endpoint.",
+      "sourceType": "org.springframework.boot.actuate.web.mappings.MappingsEndpoint",
+      "defaultValue": true
+    },
+    {
+      "name": "management.endpoint.metrics.cache.time-to-live",
+      "type": "java.time.Duration",
+      "description": "Maximum time that a response can be cached.",
+      "sourceType": "org.springframework.boot.actuate.metrics.MetricsEndpoint",
+      "defaultValue": "0ms"
+    },
+    {
+      "name": "management.endpoint.metrics.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Whether to enable the metrics endpoint.",
+      "sourceType": "org.springframework.boot.actuate.metrics.MetricsEndpoint",
+      "defaultValue": true
+    },
+    {
+      "name": "management.endpoint.prometheus.cache.time-to-live",
+      "type": "java.time.Duration",
+      "description": "Maximum time that a response can be cached.",
+      "sourceType": "org.springframework.boot.actuate.metrics.export.prometheus.PrometheusScrapeEndpoint",
+      "defaultValue": "0ms"
+    },
+    {
+      "name": "management.endpoint.prometheus.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Whether to enable the prometheus endpoint.",
+      "sourceType": "org.springframework.boot.actuate.metrics.export.prometheus.PrometheusScrapeEndpoint",
+      "defaultValue": true
+    },
+    {
+      "name": "management.endpoint.scheduledtasks.cache.time-to-live",
+      "type": "java.time.Duration",
+      "description": "Maximum time that a response can be cached.",
+      "sourceType": "org.springframework.boot.actuate.scheduling.ScheduledTasksEndpoint",
+      "defaultValue": "0ms"
+    },
+    {
+      "name": "management.endpoint.scheduledtasks.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Whether to enable the scheduledtasks endpoint.",
+      "sourceType": "org.springframework.boot.actuate.scheduling.ScheduledTasksEndpoint",
+      "defaultValue": true
+    },
+    {
+      "name": "management.endpoint.sessions.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Whether to enable the sessions endpoint.",
+      "sourceType": "org.springframework.boot.actuate.session.SessionsEndpoint",
+      "defaultValue": true
+    },
+    {
+      "name": "management.endpoint.shutdown.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Whether to enable the shutdown endpoint.",
+      "sourceType": "org.springframework.boot.actuate.context.ShutdownEndpoint",
+      "defaultValue": false
+    },
+    {
+      "name": "management.endpoint.threaddump.cache.time-to-live",
+      "type": "java.time.Duration",
+      "description": "Maximum time that a response can be cached.",
+      "sourceType": "org.springframework.boot.actuate.management.ThreadDumpEndpoint",
+      "defaultValue": "0ms"
+    },
+    {
+      "name": "management.endpoint.threaddump.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Whether to enable the threaddump endpoint.",
+      "sourceType": "org.springframework.boot.actuate.management.ThreadDumpEndpoint",
+      "defaultValue": true
+    },
+    {
+      "name": "management.endpoints.migrate-legacy-ids",
+      "type": "java.lang.Boolean",
+      "description": "Whether to transparently migrate legacy endpoint IDs.",
+      "defaultValue": false
+    }
+  ],
+  "hints": []
+}

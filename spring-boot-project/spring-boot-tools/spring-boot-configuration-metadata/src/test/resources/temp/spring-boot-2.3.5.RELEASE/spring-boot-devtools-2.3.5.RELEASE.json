@@ -1,0 +1,154 @@
+{
+  "groups": [
+    {
+      "name": "spring.devtools",
+      "type": "org.springframework.boot.devtools.autoconfigure.DevToolsProperties",
+      "sourceType": "org.springframework.boot.devtools.autoconfigure.DevToolsProperties"
+    },
+    {
+      "name": "spring.devtools.livereload",
+      "type": "org.springframework.boot.devtools.autoconfigure.DevToolsProperties$Livereload",
+      "sourceType": "org.springframework.boot.devtools.autoconfigure.DevToolsProperties",
+      "sourceMethod": "getLivereload()"
+    },
+    {
+      "name": "spring.devtools.remote",
+      "type": "org.springframework.boot.devtools.autoconfigure.RemoteDevToolsProperties",
+      "sourceType": "org.springframework.boot.devtools.autoconfigure.DevToolsProperties",
+      "sourceMethod": "getRemote()"
+    },
+    {
+      "name": "spring.devtools.remote.proxy",
+      "type": "org.springframework.boot.devtools.autoconfigure.RemoteDevToolsProperties$Proxy",
+      "sourceType": "org.springframework.boot.devtools.autoconfigure.RemoteDevToolsProperties",
+      "sourceMethod": "getProxy()"
+    },
+    {
+      "name": "spring.devtools.remote.restart",
+      "type": "org.springframework.boot.devtools.autoconfigure.RemoteDevToolsProperties$Restart",
+      "sourceType": "org.springframework.boot.devtools.autoconfigure.RemoteDevToolsProperties",
+      "sourceMethod": "getRestart()"
+    },
+    {
+      "name": "spring.devtools.restart",
+      "type": "org.springframework.boot.devtools.autoconfigure.DevToolsProperties$Restart",
+      "sourceType": "org.springframework.boot.devtools.autoconfigure.DevToolsProperties",
+      "sourceMethod": "getRestart()"
+    }
+  ],
+  "properties": [
+    {
+      "name": "spring.devtools.add-properties",
+      "type": "java.lang.Boolean",
+      "description": "Whether to enable development property defaults.",
+      "defaultValue": true
+    },
+    {
+      "name": "spring.devtools.livereload.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Whether to enable a livereload.com-compatible server.",
+      "sourceType": "org.springframework.boot.devtools.autoconfigure.DevToolsProperties$Livereload",
+      "defaultValue": true
+    },
+    {
+      "name": "spring.devtools.livereload.port",
+      "type": "java.lang.Integer",
+      "description": "Server port.",
+      "sourceType": "org.springframework.boot.devtools.autoconfigure.DevToolsProperties$Livereload",
+      "defaultValue": 35729
+    },
+    {
+      "name": "spring.devtools.remote.context-path",
+      "type": "java.lang.String",
+      "description": "Context path used to handle the remote connection.",
+      "sourceType": "org.springframework.boot.devtools.autoconfigure.RemoteDevToolsProperties",
+      "defaultValue": "\/.~~spring-boot!~"
+    },
+    {
+      "name": "spring.devtools.remote.proxy.host",
+      "type": "java.lang.String",
+      "description": "The host of the proxy to use to connect to the remote application.",
+      "sourceType": "org.springframework.boot.devtools.autoconfigure.RemoteDevToolsProperties$Proxy"
+    },
+    {
+      "name": "spring.devtools.remote.proxy.port",
+      "type": "java.lang.Integer",
+      "description": "The port of the proxy to use to connect to the remote application.",
+      "sourceType": "org.springframework.boot.devtools.autoconfigure.RemoteDevToolsProperties$Proxy"
+    },
+    {
+      "name": "spring.devtools.remote.restart.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Whether to enable remote restart.",
+      "sourceType": "org.springframework.boot.devtools.autoconfigure.RemoteDevToolsProperties$Restart",
+      "defaultValue": true
+    },
+    {
+      "name": "spring.devtools.remote.secret",
+      "type": "java.lang.String",
+      "description": "A shared secret required to establish a connection (required to enable remote support).",
+      "sourceType": "org.springframework.boot.devtools.autoconfigure.RemoteDevToolsProperties"
+    },
+    {
+      "name": "spring.devtools.remote.secret-header-name",
+      "type": "java.lang.String",
+      "description": "HTTP header used to transfer the shared secret.",
+      "sourceType": "org.springframework.boot.devtools.autoconfigure.RemoteDevToolsProperties",
+      "defaultValue": "X-AUTH-TOKEN"
+    },
+    {
+      "name": "spring.devtools.restart.additional-exclude",
+      "type": "java.lang.String",
+      "description": "Additional patterns that should be excluded from triggering a full restart.",
+      "sourceType": "org.springframework.boot.devtools.autoconfigure.DevToolsProperties$Restart"
+    },
+    {
+      "name": "spring.devtools.restart.additional-paths",
+      "type": "java.util.List<java.io.File>",
+      "description": "Additional paths to watch for changes.",
+      "sourceType": "org.springframework.boot.devtools.autoconfigure.DevToolsProperties$Restart"
+    },
+    {
+      "name": "spring.devtools.restart.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Whether to enable automatic restart.",
+      "sourceType": "org.springframework.boot.devtools.autoconfigure.DevToolsProperties$Restart",
+      "defaultValue": true
+    },
+    {
+      "name": "spring.devtools.restart.exclude",
+      "type": "java.lang.String",
+      "description": "Patterns that should be excluded from triggering a full restart.",
+      "sourceType": "org.springframework.boot.devtools.autoconfigure.DevToolsProperties$Restart",
+      "defaultValue": "META-INF\/maven\/**,META-INF\/resources\/**,resources\/**,static\/**,public\/**,templates\/**,**\/*Test.class,**\/*Tests.class,git.properties,META-INF\/build-info.properties"
+    },
+    {
+      "name": "spring.devtools.restart.log-condition-evaluation-delta",
+      "type": "java.lang.Boolean",
+      "description": "Whether to log the condition evaluation delta upon restart.",
+      "sourceType": "org.springframework.boot.devtools.autoconfigure.DevToolsProperties$Restart",
+      "defaultValue": true
+    },
+    {
+      "name": "spring.devtools.restart.poll-interval",
+      "type": "java.time.Duration",
+      "description": "Amount of time to wait between polling for classpath changes.",
+      "sourceType": "org.springframework.boot.devtools.autoconfigure.DevToolsProperties$Restart",
+      "defaultValue": "1s"
+    },
+    {
+      "name": "spring.devtools.restart.quiet-period",
+      "type": "java.time.Duration",
+      "description": "Amount of quiet time required without any classpath changes before a restart is triggered.",
+      "sourceType": "org.springframework.boot.devtools.autoconfigure.DevToolsProperties$Restart",
+      "defaultValue": "400ms"
+    },
+    {
+      "name": "spring.devtools.restart.trigger-file",
+      "type": "java.lang.String",
+      "description": "Name of a specific file that, when changed, triggers the restart check. Must be a simple name (without any path) of a file that appears on your classpath. If not specified, any classpath file change triggers the restart.",
+      "sourceType": "org.springframework.boot.devtools.autoconfigure.DevToolsProperties$Restart"
+    }
+  ],
+  "hints": []
+}
