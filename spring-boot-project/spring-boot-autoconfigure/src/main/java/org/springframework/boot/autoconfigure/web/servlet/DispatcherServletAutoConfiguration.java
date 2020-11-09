@@ -70,12 +70,12 @@ import org.springframework.web.servlet.DispatcherServlet;
 public class DispatcherServletAutoConfiguration {
 
 	/*
-	 * The bean name for a DispatcherServlet that will be mapped to the root URL "/"
+	 * The bean name for a DispatcherServlet that will be mapped to the root URL "/".
 	 */
 	public static final String DEFAULT_DISPATCHER_SERVLET_BEAN_NAME = "dispatcherServlet";
 
 	/*
-	 * The bean name for a ServletRegistrationBean for the DispatcherServlet "/"
+	 * The bean name for a ServletRegistrationBean for the DispatcherServlet "/".
 	 */
 	public static final String DEFAULT_DISPATCHER_SERVLET_REGISTRATION_BEAN_NAME = "dispatcherServletRegistration";
 

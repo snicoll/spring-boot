@@ -401,6 +401,9 @@ public final class ConditionMessage {
 	 */
 	public enum Style {
 
+		/**
+		 * Rend the item as is.
+		 */
 		NORMAL {
 			@Override
 			protected Object applyToItem(Object item) {
@@ -413,6 +416,9 @@ public final class ConditionMessage {
 			}
 		},
 
+		/**
+		 * Render the item with simple quotes.
+		 */
 		QUOTE {
 			@Override
 			protected String applyToItem(Object item) {

@@ -48,10 +48,13 @@ import org.springframework.core.annotation.Order;
 @Documented
 public @interface AutoConfigureOrder {
 
+	/**
+	 * Default order.
+	 */
 	int DEFAULT_ORDER = 0;
 
 	/**
-	 * The order value. Default is {@code 0}.
+	 * The order value. Default is {@value DEFAULT_ORDER}.
 	 * @see Ordered#getOrder()
 	 * @return the order value
 	 */

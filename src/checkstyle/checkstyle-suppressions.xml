@@ -15,16 +15,15 @@
 	<suppress files="[\\/]src[\\/]test[\\/]java[\\/]" checks="Javadoc*" />
 	<suppress files="[\\/]src[\\/]test[\\/]java[\\/]" id="mainCodeIllegalImportCheck" />
 	<suppress files="[\\/]src[\\/]test[\\/]java[\\/]" checks="NonEmptyAtclauseDescription" />
-	<suppress files="[\\/]autoconfigure[\\/]" checks="JavadocType" />
-	<suppress files="[\\/]autoconfigure[\\/]" checks="JavadocVariable" />
 	<suppress files="[\\/]spring-boot-docs[\\/]" checks="JavadocType" />
 	<suppress files="[\\/]spring-boot-smoke-tests[\\/]" checks="JavadocType" />
 	<suppress files="[\\/]spring-boot-smoke-tests[\\/]" checks="ImportControl" />
 	<suppress files="[\\/]spring-boot-smoke-tests[\\/]" id="mainCodeIllegalImportCheck" />
 	<suppress files="[\\/]spring-boot-deployment-tests[\\/]" checks="JavadocType" />
 	<suppress files="[\\/]spring-boot-integration-tests[\\/]" checks="JavadocType" />
-	<suppress files="Ansi.*\.java" checks="JavadocVariable" />
-	<suppress files="Ansi.*\.java" checks="JavadocStyle" />
+	<suppress files="AnsiBackground\.java" checks="JavadocVariable" />
+	<suppress files="AnsiColor\.java" checks="JavadocVariable" />
+	<suppress files="AnsiStyle\.java" checks="JavadocVariable" />
 	<suppress files="LogLevel\.java" checks="JavadocVariable" />
 	<suppress files="HelpMojo\.java" checks=".*"/>
 	<suppress files="[\\/]org.springframework.boot.configurationprocessor.json[\\/].*\.java$" checks=".*" />

@@ -145,10 +145,19 @@ import org.springframework.web.util.UrlPathHelper;
 		ValidationAutoConfiguration.class })
 public class WebMvcAutoConfiguration {
 
+	/**
+	 * Default view prefix.
+	 */
 	public static final String DEFAULT_PREFIX = "";
 
+	/**
+	 * Default view prefix.
+	 */
 	public static final String DEFAULT_SUFFIX = "";
 
+	/**
+	 * Default servlet locations.
+	 */
 	private static final String[] SERVLET_LOCATIONS = { "/" };
 
 	@Bean
