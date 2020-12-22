@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2020 the original author or authors.
+ * Copyright 2012-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package org.springframework.boot.autoconfigure.cassandra;
 
+import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.util.LinkedHashMap;
@@ -52,6 +53,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Scope;
+import org.springframework.core.io.Resource;
 
 /**
  * {@link EnableAutoConfiguration Auto-configuration} for Cassandra.
@@ -110,12 +112,27 @@ public class CassandraAutoConfiguration {
 	public DriverConfigLoader cassandraDriverConfigLoader(CassandraProperties properties,
 			ObjectProvider<DriverConfigLoaderBuilderCustomizer> builderCustomizers) {
 		ProgrammaticDriverConfigLoaderBuilder builder = new DefaultProgrammaticDriverConfigLoaderBuilder(
-				() -> cassandraConfiguration(properties), DefaultDriverConfigLoader.DEFAULT_ROOT_PATH);
+				() -> createConfig(properties), DefaultDriverConfigLoader.DEFAULT_ROOT_PATH);
 		builderCustomizers.orderedStream().forEach((customizer) -> customizer.customize(builder));
 		return builder.build();
 	}
 
-	private Config cassandraConfiguration(CassandraProperties properties) {
+	private Config createConfig(CassandraProperties properties) {
+		Config config = mapConfig(properties);
+		Resource configFile = properties.getConfig();
+		return (configFile != null) ? config.withFallback(loadConfig(configFile)) : config;
+	}
+
+	private Config loadConfig(Resource config) {
+		try {
+			return ConfigFactory.parseURL(config.getURL());
+		}
+		catch (IOException ex) {
+			throw new IllegalStateException("Failed to load cassandra configuration from" + config, ex);
+		}
+	}
+
+	private Config mapConfig(CassandraProperties properties) {
 		CassandraDriverOptions options = new CassandraDriverOptions();
 		PropertyMapper map = PropertyMapper.get();
 		map.from(properties.getSessionName()).whenHasText()

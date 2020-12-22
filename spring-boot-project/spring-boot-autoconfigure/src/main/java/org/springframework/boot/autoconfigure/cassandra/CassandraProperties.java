@@ -24,6 +24,8 @@ import java.util.List;
 import com.datastax.oss.driver.api.core.DefaultConsistencyLevel;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.DeprecatedConfigurationProperty;
+import org.springframework.core.io.Resource;
 
 /**
  * Configuration properties for Cassandra.
@@ -36,6 +38,11 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  */
 @ConfigurationProperties(prefix = "spring.data.cassandra")
 public class CassandraProperties {
+
+	/**
+	 * Location of the configuration file to use.
+	 */
+	private Resource config;
 
 	/**
 	 * Keyspace name to use.
@@ -108,6 +115,14 @@ public class CassandraProperties {
 	 * Control connection configuration.
 	 */
 	private final Controlconnection controlconnection = new Controlconnection();
+
+	public Resource getConfig() {
+		return this.config;
+	}
+
+	public void setConfig(Resource config) {
+		this.config = config;
+	}
 
 	public String getKeyspaceName() {
 		return this.keyspaceName;
