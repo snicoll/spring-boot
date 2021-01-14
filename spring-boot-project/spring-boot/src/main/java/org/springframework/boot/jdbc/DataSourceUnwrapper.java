@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2020 the original author or authors.
+ * Copyright 2012-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,31 +45,47 @@ public final class DataSourceUnwrapper {
 	 * Return an object that implements the given {@code target} type, unwrapping delegate
 	 * or proxy if necessary.
 	 * @param dataSource the datasource to handle
+	 * @param unwrapInterface the interface that the target type must implement
 	 * @param target the type that the result must implement
+	 * @param <I> the interface that the target type must implement
 	 * @param <T> the target type
 	 * @return an object that implements the target type or {@code null}
 	 */
-	public static <T> T unwrap(DataSource dataSource, Class<T> target) {
+	public static <I, T extends I> T unwrap(DataSource dataSource, Class<I> unwrapInterface, Class<T> target) {
 		if (target.isInstance(dataSource)) {
 			return target.cast(dataSource);
 		}
-		T unwrapped = safeUnwrap(dataSource, target);
-		if (unwrapped != null) {
-			return unwrapped;
+		I unwrapped = safeUnwrap(dataSource, unwrapInterface);
+		if (unwrapped != null && unwrapInterface.isAssignableFrom(target)) {
+			return target.cast(unwrapped);
 		}
 		if (DELEGATING_DATA_SOURCE_PRESENT) {
 			DataSource targetDataSource = DelegatingDataSourceUnwrapper.getTargetDataSource(dataSource);
 			if (targetDataSource != null) {
-				return unwrap(targetDataSource, target);
+				return unwrap(targetDataSource, unwrapInterface, target);
 			}
 		}
 		if (AopUtils.isAopProxy(dataSource)) {
 			Object proxyTarget = AopProxyUtils.getSingletonTarget(dataSource);
 			if (proxyTarget instanceof DataSource) {
-				return unwrap((DataSource) proxyTarget, target);
+				return unwrap((DataSource) proxyTarget, unwrapInterface, target);
 			}
 		}
 		return null;
+	}
+
+	/**
+	 * Return an object that implements the given {@code target} type, unwrapping delegate
+	 * or proxy if necessary.
+	 * @param dataSource the datasource to handle
+	 * @param target the type that the result must implement
+	 * @param <T> the target type
+	 * @return an object that implements the target type or {@code null}
+	 * @deprecated as of 2.3.8 in favour of {@link #unwrap(DataSource, Class, Class)}
+	 */
+	@Deprecated
+	public static <T> T unwrap(DataSource dataSource, Class<T> target) {
+		return unwrap(dataSource, target, target);
 	}
 
 	private static <S> S safeUnwrap(Wrapper wrapper, Class<S> target) {
@@ -82,6 +98,10 @@ public final class DataSourceUnwrapper {
 			// Continue
 		}
 		return null;
+	}
+
+	private static <S> S safeCast(Object target, Class<S> type) {
+		return (type.isInstance(target)) ? type.cast(target) : null;
 	}
 
 	private static class DelegatingDataSourceUnwrapper {
