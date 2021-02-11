@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2020 the original author or authors.
+ * Copyright 2012-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 
 /**
  * Configuration for Hazelcast client.
@@ -49,12 +50,15 @@ class HazelcastClientConfiguration {
 	static class HazelcastClientConfigFileConfiguration {
 
 		@Bean
-		HazelcastInstance hazelcastInstance(HazelcastProperties properties) throws IOException {
-			Resource config = properties.resolveConfigLocation();
-			if (config != null) {
-				return new HazelcastClientFactory(config).getHazelcastInstance();
-			}
-			return HazelcastClient.newHazelcastClient();
+		HazelcastInstance hazelcastInstance(HazelcastProperties properties, ResourceLoader resourceLoader)
+				throws IOException {
+			return createHazelcastClientFactory(properties.resolveConfigLocation())
+					.getHazelcastInstance(resourceLoader.getClassLoader());
+		}
+
+		private HazelcastClientFactory createHazelcastClientFactory(Resource config) throws IOException {
+			return (config != null) ? new HazelcastClientFactory(config)
+					: new HazelcastClientFactory(ClientConfig.load());
 		}
 
 	}
@@ -65,6 +69,7 @@ class HazelcastClientConfiguration {
 
 		@Bean
 		HazelcastInstance hazelcastInstance(ClientConfig config) {
+			// TODO should we replace the ClassLoader here?
 			return new HazelcastClientFactory(config).getHazelcastInstance();
 		}
 

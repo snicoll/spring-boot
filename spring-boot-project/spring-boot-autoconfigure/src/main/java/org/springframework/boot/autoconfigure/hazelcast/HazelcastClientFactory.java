@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2020 the original author or authors.
+ * Copyright 2012-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -67,10 +67,22 @@ public class HazelcastClientFactory {
 	}
 
 	/**
-	 * Get the {@link HazelcastInstance}.
+	 * Get the {@link HazelcastInstance} with the default {@link ClassLoader}.
 	 * @return the {@link HazelcastInstance}
 	 */
 	public HazelcastInstance getHazelcastInstance() {
+		return getHazelcastInstance(null);
+	}
+
+	/**
+	 * Get the {@link HazelcastInstance} with the specified {@link ClassLoader}.
+	 * @param classLoader the classloader to use for serialization
+	 * @return the {@link HazelcastInstance}
+	 */
+	public HazelcastInstance getHazelcastInstance(ClassLoader classLoader) {
+		if (classLoader != null) {
+			this.clientConfig.setClassLoader(classLoader);
+		}
 		if (StringUtils.hasText(this.clientConfig.getInstanceName())) {
 			return HazelcastClient.getOrCreateHazelcastClient(this.clientConfig);
 		}
