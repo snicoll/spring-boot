@@ -52,10 +52,10 @@ public class InfluxDbAutoConfiguration {
 		InfluxDB influxDb = new InfluxDBImpl(properties.getUrl(), properties.getUser(), properties.getPassword(),
 				determineBuilder(builder.getIfAvailable()));
 		PropertyMapper map = PropertyMapper.get().alwaysApplyingWhenNonNull();
-		map.from(properties::getConsistency).to(influxDb::setConsistency);
 		map.from(properties::getDatabase).to(influxDb::setDatabase);
-		map.from(properties::getLog).to(influxDb::setLogLevel);
 		map.from(properties::getRetentionPolicy).to(influxDb::setRetentionPolicy);
+		map.from(properties::getConsistencyLevel).to(influxDb::setConsistency);
+		map.from(properties::getLog).to(influxDb::setLogLevel);
 		map.from(properties.isGzipEnabled()).whenTrue().toCall(influxDb::enableGzip);
 		if (properties.getBatch().isEnabled()) {
 			BatchOptions batchOptions = mapBatchOptions(properties);
@@ -68,9 +68,9 @@ public class InfluxDbAutoConfiguration {
 	private BatchOptions mapBatchOptions(InfluxDbProperties properties) {
 		InfluxDbProperties.Batch batch = properties.getBatch();
 		return BatchOptions.DEFAULTS.actions(batch.getActions())
-				.flushDuration(Long.valueOf(batch.getFlushDuration().toMillis()).intValue())
-				.jitterDuration(Long.valueOf(batch.getJitterDuration().toMillis()).intValue())
-				.bufferLimit(batch.getBufferLimit()).consistency(batch.getConsistency()).precision(batch.getPrecision())
+				.flushDuration((int) batch.getFlushDuration().toMillis())
+				.jitterDuration((int) batch.getJitterDuration().toMillis()).bufferLimit(batch.getBufferLimit())
+				.consistency(properties.getConsistencyLevel()).precision(batch.getPrecision())
 				.dropActionsOnQueueExhaustion(batch.isDropActionsOnQueueExhaustion());
 	}
 

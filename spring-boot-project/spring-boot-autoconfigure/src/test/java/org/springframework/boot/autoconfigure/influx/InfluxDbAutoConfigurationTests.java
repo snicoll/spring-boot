@@ -16,11 +16,14 @@
 
 package org.springframework.boot.autoconfigure.influx;
 
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.OkHttpClient;
-import org.influxdb.BatchOptions;
+import org.assertj.core.api.InstanceOfAssertFactories;
+import org.assertj.core.api.ObjectAssert;
 import org.influxdb.InfluxDB;
+import org.influxdb.InfluxDB.LogLevel;
 import org.influxdb.impl.BatchProcessor;
 import org.junit.jupiter.api.Test;
 import retrofit2.Retrofit;
@@ -53,16 +56,53 @@ class InfluxDbAutoConfigurationTests {
 
 	@Test
 	void influxDbCanBeCustomized() {
+		this.contextRunner.withPropertyValues("spring.influx.url=http://localhost", "spring.influx.password=password",
+				"spring.influx.user=user", "spring.influx.database=sample-db",
+				"spring.influx.retention-policy=two_hours", "spring.influx.consistency-level=all",
+				"spring.influx.log=basic", "spring.influx.gzip-enabled=true").run((context) -> {
+					assertThat(context).hasSingleBean(InfluxDB.class);
+					InfluxDB influxDb = context.getBean(InfluxDB.class);
+					assertThat(influxDb).hasFieldOrPropertyWithValue("database", "sample-db");
+					assertThat(influxDb).hasFieldOrPropertyWithValue("retentionPolicy", "two_hours");
+					assertThat(influxDb).hasFieldOrPropertyWithValue("consistency", InfluxDB.ConsistencyLevel.ALL);
+					assertThat(influxDb).hasFieldOrPropertyWithValue("logLevel", LogLevel.BASIC);
+					assertThat(influxDb).extracting("gzipRequestInterceptor").hasFieldOrPropertyWithValue("enabled",
+							true);
+				});
+	}
+
+	@Test
+	void influxDbDoesNotUseBatchByDefault() {
+		this.contextRunner.withPropertyValues("spring.influx.url=http://localhost").run((context) -> {
+			assertThat(context).hasSingleBean(InfluxDB.class);
+			InfluxDB influxDb = context.getBean(InfluxDB.class);
+			assertThat(influxDb.isBatchEnabled()).isFalse();
+		});
+	}
+
+	@Test
+	void influxDbCanCustomizeBatchOptions() {
 		this.contextRunner
-				.withPropertyValues("spring.influx.url=http://localhost", "spring.influx.password:password",
-						"spring.influx.user:user")
-				.run(((context) -> assertThat(context.getBeansOfType(InfluxDB.class)).hasSize(1)));
+				.withPropertyValues("spring.influx.url=http://localhost", "spring.influx.consistency-level=all",
+						"spring.influx.batch.enabled=true", "spring.influx.batch.actions=50",
+						"spring.influx.batch.flush-duration=5s", "spring.influx.batch.jitter-duration=500ms")
+				.run((context) -> {
+					assertThat(context).hasSingleBean(InfluxDB.class);
+					InfluxDB influxDb = context.getBean(InfluxDB.class);
+					ObjectAssert<BatchProcessor> batchProcessor = assertThat(influxDb).extracting("batchProcessor",
+							InstanceOfAssertFactories.type(BatchProcessor.class));
+					batchProcessor.hasFieldOrPropertyWithValue("actions", 50);
+					batchProcessor.hasFieldOrPropertyWithValue("flushInterval", (int) Duration.ofSeconds(5).toMillis());
+					batchProcessor.hasFieldOrPropertyWithValue("jitterInterval", 500);
+					batchProcessor.hasFieldOrPropertyWithValue("consistencyLevel", InfluxDB.ConsistencyLevel.ALL);
+
+				});
 	}
 
 	@Test
 	void influxDbCanBeCreatedWithoutCredentials() {
 		this.contextRunner.withPropertyValues("spring.influx.url=http://localhost").run((context) -> {
-			assertThat(context.getBeansOfType(InfluxDB.class)).hasSize(1);
+			assertThat(context).hasSingleBean(InfluxDB.class);
 			int readTimeout = getReadTimeoutProperty(context);
 			assertThat(readTimeout).isEqualTo(10_000);
 		});
@@ -72,87 +112,20 @@ class InfluxDbAutoConfigurationTests {
 	void influxDbWithOkHttpClientBuilderProvider() {
 		this.contextRunner.withUserConfiguration(CustomOkHttpClientBuilderProviderConfig.class)
 				.withPropertyValues("spring.influx.url=http://localhost").run((context) -> {
-					assertThat(context.getBeansOfType(InfluxDB.class)).hasSize(1);
+					assertThat(context).hasSingleBean(InfluxDB.class);
 					int readTimeout = getReadTimeoutProperty(context);
 					assertThat(readTimeout).isEqualTo(40_000);
 				});
 	}
 
 	@Test
-	void influxDbWithDatabase() {
-		this.contextRunner.withPropertyValues("spring.influx.url=http://localhost", "spring.influx.database:sample-db")
+	void influxDbWithCustomizer() {
+		this.contextRunner.withBean(InfluxDbCustomizer.class, () -> (influxDb) -> influxDb.setDatabase("test"))
+				.withPropertyValues("spring.influx.url=http://localhost", "spring.influx.database=sample-db")
 				.run((context) -> {
-					assertThat(context.getBeansOfType(InfluxDB.class)).hasSize(1);
+					assertThat(context).hasSingleBean(InfluxDB.class);
 					InfluxDB influxDb = context.getBean(InfluxDB.class);
-					String database = (String) ReflectionTestUtils.getField(influxDb, "database");
-					assertThat(database).isEqualTo("sample-db");
-				});
-	}
-
-	@Test
-	void influxDbWithRetentionPolicy() {
-		this.contextRunner
-				.withPropertyValues("spring.influx.url=http://localhost", "spring.influx.retention-policy:two_hours")
-				.run((context) -> {
-					assertThat(context.getBeansOfType(InfluxDB.class)).hasSize(1);
-					InfluxDB influxDb = context.getBean(InfluxDB.class);
-					String retentionPolicy = (String) ReflectionTestUtils.getField(influxDb, "retentionPolicy");
-					assertThat(retentionPolicy).isEqualTo("two_hours");
-				});
-	}
-
-	@Test
-	void influxDbWithLogLevel() {
-		this.contextRunner.withPropertyValues("spring.influx.url=http://localhost", "spring.influx.log:basic")
-				.run((context) -> {
-					assertThat(context.getBeansOfType(InfluxDB.class)).hasSize(1);
-					InfluxDB influxDb = context.getBean(InfluxDB.class);
-					InfluxDB.LogLevel log = (InfluxDB.LogLevel) ReflectionTestUtils.getField(influxDb, "logLevel");
-					assertThat(log).isEqualTo(InfluxDB.LogLevel.BASIC);
-				});
-	}
-
-	@Test
-	void influxDbWithConsistency() {
-		this.contextRunner.withPropertyValues("spring.influx.url=http://localhost", "spring.influx.consistency:all")
-				.run((context) -> {
-					assertThat(context.getBeansOfType(InfluxDB.class)).hasSize(1);
-					InfluxDB influxDb = context.getBean(InfluxDB.class);
-					InfluxDB.ConsistencyLevel consistency = (InfluxDB.ConsistencyLevel) ReflectionTestUtils
-							.getField(influxDb, "consistency");
-					assertThat(consistency).isEqualTo(InfluxDB.ConsistencyLevel.ALL);
-				});
-	}
-
-	@Test
-	void influxDbWithBatchOptions() {
-		this.contextRunner.withPropertyValues("spring.influx.url=http://localhost", "spring.influx.batch.enabled:true",
-				"spring.influx.batch.actions:50", "spring.influx.batch.flush-duration:50").run((context) -> {
-					assertThat(context.getBeansOfType(InfluxDB.class)).hasSize(1);
-					InfluxDB influxDb = context.getBean(InfluxDB.class);
-					BatchProcessor batchProcessor = (BatchProcessor) ReflectionTestUtils.getField(influxDb,
-							"batchProcessor");
-					int actions = (int) ReflectionTestUtils.getField(batchProcessor, "actions");
-					int flushInterval = (int) ReflectionTestUtils.getField(batchProcessor, "flushInterval");
-					assertThat(actions).isEqualTo(50);
-					assertThat(flushInterval).isEqualTo(50);
-				});
-	}
-
-	@Test
-	void influxDbWithBatchOptionsCustomizer() {
-		this.contextRunner.withUserConfiguration(CustomInfluxDbBatchOptionsCustomizerConfig.class)
-				.withPropertyValues("spring.influx.url=http://localhost").run((context) -> {
-					assertThat(context.getBeansOfType(InfluxDB.class)).hasSize(1);
-					InfluxDB influxDb = context.getBean(InfluxDB.class);
-					BatchProcessor batchProcessor = (BatchProcessor) ReflectionTestUtils.getField(influxDb,
-							"batchProcessor");
-					int actions = (int) ReflectionTestUtils.getField(batchProcessor, "actions");
-					int flushInterval = (int) ReflectionTestUtils.getField(batchProcessor, "flushInterval");
-					int jitterInterval = (int) ReflectionTestUtils.getField(batchProcessor, "jitterInterval");
-					assertThat(actions).isEqualTo(20);
-					assertThat(flushInterval).isEqualTo(20);
-					assertThat(jitterInterval).isEqualTo(20);
+					assertThat(influxDb).hasFieldOrPropertyWithValue("database", "test");
 				});
 	}
 
@@ -169,19 +142,6 @@ class InfluxDbAutoConfigurationTests {
 		@Bean
 		InfluxDbOkHttpClientBuilderProvider influxDbOkHttpClientBuilderProvider() {
 			return () -> new OkHttpClient.Builder().readTimeout(40, TimeUnit.SECONDS);
-		}
-
-	}
-
-	@Configuration(proxyBeanMethods = false)
-	static class CustomInfluxDbBatchOptionsCustomizerConfig {
-
-		@Bean
-		InfluxDbCustomizer influxDbBatchOptionsCustomizer() {
-			return (influxDb) -> {
-				BatchOptions batchOptions = BatchOptions.DEFAULTS.actions(20).flushDuration(20).jitterDuration(20);
-				influxDb.enableBatch(batchOptions);
-			};
 		}
 
 	}

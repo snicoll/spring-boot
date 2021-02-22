@@ -16,7 +16,9 @@
 
 package org.springframework.boot.autoconfigure.influx;
 
+import okhttp3.OkHttpClient.Builder;
 import org.influxdb.BatchOptions;
+import org.influxdb.impl.InfluxDBImpl;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -31,14 +33,23 @@ class InfluxDbPropertiesTests {
 	@Test
 	void defaultValuesAreConsistent() {
 		InfluxDbProperties properties = new InfluxDbProperties();
+		InfluxDBImpl influxDb = new InfluxDBImpl("http://example.com", "test", "test", new Builder());
+		assertThat(influxDb).hasFieldOrPropertyWithValue("consistency", properties.getConsistencyLevel());
+		assertThat(influxDb).hasFieldOrPropertyWithValue("retentionPolicy", properties.getRetentionPolicy());
+		assertThat(influxDb).extracting("gzipRequestInterceptor").hasFieldOrPropertyWithValue("enabled",
+				properties.isGzipEnabled());
+
+	}
+
+	@Test
+	void defaultBatchValuesAreConsistent() {
+		InfluxDbProperties properties = new InfluxDbProperties();
 		BatchOptions batchOptions = BatchOptions.DEFAULTS;
 		assertThat(properties.getBatch().getActions()).isEqualTo(batchOptions.getActions());
-		assertThat(Long.valueOf(properties.getBatch().getFlushDuration().toMillis()).intValue())
-				.isEqualTo(batchOptions.getFlushDuration());
-		assertThat(Long.valueOf(properties.getBatch().getJitterDuration().toMillis()).intValue())
-				.isEqualTo(batchOptions.getJitterDuration());
+		assertThat(properties.getBatch().getFlushDuration().toMillis()).isEqualTo(batchOptions.getFlushDuration());
+		assertThat(properties.getBatch().getJitterDuration().toMillis()).isEqualTo(batchOptions.getJitterDuration());
 		assertThat(properties.getBatch().getBufferLimit()).isEqualTo(batchOptions.getBufferLimit());
-		assertThat(properties.getBatch().getConsistency()).isEqualTo(batchOptions.getConsistency());
+		assertThat(properties.getConsistencyLevel()).isEqualTo(batchOptions.getConsistency());
 		assertThat(properties.getBatch().getPrecision()).isEqualTo(batchOptions.getPrecision());
 		assertThat(properties.getBatch().isDropActionsOnQueueExhaustion())
 				.isEqualTo(batchOptions.isDropActionsOnQueueExhaustion());

@@ -20,6 +20,8 @@ import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 import org.influxdb.InfluxDB;
+import org.influxdb.InfluxDB.ConsistencyLevel;
+import org.influxdb.InfluxDB.LogLevel;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
@@ -50,33 +52,30 @@ public class InfluxDbProperties {
 	private String password;
 
 	/**
-	 * Consistency level.
-	 */
-	private InfluxDB.ConsistencyLevel consistency;
-
-	/**
 	 * Database name.
 	 */
 	private String database;
 
 	/**
-	 * Log level.
-	 */
-	private InfluxDB.LogLevel log;
-
-	/**
 	 * Retention policy.
 	 */
-	private String retentionPolicy;
+	private String retentionPolicy = "autogen";
+
+	/**
+	 * Consistency level.
+	 */
+	private InfluxDB.ConsistencyLevel consistencyLevel = ConsistencyLevel.ONE;
+
+	/**
+	 * Log level used for REST-related actions.
+	 */
+	private InfluxDB.LogLevel log;
 
 	/**
 	 * Whether to enable Gzip compression.
 	 */
 	private boolean gzipEnabled;
 
-	/**
-	 * Batch configuration.
-	 */
 	private final Batch batch = new Batch();
 
 	public String getUrl() {
@@ -103,14 +102,6 @@ public class InfluxDbProperties {
 		this.password = password;
 	}
 
-	public InfluxDB.ConsistencyLevel getConsistency() {
-		return this.consistency;
-	}
-
-	public void setConsistency(InfluxDB.ConsistencyLevel consistency) {
-		this.consistency = consistency;
-	}
-
 	public String getDatabase() {
 		return this.database;
 	}
@@ -119,20 +110,28 @@ public class InfluxDbProperties {
 		this.database = database;
 	}
 
-	public InfluxDB.LogLevel getLog() {
-		return this.log;
-	}
-
-	public void setLog(InfluxDB.LogLevel log) {
-		this.log = log;
-	}
-
 	public String getRetentionPolicy() {
 		return this.retentionPolicy;
 	}
 
 	public void setRetentionPolicy(String retentionPolicy) {
 		this.retentionPolicy = retentionPolicy;
+	}
+
+	public ConsistencyLevel getConsistencyLevel() {
+		return this.consistencyLevel;
+	}
+
+	public void setConsistencyLevel(ConsistencyLevel consistencyLevel) {
+		this.consistencyLevel = consistencyLevel;
+	}
+
+	public LogLevel getLog() {
+		return this.log;
+	}
+
+	public void setLog(LogLevel log) {
+		this.log = log;
 	}
 
 	public boolean isGzipEnabled() {
@@ -150,34 +149,30 @@ public class InfluxDbProperties {
 	public static class Batch {
 
 		/**
-		 * Whether to enable Batch configuration.
+		 * Whether to send data points in batches.
 		 */
 		private boolean enabled;
 
 		/**
-		 * Number of actions to collect.
+		 * Maximum size of the action queue.
 		 */
 		private int actions = 1000;
 
 		/**
-		 * Time to wait.
+		 * Maximum time to wait before submitting the queued data points.
 		 */
 		private Duration flushDuration = Duration.ofMillis(1000);
 
 		/**
-		 * Time to jitter the batch flush interval.
+		 * Jitter the batch flush interval by a random amount. This is primarily to avoid
+		 * large write spikes for users running a large number of client instances.
 		 */
 		private Duration jitterDuration = Duration.ofMillis(0);
 
 		/**
-		 * Number of points stored in the retry buffer.
+		 * Number of data points stored in the retry buffer.
 		 */
 		private int bufferLimit = 10000;
-
-		/**
-		 * Cluster consistency.
-		 */
-		private InfluxDB.ConsistencyLevel consistency = InfluxDB.ConsistencyLevel.ONE;
 
 		/**
 		 * Precision to use for the whole batch.
@@ -185,7 +180,7 @@ public class InfluxDbProperties {
 		private TimeUnit precision = TimeUnit.NANOSECONDS;
 
 		/**
-		 * Whether to enable dropped actions.
+		 * Whether to drop actions when the queue exhausts.
 		 */
 		private boolean dropActionsOnQueueExhaustion = false;
 
@@ -227,14 +222,6 @@ public class InfluxDbProperties {
 
 		public void setBufferLimit(int bufferLimit) {
 			this.bufferLimit = bufferLimit;
-		}
-
-		public InfluxDB.ConsistencyLevel getConsistency() {
-			return this.consistency;
-		}
-
-		public void setConsistency(InfluxDB.ConsistencyLevel consistency) {
-			this.consistency = consistency;
 		}
 
 		public TimeUnit getPrecision() {

@@ -4917,10 +4917,12 @@ Spring Boot auto-configures an `InfluxDB` instance, provided the `influxdb-java`
 	    url: "https://172.0.0.1:8086"
 ----
 
-If the connection to InfluxDB requires a user and password, you can set the `spring.influx.user` and `spring.influx.password` properties accordingly.
+The `spring.influx` configuration namespace can be used to tune various settings, including database access and batch options.
 
 InfluxDB relies on OkHttp.
 If you need to tune the http client `InfluxDB` uses behind the scenes, you can register an `InfluxDbOkHttpClientBuilderProvider` bean.
+
+If you need more control over the configuration, consider registering a `InfluxDbCustomizer` bean.
 
 
 
