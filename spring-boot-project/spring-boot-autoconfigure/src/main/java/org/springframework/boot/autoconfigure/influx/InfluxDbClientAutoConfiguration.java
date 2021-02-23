@@ -16,9 +16,11 @@
 
 package org.springframework.boot.autoconfigure.influx;
 
+import com.influxdb.client.InfluxDBClient;
+import com.influxdb.client.InfluxDBClientFactory;
+import com.influxdb.client.InfluxDBClientOptions;
+import com.influxdb.client.InfluxDBClientOptions.Builder;
 import okhttp3.OkHttpClient;
-import org.influxdb.InfluxDB;
-import org.influxdb.impl.InfluxDBImpl;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -30,27 +32,27 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * {@link EnableAutoConfiguration Auto-configuration} for InfluxDB 1.x.
+ * {@link EnableAutoConfiguration Auto-configuration} for InfluxDB 2.x.
  *
- * @author Sergey Kuptsov
  * @author Stephane Nicoll
- * @author Eddú Meléndez
- * @since 2.0.0
+ * @since 2.5.0
  */
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnClass(InfluxDB.class)
+@ConditionalOnClass(InfluxDBClient.class)
 @EnableConfigurationProperties(InfluxDbProperties.class)
-public class InfluxDbAutoConfiguration {
+public class InfluxDbClientAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
 	@ConditionalOnProperty("spring.influx.url")
-	public InfluxDB influxDb(InfluxDbProperties properties, ObjectProvider<InfluxDbOkHttpClientBuilderProvider> builder,
-			ObjectProvider<InfluxDbCustomizer> customizers) {
-		InfluxDB influxDb = new InfluxDBImpl(properties.getUrl(), properties.getUser(), properties.getPassword(),
-				determineBuilder(builder.getIfAvailable()));
-		customizers.orderedStream().forEach((customizer) -> customizer.customize(influxDb));
-		return influxDb;
+	public InfluxDBClient influxDbClient(InfluxDbProperties properties,
+			ObjectProvider<InfluxDbOkHttpClientBuilderProvider> httpClientBuilder,
+			ObjectProvider<InfluxDbClientOptionsCustomizer> customizers) {
+		Builder builder = InfluxDBClientOptions.builder().url(properties.getUrl())
+				.authenticate(properties.getUrl(), properties.getPassword().toCharArray())
+				.okHttpClient(determineBuilder(httpClientBuilder.getIfAvailable()));
+		customizers.orderedStream().forEach((customizer) -> customizer.customize(builder));
+		return InfluxDBClientFactory.create(builder.build());
 	}
 
 	private static OkHttpClient.Builder determineBuilder(InfluxDbOkHttpClientBuilderProvider builder) {

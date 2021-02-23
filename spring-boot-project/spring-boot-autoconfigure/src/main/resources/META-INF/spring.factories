@@ -73,6 +73,7 @@ org.springframework.boot.autoconfigure.hazelcast.HazelcastJpaDependencyAutoConfi
 org.springframework.boot.autoconfigure.http.HttpMessageConvertersAutoConfiguration,\
 org.springframework.boot.autoconfigure.http.codec.CodecsAutoConfiguration,\
 org.springframework.boot.autoconfigure.influx.InfluxDbAutoConfiguration,\
+org.springframework.boot.autoconfigure.influx.InfluxDbClientAutoConfiguration,\
 org.springframework.boot.autoconfigure.info.ProjectInfoAutoConfiguration,\
 org.springframework.boot.autoconfigure.integration.IntegrationAutoConfiguration,\
 org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration,\
