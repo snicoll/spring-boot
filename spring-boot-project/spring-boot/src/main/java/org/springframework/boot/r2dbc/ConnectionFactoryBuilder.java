@@ -103,6 +103,28 @@ public final class ConnectionFactoryBuilder {
 		return withOptions(options.mutate());
 	}
 
+	/**
+	 * Determine if the given {@link ConnectionFactory} targets an embedded database, or
+	 * {@code null} if that information could not be determined.
+	 * @param connectionFactory the connection factory to inspect
+	 * @return true if the connection factory targets an embedded database
+	 * @since 2.5.1
+	 */
+	public static Boolean isEmbedded(ConnectionFactory connectionFactory) {
+		ConnectionFactoryOptions options = extractOptionsIfPossible(connectionFactory);
+		return (options != null) ? isEmbedded(options) : null;
+	}
+
+	private static boolean isEmbedded(ConnectionFactoryOptions options) {
+		// TODO: could be moved to embedded database connection?
+		String protocol = options.getRequiredValue(ConnectionFactoryOptions.DRIVER);
+		if (protocol.equals("h2")) {
+			String driver = options.getValue(ConnectionFactoryOptions.PROTOCOL);
+			return "mem".equals(driver);
+		}
+		return false;
+	}
+
 	private static ConnectionFactoryOptions extractOptionsIfPossible(ConnectionFactory connectionFactory) {
 		if (connectionFactory instanceof OptionsCapableConnectionFactory) {
 			return ((OptionsCapableConnectionFactory) connectionFactory).getOptions();

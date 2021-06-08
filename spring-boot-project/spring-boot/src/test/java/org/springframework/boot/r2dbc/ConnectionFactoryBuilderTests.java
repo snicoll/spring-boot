@@ -25,6 +25,7 @@ import io.r2dbc.h2.H2ConnectionFactoryMetadata;
 import io.r2dbc.pool.ConnectionPool;
 import io.r2dbc.pool.ConnectionPoolConfiguration;
 import io.r2dbc.pool.PoolingConnectionFactoryProvider;
+import io.r2dbc.spi.ConnectionFactories;
 import io.r2dbc.spi.ConnectionFactory;
 import io.r2dbc.spi.ConnectionFactoryOptions;
 import io.r2dbc.spi.Option;
@@ -211,6 +212,46 @@ class ConnectionFactoryBuilderTests {
 		ConnectionPoolConfiguration configuration = new PoolingAwareOptionsCapableWrapper()
 				.connectionPoolConfiguration(options, mock(ConnectionFactory.class));
 		assertThat(configuration).extracting(expectedOption.property).isEqualTo(expectedOption.value);
+	}
+
+	@Test
+	void isEmbeddedWithNonEmbeddedDatabase() {
+		ConnectionFactory connectionFactory = ConnectionFactoryBuilder.withUrl("r2dbc:test://db").build();
+		assertThat(ConnectionFactoryBuilder.isEmbedded(connectionFactory)).isFalse();
+	}
+
+	@Test
+	void isEmbeddedWithPoolOnNonEmbeddedDatabase() {
+		ConnectionFactory connectionFactory = ConnectionFactoryBuilder.withUrl("r2dbc:pool:test://db").build();
+		assertThat(ConnectionFactoryBuilder.isEmbedded(connectionFactory)).isFalse();
+	}
+
+	@Test
+	void isEmbeddedOnEmbeddedDatabase() {
+		ConnectionFactory connectionFactory = ConnectionFactoryBuilder.withUrl("r2dbc:h2:mem:///" + UUID.randomUUID())
+				.build();
+		assertThat(ConnectionFactoryBuilder.isEmbedded(connectionFactory)).isTrue();
+	}
+
+	@Test
+	void isEmbeddedWithPoolOnEmbeddedDatabase() {
+		ConnectionFactory connectionFactory = ConnectionFactoryBuilder
+				.withUrl("r2dbc:pool:h2:mem:///" + UUID.randomUUID()).build();
+		assertThat(ConnectionFactoryBuilder.isEmbedded(connectionFactory)).isTrue();
+	}
+
+	@Test
+	void isEmbeddedOnH2NonEmbeddedDriver() {
+		ConnectionFactory connectionFactory = ConnectionFactoryBuilder.withUrl("r2dbc:h2:file:///" + UUID.randomUUID())
+				.build();
+		assertThat(ConnectionFactoryBuilder.isEmbedded(connectionFactory)).isFalse();
+	}
+
+	@Test
+	void isEmbeddedOnEmbeddedDatabaseWithNoOptions() {
+		ConnectionFactory connectionFactory = ConnectionFactories
+				.get(ConnectionFactoryOptions.parse(("r2dbc:h2:mem:///" + UUID.randomUUID())));
+		assertThat(ConnectionFactoryBuilder.isEmbedded(connectionFactory)).isNull();
 	}
 
 	private void assertMatchingOptions(ConnectionFactoryOptions actualOptions, ConnectionFactoryOptions expectedOptions,
