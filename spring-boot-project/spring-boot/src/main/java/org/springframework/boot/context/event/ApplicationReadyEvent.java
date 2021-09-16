@@ -47,6 +47,7 @@ public class ApplicationReadyEvent extends SpringApplicationEvent {
 	 * @deprecated since 2.6.0 for removal in 2.8.0 in favor of
 	 * {@link #ApplicationReadyEvent(SpringApplication, String[], ConfigurableApplicationContext, Duration)}
 	 */
+	@Deprecated
 	public ApplicationReadyEvent(SpringApplication application, String[] args, ConfigurableApplicationContext context) {
 		this(application, args, context, null);
 	}

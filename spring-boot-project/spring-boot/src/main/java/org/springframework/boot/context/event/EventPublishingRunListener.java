@@ -104,21 +104,9 @@ public class EventPublishingRunListener implements SpringApplicationRunListener,
 	}
 
 	@Override
-	@Deprecated
-	public void started(ConfigurableApplicationContext context) {
-		started(context, null);
-	}
-
-	@Override
 	public void started(ConfigurableApplicationContext context, Duration startupTime) {
 		context.publishEvent(new ApplicationStartedEvent(this.application, this.args, context, startupTime));
 		AvailabilityChangeEvent.publish(context, LivenessState.CORRECT);
-	}
-
-	@Override
-	@Deprecated
-	public void running(ConfigurableApplicationContext context) {
-		running(context, null);
 	}
 
 	@Override

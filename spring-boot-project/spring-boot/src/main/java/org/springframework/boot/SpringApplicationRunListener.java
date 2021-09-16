@@ -83,6 +83,7 @@ public interface SpringApplicationRunListener {
 	 */
 	@Deprecated
 	default void started(ConfigurableApplicationContext context) {
+		started(context, null);
 	}
 
 	/**
@@ -109,6 +110,7 @@ public interface SpringApplicationRunListener {
 	 */
 	@Deprecated
 	default void running(ConfigurableApplicationContext context) {
+		running(context, null);
 	}
 
 	/**
