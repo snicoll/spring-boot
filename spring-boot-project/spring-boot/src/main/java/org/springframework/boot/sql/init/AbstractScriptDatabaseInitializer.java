@@ -143,11 +143,11 @@ public abstract class AbstractScriptDatabaseInitializer implements ResourceLoade
 
 	private void runScripts(List<Resource> resources) {
 		runScripts(resources, this.settings.isContinueOnError(), this.settings.getSeparator(),
-				this.settings.getEncoding());
+				this.settings.getCommentPrefixes(), this.settings.getEncoding());
 	}
 
 	protected abstract void runScripts(List<Resource> resources, boolean continueOnError, String separator,
-			Charset encoding);
+			List<String> commentPrefixes, Charset encoding);
 
 	private static class ScriptLocationResolver {
 

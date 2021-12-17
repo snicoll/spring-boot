@@ -31,6 +31,7 @@ import org.springframework.boot.sql.init.DatabaseInitializationSettings;
 import org.springframework.core.io.Resource;
 import org.springframework.jdbc.datasource.init.DatabasePopulatorUtils;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
+import org.springframework.util.CollectionUtils;
 
 /**
  * {@link InitializingBean} that performs {@link DataSource} initialization using schema
@@ -76,10 +77,14 @@ public class DataSourceScriptDatabaseInitializer extends AbstractScriptDatabaseI
 	}
 
 	@Override
-	protected void runScripts(List<Resource> resources, boolean continueOnError, String separator, Charset encoding) {
+	protected void runScripts(List<Resource> resources, boolean continueOnError, String separator,
+			List<String> commentPrefixes, Charset encoding) {
 		ResourceDatabasePopulator populator = new ResourceDatabasePopulator();
 		populator.setContinueOnError(continueOnError);
 		populator.setSeparator(separator);
+		if (!CollectionUtils.isEmpty(commentPrefixes)) {
+			populator.setCommentPrefixes(commentPrefixes.toArray(new String[0]));
+		}
 		if (encoding != null) {
 			populator.setSqlScriptEncoding(encoding.name());
 		}

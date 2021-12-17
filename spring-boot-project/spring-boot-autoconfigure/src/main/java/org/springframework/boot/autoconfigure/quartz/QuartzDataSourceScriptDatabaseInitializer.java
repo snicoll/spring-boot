@@ -70,6 +70,7 @@ public class QuartzDataSourceScriptDatabaseInitializer extends DataSourceScriptD
 	public static DatabaseInitializationSettings getSettings(DataSource dataSource, QuartzProperties properties) {
 		DatabaseInitializationSettings settings = new DatabaseInitializationSettings();
 		settings.setSchemaLocations(resolveSchemaLocations(dataSource, properties.getJdbc()));
+		settings.setCommentPrefixes(properties.getJdbc().getCommentPrefix());
 		settings.setMode(properties.getJdbc().getInitializeSchema());
 		settings.setContinueOnError(true);
 		return settings;

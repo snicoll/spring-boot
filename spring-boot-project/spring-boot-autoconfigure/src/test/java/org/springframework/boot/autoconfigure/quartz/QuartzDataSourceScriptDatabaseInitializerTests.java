@@ -16,6 +16,8 @@
 
 package org.springframework.boot.autoconfigure.quartz;
 
+import java.util.Arrays;
+
 import javax.sql.DataSource;
 
 import org.junit.jupiter.api.Test;
@@ -43,6 +45,17 @@ class QuartzDataSourceScriptDatabaseInitializerTests {
 		assertThat(settings.getSchemaLocations())
 				.containsOnly("classpath:org/quartz/impl/jdbcjobstore/tables_test.sql");
 		verifyNoInteractions(dataSource);
+	}
+
+	@Test
+	void getSettingsWithCommentPrefixesAreConfigured() {
+		DataSource dataSource = mock(DataSource.class);
+		QuartzProperties properties = new QuartzProperties();
+		properties.getJdbc().setPlatform("test");
+		properties.getJdbc().setCommentPrefix(Arrays.asList("--", "#"));
+		DatabaseInitializationSettings settings = QuartzDataSourceScriptDatabaseInitializer.getSettings(dataSource,
+				properties);
+		assertThat(settings.getCommentPrefixes()).containsOnly("--", "#");
 	}
 
 }

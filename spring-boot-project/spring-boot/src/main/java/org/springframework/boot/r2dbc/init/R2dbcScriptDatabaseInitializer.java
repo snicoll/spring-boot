@@ -27,6 +27,7 @@ import org.springframework.boot.sql.init.AbstractScriptDatabaseInitializer;
 import org.springframework.boot.sql.init.DatabaseInitializationSettings;
 import org.springframework.core.io.Resource;
 import org.springframework.r2dbc.connection.init.ResourceDatabasePopulator;
+import org.springframework.util.CollectionUtils;
 
 /**
  * An {@link InitializingBean} that initializes a database represented by an R2DBC
@@ -58,10 +59,14 @@ public class R2dbcScriptDatabaseInitializer extends AbstractScriptDatabaseInitia
 	}
 
 	@Override
-	protected void runScripts(List<Resource> scripts, boolean continueOnError, String separator, Charset encoding) {
+	protected void runScripts(List<Resource> scripts, boolean continueOnError, String separator,
+			List<String> commentPrefixes, Charset encoding) {
 		ResourceDatabasePopulator populator = new ResourceDatabasePopulator();
 		populator.setContinueOnError(continueOnError);
 		populator.setSeparator(separator);
+		if (!CollectionUtils.isEmpty(commentPrefixes)) {
+			populator.setCommentPrefixes(commentPrefixes.toArray(new String[0]));
+		}
 		if (encoding != null) {
 			populator.setSqlScriptEncoding(encoding.name());
 		}

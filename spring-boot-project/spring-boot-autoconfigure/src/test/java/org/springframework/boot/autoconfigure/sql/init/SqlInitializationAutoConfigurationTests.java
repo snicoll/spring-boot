@@ -189,7 +189,7 @@ class SqlInitializationAutoConfigurationTests {
 
 				@Override
 				protected void runScripts(List<Resource> resources, boolean continueOnError, String separator,
-						Charset encoding) {
+						List<String> commentPrefixes, Charset encoding) {
 					// No-op
 				}
 
@@ -212,7 +212,7 @@ class SqlInitializationAutoConfigurationTests {
 
 				@Override
 				protected void runScripts(List<Resource> resources, boolean continueOnError, String separator,
-						Charset encoding) {
+						List<String> commentPrefixes, Charset encoding) {
 					// No-op
 				}
 

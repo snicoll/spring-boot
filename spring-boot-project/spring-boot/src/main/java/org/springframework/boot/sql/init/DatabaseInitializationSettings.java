@@ -17,6 +17,7 @@
 package org.springframework.boot.sql.init;
 
 import java.nio.charset.Charset;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -34,6 +35,8 @@ public class DatabaseInitializationSettings {
 	private boolean continueOnError = false;
 
 	private String separator = ";";
+
+	private List<String> commentPrefixes = Collections.singletonList("--");
 
 	private Charset encoding;
 
@@ -107,6 +110,26 @@ public class DatabaseInitializationSettings {
 	 */
 	public void setSeparator(String separator) {
 		this.separator = separator;
+	}
+
+	/**
+	 * Returns the prefixes that identify single-line comments when reading the schema and
+	 * data scripts.
+	 * @return comment prefixes used to identify single-line comments
+	 * @since 2.6.2
+	 */
+	public List<String> getCommentPrefixes() {
+		return this.commentPrefixes;
+	}
+
+	/**
+	 * Sets the prefixes that identify single-line comments when reading the schema and
+	 * data scripts.
+	 * @param commentPrefixes comment prefixes used to identify single-line comments
+	 * @since 2.6.2
+	 */
+	public void setCommentPrefixes(List<String> commentPrefixes) {
+		this.commentPrefixes = commentPrefixes;
 	}
 
 	/**
