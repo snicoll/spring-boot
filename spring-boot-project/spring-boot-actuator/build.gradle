@@ -16,6 +16,8 @@ dependencies {
 	}
 	optional("com.fasterxml.jackson.core:jackson-databind")
 	optional("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
+	optional("org.cache2k:cache2k-spring")
+	optional("org.cache2k:cache2k-micrometer")
 	optional("com.github.ben-manes.caffeine:caffeine")
 	optional("com.hazelcast:hazelcast")
 	optional("com.hazelcast:hazelcast-spring")

@@ -20,7 +20,11 @@ import com.hazelcast.core.Hazelcast;
 import com.hazelcast.spring.cache.HazelcastCache;
 import io.micrometer.core.instrument.binder.MeterBinder;
 import net.sf.ehcache.Ehcache;
+import org.cache2k.Cache2kBuilder;
+import org.cache2k.extra.micrometer.Cache2kCacheMetrics;
+import org.cache2k.extra.spring.SpringCache2kCache;
 
+import org.springframework.boot.actuate.metrics.cache.Cache2kCacheMeterBinderProvider;
 import org.springframework.boot.actuate.metrics.cache.CacheMeterBinderProvider;
 import org.springframework.boot.actuate.metrics.cache.CaffeineCacheMeterBinderProvider;
 import org.springframework.boot.actuate.metrics.cache.EhCache2CacheMeterBinderProvider;
@@ -43,6 +47,17 @@ import org.springframework.data.redis.cache.RedisCache;
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnClass(MeterBinder.class)
 class CacheMeterBinderProvidersConfiguration {
+
+	@Configuration(proxyBeanMethods = false)
+	@ConditionalOnClass({ SpringCache2kCache.class, Cache2kBuilder.class, Cache2kCacheMetrics.class })
+	static class Cache2kCacheMeterBinderProviderConfiguration {
+
+		@Bean
+		Cache2kCacheMeterBinderProvider cache2kCacheMeterBinderProvider() {
+			return new Cache2kCacheMeterBinderProvider();
+		}
+
+	}
 
 	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass({ CaffeineCache.class, com.github.benmanes.caffeine.cache.Cache.class })

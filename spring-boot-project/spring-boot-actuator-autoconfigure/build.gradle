@@ -41,6 +41,8 @@ dependencies {
 	}
 	optional("com.fasterxml.jackson.dataformat:jackson-dataformat-xml")
 	optional("com.github.ben-manes.caffeine:caffeine")
+	optional("org.cache2k:cache2k-spring")
+	optional("org.cache2k:cache2k-micrometer")
 	optional("com.hazelcast:hazelcast")
 	optional("com.hazelcast:hazelcast-spring")
 	optional("com.sun.mail:jakarta.mail")
@@ -196,6 +198,7 @@ dependencies {
 	testRuntimeOnly("org.springframework.security:spring-security-oauth2-jose")
 	testRuntimeOnly("org.springframework.security:spring-security-oauth2-resource-server")
 	testRuntimeOnly("org.springframework.security:spring-security-saml2-service-provider")
+	testRuntimeOnly("org.cache2k:cache2k-core")
 }
 
 test {

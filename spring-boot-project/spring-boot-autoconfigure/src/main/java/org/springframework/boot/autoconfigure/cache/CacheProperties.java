@@ -46,6 +46,8 @@ public class CacheProperties {
 	 */
 	private List<String> cacheNames = new ArrayList<>();
 
+	private final Cache2k cache2k = new Cache2k();
+
 	private final Caffeine caffeine = new Caffeine();
 
 	private final Couchbase couchbase = new Couchbase();
@@ -72,6 +74,10 @@ public class CacheProperties {
 
 	public void setCacheNames(List<String> cacheNames) {
 		this.cacheNames = cacheNames;
+	}
+
+	public Cache2k getCache2k() {
+		return this.cache2k;
 	}
 
 	public Caffeine getCaffeine() {
@@ -112,6 +118,36 @@ public class CacheProperties {
 			return config;
 		}
 		return null;
+	}
+
+	/**
+	 * Cache2k specific cache properties.
+	 */
+	public static class Cache2k {
+
+		/**
+		 * The cache2k cache manager name to use, if unset/{@code null}, the manager name
+		 * {@value org.cache2k.extra.spring.SpringCache2kCacheManager#DEFAULT_SPRING_CACHE_MANAGER_NAME}
+		 * will be used. For better overview, it can be useful to separate a group of
+		 * caches into different cache managers, e.g. {@code "spring"} for caches used by
+		 * the Spring cache abstraction or {@code "hibernate"} for caches used by
+		 * hibernate. This avoids naming conflicts, since a cache manager defines a
+		 * separate scope. Per cache manager a separate default configuration can be used
+		 * to simplify cache configuration.
+		 *
+		 * @see org.cache2k.extra.spring.SpringCache2kCacheManager
+		 * @see org.cache2k.CacheManager
+		 */
+		private String managerName = null;
+
+		public String getManagerName() {
+			return this.managerName;
+		}
+
+		public void setManagerName(String managerName) {
+			this.managerName = managerName;
+		}
+
 	}
 
 	/**
