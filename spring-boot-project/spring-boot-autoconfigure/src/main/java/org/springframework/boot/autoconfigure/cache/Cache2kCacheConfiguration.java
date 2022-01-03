@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2021 the original author or authors.
+ * Copyright 2012-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,14 +30,14 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.util.CollectionUtils;
 
 /**
- * Support for cache2k auto configuration.
+ * Cache2k cache configuration.
  *
  * @author Jens Wilke
  */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnClass({ Cache2kBuilder.class, SpringCache2kCacheManager.class })
 @ConditionalOnMissingBean(CacheManager.class)
-@Conditional({ CacheCondition.class })
+@Conditional(CacheCondition.class)
 class Cache2kCacheConfiguration {
 
 	@Bean
@@ -45,25 +45,11 @@ class Cache2kCacheConfiguration {
 		String managerName = cacheProperties.getCache2k().getManagerName();
 		SpringCache2kCacheManager cacheManager = (managerName != null) ? new SpringCache2kCacheManager(managerName)
 				: new SpringCache2kCacheManager();
-		customizers.customize(cacheManager);
-		addListedButUnknownCaches(cacheManager, cacheProperties.getCacheNames());
-		return cacheManager;
-	}
-
-	/**
-	 * Add caches yet unknown that are configured via the {@code CacheProperties}. Don't
-	 * add those before customization to be able the add the cache with programmatic
-	 * configuration via customization. These caches are created with default parameters
-	 * provided either via the customizer or the XML configuration
-	 * @param cacheManager the cache manger to add the caches
-	 * @param cacheNames the cache names
-	 */
-	private void addListedButUnknownCaches(SpringCache2kCacheManager cacheManager, Collection<String> cacheNames) {
-		Collection<String> knownCaches = cacheManager.getCacheNames();
+		Collection<String> cacheNames = cacheProperties.getCacheNames();
 		if (!CollectionUtils.isEmpty(cacheNames)) {
-			cacheNames.stream().filter((n) -> !knownCaches.contains(n))
-					.forEach((name) -> cacheManager.addCaches((builder) -> builder.name(name)));
+			cacheNames.forEach((cacheName) -> cacheManager.addCaches((builder) -> builder.name(cacheName)));
 		}
+		return customizers.customize(cacheManager);
 	}
 
 }

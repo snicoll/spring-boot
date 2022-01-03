@@ -41,8 +41,6 @@ dependencies {
 	}
 	optional("com.fasterxml.jackson.dataformat:jackson-dataformat-xml")
 	optional("com.github.ben-manes.caffeine:caffeine")
-	optional("org.cache2k:cache2k-spring")
-	optional("org.cache2k:cache2k-micrometer")
 	optional("com.hazelcast:hazelcast")
 	optional("com.hazelcast:hazelcast-spring")
 	optional("com.sun.mail:jakarta.mail")
@@ -99,6 +97,8 @@ dependencies {
 	optional("org.apache.tomcat.embed:tomcat-embed-el")
 	optional("org.apache.tomcat:tomcat-jdbc")
 	optional("org.aspectj:aspectjweaver")
+	optional("org.cache2k:cache2k-micrometer")
+	optional("org.cache2k:cache2k-spring")
 	optional("org.eclipse.jetty:jetty-server") {
 		exclude group: "javax.servlet", module: "javax.servlet-api"
 	}
@@ -195,10 +195,10 @@ dependencies {
 
 	testRuntimeOnly("jakarta.management.j2ee:jakarta.management.j2ee-api")
 	testRuntimeOnly("jakarta.transaction:jakarta.transaction-api")
+	testRuntimeOnly("org.cache2k:cache2k-core")
 	testRuntimeOnly("org.springframework.security:spring-security-oauth2-jose")
 	testRuntimeOnly("org.springframework.security:spring-security-oauth2-resource-server")
 	testRuntimeOnly("org.springframework.security:spring-security-saml2-service-provider")
-	testRuntimeOnly("org.cache2k:cache2k-core")
 }
 
 test {

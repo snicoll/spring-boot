@@ -16,8 +16,6 @@ dependencies {
 	}
 	optional("com.fasterxml.jackson.core:jackson-databind")
 	optional("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
-	optional("org.cache2k:cache2k-spring")
-	optional("org.cache2k:cache2k-micrometer")
 	optional("com.github.ben-manes.caffeine:caffeine")
 	optional("com.hazelcast:hazelcast")
 	optional("com.hazelcast:hazelcast-spring")
@@ -47,6 +45,8 @@ dependencies {
 	}
 	optional("org.apache.tomcat.embed:tomcat-embed-core")
 	optional("org.aspectj:aspectjweaver")
+	optional("org.cache2k:cache2k-micrometer")
+	optional("org.cache2k:cache2k-spring")
 	optional("org.eclipse.jetty:jetty-server") {
 		exclude(group: "javax.servlet", module: "javax.servlet-api")
 	}

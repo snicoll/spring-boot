@@ -16,22 +16,29 @@
 
 package org.springframework.boot.actuate.metrics.cache;
 
-import io.micrometer.core.instrument.Tag;
+import java.util.Collections;
+
 import io.micrometer.core.instrument.binder.MeterBinder;
 import org.cache2k.extra.micrometer.Cache2kCacheMetrics;
-import org.cache2k.extra.spring.SpringCache2kCache;
+import org.cache2k.extra.spring.SpringCache2kCacheManager;
+import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * {@link CacheMeterBinderProvider} implementation for cache2k.
- *
- * @author Jens Wilke
- * @since 2.7.0
+ * Tests for {@link Cache2kCacheMeterBinderProvider}.
+ * 
+ * @author Stephane Nicoll
  */
-public class Cache2kCacheMeterBinderProvider implements CacheMeterBinderProvider<SpringCache2kCache> {
+class Cache2kCacheMeterBinderProviderTests {
 
-	@Override
-	public MeterBinder getMeterBinder(SpringCache2kCache cache, Iterable<Tag> tags) {
-		return new Cache2kCacheMetrics(cache.getNativeCache(), tags);
+	@Test
+	void cache2kCacheProvider() {
+		SpringCache2kCacheManager cacheManager = new SpringCache2kCacheManager()
+				.addCaches((builder) -> builder.name("test"));
+		MeterBinder meterBinder = new Cache2kCacheMeterBinderProvider().getMeterBinder(cacheManager.getCache("test"),
+				Collections.emptyList());
+		assertThat(meterBinder).isInstanceOf(Cache2kCacheMetrics.class);
 	}
 
 }

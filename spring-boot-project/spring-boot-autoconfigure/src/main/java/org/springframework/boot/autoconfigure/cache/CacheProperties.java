@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2020 the original author or authors.
+ * Copyright 2012-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -126,19 +126,9 @@ public class CacheProperties {
 	public static class Cache2k {
 
 		/**
-		 * The cache2k cache manager name to use, if unset/{@code null}, the manager name
-		 * {@value org.cache2k.extra.spring.SpringCache2kCacheManager#DEFAULT_SPRING_CACHE_MANAGER_NAME}
-		 * will be used. For better overview, it can be useful to separate a group of
-		 * caches into different cache managers, e.g. {@code "spring"} for caches used by
-		 * the Spring cache abstraction or {@code "hibernate"} for caches used by
-		 * hibernate. This avoids naming conflicts, since a cache manager defines a
-		 * separate scope. Per cache manager a separate default configuration can be used
-		 * to simplify cache configuration.
-		 *
-		 * @see org.cache2k.extra.spring.SpringCache2kCacheManager
-		 * @see org.cache2k.CacheManager
+		 * Name of the cache manager.
 		 */
-		private String managerName = null;
+		private String managerName = "springDefault";
 
 		public String getManagerName() {
 			return this.managerName;
