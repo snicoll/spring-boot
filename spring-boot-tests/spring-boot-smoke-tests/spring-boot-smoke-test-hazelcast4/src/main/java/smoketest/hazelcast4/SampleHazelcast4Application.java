@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2020 the original author or authors.
+ * Copyright 2012-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package smoketest.hazelcast3;
+package smoketest.hazelcast4;
 
 import com.hazelcast.spring.cache.HazelcastCacheManager;
 
@@ -27,10 +27,10 @@ import org.springframework.context.annotation.Bean;
 
 @SpringBootApplication
 @EnableCaching
-public class SampleHazelcast3Application {
+public class SampleHazelcast4Application {
 
 	public static void main(String[] args) {
-		SpringApplication.run(SampleHazelcast3Application.class, args);
+		SpringApplication.run(SampleHazelcast4Application.class, args);
 	}
 
 	@Bean
