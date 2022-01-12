@@ -46,8 +46,6 @@ public class CacheProperties {
 	 */
 	private List<String> cacheNames = new ArrayList<>();
 
-	private final Cache2k cache2k = new Cache2k();
-
 	private final Caffeine caffeine = new Caffeine();
 
 	private final Couchbase couchbase = new Couchbase();
@@ -74,10 +72,6 @@ public class CacheProperties {
 
 	public void setCacheNames(List<String> cacheNames) {
 		this.cacheNames = cacheNames;
-	}
-
-	public Cache2k getCache2k() {
-		return this.cache2k;
 	}
 
 	public Caffeine getCaffeine() {
@@ -118,26 +112,6 @@ public class CacheProperties {
 			return config;
 		}
 		return null;
-	}
-
-	/**
-	 * Cache2k specific cache properties.
-	 */
-	public static class Cache2k {
-
-		/**
-		 * Name of the cache manager.
-		 */
-		private String managerName = "springDefault";
-
-		public String getManagerName() {
-			return this.managerName;
-		}
-
-		public void setManagerName(String managerName) {
-			this.managerName = managerName;
-		}
-
 	}
 
 	/**

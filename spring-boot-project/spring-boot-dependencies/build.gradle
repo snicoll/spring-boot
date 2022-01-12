@@ -152,7 +152,7 @@ bom {
 			]
 		}
 	}
-	library("cache2k", "2.4.1.Final") {
+	library("cache2k", "2.6-SNAPSHOT") {
 		group("org.cache2k") {
 			modules = [
 					"cache2k-api",

@@ -20,7 +20,9 @@ import java.util.Collection;
 
 import org.cache2k.Cache2kBuilder;
 import org.cache2k.extra.spring.SpringCache2kCacheManager;
+import org.cache2k.extra.spring.SpringCache2kDefaultSupplier;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.cache.CacheManager;
@@ -41,10 +43,10 @@ import org.springframework.util.CollectionUtils;
 class Cache2kCacheConfiguration {
 
 	@Bean
-	SpringCache2kCacheManager cacheManager(CacheProperties cacheProperties, CacheManagerCustomizers customizers) {
-		String managerName = cacheProperties.getCache2k().getManagerName();
-		SpringCache2kCacheManager cacheManager = (managerName != null) ? new SpringCache2kCacheManager(managerName)
-				: new SpringCache2kCacheManager();
+	SpringCache2kCacheManager cacheManager(CacheProperties cacheProperties, CacheManagerCustomizers customizers,
+			ObjectProvider<SpringCache2kDefaultSupplier> springCache2kDefaultSupplier) {
+		SpringCache2kCacheManager cacheManager = new SpringCache2kCacheManager(
+				springCache2kDefaultSupplier.getIfAvailable(() -> SpringCache2kDefaultSupplier::supplyDefaultBuilder));
 		Collection<String> cacheNames = cacheProperties.getCacheNames();
 		if (!CollectionUtils.isEmpty(cacheNames)) {
 			cacheNames.forEach((cacheName) -> cacheManager.addCaches((builder) -> builder.name(cacheName)));

@@ -33,7 +33,9 @@ import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.spring.cache.HazelcastCacheManager;
 import net.sf.ehcache.Status;
+import org.cache2k.Cache2kBuilder;
 import org.cache2k.extra.spring.SpringCache2kCacheManager;
+import org.cache2k.extra.spring.SpringCache2kDefaultSupplier;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.jcache.embedded.JCachingProvider;
 import org.infinispan.spring.embedded.provider.SpringEmbeddedCacheManager;
@@ -637,9 +639,12 @@ class CacheAutoConfigurationTests extends AbstractCacheAutoConfigurationTests {
 	@Test
 	void cache2kDifferentCacheManagerName() {
 		this.contextRunner.withUserConfiguration(DefaultCacheConfiguration.class)
-				.withPropertyValues("spring.cache.type=cache2k", "spring.cache.cacheNames=foo",
-						"spring.cache.cache2k.managerName=separate")
-				.run((context) -> {
+				.withBean(SpringCache2kDefaultSupplier.class, () -> () -> {
+					Cache2kBuilder<Object, Object> cache2kBuilder = Cache2kBuilder.forUnknownTypes()
+							.manager(org.cache2k.CacheManager.getInstance("separate"));
+					SpringCache2kDefaultSupplier.applySpringDefaults(cache2kBuilder);
+					return cache2kBuilder;
+				}).withPropertyValues("spring.cache.type=cache2k", "spring.cache.cacheNames=foo").run((context) -> {
 					SpringCache2kCacheManager manager = getCacheManager(context, SpringCache2kCacheManager.class);
 					assertThat(manager.getNativeCacheManager().getName()).isEqualTo("separate");
 				});
@@ -972,9 +977,13 @@ class CacheAutoConfigurationTests extends AbstractCacheAutoConfigurationTests {
 
 		@Bean
 		CacheManagerCustomizer<SpringCache2kCacheManager> cache2kCustomizer() {
-			return (cacheManager) -> cacheManager
-					.defaultSetup((b) -> b.valueType(String.class).loader((key) -> "defaultSetup"))
-					.addCaches((b) -> b.name("viaCustomizer"));
+			return (cacheManager) -> cacheManager.addCaches((b) -> b.name("viaCustomizer"));
+		}
+
+		@Bean
+		SpringCache2kDefaultSupplier cache2kDefaultConfiguration() {
+			return () -> SpringCache2kDefaultSupplier.supplyDefaultBuilder().valueType(String.class)
+					.loader((key) -> "defaultSetup");
 		}
 
 	}
