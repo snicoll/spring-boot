@@ -123,8 +123,8 @@ class ConditionEvaluationReportLoggingListenerTests {
 	@Test
 	void listenerWithInfoLevelShouldLogAtInfo(CapturedOutput output) {
 		AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
-		ConditionEvaluationReportLoggingListener initializer = new ConditionEvaluationReportLoggingListener(
-				LogLevel.INFO);
+		ConditionEvaluationReportLoggingListener initializer = ConditionEvaluationReportLoggingListener
+				.forLogLevel(LogLevel.INFO);
 		initializer.initialize(context);
 		context.register(Config.class);
 		context.refresh();
@@ -135,7 +135,7 @@ class ConditionEvaluationReportLoggingListenerTests {
 	@Test
 	void listenerSupportsOnlyInfoAndDebug() {
 		assertThatIllegalArgumentException()
-				.isThrownBy(() -> new ConditionEvaluationReportLoggingListener(LogLevel.TRACE))
+				.isThrownBy(() -> ConditionEvaluationReportLoggingListener.forLogLevel(LogLevel.TRACE))
 				.withMessageContaining("LogLevel must be INFO or DEBUG");
 	}
 

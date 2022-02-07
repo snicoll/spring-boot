@@ -28,7 +28,6 @@ import org.springframework.boot.BootstrapRegistry;
 import org.springframework.boot.ConfigurableBootstrapContext;
 import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.boot.logging.DeferredLogFactory;
-import org.springframework.boot.util.Instantiator;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.support.SpringFactoriesLoader;
@@ -53,34 +52,16 @@ class ConfigDataLocationResolvers {
 	 */
 	ConfigDataLocationResolvers(DeferredLogFactory logFactory, ConfigurableBootstrapContext bootstrapContext,
 			Binder binder, ResourceLoader resourceLoader) {
-		this(logFactory, bootstrapContext, binder, resourceLoader, SpringFactoriesLoader
-				.loadFactoryNames(ConfigDataLocationResolver.class, resourceLoader.getClassLoader()));
+		SpringFactoriesLoader.ArgumentResolver argumentResolver = SpringFactoriesLoader.ArgumentResolver
+				.of(DeferredLogFactory.class, logFactory).and(Binder.class, binder)
+				.and(ResourceLoader.class, resourceLoader).and(ConfigurableBootstrapContext.class, bootstrapContext)
+				.and(BootstrapContext.class, bootstrapContext).and(BootstrapRegistry.class, bootstrapContext);
+		this.resolvers = reorder(SpringFactoriesLoader.loadFactories(ConfigDataLocationResolver.class,
+				resourceLoader.getClassLoader(), argumentResolver));
 	}
 
-	/**
-	 * Create a new {@link ConfigDataLocationResolvers} instance.
-	 * @param logFactory a {@link DeferredLogFactory} used to inject {@link Log} instances
-	 * @param bootstrapContext the bootstrap context
-	 * @param binder {@link Binder} providing values from the initial {@link Environment}
-	 * @param resourceLoader {@link ResourceLoader} to load resource locations
-	 * @param names the {@link ConfigDataLocationResolver} class names
-	 */
-	ConfigDataLocationResolvers(DeferredLogFactory logFactory, ConfigurableBootstrapContext bootstrapContext,
-			Binder binder, ResourceLoader resourceLoader, List<String> names) {
-		Instantiator<ConfigDataLocationResolver<?>> instantiator = new Instantiator<>(ConfigDataLocationResolver.class,
-				(availableParameters) -> {
-					availableParameters.add(Log.class, logFactory::getLog);
-					availableParameters.add(DeferredLogFactory.class, logFactory);
-					availableParameters.add(Binder.class, binder);
-					availableParameters.add(ResourceLoader.class, resourceLoader);
-					availableParameters.add(ConfigurableBootstrapContext.class, bootstrapContext);
-					availableParameters.add(BootstrapContext.class, bootstrapContext);
-					availableParameters.add(BootstrapRegistry.class, bootstrapContext);
-				});
-		this.resolvers = reorder(instantiator.instantiate(resourceLoader.getClassLoader(), names));
-	}
-
-	private List<ConfigDataLocationResolver<?>> reorder(List<ConfigDataLocationResolver<?>> resolvers) {
+	@SuppressWarnings("rawtypes")
+	private List<ConfigDataLocationResolver<?>> reorder(List<ConfigDataLocationResolver> resolvers) {
 		List<ConfigDataLocationResolver<?>> reordered = new ArrayList<>(resolvers.size());
 		StandardConfigDataLocationResolver resourceResolver = null;
 		for (ConfigDataLocationResolver<?> resolver : resolvers) {

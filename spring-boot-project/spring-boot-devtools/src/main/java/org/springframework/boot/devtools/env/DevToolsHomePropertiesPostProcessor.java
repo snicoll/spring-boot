@@ -76,12 +76,8 @@ public class DevToolsHomePropertiesPostProcessor implements EnvironmentPostProce
 	}
 
 	public DevToolsHomePropertiesPostProcessor() {
-		this(System.getenv(), System.getProperties());
-	}
-
-	DevToolsHomePropertiesPostProcessor(Map<String, String> environmentVariables, Properties systemProperties) {
-		this.environmentVariables = environmentVariables;
-		this.systemProperties = systemProperties;
+		this.environmentVariables = System.getenv();
+		this.systemProperties = System.getProperties();
 	}
 
 	@Override

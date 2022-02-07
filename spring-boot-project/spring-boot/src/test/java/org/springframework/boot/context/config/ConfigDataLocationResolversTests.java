@@ -16,16 +16,23 @@
 
 package org.springframework.boot.context.config;
 
-import java.io.InputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.List;
+import java.util.Properties;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import org.apache.commons.logging.Log;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -39,11 +46,9 @@ import org.springframework.boot.logging.DeferredLogFactory;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.io.DefaultResourceLoader;
-import org.springframework.core.io.ResourceLoader;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 
 /**
  * Tests for {@link ConfigDataLocationResolvers}.
@@ -67,23 +72,23 @@ class ConfigDataLocationResolversTests {
 	@Mock
 	private Profiles profiles;
 
-	private ResourceLoader resourceLoader = new DefaultResourceLoader();
+	@TempDir
+	private File tempDir;
 
 	@Test
-	void createWhenInjectingLogAndDeferredLogFactoryCreatesResolver() {
+	void createWhenInjectingDeferredLogFactoryCreatesResolver() {
 		ConfigDataLocationResolvers resolvers = new ConfigDataLocationResolvers(this.logFactory, this.bootstrapContext,
-				this.binder, this.resourceLoader, Collections.singletonList(TestLogResolver.class.getName()));
+				this.binder, new DefaultResourceLoader(classLoader(TestLogResolver.class)));
 		assertThat(resolvers.getResolvers()).hasSize(1);
 		assertThat(resolvers.getResolvers().get(0)).isExactlyInstanceOf(TestLogResolver.class);
 		TestLogResolver resolver = (TestLogResolver) resolvers.getResolvers().get(0);
 		assertThat(resolver.getDeferredLogFactory()).isSameAs(this.logFactory);
-		assertThat(resolver.getLog()).isNotNull();
 	}
 
 	@Test
 	void createWhenInjectingBinderCreatesResolver() {
 		ConfigDataLocationResolvers resolvers = new ConfigDataLocationResolvers(this.logFactory, this.bootstrapContext,
-				this.binder, this.resourceLoader, Collections.singletonList(TestBoundResolver.class.getName()));
+				this.binder, new DefaultResourceLoader(classLoader(TestBoundResolver.class)));
 		assertThat(resolvers.getResolvers()).hasSize(1);
 		assertThat(resolvers.getResolvers().get(0)).isExactlyInstanceOf(TestBoundResolver.class);
 		assertThat(((TestBoundResolver) resolvers.getResolvers().get(0)).getBinder()).isSameAs(this.binder);
@@ -92,24 +97,16 @@ class ConfigDataLocationResolversTests {
 	@Test
 	void createWhenNotInjectingBinderCreatesResolver() {
 		ConfigDataLocationResolvers resolvers = new ConfigDataLocationResolvers(this.logFactory, this.bootstrapContext,
-				this.binder, this.resourceLoader, Collections.singletonList(TestResolver.class.getName()));
+				this.binder, new DefaultResourceLoader(classLoader(TestResolver.class)));
 		assertThat(resolvers.getResolvers()).hasSize(1);
 		assertThat(resolvers.getResolvers().get(0)).isExactlyInstanceOf(TestResolver.class);
 	}
 
 	@Test
 	void createWhenResolverHasBootstrapParametersInjectsBootstrapContext() {
-		new ConfigDataLocationResolvers(this.logFactory, this.bootstrapContext, this.binder, this.resourceLoader,
-				Collections.singletonList(TestBootstrappingResolver.class.getName()));
+		new ConfigDataLocationResolvers(this.logFactory, this.bootstrapContext, this.binder,
+				new DefaultResourceLoader(classLoader(TestBootstrappingResolver.class)));
 		assertThat(this.bootstrapContext.get(String.class)).isEqualTo("boot");
-	}
-
-	@Test
-	void createWhenNameIsNotConfigDataLocationResolverThrowsException() {
-		assertThatIllegalArgumentException()
-				.isThrownBy(() -> new ConfigDataLocationResolvers(this.logFactory, this.bootstrapContext, this.binder,
-						this.resourceLoader, Collections.singletonList(InputStream.class.getName())))
-				.withMessageContaining("Unable to instantiate").havingCause().withMessageContaining("not assignable");
 	}
 
 	@Test
@@ -119,7 +116,8 @@ class ConfigDataLocationResolversTests {
 		names.add(LowestTestResolver.class.getName());
 		names.add(HighestTestResolver.class.getName());
 		ConfigDataLocationResolvers resolvers = new ConfigDataLocationResolvers(this.logFactory, this.bootstrapContext,
-				this.binder, this.resourceLoader, names);
+				this.binder, new DefaultResourceLoader(
+						classLoader(TestResolver.class, LowestTestResolver.class, HighestTestResolver.class)));
 		assertThat(resolvers.getResolvers().get(0)).isExactlyInstanceOf(HighestTestResolver.class);
 		assertThat(resolvers.getResolvers().get(1)).isExactlyInstanceOf(TestResolver.class);
 		assertThat(resolvers.getResolvers().get(2)).isExactlyInstanceOf(LowestTestResolver.class);
@@ -128,8 +126,8 @@ class ConfigDataLocationResolversTests {
 	@Test
 	void resolveResolvesUsingFirstSupportedResolver() {
 		ConfigDataLocationResolvers resolvers = new ConfigDataLocationResolvers(this.logFactory, this.bootstrapContext,
-				this.binder, this.resourceLoader,
-				Arrays.asList(LowestTestResolver.class.getName(), HighestTestResolver.class.getName()));
+				this.binder,
+				new DefaultResourceLoader(classLoader(LowestTestResolver.class, HighestTestResolver.class)));
 		ConfigDataLocation location = ConfigDataLocation.of("LowestTestResolver:test");
 		List<ConfigDataResolutionResult> resolved = resolvers.resolve(this.context, location, null);
 		assertThat(resolved).hasSize(1);
@@ -142,8 +140,8 @@ class ConfigDataLocationResolversTests {
 	@Test
 	void resolveWhenProfileMergesResolvedLocations() {
 		ConfigDataLocationResolvers resolvers = new ConfigDataLocationResolvers(this.logFactory, this.bootstrapContext,
-				this.binder, this.resourceLoader,
-				Arrays.asList(LowestTestResolver.class.getName(), HighestTestResolver.class.getName()));
+				this.binder,
+				new DefaultResourceLoader(classLoader(LowestTestResolver.class, HighestTestResolver.class)));
 		ConfigDataLocation location = ConfigDataLocation.of("LowestTestResolver:test");
 		List<ConfigDataResolutionResult> resolved = resolvers.resolve(this.context, location, this.profiles);
 		assertThat(resolved).hasSize(2);
@@ -160,8 +158,8 @@ class ConfigDataLocationResolversTests {
 	@Test
 	void resolveWhenNoResolverThrowsException() {
 		ConfigDataLocationResolvers resolvers = new ConfigDataLocationResolvers(this.logFactory, this.bootstrapContext,
-				this.binder, this.resourceLoader,
-				Arrays.asList(LowestTestResolver.class.getName(), HighestTestResolver.class.getName()));
+				this.binder,
+				new DefaultResourceLoader(classLoader(LowestTestResolver.class, HighestTestResolver.class)));
 		ConfigDataLocation location = ConfigDataLocation.of("Missing:test");
 		assertThatExceptionOfType(UnsupportedConfigDataLocationException.class)
 				.isThrownBy(() -> resolvers.resolve(this.context, location, null))
@@ -171,10 +169,40 @@ class ConfigDataLocationResolversTests {
 	@Test
 	void resolveWhenOptional() {
 		ConfigDataLocationResolvers resolvers = new ConfigDataLocationResolvers(this.logFactory, this.bootstrapContext,
-				this.binder, this.resourceLoader, Arrays.asList(OptionalResourceTestResolver.class.getName()));
+				this.binder, new DefaultResourceLoader(classLoader(OptionalResourceTestResolver.class)));
 		ConfigDataLocation location = ConfigDataLocation.of("OptionalResourceTestResolver:test");
 		List<ConfigDataResolutionResult> resolved = resolvers.resolve(this.context, location, null);
 		assertThat(resolved.get(0).getResource().isOptional()).isTrue();
+	}
+
+	private ClassLoader classLoader(Class<?>... resolvers) {
+		File springFactoriesFile = createSpringFactoriesFile(resolvers);
+		return new URLClassLoader(new URL[] {}, getClass().getClassLoader()) {
+
+			@Override
+			public Enumeration<URL> getResources(String name) throws IOException {
+				if ("META-INF/spring.factories".equals(name)) {
+					return Collections.enumeration(List.of(springFactoriesFile.toURI().toURL()));
+				}
+				return super.getResources(name);
+			}
+
+		};
+	}
+
+	private File createSpringFactoriesFile(Class<?>... resolvers) {
+		Properties properties = new Properties();
+		String value = String.join(",", Stream.of(resolvers).map(Class::getName).collect(Collectors.toList()));
+		properties.setProperty(ConfigDataLocationResolver.class.getName(), value);
+		File springFactoriesFile = new File(ConfigDataLocationResolversTests.this.tempDir, "META-INF/spring.factories");
+		springFactoriesFile.getParentFile().mkdirs();
+		try (FileOutputStream output = new FileOutputStream(springFactoriesFile)) {
+			properties.store(new FileOutputStream(springFactoriesFile), null);
+			return springFactoriesFile;
+		}
+		catch (IOException ex) {
+			throw new IllegalStateException(ex);
+		}
 	}
 
 	static class TestResolver implements ConfigDataLocationResolver<TestConfigDataResource> {
@@ -185,7 +213,7 @@ class ConfigDataLocationResolversTests {
 			this(false);
 		}
 
-		TestResolver(boolean optionalResource) {
+		private TestResolver(boolean optionalResource) {
 			this.optionalResource = optionalResource;
 		}
 
@@ -214,19 +242,12 @@ class ConfigDataLocationResolversTests {
 
 		private final DeferredLogFactory deferredLogFactory;
 
-		private final Log log;
-
-		TestLogResolver(DeferredLogFactory deferredLogFactory, Log log) {
+		TestLogResolver(DeferredLogFactory deferredLogFactory) {
 			this.deferredLogFactory = deferredLogFactory;
-			this.log = log;
 		}
 
 		DeferredLogFactory getDeferredLogFactory() {
 			return this.deferredLogFactory;
-		}
-
-		Log getLog() {
-			return this.log;
 		}
 
 	}

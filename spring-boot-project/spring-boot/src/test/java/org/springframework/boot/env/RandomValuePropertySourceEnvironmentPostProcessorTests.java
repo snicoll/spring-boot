@@ -16,7 +16,8 @@
 
 package org.springframework.boot.env;
 
-import org.apache.commons.logging.LogFactory;
+import java.util.function.Supplier;
+
 import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.SpringApplication;
@@ -34,7 +35,7 @@ import static org.mockito.Mockito.mock;
 class RandomValuePropertySourceEnvironmentPostProcessorTests {
 
 	private RandomValuePropertySourceEnvironmentPostProcessor postProcessor = new RandomValuePropertySourceEnvironmentPostProcessor(
-			LogFactory.getLog(getClass()));
+			Supplier::get);
 
 	@Test
 	void getOrderIsBeforeConfigData() {

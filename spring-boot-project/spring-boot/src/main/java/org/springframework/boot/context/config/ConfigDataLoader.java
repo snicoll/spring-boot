@@ -18,8 +18,6 @@ package org.springframework.boot.context.config;
 
 import java.io.IOException;
 
-import org.apache.commons.logging.Log;
-
 import org.springframework.boot.BootstrapContext;
 import org.springframework.boot.BootstrapRegistry;
 import org.springframework.boot.ConfigurableBootstrapContext;
@@ -30,8 +28,7 @@ import org.springframework.boot.logging.DeferredLogFactory;
  * {@link ConfigDataResource}. Implementations should be added as {@code spring.factories}
  * entries. The following constructor parameter types are supported:
  * <ul>
- * <li>{@link Log} or {@link DeferredLogFactory} - if the loader needs deferred
- * logging</li>
+ * <li>{@link DeferredLogFactory} - if the loader needs deferred logging</li>
  * <li>{@link ConfigurableBootstrapContext} - A bootstrap context that can be used to
  * store objects that may be expensive to create, or need to be shared
  * ({@link BootstrapContext} or {@link BootstrapRegistry} may also be used).</li>

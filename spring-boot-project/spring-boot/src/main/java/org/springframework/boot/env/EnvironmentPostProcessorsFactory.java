@@ -20,7 +20,6 @@ import java.util.List;
 
 import org.springframework.boot.ConfigurableBootstrapContext;
 import org.springframework.boot.logging.DeferredLogFactory;
-import org.springframework.core.io.support.SpringFactoriesLoader;
 
 /**
  * Factory interface used by the {@link EnvironmentPostProcessorApplicationListener} to
@@ -48,8 +47,7 @@ public interface EnvironmentPostProcessorsFactory {
 	 * @return an {@link EnvironmentPostProcessorsFactory} instance
 	 */
 	static EnvironmentPostProcessorsFactory fromSpringFactories(ClassLoader classLoader) {
-		return new ReflectionEnvironmentPostProcessorsFactory(classLoader,
-				SpringFactoriesLoader.loadFactoryNames(EnvironmentPostProcessor.class, classLoader));
+		return new SpringFactoriesEnvironmentPostProcessorsFactory(classLoader);
 	}
 
 	/**

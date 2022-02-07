@@ -64,13 +64,23 @@ public class ConditionEvaluationReportLoggingListener
 		this(LogLevel.DEBUG);
 	}
 
-	public ConditionEvaluationReportLoggingListener(LogLevel logLevelForReport) {
+	private ConditionEvaluationReportLoggingListener(LogLevel logLevelForReport) {
 		Assert.isTrue(isInfoOrDebug(logLevelForReport), "LogLevel must be INFO or DEBUG");
 		this.logLevelForReport = logLevelForReport;
 	}
 
 	private boolean isInfoOrDebug(LogLevel logLevelForReport) {
 		return LogLevel.INFO.equals(logLevelForReport) || LogLevel.DEBUG.equals(logLevelForReport);
+	}
+
+	/**
+	 * Static factory method that creates a {@link ConditionEvaluationReportListener}
+	 * which logs the report at the specified log level.
+	 * @param logLevelForReport the log level to log the report at
+	 * @return a {@link ConditionEvaluationReportListener} instance.
+	 */
+	public static ConditionEvaluationReportLoggingListener forLogLevel(LogLevel logLevelForReport) {
+		return new ConditionEvaluationReportLoggingListener(logLevelForReport);
 	}
 
 	public LogLevel getLogLevelForReport() {

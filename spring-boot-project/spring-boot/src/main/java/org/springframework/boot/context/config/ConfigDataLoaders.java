@@ -27,7 +27,6 @@ import org.springframework.boot.BootstrapContext;
 import org.springframework.boot.BootstrapRegistry;
 import org.springframework.boot.ConfigurableBootstrapContext;
 import org.springframework.boot.logging.DeferredLogFactory;
-import org.springframework.boot.util.Instantiator;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.io.support.SpringFactoriesLoader;
 import org.springframework.core.log.LogMessage;
@@ -43,7 +42,8 @@ class ConfigDataLoaders {
 
 	private final Log logger;
 
-	private final List<ConfigDataLoader<?>> loaders;
+	@SuppressWarnings("rawtypes")
+	private final List<ConfigDataLoader> loaders;
 
 	private final List<Class<?>> resourceTypes;
 
@@ -55,33 +55,16 @@ class ConfigDataLoaders {
 	 */
 	ConfigDataLoaders(DeferredLogFactory logFactory, ConfigurableBootstrapContext bootstrapContext,
 			ClassLoader classLoader) {
-		this(logFactory, bootstrapContext, classLoader,
-				SpringFactoriesLoader.loadFactoryNames(ConfigDataLoader.class, classLoader));
-	}
-
-	/**
-	 * Create a new {@link ConfigDataLoaders} instance.
-	 * @param logFactory the deferred log factory
-	 * @param bootstrapContext the bootstrap context
-	 * @param classLoader the class loader used when loading
-	 * @param names the {@link ConfigDataLoader} class names instantiate
-	 */
-	ConfigDataLoaders(DeferredLogFactory logFactory, ConfigurableBootstrapContext bootstrapContext,
-			ClassLoader classLoader, List<String> names) {
 		this.logger = logFactory.getLog(getClass());
-		Instantiator<ConfigDataLoader<?>> instantiator = new Instantiator<>(ConfigDataLoader.class,
-				(availableParameters) -> {
-					availableParameters.add(Log.class, logFactory::getLog);
-					availableParameters.add(DeferredLogFactory.class, logFactory);
-					availableParameters.add(ConfigurableBootstrapContext.class, bootstrapContext);
-					availableParameters.add(BootstrapContext.class, bootstrapContext);
-					availableParameters.add(BootstrapRegistry.class, bootstrapContext);
-				});
-		this.loaders = instantiator.instantiate(classLoader, names);
+		SpringFactoriesLoader.ArgumentResolver argumentResolver = SpringFactoriesLoader.ArgumentResolver
+				.of(DeferredLogFactory.class, logFactory).and(ConfigurableBootstrapContext.class, bootstrapContext)
+				.and(BootstrapContext.class, bootstrapContext).and(BootstrapRegistry.class, bootstrapContext);
+		this.loaders = SpringFactoriesLoader.loadFactories(ConfigDataLoader.class, classLoader, argumentResolver);
 		this.resourceTypes = getResourceTypes(this.loaders);
 	}
 
-	private List<Class<?>> getResourceTypes(List<ConfigDataLoader<?>> loaders) {
+	@SuppressWarnings("rawtypes")
+	private List<Class<?>> getResourceTypes(List<ConfigDataLoader> loaders) {
 		List<Class<?>> resourceTypes = new ArrayList<>(loaders.size());
 		for (ConfigDataLoader<?> loader : loaders) {
 			resourceTypes.add(getResourceType(loader));

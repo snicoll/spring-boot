@@ -32,6 +32,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.mock.env.MockEnvironment;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -208,8 +209,10 @@ class DevToolsHomePropertiesPostProcessorTests {
 			systemProperties.setProperty("user.home", this.home.getAbsolutePath());
 		}
 		ConfigurableEnvironment environment = new MockEnvironment();
-		DevToolsHomePropertiesPostProcessor postProcessor = new DevToolsHomePropertiesPostProcessor(
-				(env != null) ? env : Collections.emptyMap(), systemProperties);
+		DevToolsHomePropertiesPostProcessor postProcessor = new DevToolsHomePropertiesPostProcessor();
+		Map<?, ?> environmentVariables = (env != null) ? env : Collections.emptyMap();
+		ReflectionTestUtils.setField(postProcessor, "environmentVariables", environmentVariables);
+		ReflectionTestUtils.setField(postProcessor, "systemProperties", systemProperties);
 		runPostProcessor(() -> postProcessor.postProcessEnvironment(environment, null));
 		return environment;
 	}

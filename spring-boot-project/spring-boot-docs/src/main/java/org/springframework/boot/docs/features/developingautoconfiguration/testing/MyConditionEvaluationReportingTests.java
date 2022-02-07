@@ -28,7 +28,7 @@ class MyConditionEvaluationReportingTests {
 	void autoConfigTest() {
 		// @formatter:off
 		new ApplicationContextRunner()
-			.withInitializer(new ConditionEvaluationReportLoggingListener(LogLevel.INFO))
+			.withInitializer(ConditionEvaluationReportLoggingListener.forLogLevel(LogLevel.INFO))
 			.run((context) -> {
 					// Test something...
 			});
