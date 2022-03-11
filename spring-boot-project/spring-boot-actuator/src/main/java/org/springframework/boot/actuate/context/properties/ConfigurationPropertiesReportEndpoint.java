@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2021 the original author or authors.
+ * Copyright 2012-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -490,8 +490,7 @@ public class ConfigurationPropertiesReportEndpoint implements ApplicationContext
 		}
 
 		private Constructor<?> findBindConstructor(Class<?> type) {
-			boolean classConstructorBinding = MergedAnnotations
-					.from(type, SearchStrategy.TYPE_HIERARCHY_AND_ENCLOSING_CLASSES)
+			boolean classConstructorBinding = MergedAnnotations.from(type, SearchStrategy.TYPE_HIERARCHY)
 					.isPresent(ConstructorBinding.class);
 			if (KotlinDetector.isKotlinPresent() && KotlinDetector.isKotlinType(type)) {
 				Constructor<?> constructor = BeanUtils.findPrimaryConstructor(type);
