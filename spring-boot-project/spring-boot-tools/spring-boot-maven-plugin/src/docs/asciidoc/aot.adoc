@@ -1,0 +1,5 @@
+[[aot]]
+= Optimizing Your Application at Build-Time
+Spring Boot Applications can be optimized at compile-time, typically to be compiled as a native image.
+
+include::goals/aot-generate.adoc[leveloffset=+1]

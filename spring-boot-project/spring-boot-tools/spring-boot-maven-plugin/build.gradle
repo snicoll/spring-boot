@@ -26,6 +26,7 @@ dependencies {
 	compileOnly("org.apache.maven.plugin-tools:maven-plugin-annotations")
 	compileOnly("org.sonatype.plexus:plexus-build-api")
 
+	implementation("org.springframework:spring-context")
 	implementation(project(":spring-boot-project:spring-boot-tools:spring-boot-buildpack-platform"))
 	implementation(project(":spring-boot-project:spring-boot-tools:spring-boot-loader-tools"))
 	implementation("org.apache.maven.shared:maven-common-artifact-filters") {
@@ -37,6 +38,7 @@ dependencies {
 		exclude(group: "javax.inject", module: "javax.inject")
 	}
 
+	intTestImplementation(project(":spring-boot-project:spring-boot"))
 	intTestImplementation(project(":spring-boot-project:spring-boot-tools:spring-boot-buildpack-platform"))
 	intTestImplementation(project(":spring-boot-project:spring-boot-tools:spring-boot-loader-tools"))
 	intTestImplementation(project(":spring-boot-project:spring-boot-tools:spring-boot-test-support"))
