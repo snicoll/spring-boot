@@ -20,7 +20,9 @@ import java.util.Collections;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.domain.EntityProvider;
 import org.springframework.boot.autoconfigure.domain.EntityScanner;
+import org.springframework.boot.autoconfigure.domain.ScannedEntityProvider;
 import org.springframework.boot.autoconfigure.mongo.MongoProperties;
 import org.springframework.boot.context.properties.PropertyMapper;
 import org.springframework.context.ApplicationContext;
@@ -42,13 +44,19 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 class MongoDataConfiguration {
 
 	@Bean
+	@ConditionalOnMissingBean(name = "mongoEntityProvider")
+	ScannedEntityProvider mongoEntityProvider(ApplicationContext applicationContext) {
+		return new ScannedEntityProvider(new EntityScanner(applicationContext), Document.class);
+	}
+
+	@Bean
 	@ConditionalOnMissingBean
-	MongoMappingContext mongoMappingContext(ApplicationContext applicationContext, MongoProperties properties,
+	MongoMappingContext mongoMappingContext(EntityProvider mongoEntityProvider, MongoProperties properties,
 			MongoCustomConversions conversions) throws ClassNotFoundException {
 		PropertyMapper mapper = PropertyMapper.get().alwaysApplyingWhenNonNull();
 		MongoMappingContext context = new MongoMappingContext();
 		mapper.from(properties.isAutoIndexCreation()).to(context::setAutoIndexCreation);
-		context.setInitialEntitySet(new EntityScanner(applicationContext).scan(Document.class));
+		context.setInitialEntitySet(mongoEntityProvider.provideEntities());
 		Class<?> strategyClass = properties.getFieldNamingStrategy();
 		if (strategyClass != null) {
 			context.setFieldNamingStrategy((FieldNamingStrategy) BeanUtils.instantiateClass(strategyClass));

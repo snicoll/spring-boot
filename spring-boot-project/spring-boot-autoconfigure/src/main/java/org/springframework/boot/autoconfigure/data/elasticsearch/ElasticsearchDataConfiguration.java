@@ -21,7 +21,9 @@ import java.util.Collections;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.domain.EntityProvider;
 import org.springframework.boot.autoconfigure.domain.EntityScanner;
+import org.springframework.boot.autoconfigure.domain.ScannedEntityProvider;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -59,11 +61,17 @@ abstract class ElasticsearchDataConfiguration {
 		}
 
 		@Bean
+		@ConditionalOnMissingBean(name = "elasticsearchEntityProvider")
+		ScannedEntityProvider elasticsearchEntityProvider(ApplicationContext applicationContext) {
+			return new ScannedEntityProvider(new EntityScanner(applicationContext), Document.class);
+		}
+
+		@Bean
 		@ConditionalOnMissingBean
-		SimpleElasticsearchMappingContext mappingContext(ApplicationContext applicationContext,
+		SimpleElasticsearchMappingContext mappingContext(EntityProvider elasticsearchEntityProvider,
 				ElasticsearchCustomConversions elasticsearchCustomConversions) throws ClassNotFoundException {
 			SimpleElasticsearchMappingContext mappingContext = new SimpleElasticsearchMappingContext();
-			mappingContext.setInitialEntitySet(new EntityScanner(applicationContext).scan(Document.class));
+			mappingContext.setInitialEntitySet(elasticsearchEntityProvider.provideEntities());
 			mappingContext.setSimpleTypeHolder(elasticsearchCustomConversions.getSimpleTypeHolder());
 			return mappingContext;
 		}

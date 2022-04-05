@@ -18,6 +18,7 @@ package org.springframework.boot.autoconfigure.data.cassandra;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 
@@ -29,6 +30,7 @@ import org.springframework.boot.autoconfigure.cassandra.CassandraAutoConfigurati
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.domain.EntityProvider;
 import org.springframework.boot.autoconfigure.domain.EntityScanPackages;
 import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.context.annotation.Bean;
@@ -67,17 +69,17 @@ public class CassandraDataAutoConfiguration {
 	}
 
 	@Bean
+	@ConditionalOnMissingBean(name = "cassandraEntityProvider")
+	CassandraScannedEntityProvider cassandraEntityProvider(BeanFactory beanFactory) {
+		return new CassandraScannedEntityProvider(beanFactory);
+	}
+
+	@Bean
 	@ConditionalOnMissingBean
-	public CassandraMappingContext cassandraMapping(BeanFactory beanFactory, CassandraCustomConversions conversions)
-			throws ClassNotFoundException {
+	public CassandraMappingContext cassandraMapping(EntityProvider cassandraEntityProvider,
+			CassandraCustomConversions conversions) throws ClassNotFoundException {
 		CassandraMappingContext context = new CassandraMappingContext();
-		List<String> packages = EntityScanPackages.get(beanFactory).getPackageNames();
-		if (packages.isEmpty() && AutoConfigurationPackages.has(beanFactory)) {
-			packages = AutoConfigurationPackages.get(beanFactory);
-		}
-		if (!packages.isEmpty()) {
-			context.setInitialEntitySet(CassandraEntityClassScanner.scan(packages));
-		}
+		context.setInitialEntitySet(cassandraEntityProvider.provideEntities());
 		context.setSimpleTypeHolder(conversions.getSimpleTypeHolder());
 		return context;
 	}
@@ -114,6 +116,25 @@ public class CassandraDataAutoConfiguration {
 	@ConditionalOnMissingBean
 	public CassandraCustomConversions cassandraCustomConversions() {
 		return new CassandraCustomConversions(Collections.emptyList());
+	}
+
+	static class CassandraScannedEntityProvider implements EntityProvider {
+
+		private final BeanFactory beanFactory;
+
+		CassandraScannedEntityProvider(BeanFactory beanFactory) {
+			this.beanFactory = beanFactory;
+		}
+
+		@Override
+		public Set<Class<?>> provideEntities() throws ClassNotFoundException {
+			List<String> packages = EntityScanPackages.get(this.beanFactory).getPackageNames();
+			if (packages.isEmpty() && AutoConfigurationPackages.has(this.beanFactory)) {
+				packages = AutoConfigurationPackages.get(this.beanFactory);
+			}
+			return (!packages.isEmpty()) ? CassandraEntityClassScanner.scan(packages) : Collections.emptySet();
+		}
+
 	}
 
 }

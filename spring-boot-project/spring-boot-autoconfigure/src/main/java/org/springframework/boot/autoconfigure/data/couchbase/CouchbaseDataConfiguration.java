@@ -20,7 +20,9 @@ import java.util.Collections;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.domain.EntityProvider;
 import org.springframework.boot.autoconfigure.domain.EntityScanner;
+import org.springframework.boot.autoconfigure.domain.ScannedEntityProvider;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -57,13 +59,19 @@ class CouchbaseDataConfiguration {
 		return new JacksonTranslationService();
 	}
 
+	@Bean
+	@ConditionalOnMissingBean(name = "couchbaseEntityProvider")
+	ScannedEntityProvider couchbaseEntityProvider(ApplicationContext applicationContext) {
+		return new ScannedEntityProvider(new EntityScanner(applicationContext), Document.class);
+	}
+
 	@Bean(name = BeanNames.COUCHBASE_MAPPING_CONTEXT)
 	@ConditionalOnMissingBean(name = BeanNames.COUCHBASE_MAPPING_CONTEXT)
 	CouchbaseMappingContext couchbaseMappingContext(CouchbaseDataProperties properties,
-			ApplicationContext applicationContext, CouchbaseCustomConversions couchbaseCustomConversions)
+			EntityProvider couchbaseEntityProvider, CouchbaseCustomConversions couchbaseCustomConversions)
 			throws Exception {
 		CouchbaseMappingContext mappingContext = new CouchbaseMappingContext();
-		mappingContext.setInitialEntitySet(new EntityScanner(applicationContext).scan(Document.class));
+		mappingContext.setInitialEntitySet(couchbaseEntityProvider.provideEntities());
 		mappingContext.setSimpleTypeHolder(couchbaseCustomConversions.getSimpleTypeHolder());
 		Class<?> fieldNamingStrategy = properties.getFieldNamingStrategy();
 		if (fieldNamingStrategy != null) {

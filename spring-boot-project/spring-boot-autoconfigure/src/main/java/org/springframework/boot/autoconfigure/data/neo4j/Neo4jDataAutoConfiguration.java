@@ -26,7 +26,9 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.domain.EntityProvider;
 import org.springframework.boot.autoconfigure.domain.EntityScanner;
+import org.springframework.boot.autoconfigure.domain.ScannedEntityProvider;
 import org.springframework.boot.autoconfigure.neo4j.Neo4jAutoConfiguration;
 import org.springframework.boot.autoconfigure.transaction.TransactionAutoConfiguration;
 import org.springframework.boot.autoconfigure.transaction.TransactionManagerCustomizers;
@@ -70,11 +72,17 @@ public class Neo4jDataAutoConfiguration {
 	}
 
 	@Bean
-	@ConditionalOnMissingBean
-	public Neo4jMappingContext neo4jMappingContext(ApplicationContext applicationContext,
-			Neo4jConversions neo4jConversions) throws ClassNotFoundException {
-		Set<Class<?>> initialEntityClasses = new EntityScanner(applicationContext).scan(Node.class,
+	@ConditionalOnMissingBean(name = "neo4jEntityProvider")
+	public ScannedEntityProvider neo4jEntityProvider(ApplicationContext applicationContext) {
+		return new ScannedEntityProvider(new EntityScanner(applicationContext), Node.class,
 				RelationshipProperties.class);
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	public Neo4jMappingContext neo4jMappingContext(EntityProvider neo4jEntityProvider,
+			Neo4jConversions neo4jConversions) throws ClassNotFoundException {
+		Set<Class<?>> initialEntityClasses = neo4jEntityProvider.provideEntities();
 		Neo4jMappingContext context = new Neo4jMappingContext(neo4jConversions);
 		context.setInitialEntitySet(initialEntityClasses);
 		return context;
