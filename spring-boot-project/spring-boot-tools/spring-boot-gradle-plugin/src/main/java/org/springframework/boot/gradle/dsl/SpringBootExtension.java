@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2021 the original author or authors.
+ * Copyright 2012-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,18 +17,26 @@
 package org.springframework.boot.gradle.dsl;
 
 import java.io.File;
+import java.util.List;
 
 import org.gradle.api.Action;
 import org.gradle.api.Project;
+import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.ConfigurationContainer;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.plugins.BasePlugin;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.SourceSet;
+import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskContainer;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.jvm.tasks.Jar;
 
+import org.springframework.boot.gradle.plugin.ResolveMainClassName;
+import org.springframework.boot.gradle.plugin.SpringBootPlugin;
+import org.springframework.boot.gradle.tasks.aot.GenerateAotSources;
 import org.springframework.boot.gradle.tasks.buildinfo.BuildInfo;
 import org.springframework.boot.gradle.tasks.buildinfo.BuildInfoProperties;
 
@@ -127,6 +135,41 @@ public class SpringBootExtension {
 			return artifactTask;
 		}
 		return (Jar) this.project.getTasks().findByName("bootJar");
+	}
+
+	public void aot() {
+		this.project.getPlugins().withType(JavaPlugin.class).all((plugin) -> {
+			JavaPluginExtension javaPluginExtension = this.project.getExtensions().getByType(JavaPluginExtension.class);
+			SourceSetContainer sourceSets = javaPluginExtension.getSourceSets();
+			SourceSet main = sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME);
+			FileCollection runtimeClasspath = main.getRuntimeClasspath();
+			TaskProvider<ResolveMainClassName> resolveMainClassName = this.project.getTasks()
+					.named(SpringBootPlugin.RESOLVE_MAIN_CLASS_NAME_TASK_NAME, ResolveMainClassName.class);
+			SourceSet aotSourceSet = sourceSets.create("aot", (aot) -> {
+				aot.getJava().setSrcDirs(List.of("build/generated/aotSources"));
+				aot.getResources().setSrcDirs(List.of("build/generated/aotResources"));
+				aot.setCompileClasspath(aot.getCompileClasspath().plus(main.getOutput()));
+				main.setRuntimeClasspath(runtimeClasspath.plus(aot.getOutput()));
+				ConfigurationContainer configurations = this.project.getConfigurations();
+				Configuration aotImplementation = configurations.getByName(aot.getImplementationConfigurationName());
+				aotImplementation.extendsFrom(configurations.getByName(main.getImplementationConfigurationName()));
+				aotImplementation.extendsFrom(configurations.getByName(main.getRuntimeOnlyConfigurationName()));
+			});
+			TaskProvider<GenerateAotSources> generateAotSources = this.project.getTasks().register("generateAotSources",
+					GenerateAotSources.class, (task) -> {
+						task.getApplicationClass()
+								.set(resolveMainClassName.flatMap((thing) -> thing.readMainClassName()));
+						task.setClasspath(aotSourceSet.getCompileClasspath());
+						task.getSourcesDir().set(aotSourceSet.getJava().getSrcDirs().iterator().next());
+						task.getResourcesDir().set(aotSourceSet.getResources().getSrcDirs().iterator().next());
+					});
+			this.project.getTasks().getByName(aotSourceSet.getCompileJavaTaskName(), (compile) -> {
+				compile.dependsOn(generateAotSources);
+			});
+			this.project.getTasks().getByName(aotSourceSet.getProcessResourcesTaskName(), (processResources) -> {
+				processResources.dependsOn(generateAotSources);
+			});
+		});
 	}
 
 }

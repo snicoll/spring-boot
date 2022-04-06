@@ -144,7 +144,7 @@ public class ResolveMainClassName extends DefaultTask {
 		}
 	}
 
-	Provider<String> readMainClassName() {
+	public Provider<String> readMainClassName() {
 		return this.outputFile.map(new ClassNameReader());
 	}
 
