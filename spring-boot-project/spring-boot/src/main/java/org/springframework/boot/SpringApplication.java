@@ -76,6 +76,7 @@ import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.support.SpringFactoriesLoader;
 import org.springframework.core.metrics.ApplicationStartup;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
@@ -229,6 +230,8 @@ public class SpringApplication {
 
 	private ApplicationStartup applicationStartup = ApplicationStartup.DEFAULT;
 
+	private RunStrategy runStrategy = RunStrategy.DEFAULT;
+
 	/**
 	 * Create a new {@link SpringApplication} instance. The application context will load
 	 * beans from the specified primary sources (see {@link SpringApplication class-level}
@@ -289,6 +292,7 @@ public class SpringApplication {
 	 */
 	public ConfigurableApplicationContext run(String... args) {
 		long startTime = System.nanoTime();
+		ApplicationRunMode runMode = this.runStrategy.determineRunMode(this.mainApplicationClass, getClassLoader());
 		DefaultBootstrapContext bootstrapContext = createBootstrapContext();
 		ConfigurableApplicationContext context = null;
 		configureHeadlessProperty();
@@ -1271,6 +1275,14 @@ public class SpringApplication {
 	}
 
 	/**
+	 * Set the {@link RunStrategy} to use.
+	 * @param runStrategy the run strategy to use
+	 */
+	public void setRunStrategy(RunStrategy runStrategy) {
+		this.runStrategy = runStrategy;
+	}
+
+	/**
 	 * Return a {@link SpringApplicationShutdownHandlers} instance that can be used to add
 	 * or remove handlers that perform actions before the JVM is shutdown.
 	 * @return a {@link SpringApplicationShutdownHandlers} instance
@@ -1366,6 +1378,50 @@ public class SpringApplication {
 		List<E> list = new ArrayList<>(elements);
 		list.sort(AnnotationAwareOrderComparator.INSTANCE);
 		return new LinkedHashSet<>(list);
+	}
+
+	/**
+	 * Determine the {@link ApplicationRunMode} to use.
+	 *
+	 * @author Stephane Nicoll
+	 * @since 3.0
+	 */
+	@FunctionalInterface
+	public interface RunStrategy {
+
+		/**
+		 * The default strategy, using {@link ApplicationRunMode#DEFAULT}.
+		 */
+		RunStrategy DEFAULT = usingRunMode(ApplicationRunMode.DEFAULT);
+
+		/**
+		 * Determine the {@link ApplicationRunMode run mode} that should be used to run
+		 * the specified {@code applicationClass}.
+		 * @param applicationClass the class of the application
+		 * @param classLoader the classloader to use
+		 * @return the run mode
+		 */
+		ApplicationRunMode determineRunMode(@Nullable Class<?> applicationClass, ClassLoader classLoader);
+
+		static RunStrategy usingRunMode(ApplicationRunMode runMode) {
+			return new SimpleRunStrategy(runMode);
+		}
+
+		class SimpleRunStrategy implements RunStrategy {
+
+			private final ApplicationRunMode mode;
+
+			SimpleRunStrategy(ApplicationRunMode mode) {
+				this.mode = mode;
+			}
+
+			@Override
+			public ApplicationRunMode determineRunMode(Class<?> applicationClass, ClassLoader classLoader) {
+				return this.mode;
+			}
+
+		}
+
 	}
 
 }
