@@ -79,10 +79,10 @@ class ChildManagementContextInitializerAotTests {
 								EndpointAutoConfiguration.class));
 		contextRunner.withPropertyValues("server.port=0", "management.server.port=0").prepare((context) -> {
 			InMemoryGeneratedFiles generatedFiles = new InMemoryGeneratedFiles();
-			DefaultGenerationContext generationContext = new DefaultGenerationContext(generatedFiles);
-			ClassName className = ClassName.get("com.example", "TestInitializer");
-			new ApplicationContextAotGenerator().generateApplicationContext(
-					(GenericApplicationContext) context.getSourceApplicationContext(), generationContext, className);
+			DefaultGenerationContext generationContext = new DefaultGenerationContext(TestTarget.class, "",
+					generatedFiles);
+			ClassName className = new ApplicationContextAotGenerator().generateApplicationContext(
+					(GenericApplicationContext) context.getSourceApplicationContext(), generationContext);
 			generationContext.writeGeneratedContent();
 			TestCompiler compiler = TestCompiler.forSystem();
 			compiler.withFiles(generatedFiles).compile((compiled) -> {
@@ -103,6 +103,10 @@ class ChildManagementContextInitializerAotTests {
 			int count = StringUtils.countOccurrencesOf(charSequence.toString(), substring);
 			assertThat(count).isEqualTo(expectedCount);
 		};
+	}
+
+	static class TestTarget {
+
 	}
 
 	static class MockBeanRegistrationCode implements BeanRegistrationCode {

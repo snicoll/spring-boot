@@ -267,7 +267,8 @@ class ConfigurationPropertiesBeanFactoryInitializationAotProcessorTests {
 	private RuntimeHints process(ConfigurableListableBeanFactory beanFactory) {
 		BeanFactoryInitializationAotContribution contribution = this.processor.processAheadOfTime(beanFactory);
 		assertThat(contribution).isNotNull();
-		GenerationContext generationContext = new DefaultGenerationContext(new InMemoryGeneratedFiles());
+		GenerationContext generationContext = new DefaultGenerationContext(Object.class, "",
+				new InMemoryGeneratedFiles());
 		contribution.applyTo(generationContext, mock(BeanFactoryInitializationCode.class));
 		return generationContext.getRuntimeHints();
 	}
