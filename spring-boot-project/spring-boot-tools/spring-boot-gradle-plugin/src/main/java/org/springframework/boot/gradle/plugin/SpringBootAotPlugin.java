@@ -32,7 +32,7 @@ import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskProvider;
 
-import org.springframework.boot.gradle.tasks.aot.GenerateAotSources;
+import org.springframework.boot.gradle.tasks.aot.BootAot;
 
 /**
  * Gradle plugin for Spring Boot AOT.
@@ -48,9 +48,9 @@ public class SpringBootAotPlugin implements Plugin<Project> {
 	public static final String AOT_SOURCE_SET_NAME = "aot";
 
 	/**
-	 * Name of the default {@link GenerateAotSources} task.
+	 * Name of the default {@link BootAot} task.
 	 */
-	public static final String GENERATE_AOT_SOURCES_TASK_NAME = "generateAotSources";
+	public static final String GENERATE_AOT_SOURCES_TASK_NAME = "bootAot";
 
 	@Override
 	public void apply(Project project) {
@@ -86,8 +86,8 @@ public class SpringBootAotPlugin implements Plugin<Project> {
 	private void registerGenerateAotSourcesTask(Project project, SourceSet aotSourceSet) {
 		TaskProvider<ResolveMainClassName> resolveMainClassName = project.getTasks()
 				.named(SpringBootPlugin.RESOLVE_MAIN_CLASS_NAME_TASK_NAME, ResolveMainClassName.class);
-		TaskProvider<GenerateAotSources> generateAotSources = project.getTasks()
-				.register(GENERATE_AOT_SOURCES_TASK_NAME, GenerateAotSources.class, (task) -> {
+		TaskProvider<BootAot> bootAot = project.getTasks().register(GENERATE_AOT_SOURCES_TASK_NAME, BootAot.class,
+				(task) -> {
 					Provider<Directory> generatedClasses = project.getLayout().getBuildDirectory()
 							.dir(GENERATE_AOT_SOURCES_TASK_NAME);
 					aotSourceSet.getOutput().dir(generatedClasses);
@@ -100,9 +100,9 @@ public class SpringBootAotPlugin implements Plugin<Project> {
 					task.getArtifactId().set(project.provider(() -> project.getName()));
 				});
 		project.getTasks().named(aotSourceSet.getCompileJavaTaskName())
-				.configure((compileJava) -> compileJava.dependsOn(generateAotSources));
+				.configure((compileJava) -> compileJava.dependsOn(bootAot));
 		project.getTasks().named(aotSourceSet.getProcessResourcesTaskName())
-				.configure((processResources) -> processResources.dependsOn(generateAotSources));
+				.configure((processResources) -> processResources.dependsOn(bootAot));
 	}
 
 }

@@ -40,24 +40,24 @@ class SpringBootAotPluginIntegrationTests {
 
 	@TestTemplate
 	void noGenerateAotSourcesTaskWithoutAotPluginApplied() {
-		assertThat(this.gradleBuild.build("taskExists", "-PtaskName=generateAotSources").getOutput())
-				.contains("generateAotSources exists = false");
+		assertThat(this.gradleBuild.build("taskExists", "-PtaskName=bootAot").getOutput())
+				.contains("bootAot exists = false");
 	}
 
 	@TestTemplate
-	void applyingAotPluginCreatesGenerateAotSourcesTask() {
-		assertThat(this.gradleBuild.build("taskExists", "-PtaskName=generateAotSources").getOutput())
-				.contains("generateAotSources exists = true");
+	void applyingAotPluginCreatesBootAotTask() {
+		assertThat(this.gradleBuild.build("taskExists", "-PtaskName=bootAot").getOutput())
+				.contains("bootAot exists = true");
 	}
 
 	@TestTemplate
-	void generateAotSourcesHasLibraryResourcesOnItsClasspath() throws IOException {
+	void bootAotHasLibraryResourcesOnItsClasspath() throws IOException {
 		File settings = new File(this.gradleBuild.getProjectDir(), "settings.gradle");
 		Files.write(settings.toPath(), List.of("include 'library'"));
 		File library = new File(this.gradleBuild.getProjectDir(), "library");
 		library.mkdirs();
 		Files.write(library.toPath().resolve("build.gradle"), List.of("plugins {", "    id 'java-library'", "}"));
-		assertThat(this.gradleBuild.build("generateAotSourcesClasspath").getOutput()).contains("library.jar");
+		assertThat(this.gradleBuild.build("bootAotClasspath").getOutput()).contains("library.jar");
 	}
 
 }

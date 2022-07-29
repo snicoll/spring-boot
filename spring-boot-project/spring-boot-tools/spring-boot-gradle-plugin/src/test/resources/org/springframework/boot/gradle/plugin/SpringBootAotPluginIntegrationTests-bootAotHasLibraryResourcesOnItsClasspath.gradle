@@ -8,8 +8,8 @@ dependencies {
 	implementation project(":library")
 }
 
-task('generateAotSourcesClasspath') {
+task('bootAotClasspath') {
 	doFirst {
-		tasks.findByName('generateAotSources').classpath.files.each { println it }
+		tasks.findByName('bootAot').classpath.files.each { println it }
 	}
 }

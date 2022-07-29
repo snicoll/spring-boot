@@ -28,13 +28,13 @@ import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
 
 /**
- * Custom {@link JavaExec} task for generating sources ahead of time.
+ * Custom {@link JavaExec} task for invoking the AOT engine on the application.
  *
  * @author Andy Wilkinson
  * @since 3.0.0
  */
 @CacheableTask
-public class GenerateAotSources extends JavaExec {
+public class BootAot extends JavaExec {
 
 	private final Property<String> applicationClass;
 
@@ -48,7 +48,7 @@ public class GenerateAotSources extends JavaExec {
 
 	private final Property<String> artifactId;
 
-	public GenerateAotSources() {
+	public BootAot() {
 		this.applicationClass = getProject().getObjects().property(String.class);
 		this.sourcesDir = getProject().getObjects().directoryProperty();
 		this.resourcesDir = getProject().getObjects().directoryProperty();
