@@ -57,7 +57,7 @@ import org.springframework.util.ObjectUtils;
  * @author Andy Wilkinson
  * @since 3.0.0
  */
-@Mojo(name = "aot-generate", defaultPhase = LifecyclePhase.PREPARE_PACKAGE, threadSafe = true,
+@Mojo(name = "aot", defaultPhase = LifecyclePhase.PREPARE_PACKAGE, threadSafe = true,
 		requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME,
 		requiresDependencyCollection = ResolutionScope.COMPILE_PLUS_RUNTIME)
 public class AotGenerateMojo extends AbstractDependencyFilterMojo {

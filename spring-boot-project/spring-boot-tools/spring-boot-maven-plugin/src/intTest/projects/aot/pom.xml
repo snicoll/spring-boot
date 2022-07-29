@@ -19,7 +19,7 @@
 				<executions>
 					<execution>
 						<goals>
-							<goal>aot-generate</goal>
+							<goal>aot</goal>
 						</goals>
 					</execution>
 				</executions>
