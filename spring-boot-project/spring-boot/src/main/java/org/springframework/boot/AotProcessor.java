@@ -30,6 +30,7 @@ import org.springframework.aot.generate.ClassNameGenerator;
 import org.springframework.aot.generate.DefaultGenerationContext;
 import org.springframework.aot.generate.FileSystemGeneratedFiles;
 import org.springframework.aot.generate.GeneratedFiles.Kind;
+import org.springframework.aot.generate.RootPackageTargetResolver;
 import org.springframework.aot.hint.ExecutableMode;
 import org.springframework.aot.hint.ReflectionHints;
 import org.springframework.aot.hint.RuntimeHints;
@@ -124,8 +125,10 @@ public class AotProcessor {
 
 	private void performAotProcessing(GenericApplicationContext applicationContext) {
 		FileSystemGeneratedFiles generatedFiles = new FileSystemGeneratedFiles(this::getRoot);
+		RootPackageTargetResolver targetResolver = new RootPackageTargetResolver(
+				this.application.getPackageName() + ".aot");
 		DefaultGenerationContext generationContext = new DefaultGenerationContext(
-				new ClassNameGenerator(this.application), generatedFiles);
+				new ClassNameGenerator(ClassName.get(this.application), "", targetResolver), generatedFiles);
 		ApplicationContextAotGenerator generator = new ApplicationContextAotGenerator();
 		ClassName generatedInitializerClassName = generator.processAheadOfTime(applicationContext, generationContext);
 		registerEntryPointHint(generationContext, generatedInitializerClassName);
