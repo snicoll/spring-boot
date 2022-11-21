@@ -231,6 +231,11 @@ publishing.publications.withType(MavenPublication) {
 			profiles {
 				profile {
 					delegate.id("native")
+					activation {
+						property {
+							delegate.name('spring-boot.native')
+						}
+					}
 					build {
 						pluginManagement {
 							plugins {
@@ -269,6 +274,60 @@ publishing.publications.withType(MavenPublication) {
 											delegate.id('add-reachability-metadata')
 											goals {
 												delegate.goal('add-reachability-metadata')
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+				profile {
+					delegate.id("nativeBuildpacks")
+					activation {
+						property {
+							delegate.name('spring-boot.native')
+							delegate.value('buildpacks')
+						}
+					}
+					build {
+						pluginManagement {
+							plugins {
+								plugin {
+									delegate.groupId('org.springframework.boot')
+									delegate.artifactId('spring-boot-maven-plugin')
+									executions {
+										execution {
+											delegate.id('build-image')
+											goals {
+												delegate.goal('build-image')
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+				profile {
+					delegate.id("nativeNbt")
+					activation {
+						property {
+							delegate.name('spring-boot.native')
+							delegate.value('nbt')
+						}
+					}
+					build {
+						pluginManagement {
+							plugins {
+								plugin {
+									delegate.groupId('org.graalvm.buildtools')
+									delegate.artifactId('native-maven-plugin')
+									executions {
+										execution {
+											delegate.id('build-image')
+											goals {
+												delegate.goal('compile-no-fork')
 											}
 										}
 									}
