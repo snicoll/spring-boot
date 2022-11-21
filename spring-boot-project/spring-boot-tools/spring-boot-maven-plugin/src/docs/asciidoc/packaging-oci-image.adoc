@@ -209,6 +209,7 @@ You can override this behaviour as shown in the <<build-image.examples.builder-c
 For more details, see also <<build-image.examples,examples>>.
 
 include::goals/build-image.adoc[leveloffset=+1]
+include::goals/build-image-no-fork.adoc[leveloffset=+1]
 
 
 
