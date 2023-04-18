@@ -17,9 +17,40 @@ bom {
 	library("ActiveMQ", "5.18.1") {
 		group("org.apache.activemq") {
 			modules = [
+					"activemq-amqp",
+					"activemq-blueprint",
+					"activemq-broker",
+					"activemq-camel",
 					"activemq-client",
 					"activemq-client-jakarta",
+					"activemq-console" {
+						exclude group: "commons-logging", module: "commons-logging"
+					},
+					"activemq-http",
+					"activemq-jaas",
+					"activemq-jdbc-store",
+					"activemq-jms-pool",
+					"activemq-kahadb-store",
+					"activemq-karaf",
+					"activemq-leveldb-store" {
+						exclude group: "commons-logging", module: "commons-logging"
+					},
+					"activemq-log4j-appender",
+					"activemq-mqtt",
+					"activemq-openwire-generator",
 					"activemq-openwire-legacy",
+					"activemq-osgi",
+					"activemq-partition",
+					"activemq-pool",
+					"activemq-ra",
+					"activemq-run",
+					"activemq-runtime-config",
+					"activemq-shiro",
+					"activemq-spring" {
+						exclude group: "commons-logging", module: "commons-logging"
+					},
+					"activemq-stomp",
+					"activemq-web"
 			]
 		}
 	}
