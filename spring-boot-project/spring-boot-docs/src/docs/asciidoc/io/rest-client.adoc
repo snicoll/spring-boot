@@ -181,7 +181,6 @@ Spring Boot will auto-detect which HTTP client to use with `RestClient` and `Res
 In order of preference, the following clients are supported:
 
 . Apache HttpClient
-. Jetty HttpClient
 . OkHttp (deprecated)
 . Simple JDK client (`HttpURLConnection`)
 

@@ -16,6 +16,10 @@
 
 package smoketest.jetty;
 
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.zip.GZIPInputStream;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import smoketest.jetty.util.RandomStringUtil;
@@ -31,6 +35,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StreamUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -60,14 +65,16 @@ class SampleJettyApplicationTests {
 	}
 
 	@Test
-	void testCompression() {
-		// Jetty HttpClient sends Accept-Encoding: gzip by default
-		ResponseEntity<String> entity = this.restTemplate.getForEntity("/", String.class);
+	void testCompression() throws Exception {
+		HttpHeaders requestHeaders = new HttpHeaders();
+		requestHeaders.set("Accept-Encoding", "gzip");
+		HttpEntity<?> requestEntity = new HttpEntity<>(requestHeaders);
+		ResponseEntity<byte[]> entity = this.restTemplate.exchange("/", HttpMethod.GET, requestEntity, byte[].class);
 		assertThat(entity.getStatusCode()).isEqualTo(HttpStatus.OK);
-		assertThat(entity.getBody()).isEqualTo("Hello World");
-		// Jetty HttpClient decodes gzip reponses automatically
-		// Check that we received a gzip-encoded response
-		assertThat(entity.getHeaders().getFirst(HttpHeaders.CONTENT_ENCODING)).isEqualTo("gzip");
+		assertThat(entity.getBody()).isNotNull();
+		try (GZIPInputStream inflater = new GZIPInputStream(new ByteArrayInputStream(entity.getBody()))) {
+			assertThat(StreamUtils.copyToString(inflater, StandardCharsets.UTF_8)).isEqualTo("Hello World");
+		}
 	}
 
 	@Test

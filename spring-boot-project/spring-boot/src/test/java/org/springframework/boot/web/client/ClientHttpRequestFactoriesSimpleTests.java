@@ -26,7 +26,7 @@ import org.springframework.test.util.ReflectionTestUtils;
  *
  * @author Andy Wilkinson
  */
-@ClassPathExclusions({ "httpclient5-*.jar", "jetty-client-*.jar", "okhttp-*.jar" })
+@ClassPathExclusions({ "httpclient5-*.jar", "okhttp-*.jar" })
 class ClientHttpRequestFactoriesSimpleTests
 		extends AbstractClientHttpRequestFactoriesTests<SimpleClientHttpRequestFactory> {
 
