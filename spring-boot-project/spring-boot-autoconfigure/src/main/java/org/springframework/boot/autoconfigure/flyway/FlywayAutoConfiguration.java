@@ -32,6 +32,7 @@ import org.flywaydb.core.api.MigrationVersion;
 import org.flywaydb.core.api.callback.Callback;
 import org.flywaydb.core.api.configuration.FluentConfiguration;
 import org.flywaydb.core.api.migration.JavaMigration;
+import org.flywaydb.database.oracle.OracleConfigurationExtension;
 import org.flywaydb.database.sqlserver.SQLServerConfigurationExtension;
 
 import org.springframework.aot.hint.RuntimeHints;
@@ -242,12 +243,7 @@ public class FlywayAutoConfiguration {
 			map.from(properties.getDryRunOutput()).to(configuration::dryRunOutput);
 			map.from(properties.getErrorOverrides()).to(configuration::errorOverrides);
 			map.from(properties.getLicenseKey()).to(configuration::licenseKey);
-			// No method references for Oracle props for compatibility with Flyway 9.20+
-			map.from(properties.getOracleSqlplus()).to((oracleSqlplus) -> configuration.oracleSqlplus(oracleSqlplus));
-			map.from(properties.getOracleSqlplusWarn())
-				.to((oracleSqlplusWarn) -> configuration.oracleSqlplusWarn(oracleSqlplusWarn));
-			map.from(properties.getOracleKerberosCacheFile())
-				.to((oracleKerberosCacheFile) -> configuration.oracleKerberosCacheFile(oracleKerberosCacheFile));
+			configureOracleExtension(configuration, properties, map);
 			map.from(properties.getStream()).to(configuration::stream);
 			map.from(properties.getUndoSqlMigrationPrefix()).to(configuration::undoSqlMigrationPrefix);
 			map.from(properties.getCherryPick()).to(configuration::cherryPick);
@@ -274,6 +270,26 @@ public class FlywayAutoConfiguration {
 			catch (NoSuchMethodError ex) {
 				// Flyway < 9.14
 			}
+		}
+
+		private void configureOracleExtension(FluentConfiguration configuration, FlywayProperties properties,
+				PropertyMapper map) {
+			if (properties.getOracleSqlplus() == null && properties.getOracleSqlplusWarn() == null
+					&& properties.getOracleWalletLocation() == null
+					&& properties.getOracleKerberosCacheFile() == null) {
+				return;
+			}
+			OracleConfigurationExtension extension = configuration.getPluginRegister()
+				.getPlugin(OracleConfigurationExtension.class);
+			Assert.state(extension != null, "Flyway Oracle extension missing");
+			// No method references for Oracle props for compatibility with Flyway 9.20+
+			map.from(properties.getOracleSqlplus()).to((oracleSqlplus) -> extension.setSqlplus(oracleSqlplus));
+			map.from(properties.getOracleSqlplusWarn())
+				.to((oracleSqlplusWarn) -> extension.setSqlplusWarn(oracleSqlplusWarn));
+			map.from(properties.getOracleWalletLocation())
+				.to((walletLocation) -> extension.setWalletLocation(walletLocation));
+			map.from(properties.getOracleKerberosCacheFile())
+				.to((oracleKerberosCacheFile) -> extension.setKerberosCacheFile(oracleKerberosCacheFile));
 		}
 
 		private void configureSqlServerKerberosLoginFile(FluentConfiguration configuration,

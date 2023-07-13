@@ -33,6 +33,7 @@ import org.flywaydb.core.api.callback.Context;
 import org.flywaydb.core.api.callback.Event;
 import org.flywaydb.core.api.migration.JavaMigration;
 import org.flywaydb.core.internal.license.FlywayTeamsUpgradeRequiredException;
+import org.flywaydb.database.oracle.OracleConfigurationExtension;
 import org.flywaydb.database.sqlserver.SQLServerConfigurationExtension;
 import org.hibernate.engine.transaction.jta.platform.internal.NoJtaPlatform;
 import org.jooq.DSLContext;
@@ -606,14 +607,34 @@ class FlywayAutoConfigurationTests {
 	void oracleSqlplusIsCorrectlyMapped() {
 		this.contextRunner.withUserConfiguration(EmbeddedDataSourceConfiguration.class)
 			.withPropertyValues("spring.flyway.oracle-sqlplus=true")
-			.run(validateFlywayTeamsPropertyOnly("oracle.sqlplus"));
+			.run((context) -> assertThat(context.getBean(Flyway.class)
+				.getConfiguration()
+				.getPluginRegister()
+				.getPlugin(OracleConfigurationExtension.class)
+				.getSqlplus()).isTrue());
+
 	}
 
 	@Test
 	void oracleSqlplusWarnIsCorrectlyMapped() {
 		this.contextRunner.withUserConfiguration(EmbeddedDataSourceConfiguration.class)
 			.withPropertyValues("spring.flyway.oracle-sqlplus-warn=true")
-			.run(validateFlywayTeamsPropertyOnly("oracle.sqlplusWarn"));
+			.run((context) -> assertThat(context.getBean(Flyway.class)
+				.getConfiguration()
+				.getPluginRegister()
+				.getPlugin(OracleConfigurationExtension.class)
+				.getSqlplusWarn()).isTrue());
+	}
+
+	@Test
+	void oracleWallerLocationIsCorrectlyMapped() {
+		this.contextRunner.withUserConfiguration(EmbeddedDataSourceConfiguration.class)
+			.withPropertyValues("spring.flyway.oracle-wallet-location=/tmp/my.wallet")
+			.run((context) -> assertThat(context.getBean(Flyway.class)
+				.getConfiguration()
+				.getPluginRegister()
+				.getPlugin(OracleConfigurationExtension.class)
+				.getWalletLocation()).isEqualTo("/tmp/my.wallet"));
 	}
 
 	@Test
@@ -687,7 +708,11 @@ class FlywayAutoConfigurationTests {
 	void oracleKerberosCacheFileIsCorrectlyMapped() {
 		this.contextRunner.withUserConfiguration(EmbeddedDataSourceConfiguration.class)
 			.withPropertyValues("spring.flyway.oracle-kerberos-cache-file=/tmp/cache")
-			.run(validateFlywayTeamsPropertyOnly("oracle.kerberosCacheFile"));
+			.run((context) -> assertThat(context.getBean(Flyway.class)
+				.getConfiguration()
+				.getPluginRegister()
+				.getPlugin(OracleConfigurationExtension.class)
+				.getKerberosCacheFile()).isEqualTo("/tmp/cache"));
 	}
 
 	@Test
