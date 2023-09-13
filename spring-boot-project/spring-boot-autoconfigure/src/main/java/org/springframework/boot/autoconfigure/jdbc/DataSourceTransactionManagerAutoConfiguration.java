@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2022 the original author or authors.
+ * Copyright 2012-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,15 +18,14 @@ package org.springframework.boot.autoconfigure.jdbc;
 
 import javax.sql.DataSource;
 
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureOrder;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnSingleCandidate;
+import org.springframework.boot.autoconfigure.transaction.PlatformTransactionManagerFactory;
 import org.springframework.boot.autoconfigure.transaction.TransactionAutoConfiguration;
-import org.springframework.boot.autoconfigure.transaction.TransactionManagerCustomizers;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -57,12 +56,9 @@ public class DataSourceTransactionManagerAutoConfiguration {
 	static class JdbcTransactionManagerConfiguration {
 
 		@Bean
-		@ConditionalOnMissingBean(TransactionManager.class)
-		DataSourceTransactionManager transactionManager(Environment environment, DataSource dataSource,
-				ObjectProvider<TransactionManagerCustomizers> transactionManagerCustomizers) {
-			DataSourceTransactionManager transactionManager = createTransactionManager(environment, dataSource);
-			transactionManagerCustomizers.ifAvailable((customizers) -> customizers.customize(transactionManager));
-			return transactionManager;
+		@ConditionalOnMissingBean
+		PlatformTransactionManagerFactory transactionManagerFactory(Environment environment, DataSource dataSource) {
+			return PlatformTransactionManagerFactory.using(() -> createTransactionManager(environment, dataSource));
 		}
 
 		private DataSourceTransactionManager createTransactionManager(Environment environment, DataSource dataSource) {

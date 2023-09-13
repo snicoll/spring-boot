@@ -35,7 +35,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication.Type;
 import org.springframework.boot.autoconfigure.domain.EntityScanPackages;
-import org.springframework.boot.autoconfigure.transaction.TransactionManagerCustomizers;
+import org.springframework.boot.autoconfigure.transaction.PlatformTransactionManagerFactory;
 import org.springframework.boot.autoconfigure.web.servlet.ConditionalOnMissingFilterBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.orm.jpa.EntityManagerFactoryBuilder;
@@ -53,7 +53,6 @@ import org.springframework.orm.jpa.support.OpenEntityManagerInViewFilter;
 import org.springframework.orm.jpa.support.OpenEntityManagerInViewInterceptor;
 import org.springframework.orm.jpa.vendor.AbstractJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.TransactionManager;
 import org.springframework.transaction.jta.JtaTransactionManager;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -89,12 +88,9 @@ public abstract class JpaBaseConfiguration {
 	}
 
 	@Bean
-	@ConditionalOnMissingBean(TransactionManager.class)
-	public PlatformTransactionManager transactionManager(
-			ObjectProvider<TransactionManagerCustomizers> transactionManagerCustomizers) {
-		JpaTransactionManager transactionManager = new JpaTransactionManager();
-		transactionManagerCustomizers.ifAvailable((customizers) -> customizers.customize(transactionManager));
-		return transactionManager;
+	@ConditionalOnMissingBean
+	public PlatformTransactionManagerFactory transactionManagerFactory() {
+		return PlatformTransactionManagerFactory.using(JpaTransactionManager::new);
 	}
 
 	@Bean

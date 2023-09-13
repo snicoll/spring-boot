@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2022 the original author or authors.
+ * Copyright 2012-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ import java.util.Set;
 
 import org.neo4j.driver.Driver;
 
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -28,8 +27,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.domain.EntityScanner;
 import org.springframework.boot.autoconfigure.neo4j.Neo4jAutoConfiguration;
+import org.springframework.boot.autoconfigure.transaction.PlatformTransactionManagerFactory;
 import org.springframework.boot.autoconfigure.transaction.TransactionAutoConfiguration;
-import org.springframework.boot.autoconfigure.transaction.TransactionManagerCustomizers;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -44,7 +43,6 @@ import org.springframework.data.neo4j.core.schema.RelationshipProperties;
 import org.springframework.data.neo4j.core.transaction.Neo4jTransactionManager;
 import org.springframework.data.neo4j.repository.config.Neo4jRepositoryConfigurationExtension;
 import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.TransactionManager;
 
 /**
  * {@link EnableAutoConfiguration Auto-configuration} for Spring Data Neo4j.
@@ -100,13 +98,11 @@ public class Neo4jDataAutoConfiguration {
 		return new Neo4jTemplate(neo4jClient, neo4jMappingContext);
 	}
 
-	@Bean(Neo4jRepositoryConfigurationExtension.DEFAULT_TRANSACTION_MANAGER_BEAN_NAME)
-	@ConditionalOnMissingBean(TransactionManager.class)
-	public Neo4jTransactionManager transactionManager(Driver driver, DatabaseSelectionProvider databaseNameProvider,
-			ObjectProvider<TransactionManagerCustomizers> optionalCustomizers) {
-		Neo4jTransactionManager transactionManager = new Neo4jTransactionManager(driver, databaseNameProvider);
-		optionalCustomizers.ifAvailable((customizer) -> customizer.customize(transactionManager));
-		return transactionManager;
+	@Bean
+	@ConditionalOnMissingBean
+	public PlatformTransactionManagerFactory transactionManagerFactory(Driver driver,
+			DatabaseSelectionProvider databaseNameProvider) {
+		return PlatformTransactionManagerFactory.using(() -> new Neo4jTransactionManager(driver, databaseNameProvider));
 	}
 
 }

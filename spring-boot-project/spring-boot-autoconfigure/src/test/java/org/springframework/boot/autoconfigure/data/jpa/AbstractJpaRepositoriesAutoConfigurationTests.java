@@ -32,6 +32,7 @@ import org.springframework.boot.autoconfigure.jdbc.EmbeddedDataSourceConfigurati
 import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
 import org.springframework.boot.autoconfigure.task.TaskExecutionAutoConfiguration;
 import org.springframework.boot.autoconfigure.task.TaskSchedulingAutoConfiguration;
+import org.springframework.boot.autoconfigure.transaction.TransactionAutoConfiguration;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan.Filter;
@@ -57,8 +58,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 abstract class AbstractJpaRepositoriesAutoConfigurationTests {
 
 	final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
-		.withConfiguration(AutoConfigurations.of(HibernateJpaAutoConfiguration.class,
-				JpaRepositoriesAutoConfiguration.class, PropertyPlaceholderAutoConfiguration.class))
+		.withConfiguration(
+				AutoConfigurations.of(HibernateJpaAutoConfiguration.class, JpaRepositoriesAutoConfiguration.class,
+						TransactionAutoConfiguration.class, PropertyPlaceholderAutoConfiguration.class))
 		.withUserConfiguration(EmbeddedDataSourceConfiguration.class);
 
 	@Test

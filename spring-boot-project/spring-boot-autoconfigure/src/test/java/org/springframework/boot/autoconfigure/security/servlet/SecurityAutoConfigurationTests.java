@@ -29,6 +29,7 @@ import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoCon
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
 import org.springframework.boot.autoconfigure.orm.jpa.test.City;
+import org.springframework.boot.autoconfigure.transaction.TransactionAutoConfiguration;
 import org.springframework.boot.autoconfigure.web.servlet.WebMvcAutoConfiguration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.ConfigurationPropertiesBinding;
@@ -144,8 +145,8 @@ class SecurityAutoConfigurationTests {
 	void testJpaCoexistsHappily() {
 		this.contextRunner.withPropertyValues("spring.datasource.url:jdbc:hsqldb:mem:testsecdb")
 			.withUserConfiguration(EntityConfiguration.class)
-			.withConfiguration(
-					AutoConfigurations.of(HibernateJpaAutoConfiguration.class, DataSourceAutoConfiguration.class))
+			.withConfiguration(AutoConfigurations.of(HibernateJpaAutoConfiguration.class,
+					DataSourceAutoConfiguration.class, TransactionAutoConfiguration.class))
 			.run((context) -> assertThat(context.getBean(JpaTransactionManager.class)).isNotNull());
 		// This can fail if security @Conditionals force early instantiation of the
 		// HibernateJpaAutoConfiguration (e.g. the EntityManagerFactory is not found)

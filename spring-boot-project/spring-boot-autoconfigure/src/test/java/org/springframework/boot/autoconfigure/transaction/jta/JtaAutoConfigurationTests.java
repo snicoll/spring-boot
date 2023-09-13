@@ -42,6 +42,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.osjava.sj.loader.JndiLoader;
 
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
+import org.springframework.boot.autoconfigure.transaction.TransactionAutoConfiguration;
 import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.boot.testsupport.classpath.ClassPathExclusions;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -81,7 +82,8 @@ class JtaAutoConfigurationTests {
 	@MethodSource("transactionManagerJndiEntries")
 	void transactionManagerFromJndi(JndiEntry jndiEntry, InitialContext initialContext) throws NamingException {
 		jndiEntry.register(initialContext);
-		this.context = new AnnotationConfigApplicationContext(JtaAutoConfiguration.class);
+		this.context = new AnnotationConfigApplicationContext(JtaAutoConfiguration.class,
+				TransactionAutoConfiguration.class);
 		JtaTransactionManager transactionManager = this.context.getBean(JtaTransactionManager.class);
 		if (jndiEntry.value instanceof UserTransaction) {
 			assertThat(transactionManager.getUserTransaction()).isEqualTo(jndiEntry.value);
@@ -103,7 +105,7 @@ class JtaAutoConfigurationTests {
 	@Test
 	void customTransactionManager() {
 		this.context = new AnnotationConfigApplicationContext(CustomTransactionManagerConfig.class,
-				JtaAutoConfiguration.class);
+				JtaAutoConfiguration.class, TransactionAutoConfiguration.class);
 		assertThatExceptionOfType(NoSuchBeanDefinitionException.class)
 			.isThrownBy(() -> this.context.getBean(JtaTransactionManager.class));
 	}

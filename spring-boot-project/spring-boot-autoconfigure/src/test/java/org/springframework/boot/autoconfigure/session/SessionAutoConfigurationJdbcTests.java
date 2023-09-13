@@ -30,6 +30,7 @@ import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.JdbcTemplateAutoConfiguration;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
+import org.springframework.boot.autoconfigure.transaction.TransactionAutoConfiguration;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.jdbc.init.DataSourceScriptDatabaseInitializer;
 import org.springframework.boot.sql.init.DatabaseInitializationMode;
@@ -67,8 +68,8 @@ class SessionAutoConfigurationJdbcTests extends AbstractSessionAutoConfiguration
 		.withClassLoader(new FilteredClassLoader(HazelcastIndexedSessionRepository.class,
 				MongoIndexedSessionRepository.class, RedisIndexedSessionRepository.class))
 		.withConfiguration(AutoConfigurations.of(DataSourceAutoConfiguration.class,
-				DataSourceTransactionManagerAutoConfiguration.class, JdbcTemplateAutoConfiguration.class,
-				SessionAutoConfiguration.class))
+				DataSourceTransactionManagerAutoConfiguration.class, TransactionAutoConfiguration.class,
+				JdbcTemplateAutoConfiguration.class, SessionAutoConfiguration.class))
 		.withPropertyValues("spring.datasource.generate-unique-name=true");
 
 	@Test

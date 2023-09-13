@@ -32,6 +32,7 @@ import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.JdbcTemplateAutoConfiguration;
 import org.springframework.boot.autoconfigure.sql.init.SqlInitializationAutoConfiguration;
+import org.springframework.boot.autoconfigure.transaction.TransactionAutoConfiguration;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -94,7 +95,7 @@ class JdbcRepositoriesAutoConfigurationTests {
 	void basicAutoConfiguration() {
 		this.contextRunner.with(database())
 			.withConfiguration(AutoConfigurations.of(JdbcTemplateAutoConfiguration.class,
-					DataSourceTransactionManagerAutoConfiguration.class))
+					DataSourceTransactionManagerAutoConfiguration.class, TransactionAutoConfiguration.class))
 			.withUserConfiguration(TestConfiguration.class)
 			.run((context) -> {
 				assertThat(context).hasSingleBean(AbstractJdbcConfiguration.class);
@@ -107,7 +108,7 @@ class JdbcRepositoriesAutoConfigurationTests {
 	void entityScanShouldSetManagedTypes() {
 		this.contextRunner.with(database())
 			.withConfiguration(AutoConfigurations.of(JdbcTemplateAutoConfiguration.class,
-					DataSourceTransactionManagerAutoConfiguration.class))
+					DataSourceTransactionManagerAutoConfiguration.class, TransactionAutoConfiguration.class))
 			.withUserConfiguration(TestConfiguration.class)
 			.run((context) -> {
 				JdbcMappingContext mappingContext = context.getBean(JdbcMappingContext.class);
@@ -120,7 +121,7 @@ class JdbcRepositoriesAutoConfigurationTests {
 	void autoConfigurationWithNoRepositories() {
 		this.contextRunner.with(database())
 			.withConfiguration(AutoConfigurations.of(JdbcTemplateAutoConfiguration.class,
-					DataSourceTransactionManagerAutoConfiguration.class))
+					DataSourceTransactionManagerAutoConfiguration.class, TransactionAutoConfiguration.class))
 			.withUserConfiguration(EmptyConfiguration.class)
 			.run((context) -> {
 				assertThat(context).hasSingleBean(AbstractJdbcConfiguration.class);
@@ -132,7 +133,7 @@ class JdbcRepositoriesAutoConfigurationTests {
 	void honoursUsersEnableJdbcRepositoriesConfiguration() {
 		this.contextRunner.with(database())
 			.withConfiguration(AutoConfigurations.of(JdbcTemplateAutoConfiguration.class,
-					DataSourceTransactionManagerAutoConfiguration.class))
+					DataSourceTransactionManagerAutoConfiguration.class, TransactionAutoConfiguration.class))
 			.withUserConfiguration(EnableRepositoriesConfiguration.class)
 			.run((context) -> {
 				assertThat(context).hasSingleBean(AbstractJdbcConfiguration.class);
@@ -184,7 +185,7 @@ class JdbcRepositoriesAutoConfigurationTests {
 	private void allowsUserToDefineCustomBean(Class<?> configuration, Class<?> beanType, String beanName) {
 		this.contextRunner.with(database())
 			.withConfiguration(AutoConfigurations.of(JdbcTemplateAutoConfiguration.class,
-					DataSourceTransactionManagerAutoConfiguration.class))
+					DataSourceTransactionManagerAutoConfiguration.class, TransactionAutoConfiguration.class))
 			.withUserConfiguration(configuration, EmptyConfiguration.class)
 			.run((context) -> {
 				assertThat(context).hasSingleBean(beanType);

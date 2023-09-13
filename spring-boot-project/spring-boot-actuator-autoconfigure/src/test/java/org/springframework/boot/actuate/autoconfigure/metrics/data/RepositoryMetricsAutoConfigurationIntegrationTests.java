@@ -29,6 +29,7 @@ import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoCon
 import org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.EmbeddedDataSourceConfiguration;
 import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
+import org.springframework.boot.autoconfigure.transaction.TransactionAutoConfiguration;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -43,9 +44,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 class RepositoryMetricsAutoConfigurationIntegrationTests {
 
 	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner().with(MetricsRun.simple())
-		.withConfiguration(
-				AutoConfigurations.of(HibernateJpaAutoConfiguration.class, JpaRepositoriesAutoConfiguration.class,
-						PropertyPlaceholderAutoConfiguration.class, RepositoryMetricsAutoConfiguration.class))
+		.withConfiguration(AutoConfigurations.of(HibernateJpaAutoConfiguration.class,
+				JpaRepositoriesAutoConfiguration.class, TransactionAutoConfiguration.class,
+				PropertyPlaceholderAutoConfiguration.class, RepositoryMetricsAutoConfiguration.class))
 		.withUserConfiguration(EmbeddedDataSourceConfiguration.class, TestConfig.class);
 
 	@Test

@@ -26,6 +26,7 @@ import org.springframework.boot.autoconfigure.data.neo4j.city.CityRepository;
 import org.springframework.boot.autoconfigure.data.neo4j.city.ReactiveCityRepository;
 import org.springframework.boot.autoconfigure.data.neo4j.country.CountryRepository;
 import org.springframework.boot.autoconfigure.data.neo4j.country.ReactiveCountryRepository;
+import org.springframework.boot.autoconfigure.transaction.TransactionAutoConfiguration;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -51,8 +52,8 @@ class Neo4jRepositoriesAutoConfigurationTests {
 
 	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
 		.withUserConfiguration(MockedDriverConfiguration.class)
-		.withConfiguration(
-				AutoConfigurations.of(Neo4jDataAutoConfiguration.class, Neo4jRepositoriesAutoConfiguration.class));
+		.withConfiguration(AutoConfigurations.of(Neo4jDataAutoConfiguration.class,
+				Neo4jRepositoriesAutoConfiguration.class, TransactionAutoConfiguration.class));
 
 	@Test
 	void configurationWithDefaultRepositories() {

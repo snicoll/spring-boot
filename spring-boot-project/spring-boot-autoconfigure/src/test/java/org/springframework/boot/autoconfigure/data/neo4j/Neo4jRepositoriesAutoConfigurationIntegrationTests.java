@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.data.neo4j.country.CountryRepository;
 import org.springframework.boot.autoconfigure.neo4j.Neo4jAutoConfiguration;
+import org.springframework.boot.autoconfigure.transaction.TransactionAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testsupport.testcontainers.DockerImageNames;
 import org.springframework.context.annotation.Configuration;
@@ -68,7 +69,7 @@ class Neo4jRepositoriesAutoConfigurationIntegrationTests {
 	@Configuration
 	@EnableNeo4jRepositories(basePackageClasses = CountryRepository.class)
 	@ImportAutoConfiguration({ Neo4jAutoConfiguration.class, Neo4jDataAutoConfiguration.class,
-			Neo4jRepositoriesAutoConfiguration.class })
+			Neo4jRepositoriesAutoConfiguration.class, TransactionAutoConfiguration.class })
 	static class TestConfiguration {
 
 	}

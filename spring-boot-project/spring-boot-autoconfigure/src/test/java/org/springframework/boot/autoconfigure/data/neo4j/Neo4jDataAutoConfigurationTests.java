@@ -26,6 +26,7 @@ import org.springframework.boot.autoconfigure.data.neo4j.scan.TestNonAnnotated;
 import org.springframework.boot.autoconfigure.data.neo4j.scan.TestPersistent;
 import org.springframework.boot.autoconfigure.data.neo4j.scan.TestRelationshipProperties;
 import org.springframework.boot.autoconfigure.neo4j.Neo4jAutoConfiguration;
+import org.springframework.boot.autoconfigure.transaction.TransactionAutoConfiguration;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -58,7 +59,8 @@ class Neo4jDataAutoConfigurationTests {
 
 	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
 		.withUserConfiguration(MockedDriverConfiguration.class)
-		.withConfiguration(AutoConfigurations.of(Neo4jAutoConfiguration.class, Neo4jDataAutoConfiguration.class));
+		.withConfiguration(AutoConfigurations.of(Neo4jAutoConfiguration.class, Neo4jDataAutoConfiguration.class,
+				TransactionAutoConfiguration.class));
 
 	@Test
 	void shouldProvideConversions() {

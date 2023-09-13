@@ -28,27 +28,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 /**
- * Tests for {@link TransactionManagerCustomizers}.
- *
- * @author Phillip Webb
+ * @author Stephane Nicoll
  */
-@Deprecated(since = "3.2.0", forRemoval = true)
-@SuppressWarnings("removal")
-class TransactionManagerCustomizersTests {
-
-	@Test
-	void customizeWithNullCustomizersShouldDoNothing() {
-		new TransactionManagerCustomizers(null).customize(mock(PlatformTransactionManager.class));
-	}
+class PlatformTransactionManagerFactoryTests {
 
 	@Test
 	void customizeShouldCheckGeneric() {
 		List<TestCustomizer<?>> list = new ArrayList<>();
 		list.add(new TestCustomizer<>());
 		list.add(new TestJtaCustomizer());
-		TransactionManagerCustomizers customizers = new TransactionManagerCustomizers(list);
-		customizers.customize(mock(PlatformTransactionManager.class));
-		customizers.customize(mock(JtaTransactionManager.class));
+		PlatformTransactionManagerFactory.using(() -> mock(PlatformTransactionManager.class)).create(list);
+		PlatformTransactionManagerFactory.using(() -> mock(JtaTransactionManager.class)).create(list);
 		assertThat(list.get(0).getCount()).isEqualTo(2);
 		assertThat(list.get(1).getCount()).isOne();
 	}

@@ -29,7 +29,9 @@ import org.springframework.transaction.PlatformTransactionManager;
  *
  * @author Phillip Webb
  * @since 1.5.0
+ * @deprecated as of 3.2.0 in favor of {@link PlatformTransactionManagerFactory}
  */
+@Deprecated(since = "3.2.0", forRemoval = true)
 public class TransactionManagerCustomizers {
 
 	private final List<PlatformTransactionManagerCustomizer<?>> customizers;
