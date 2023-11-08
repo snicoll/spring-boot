@@ -108,6 +108,7 @@ public class LayerToolsJarMode implements JarMode {
 			List<Command> commands = new ArrayList<>();
 			commands.add(new ListCommand(context));
 			commands.add(new ExtractCommand(context));
+			commands.add(new ExtractJarCommand(context));
 			return Collections.unmodifiableList(commands);
 		}
 
