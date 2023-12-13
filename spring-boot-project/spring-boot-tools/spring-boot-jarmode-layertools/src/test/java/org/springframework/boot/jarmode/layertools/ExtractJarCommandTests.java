@@ -141,11 +141,17 @@ class ExtractJarCommandTests {
 	private Path createJarFile(String name, Consumer<ZipOutputStream> streamHandler) throws IOException {
 		Path file = this.temp.resolve(name);
 		try (ZipOutputStream out = new ZipOutputStream(Files.newOutputStream(file))) {
+			createDirectory(out, "BOOT-INF/");
+			createDirectory(out, "BOOT-INF/classes/");
+			createDirectory(out, "BOOT-INF/classes/com/");
+			createDirectory(out, "BOOT-INF/classes/com/example/");
 			createEntry(out, "BOOT-INF/classes/com/example/DemoApplication.class", "some binary");
 			createEntry(out, "BOOT-INF/classes/application.properties", "prop=value");
 			createEntry(out, "BOOT-INF/classpath.idx", getFileContent("test-classpath.idx"));
 			createEntry(out, "hello.txt", "To be ignored");
+			createDirectory(out, "BOOT-INF/lib/");
 			createEmptyEntries(out, "BOOT-INF/lib/a.jar", "BOOT-INF/lib/b.jar", "BOOT-INF/lib/c.jar");
+			createDirectory(out, "META-INF/");
 			out.putNextEntry(entry("META-INF/MANIFEST.MF"));
 			out.write(getFileContent("test-manifest.MF").getBytes());
 			out.closeEntry();
@@ -165,6 +171,14 @@ class ExtractJarCommandTests {
 			out.putNextEntry(entry(path));
 			out.closeEntry();
 		}
+	}
+
+	private static void createDirectory(ZipOutputStream out, String path) throws IOException {
+		if (!path.endsWith("/")) {
+			throw new IllegalArgumentException("Path should end with / " + path);
+		}
+		out.putNextEntry(entry(path));
+		out.closeEntry();
 	}
 
 	private static void createEntry(ZipOutputStream out, String path, String content) throws IOException {

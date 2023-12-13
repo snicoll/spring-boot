@@ -85,9 +85,6 @@ class IndexedJarStructure implements JarStructure {
 
 	@Override
 	public Entry resolve(ZipEntry entry) {
-		if (entry.isDirectory()) {
-			return null;
-		}
 		String name = entry.getName();
 		if (this.classpathEntries.contains(name)) {
 			return new Entry(name, toStructureDependency(name), true);

@@ -90,7 +90,9 @@ class ExtractJarCommand extends Command {
 							else {
 								JarEntry jarEntry = createJarEntry(resolvedEntry, zipEntry);
 								output.putNextEntry(jarEntry);
-								StreamUtils.copy(zip, output);
+								if (!zipEntry.isDirectory()) {
+									StreamUtils.copy(zip, output);
+								}
 								output.closeEntry();
 							}
 						}
