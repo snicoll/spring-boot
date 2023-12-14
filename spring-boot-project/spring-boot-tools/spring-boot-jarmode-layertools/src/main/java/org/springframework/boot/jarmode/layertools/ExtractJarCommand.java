@@ -37,6 +37,7 @@ import java.util.zip.ZipInputStream;
 import org.springframework.boot.jarmode.layertools.JarStructure.Entry;
 import org.springframework.util.Assert;
 import org.springframework.util.StreamUtils;
+import org.springframework.util.StringUtils;
 
 /**
  * Hacking.
@@ -89,11 +90,11 @@ class ExtractJarCommand extends Command {
 							}
 							else {
 								JarEntry jarEntry = createJarEntry(resolvedEntry, zipEntry);
-								output.putNextEntry(jarEntry);
-								if (!zipEntry.isDirectory()) {
+								if (jarEntry != null) {
+									output.putNextEntry(jarEntry);
 									StreamUtils.copy(zip, output);
+									output.closeEntry();
 								}
-								output.closeEntry();
 							}
 						}
 						zipEntry = zip.getNextEntry();
@@ -144,6 +145,9 @@ class ExtractJarCommand extends Command {
 	}
 
 	private static JarEntry createJarEntry(Entry resolvedEntry, ZipEntry originalEntry) {
+		if (!StringUtils.hasLength(resolvedEntry.location())) {
+			return null;
+		}
 		JarEntry jarEntry = new JarEntry(resolvedEntry.location());
 		FileTime lastModifiedTime = originalEntry.getLastModifiedTime();
 		if (lastModifiedTime != null) {
