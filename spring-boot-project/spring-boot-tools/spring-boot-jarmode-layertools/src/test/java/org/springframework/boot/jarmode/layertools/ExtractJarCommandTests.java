@@ -26,6 +26,7 @@ import java.nio.file.attribute.FileTime;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.jar.Attributes;
@@ -42,6 +43,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import org.springframework.boot.jarmode.layertools.Command.Option;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.util.FileCopyUtils;
 
@@ -98,21 +100,49 @@ class ExtractJarCommandTests {
 		invoke(createJarFile("my-app.jar"));
 
 		Path runAppJar = this.extract.resolve("run-app.jar");
-		assertThat(runAppJar).exists().isNotEmptyFile();
-		try (JarFile jarFile = new JarFile(runAppJar.toFile())) {
-			Manifest manifest = jarFile.getManifest();
+		assertManifest(runAppJar, (manifest) -> {
 			Attributes attributes = manifest.getMainAttributes();
 			assertThat(attributes.getValue(Name.CLASS_PATH))
 				.isEqualTo("application/my-app.jar dependencies/a.jar dependencies/b.jar");
 			assertThat(attributes.getValue(Name.MAIN_CLASS)).isEqualTo("com.example.DemoApplication");
+		});
+	}
+
+	@Test
+	void runWithAdditionalJarsCopyExtLibraries() throws IOException {
+		Path libs = this.temp.resolve("libs");
+		Files.createDirectories(libs);
+		Path extA = Files.createFile(libs.resolve("ext-a.jar"));
+		Path extB = Files.createFile(libs.resolve("ext-b.jar"));
+		Map<Option, String> options = Map.of(ExtractJarCommand.ADDITIONAL_JARS_OPTION, "%s,%s".formatted(extA, extB));
+		invoke(createJarFile("my-app.jar"), options);
+
+		assertThat(this.extract.resolve("ext").toFile().list()).containsOnly("ext-a.jar", "ext-b.jar");
+		Path runAppJar = this.extract.resolve("run-app.jar");
+		assertManifest(runAppJar, (manifest) -> {
+			Attributes attributes = manifest.getMainAttributes();
+			assertThat(attributes.getValue(Name.CLASS_PATH))
+				.isEqualTo("application/my-app.jar dependencies/a.jar dependencies/b.jar ext/ext-a.jar ext/ext-b.jar");
+		});
+	}
+
+	private void assertManifest(Path file, Consumer<Manifest> assertions) throws IOException {
+		assertThat(file).exists().isNotEmptyFile();
+		try (JarFile jarFile = new JarFile(file.toFile())) {
+			Manifest manifest = jarFile.getManifest();
+			assertions.accept(manifest);
 		}
 	}
 
-	private void invoke(Path jarFile) {
+	private void invoke(Path jarFile, Map<Option, String> options) {
 		given(this.context.getArchiveFile()).willReturn(jarFile.toFile());
 		given(this.context.getWorkingDir()).willReturn(this.extract.toFile());
 		ExtractJarCommand command = new ExtractJarCommand(this.context);
-		command.run(Collections.emptyMap(), Collections.emptyList());
+		command.run(options, Collections.emptyList());
+	}
+
+	private void invoke(Path jarFile) {
+		invoke(jarFile, Collections.emptyMap());
 	}
 
 	private void timeAttributes(Path file) {

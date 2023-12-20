@@ -29,6 +29,7 @@ import java.util.jar.Attributes.Name;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 
 import org.springframework.util.Assert;
@@ -96,15 +97,15 @@ class IndexedJarStructure implements JarStructure {
 	}
 
 	@Override
-	public Manifest createRunJarManifest(UnaryOperator<String> libEntry) {
+	public Manifest createRunJarManifest(UnaryOperator<String> libEntry, List<String> additionalJars) {
 		Manifest manifest = new Manifest();
 		Attributes attributes = manifest.getMainAttributes();
 		attributes.put(Name.MANIFEST_VERSION, "1.0");
 		attributes.put(Name.MAIN_CLASS, getMandatoryAttribute(this.originalManifest, "Start-Class"));
 		attributes.put(Name.CLASS_PATH,
-				this.classpathEntries.stream()
-					.map(this::toStructureDependency)
-					.map(libEntry)
+				Stream
+					.concat(this.classpathEntries.stream().map(this::toStructureDependency).map(libEntry),
+							additionalJars.stream())
 					.collect(Collectors.joining(" ")));
 		return manifest;
 	}

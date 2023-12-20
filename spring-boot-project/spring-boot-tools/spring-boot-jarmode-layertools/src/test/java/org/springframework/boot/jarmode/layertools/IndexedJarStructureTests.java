@@ -20,6 +20,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Collections;
+import java.util.List;
 import java.util.jar.Attributes;
 import java.util.jar.Attributes.Name;
 import java.util.jar.Manifest;
@@ -74,10 +76,19 @@ class IndexedJarStructureTests {
 	}
 
 	@Test
-	void toRunManifestCreateClasspathEntriesInOrder() throws Exception {
+	void createRunJarManifestCreateClasspathEntriesInOrder() throws Exception {
 		IndexedJarStructure jarStructure = createInstance(getIndex());
-		Manifest manifest = jarStructure.createRunJarManifest((lib) -> "libs/" + lib);
+		Manifest manifest = jarStructure.createRunJarManifest((lib) -> "libs/" + lib, Collections.emptyList());
 		assertThat(manifest.getMainAttributes().get(Name.CLASS_PATH)).isEqualTo("libs/a.jar libs/b.jar");
+	}
+
+	@Test
+	void createRunJarManifestWithAdditionalJarAddsEntriesAtTheEnd() throws Exception {
+		IndexedJarStructure jarStructure = createInstance(getIndex());
+		Manifest manifest = jarStructure.createRunJarManifest((lib) -> "libs/" + lib,
+				List.of("ext/a.jar", "ext/b.jar"));
+		assertThat(manifest.getMainAttributes().get(Name.CLASS_PATH))
+			.isEqualTo("libs/a.jar libs/b.jar ext/a.jar ext/b.jar");
 	}
 
 	@Test
@@ -112,7 +123,8 @@ class IndexedJarStructureTests {
 		Context context = mock(Context.class);
 		given(context.getArchiveFile()).willReturn(createJarFile(temp, "test.jar"));
 		IndexedJarStructure jarStructure = IndexedJarStructure.get(context);
-		Manifest manifest = jarStructure.createRunJarManifest((dependency) -> "dependencies/" + dependency);
+		Manifest manifest = jarStructure.createRunJarManifest((dependency) -> "dependencies/" + dependency,
+				Collections.emptyList());
 		Attributes attributes = manifest.getMainAttributes();
 		assertThat(attributes.get(Name.MAIN_CLASS)).isEqualTo("com.example.DemoApplication");
 		assertThat(attributes.get(Name.CLASS_PATH)).isEqualTo("dependencies/a.jar dependencies/b.jar");

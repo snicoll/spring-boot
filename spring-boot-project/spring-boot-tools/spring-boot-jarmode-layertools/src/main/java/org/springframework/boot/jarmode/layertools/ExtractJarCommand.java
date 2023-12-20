@@ -25,6 +25,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributeView;
 import java.nio.file.attribute.FileTime;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.jar.Attributes.Name;
@@ -48,6 +50,9 @@ class ExtractJarCommand extends Command {
 
 	static final Option DESTINATION_OPTION = Option.of("destination", "string", "The destination to extract files to");
 
+	static final Option ADDITIONAL_JARS_OPTION = Option.of("additional-jars", "string",
+			"Comma separated list of additional jars to include");
+
 	private final Context context;
 
 	private final JarStructure jarStructure;
@@ -57,8 +62,8 @@ class ExtractJarCommand extends Command {
 	}
 
 	ExtractJarCommand(Context context, JarStructure jarStructure) {
-		super("extract2", "Extracts the application in optimized structure", Options.of(DESTINATION_OPTION),
-				Parameters.none());
+		super("extract2", "Extracts the application to an optimized structure",
+				Options.of(DESTINATION_OPTION, ADDITIONAL_JARS_OPTION), Parameters.none());
 		this.context = context;
 		this.jarStructure = jarStructure;
 	}
@@ -102,8 +107,10 @@ class ExtractJarCommand extends Command {
 				}
 			}
 
+			List<String> additionalJars = handleAdditionalJars(destination, options.get(ADDITIONAL_JARS_OPTION));
+
 			// create the run-app.jar
-			createRunAppJar(destination, applicationJarFile);
+			createRunAppJar(destination, applicationJarFile, additionalJars);
 
 		}
 		catch (IOException ex) {
@@ -112,8 +119,39 @@ class ExtractJarCommand extends Command {
 
 	}
 
-	private void createRunAppJar(Path destination, Path applicationJarFile) throws IOException {
-		Manifest manifest = this.jarStructure.createRunJarManifest((dependency) -> "dependencies/" + dependency);
+	private List<String> handleAdditionalJars(Path destination, String additionalJars) throws IOException {
+		List<String> paths = new ArrayList<>();
+		if (additionalJars == null) {
+			return paths;
+		}
+		List<Path> locations = Arrays.stream(StringUtils.commaDelimitedListToStringArray(additionalJars))
+			.map(this::toFile)
+			.toList();
+
+		Path ext = destination.resolve("ext");
+		mkDirs(ext);
+		for (Path location : locations) {
+			Path file = ext.resolve(location.getFileName());
+			Files.copy(location, file);
+		}
+		return locations.stream().map((location) -> "ext/%s".formatted(location.getFileName())).toList();
+	}
+
+	private Path toFile(String location) {
+		Path path = Paths.get(location);
+		if (!Files.exists(path)) {
+			throw new IllegalArgumentException("Additional jar not found " + path);
+		}
+		if (!Files.isRegularFile(path)) {
+			throw new IllegalArgumentException("Invalid location, should be a file " + path);
+		}
+		return path;
+	}
+
+	private void createRunAppJar(Path destination, Path applicationJarFile, List<String> additionalJars)
+			throws IOException {
+		Manifest manifest = this.jarStructure.createRunJarManifest((dependency) -> "dependencies/" + dependency,
+				additionalJars);
 		String libs = manifest.getMainAttributes().getValue(Name.CLASS_PATH);
 		String applicationJar = destination.relativize(applicationJarFile).toString();
 		manifest.getMainAttributes().put(Name.CLASS_PATH, String.join(" ", applicationJar, libs));

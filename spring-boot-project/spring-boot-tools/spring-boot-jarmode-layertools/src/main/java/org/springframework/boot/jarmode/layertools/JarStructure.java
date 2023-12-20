@@ -16,6 +16,7 @@
 
 package org.springframework.boot.jarmode.layertools;
 
+import java.util.List;
 import java.util.function.UnaryOperator;
 import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
@@ -39,9 +40,10 @@ interface JarStructure {
 	 * Create the {@link Manifest} for the {@code run-jar} jar, applying the specified
 	 * operator on each classpath entry.
 	 * @param libEntry the operator to apply on each classpath entry
+	 * @param additionalJars relative paths of additional jars, if any
 	 * @return the manifest to use for the {@code run-jar} jar
 	 */
-	Manifest createRunJarManifest(UnaryOperator<String> libEntry);
+	Manifest createRunJarManifest(UnaryOperator<String> libEntry, List<String> additionalJars);
 
 	/**
 	 * Create the {@link Manifest} for the jar that is created with classes and resources.
