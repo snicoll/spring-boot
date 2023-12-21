@@ -53,6 +53,9 @@ class ExtractJarCommand extends Command {
 	static final Option ADDITIONAL_JARS_OPTION = Option.of("additional-jars", "string",
 			"Comma separated list of additional jars to include");
 
+	static final Option QUIET = Option.of("quiet", "boolean",
+			"Make some output more quiet");
+
 	private final Context context;
 
 	private final JarStructure jarStructure;
@@ -112,6 +115,10 @@ class ExtractJarCommand extends Command {
 			// create the run-app.jar
 			createRunAppJar(destination, applicationJarFile, additionalJars);
 
+			if (!options.containsKey(QUIET)) {
+				System.out.println(createOutputMessage(destination));
+			}
+
 		}
 		catch (IOException ex) {
 			throw new IllegalStateException(ex);
@@ -125,8 +132,8 @@ class ExtractJarCommand extends Command {
 			return paths;
 		}
 		List<Path> locations = Arrays.stream(StringUtils.commaDelimitedListToStringArray(additionalJars))
-			.map(this::toFile)
-			.toList();
+				.map(this::toFile)
+				.toList();
 
 		Path ext = destination.resolve("ext");
 		mkDirs(ext);
@@ -161,6 +168,26 @@ class ExtractJarCommand extends Command {
 		}
 	}
 
+	private String createOutputMessage(Path destination) {
+		return """
+				Application successfully extracted to '%s'
+				    
+				To start the application from that directory:
+				    
+				$ java -jar run-app.jar
+				    
+				TIP: To improve startup performance, you can create a CDS Archive with a single training run:
+				    
+				$ java -XX:ArchiveClassesAtExit=application.jsa -Dspring.context.exit=onRefresh run-app.jar
+				    
+				Then use the generated cache:
+				    
+				$ java -XX:SharedArchiveFile=application.jsa run-app.jar
+				    
+				See https://docs.spring.io/spring-framework/reference/integration/class-data-sharing.html for more details.
+				""".formatted(destination);
+	}
+
 	private void write(ZipInputStream zip, ZipEntry entry, Path destination, String name) throws IOException {
 		String canonicalOutputPath = destination.toFile().getCanonicalPath() + File.separator;
 		Path file = destination.resolve(name);
@@ -175,7 +202,7 @@ class ExtractJarCommand extends Command {
 		}
 		try {
 			Files.getFileAttributeView(file, BasicFileAttributeView.class)
-				.setTimes(entry.getLastModifiedTime(), entry.getLastAccessTime(), entry.getCreationTime());
+					.setTimes(entry.getLastModifiedTime(), entry.getLastAccessTime(), entry.getCreationTime());
 		}
 		catch (IOException ex) {
 			// File system does not support setting time attributes. Continue.

@@ -103,7 +103,7 @@ class ExtractJarCommandTests {
 		assertManifest(runAppJar, (manifest) -> {
 			Attributes attributes = manifest.getMainAttributes();
 			assertThat(attributes.getValue(Name.CLASS_PATH))
-				.isEqualTo("application/my-app.jar dependencies/a.jar dependencies/b.jar");
+					.isEqualTo("application/my-app.jar dependencies/a.jar dependencies/b.jar");
 			assertThat(attributes.getValue(Name.MAIN_CLASS)).isEqualTo("com.example.DemoApplication");
 		});
 	}
@@ -114,7 +114,9 @@ class ExtractJarCommandTests {
 		Files.createDirectories(libs);
 		Path extA = Files.createFile(libs.resolve("ext-a.jar"));
 		Path extB = Files.createFile(libs.resolve("ext-b.jar"));
-		Map<Option, String> options = Map.of(ExtractJarCommand.ADDITIONAL_JARS_OPTION, "%s,%s".formatted(extA, extB));
+		Map<Option, String> options = Map.of(
+				ExtractJarCommand.QUIET, "",
+				ExtractJarCommand.ADDITIONAL_JARS_OPTION, "%s,%s".formatted(extA, extB));
 		invoke(createJarFile("my-app.jar"), options);
 
 		assertThat(this.extract.resolve("ext").toFile().list()).containsOnly("ext-a.jar", "ext-b.jar");
@@ -122,7 +124,7 @@ class ExtractJarCommandTests {
 		assertManifest(runAppJar, (manifest) -> {
 			Attributes attributes = manifest.getMainAttributes();
 			assertThat(attributes.getValue(Name.CLASS_PATH))
-				.isEqualTo("application/my-app.jar dependencies/a.jar dependencies/b.jar ext/ext-a.jar ext/ext-b.jar");
+					.isEqualTo("application/my-app.jar dependencies/a.jar dependencies/b.jar ext/ext-a.jar ext/ext-b.jar");
 		});
 	}
 
@@ -142,21 +144,21 @@ class ExtractJarCommandTests {
 	}
 
 	private void invoke(Path jarFile) {
-		invoke(jarFile, Collections.emptyMap());
+		invoke(jarFile, Map.of(ExtractJarCommand.QUIET, ""));
 	}
 
 	private void timeAttributes(Path file) {
 		try {
 			BasicFileAttributes basicAttributes = Files.getFileAttributeView(file, BasicFileAttributeView.class)
-				.readAttributes();
+					.readAttributes();
 			assertThat(basicAttributes.lastModifiedTime().to(TimeUnit.SECONDS))
-				.isEqualTo(LAST_MODIFIED_TIME.to(TimeUnit.SECONDS));
+					.isEqualTo(LAST_MODIFIED_TIME.to(TimeUnit.SECONDS));
 			assertThat(basicAttributes.creationTime().to(TimeUnit.SECONDS)).satisfiesAnyOf(
 					(creationTime) -> assertThat(creationTime).isEqualTo(CREATION_TIME.to(TimeUnit.SECONDS)),
 					// On macOS (at least) the creation time is the last modified time
 					(creationTime) -> assertThat(creationTime).isEqualTo(LAST_MODIFIED_TIME.to(TimeUnit.SECONDS)));
 			assertThat(basicAttributes.lastAccessTime().to(TimeUnit.SECONDS))
-				.isEqualTo(LAST_ACCESS_TIME.to(TimeUnit.SECONDS));
+					.isEqualTo(LAST_ACCESS_TIME.to(TimeUnit.SECONDS));
 		}
 		catch (IOException ex) {
 			throw new RuntimeException(ex);
