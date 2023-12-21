@@ -178,11 +178,11 @@ class ExtractJarCommand extends Command {
 				    
 				TIP: To improve startup performance, you can create a CDS Archive with a single training run:
 				    
-				$ java -XX:ArchiveClassesAtExit=application.jsa -Dspring.context.exit=onRefresh run-app.jar
+				$ java -XX:ArchiveClassesAtExit=application.jsa -Dspring.context.exit=onRefresh -jar run-app.jar
 				    
 				Then use the generated cache:
 				    
-				$ java -XX:SharedArchiveFile=application.jsa run-app.jar
+				$ java -XX:SharedArchiveFile=application.jsa -jar run-app.jar
 				    
 				See https://docs.spring.io/spring-framework/reference/integration/class-data-sharing.html for more details.
 				""".formatted(destination);
