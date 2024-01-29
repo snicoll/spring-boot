@@ -16,6 +16,8 @@
 
 package org.springframework.boot.test.autoconfigure.web.servlet.mockmvc;
 
+import java.util.function.Consumer;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -29,12 +31,10 @@ import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.context.ApplicationContext;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.reactive.server.WebTestClient;
-import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.assertj.MockMvcTester;
+import org.springframework.test.web.servlet.assertj.MvcTestResult;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * Tests for {@link SpringBootTest @SpringBootTest} with
@@ -56,22 +56,22 @@ class MockMvcSpringBootTestIntegrationTests {
 	private ApplicationContext applicationContext;
 
 	@Autowired
-	private MockMvc mvc;
+	private MockMvcTester mvc;
 
 	@Test
-	void shouldFindController1(CapturedOutput output) throws Exception {
-		this.mvc.perform(get("/one")).andExpect(content().string("one")).andExpect(status().isOk());
+	void shouldFindController1(CapturedOutput output) {
+		assertThat(this.mvc.get().uri("/one")).satisfies(hasBody("one"));
 		assertThat(output).contains("Request URI = /one");
 	}
 
 	@Test
-	void shouldFindController2() throws Exception {
-		this.mvc.perform(get("/two")).andExpect(content().string("hellotwo")).andExpect(status().isOk());
+	void shouldFindController2() {
+		assertThat(this.mvc.get().uri("/two")).satisfies(hasBody("hellotwo"));
 	}
 
 	@Test
-	void shouldFindControllerAdvice() throws Exception {
-		this.mvc.perform(get("/error")).andExpect(content().string("recovered")).andExpect(status().isOk());
+	void shouldFindControllerAdvice() {
+		assertThat(this.mvc.get().uri("/error")).satisfies(hasBody("recovered"));
 	}
 
 	@Test
@@ -85,10 +85,14 @@ class MockMvcSpringBootTestIntegrationTests {
 	}
 
 	@Test
-	void shouldNotFailIfFormattingValueThrowsException(CapturedOutput output) throws Exception {
-		this.mvc.perform(get("/formatting")).andExpect(content().string("formatting")).andExpect(status().isOk());
+	void shouldNotFailIfFormattingValueThrowsException(CapturedOutput output) {
+		assertThat(this.mvc.get().uri("/formatting")).satisfies(hasBody("formatting"));
 		assertThat(output).contains(
 				"Session Attrs = << Exception 'java.lang.IllegalStateException: Formatting failed' occurred while formatting >>");
+	}
+
+	private Consumer<MvcTestResult> hasBody(String expected) {
+		return (result) -> assertThat(result).hasStatusOk().hasBodyTextEqualTo(expected);
 	}
 
 }
