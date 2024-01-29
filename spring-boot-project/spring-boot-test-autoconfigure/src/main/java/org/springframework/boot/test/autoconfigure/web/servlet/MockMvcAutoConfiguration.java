@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 the original author or authors.
+ * Copyright 2012-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,11 +18,13 @@ package org.springframework.boot.test.autoconfigure.web.servlet;
 
 import java.util.List;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication.Type;
+import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.autoconfigure.web.servlet.DispatcherServletPath;
 import org.springframework.boot.autoconfigure.web.servlet.WebMvcAutoConfiguration;
@@ -37,6 +39,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.test.web.servlet.DispatcherServletCustomizer;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MockMvcBuilder;
+import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.test.web.servlet.client.MockMvcWebTestClient;
 import org.springframework.test.web.servlet.setup.DefaultMockMvcBuilder;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -95,6 +98,17 @@ public class MockMvcAutoConfiguration {
 	@ConditionalOnMissingBean
 	public MockMvc mockMvc(MockMvcBuilder builder) {
 		return builder.build();
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	public MockMvcTester mockMvcTester(MockMvc mockMvc, ObjectProvider<HttpMessageConverters> httpMessageConverters) {
+		MockMvcTester mockMvcTester = MockMvcTester.create(mockMvc);
+		HttpMessageConverters converters = httpMessageConverters.getIfAvailable();
+		if (converters != null) {
+			mockMvcTester = mockMvcTester.withHttpMessageConverters(converters);
+		}
+		return mockMvcTester;
 	}
 
 	@Bean
