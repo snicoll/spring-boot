@@ -16,6 +16,6 @@
 
 package org.springframework.boot.docs.testing.springbootapplications.autoconfiguredspringrestdocs.withmockmvc;
 
-class UserController {
+public class UserController {
 
 }
