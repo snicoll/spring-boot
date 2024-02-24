@@ -169,6 +169,7 @@ class SpringBootTestRandomPortEnvironmentPostProcessorTests {
 		addTestPropertySource("0", null);
 		this.propertySources
 			.addLast(new MapPropertySource("other", Collections.singletonMap("management.server.port", "${port}")));
+		// NOTE: This should be PlaceholderResolutionException
 		assertThatIllegalArgumentException()
 			.isThrownBy(() -> this.postProcessor.postProcessEnvironment(this.environment, null))
 			.withMessage("Could not resolve placeholder 'port' in value \"${port}\"");
@@ -196,6 +197,7 @@ class SpringBootTestRandomPortEnvironmentPostProcessorTests {
 		source.put("server.port", "${port}");
 		source.put("management.server.port", "9090");
 		this.propertySources.addLast(new MapPropertySource("other", source));
+		// NOTE: This should be PlaceholderResolutionException
 		assertThatIllegalArgumentException()
 			.isThrownBy(() -> this.postProcessor.postProcessEnvironment(this.environment, null))
 			.withMessage("Could not resolve placeholder 'port' in value \"${port}\"");
