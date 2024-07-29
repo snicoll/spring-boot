@@ -140,14 +140,15 @@ public class Docker {
 	 * Returns this configuration as a {@link DockerConfiguration} instance. This method
 	 * should only be called when the configuration is complete and will no longer be
 	 * changed.
+	 * @param publish whether the image should be published
 	 * @return the Docker configuration
 	 */
-	DockerConfiguration asDockerConfiguration() {
+	DockerConfiguration asDockerConfiguration(boolean publish) {
 		DockerConfiguration dockerConfiguration = new DockerConfiguration();
 		dockerConfiguration = customizeHost(dockerConfiguration);
 		dockerConfiguration = dockerConfiguration.withBindHostToBuilder(this.bindHostToBuilder);
 		dockerConfiguration = customizeBuilderAuthentication(dockerConfiguration);
-		dockerConfiguration = customizePublishAuthentication(dockerConfiguration);
+		dockerConfiguration = customizePublishAuthentication(dockerConfiguration, publish);
 		return dockerConfiguration;
 	}
 
@@ -180,7 +181,10 @@ public class Docker {
 				"Invalid Docker builder registry configuration, either token or username/password must be provided");
 	}
 
-	private DockerConfiguration customizePublishAuthentication(DockerConfiguration dockerConfiguration) {
+	private DockerConfiguration customizePublishAuthentication(DockerConfiguration dockerConfiguration, boolean publish) {
+		if (!publish) {
+			return dockerConfiguration;
+		}
 		if (this.publishRegistry == null || this.publishRegistry.isEmpty()) {
 			return dockerConfiguration.withEmptyPublishRegistryAuthentication();
 		}
