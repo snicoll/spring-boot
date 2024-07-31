@@ -116,7 +116,7 @@ class BuildImageTests extends AbstractArchiveIntegrationTests {
 	}
 
 	@TestTemplate
-	void whenBuildImageIsInvokedWithClassifierWithoutRepackageTheOriginalArchiveIsFound(MavenBuild mavenBuild) {
+	void whenBuildImageIsInvokedWithClassifierAndRepackageTheOriginalArchiveIsFound(MavenBuild mavenBuild) {
 		mavenBuild.project("dockerTest", "build-image-fork-classifier")
 			.goals("spring-boot:build-image")
 			.systemProperty("spring-boot.build-image.pullPolicy", "IF_NOT_PRESENT")
@@ -124,10 +124,10 @@ class BuildImageTests extends AbstractArchiveIntegrationTests {
 			.execute((project) -> {
 				File jar = new File(project, "target/build-image-fork-classifier-0.0.1.BUILD-SNAPSHOT.jar");
 				assertThat(jar).isFile();
-				File classifier = new File(project, "target/build-image-fork-classifier-0.0.1.BUILD-SNAPSHOT-test.jar");
-				assertThat(classifier).doesNotExist();
+				File classifier = new File(project, "target/build-image-fork-classifier-0.0.1.BUILD-SNAPSHOT-exec.jar");
+				assertThat(classifier).exists();
 				assertThat(buildLog(project)).contains("Building image")
-					.contains("docker.io/library/build-image--fork-classifier:0.0.1.BUILD-SNAPSHOT")
+					.contains("docker.io/library/build-image-fork-classifier:0.0.1.BUILD-SNAPSHOT")
 					.contains("---> Test Info buildpack building")
 					.contains("---> Test Info buildpack done")
 					.contains("Successfully built image");
