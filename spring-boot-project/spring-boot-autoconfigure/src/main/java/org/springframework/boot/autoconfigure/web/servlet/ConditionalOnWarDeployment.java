@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.boot.autoconfigure.condition;
+package org.springframework.boot.autoconfigure.web.servlet;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -29,16 +29,12 @@ import org.springframework.context.annotation.Conditional;
  * deployment. For applications with embedded servers, this condition will return false.
  *
  * @author Madhura Bhave
- * @since 2.3.0
- * @deprecated since 3.4.0 in favor of
- * {@link org.springframework.boot.autoconfigure.web.servlet.ConditionalOnWarDeployment}
+ * @since 3.4.0
  */
 @Target({ ElementType.TYPE, ElementType.METHOD })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Conditional(OnWarDeploymentCondition.class)
-@Deprecated(since = "3.4.0", forRemoval = true)
-@SuppressWarnings("removal")
 public @interface ConditionalOnWarDeployment {
 
 }

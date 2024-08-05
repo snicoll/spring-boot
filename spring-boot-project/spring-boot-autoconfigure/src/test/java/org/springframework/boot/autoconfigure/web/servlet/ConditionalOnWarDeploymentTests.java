@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.boot.autoconfigure.condition;
+package org.springframework.boot.autoconfigure.web.servlet;
 
 import org.junit.jupiter.api.Test;
 
@@ -32,8 +32,6 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * @author Madhura Bhave
  */
-@Deprecated(since = "3.4.0")
-@SuppressWarnings("removal")
 class ConditionalOnWarDeploymentTests {
 
 	@Test

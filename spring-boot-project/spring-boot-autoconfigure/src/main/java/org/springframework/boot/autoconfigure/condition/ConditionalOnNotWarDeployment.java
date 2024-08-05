@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 the original author or authors.
+ * Copyright 2012-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,11 +31,15 @@ import org.springframework.context.annotation.Conditional;
  *
  * @author Guirong Hu
  * @since 2.7.10
+ * @deprecated since 3.4.0 in favor of
+ * {@link org.springframework.boot.autoconfigure.web.servlet.ConditionalOnNotWarDeployment}
  */
 @Target({ ElementType.TYPE, ElementType.METHOD })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Conditional(OnWarDeploymentCondition.class)
+@Deprecated(since = "3.4.0", forRemoval = true)
+@SuppressWarnings("removal")
 public @interface ConditionalOnNotWarDeployment {
 
 }

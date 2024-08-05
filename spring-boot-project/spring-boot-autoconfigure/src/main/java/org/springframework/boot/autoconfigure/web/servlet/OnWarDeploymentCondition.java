@@ -14,10 +14,13 @@
  * limitations under the License.
  */
 
-package org.springframework.boot.autoconfigure.condition;
+package org.springframework.boot.autoconfigure.web.servlet;
 
 import jakarta.servlet.ServletContext;
 
+import org.springframework.boot.autoconfigure.condition.ConditionMessage;
+import org.springframework.boot.autoconfigure.condition.ConditionOutcome;
+import org.springframework.boot.autoconfigure.condition.SpringBootCondition;
 import org.springframework.context.annotation.Condition;
 import org.springframework.context.annotation.ConditionContext;
 import org.springframework.core.io.ResourceLoader;
@@ -32,8 +35,6 @@ import org.springframework.web.context.WebApplicationContext;
  * @see ConditionalOnWarDeployment
  * @see ConditionalOnNotWarDeployment
  */
-@Deprecated(since = "3.4.0", forRemoval = true)
-@SuppressWarnings("removal")
 class OnWarDeploymentCondition extends SpringBootCondition {
 
 	@Override

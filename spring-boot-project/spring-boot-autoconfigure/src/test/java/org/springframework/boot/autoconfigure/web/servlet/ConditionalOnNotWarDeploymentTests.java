@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.boot.autoconfigure.condition;
+package org.springframework.boot.autoconfigure.web.servlet;
 
 import org.junit.jupiter.api.Test;
 
@@ -28,52 +28,48 @@ import org.springframework.context.annotation.Configuration;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Tests for {@link ConditionalOnWarDeployment @ConditionalOnWarDeployment}.
+ * Tests for {@link ConditionalOnNotWarDeployment @ConditionalOnNotWarDeployment}.
  *
- * @author Madhura Bhave
+ * @author Guirong Hu
  */
-@Deprecated(since = "3.4.0")
-@SuppressWarnings("removal")
-class ConditionalOnWarDeploymentTests {
+class ConditionalOnNotWarDeploymentTests {
 
 	@Test
-	void nonWebApplicationShouldNotMatch() {
+	void nonWebApplicationShouldMatch() {
 		ApplicationContextRunner contextRunner = new ApplicationContextRunner();
-		contextRunner.withUserConfiguration(TestConfiguration.class)
-			.run((context) -> assertThat(context).doesNotHaveBean("forWar"));
+		contextRunner.withUserConfiguration(NotWarDeploymentConfiguration.class)
+			.run((context) -> assertThat(context).hasBean("notForWar"));
 	}
 
 	@Test
-	void reactiveWebApplicationShouldNotMatch() {
+	void reactiveWebApplicationShouldMatch() {
 		ReactiveWebApplicationContextRunner contextRunner = new ReactiveWebApplicationContextRunner();
-		contextRunner.withUserConfiguration(TestConfiguration.class)
-			.run((context) -> assertThat(context).doesNotHaveBean("forWar"));
+		contextRunner.withUserConfiguration(NotWarDeploymentConfiguration.class)
+			.run((context) -> assertThat(context).hasBean("notForWar"));
 	}
 
 	@Test
-	void embeddedServletWebApplicationShouldNotMatch() {
+	void embeddedServletWebApplicationShouldMatch() {
 		WebApplicationContextRunner contextRunner = new WebApplicationContextRunner(
 				AnnotationConfigServletWebApplicationContext::new);
-		contextRunner.withUserConfiguration(TestConfiguration.class)
-			.run((context) -> assertThat(context).doesNotHaveBean("forWar"));
+		contextRunner.withUserConfiguration(NotWarDeploymentConfiguration.class)
+			.run((context) -> assertThat(context).hasBean("notForWar"));
 	}
 
 	@Test
-	void warDeployedServletWebApplicationShouldMatch() {
-		// sets a mock servletContext before context refresh which is what the
-		// SpringBootServletInitializer does for WAR deployments.
+	void warDeployedServletWebApplicationShouldNotMatch() {
 		WebApplicationContextRunner contextRunner = new WebApplicationContextRunner();
-		contextRunner.withUserConfiguration(TestConfiguration.class)
-			.run((context) -> assertThat(context).hasBean("forWar"));
+		contextRunner.withUserConfiguration(NotWarDeploymentConfiguration.class)
+			.run((context) -> assertThat(context).doesNotHaveBean("notForWar"));
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@ConditionalOnWarDeployment
-	static class TestConfiguration {
+	@ConditionalOnNotWarDeployment
+	static class NotWarDeploymentConfiguration {
 
 		@Bean
-		String forWar() {
-			return "forWar";
+		String notForWar() {
+			return "notForWar";
 		}
 
 	}
