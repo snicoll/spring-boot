@@ -34,7 +34,6 @@ import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.core.env.Environment;
-import org.springframework.stereotype.Component;
 import org.springframework.test.context.BootstrapWith;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.client.MockRestServiceServer;
@@ -45,9 +44,9 @@ import org.springframework.web.client.RestTemplate;
  * Annotation for a Spring rest client test that focuses <strong>only</strong> on beans
  * that use {@link RestTemplateBuilder} or {@link Builder RestClient.Builder}.
  * <p>
- * Using this annotation will disable full auto-configuration and instead apply only
- * configuration relevant to rest client tests (i.e. Jackson or GSON auto-configuration
- * and {@code @JsonComponent} beans, but not regular {@link Component @Component} beans).
+ * Using this annotation only enables auto-configuration that is relevant to rest client
+ * tests. Similarly, component scanning is limited to beans annotated with
+ * {@code JsonComponent} or that implement Jackson {@code Module}.
  * <p>
  * By default, tests annotated with {@code RestClientTest} will also auto-configure a
  * {@link MockRestServiceServer}. For more fine-grained control the

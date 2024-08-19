@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2020 the original author or authors.
+ * Copyright 2012-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,12 +43,15 @@ import org.springframework.test.web.servlet.MockMvc;
  * Annotation that can be used for a Spring MVC test that focuses <strong>only</strong> on
  * Spring MVC components.
  * <p>
- * Using this annotation will disable full auto-configuration and instead apply only
- * configuration relevant to MVC tests (i.e. {@code @Controller},
- * {@code @ControllerAdvice}, {@code @JsonComponent},
- * {@code Converter}/{@code GenericConverter}, {@code Filter}, {@code WebMvcConfigurer}
- * and {@code HandlerMethodArgumentResolver} beans but not {@code @Component},
- * {@code @Service} or {@code @Repository} beans).
+ * Using this annotation only enables auto-configuration that is relevant to MVC tests.
+ * Similarly, component scanning is limited to beans annotated with {@code @Controller},
+ * {@code @ControllerAdvice}, {@code @JsonComponent}, as well as beans that implement
+ * {@code WebMvcConfigurer}, {@code WebMvcRegistrations}, {@code Filter},
+ * {@code FilterRegistrationBean}, {@code DelegatingFilterProxyRegistrationBean},
+ * {@code HandlerMethodArgumentResolver}, {@code HttpMessageConverter}, {@code
+ * ErrorAttributes}, {@code Converter}, {@code GenericConverter},
+ * {@code HandlerInterceptor}, {@code WebSecurityConfigurer}, {@code SecurityFilterChain},
+ * Jackson {@code Module}, or Thymeleaf {@code IDialect}.
  * <p>
  * By default, tests annotated with {@code @WebMvcTest} will also auto-configure Spring
  * Security and {@link MockMvc} (include support for HtmlUnit WebClient and Selenium
