@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 the original author or authors.
+ * Copyright 2012-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,22 +17,35 @@
 package org.springframework.boot.env;
 
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import org.springframework.aot.AotDetector;
+import org.springframework.aot.test.generate.TestGenerationContext;
 import org.springframework.boot.BootstrapRegistry;
 import org.springframework.boot.DefaultBootstrapContext;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.context.event.ApplicationEnvironmentPreparedEvent;
 import org.springframework.boot.context.event.ApplicationFailedEvent;
 import org.springframework.boot.context.event.ApplicationPreparedEvent;
 import org.springframework.boot.context.event.ApplicationStartingEvent;
 import org.springframework.boot.logging.DeferredLogFactory;
 import org.springframework.boot.logging.DeferredLogs;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.aot.ApplicationContextAotGenerator;
+import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.StandardEnvironment;
+import org.springframework.core.test.tools.Compiled;
+import org.springframework.core.test.tools.TestCompiler;
+import org.springframework.javapoet.ClassName;
 import org.springframework.mock.env.MockEnvironment;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -45,98 +58,176 @@ import static org.mockito.Mockito.spy;
  * Tests for {@link EnvironmentPostProcessorApplicationListener}.
  *
  * @author Phillip Webb
+ * @author Stephane Nicoll
  */
 class EnvironmentPostProcessorApplicationListenerTests {
 
-	private final DeferredLogs deferredLogs = spy(new DeferredLogs());
+	@Nested
+	class ListenerTests {
 
-	private final DefaultBootstrapContext bootstrapContext = spy(new DefaultBootstrapContext());
+		private final DeferredLogs deferredLogs = spy(new DeferredLogs());
 
-	private final EnvironmentPostProcessorApplicationListener listener = new EnvironmentPostProcessorApplicationListener();
+		private final DefaultBootstrapContext bootstrapContext = spy(new DefaultBootstrapContext());
 
-	@BeforeEach
-	void setup() {
-		ReflectionTestUtils.setField(this.listener, "deferredLogs", this.deferredLogs);
-		ReflectionTestUtils.setField(this.listener, "postProcessorsFactory",
-				(Function<ClassLoader, EnvironmentPostProcessorsFactory>) (
-						classLoader) -> EnvironmentPostProcessorsFactory.of(TestEnvironmentPostProcessor.class));
-	}
+		private final EnvironmentPostProcessorApplicationListener listener = new EnvironmentPostProcessorApplicationListener();
 
-	@Test
-	void createUsesSpringFactories() {
-		EnvironmentPostProcessorApplicationListener listener = new EnvironmentPostProcessorApplicationListener();
-		assertThat(listener.getEnvironmentPostProcessors(null, this.bootstrapContext)).hasSizeGreaterThan(1);
-	}
-
-	@Test
-	void createWhenHasFactoryUsesFactory() {
-		EnvironmentPostProcessorApplicationListener listener = EnvironmentPostProcessorApplicationListener
-			.with(EnvironmentPostProcessorsFactory.of(TestEnvironmentPostProcessor.class));
-		List<EnvironmentPostProcessor> postProcessors = listener.getEnvironmentPostProcessors(null,
-				this.bootstrapContext);
-		assertThat(postProcessors).hasSize(1);
-		assertThat(postProcessors.get(0)).isInstanceOf(TestEnvironmentPostProcessor.class);
-	}
-
-	@Test
-	void supportsEventTypeWhenApplicationEnvironmentPreparedEventReturnsTrue() {
-		assertThat(this.listener.supportsEventType(ApplicationEnvironmentPreparedEvent.class)).isTrue();
-	}
-
-	@Test
-	void supportsEventTypeWhenApplicationPreparedEventReturnsTrue() {
-		assertThat(this.listener.supportsEventType(ApplicationPreparedEvent.class)).isTrue();
-	}
-
-	@Test
-	void supportsEventTypeWhenApplicationFailedEventReturnsTrue() {
-		assertThat(this.listener.supportsEventType(ApplicationFailedEvent.class)).isTrue();
-	}
-
-	@Test
-	void supportsEventTypeWhenOtherEventReturnsFalse() {
-		assertThat(this.listener.supportsEventType(ApplicationStartingEvent.class)).isFalse();
-	}
-
-	@Test
-	void onApplicationEventWhenApplicationEnvironmentPreparedEventCallsPostProcessors() {
-		SpringApplication application = mock(SpringApplication.class);
-		MockEnvironment environment = new MockEnvironment();
-		ApplicationEnvironmentPreparedEvent event = new ApplicationEnvironmentPreparedEvent(this.bootstrapContext,
-				application, new String[0], environment);
-		this.listener.onApplicationEvent(event);
-		assertThat(environment.getProperty("processed")).isEqualTo("true");
-	}
-
-	@Test
-	void onApplicationEventWhenApplicationPreparedEventSwitchesLogs() {
-		SpringApplication application = mock(SpringApplication.class);
-		ConfigurableApplicationContext context = mock(ConfigurableApplicationContext.class);
-		ApplicationPreparedEvent event = new ApplicationPreparedEvent(application, new String[0], context);
-		this.listener.onApplicationEvent(event);
-		then(this.deferredLogs).should().switchOverAll();
-	}
-
-	@Test
-	void onApplicationEventWhenApplicationFailedEventSwitchesLogs() {
-		SpringApplication application = mock(SpringApplication.class);
-		ConfigurableApplicationContext context = mock(ConfigurableApplicationContext.class);
-		ApplicationFailedEvent event = new ApplicationFailedEvent(application, new String[0], context,
-				new RuntimeException());
-		this.listener.onApplicationEvent(event);
-		then(this.deferredLogs).should().switchOverAll();
-	}
-
-	static class TestEnvironmentPostProcessor implements EnvironmentPostProcessor {
-
-		TestEnvironmentPostProcessor(DeferredLogFactory logFactory, BootstrapRegistry bootstrapRegistry) {
-			assertThat(logFactory).isNotNull();
-			assertThat(bootstrapRegistry).isNotNull();
+		@BeforeEach
+		void setup() {
+			ReflectionTestUtils.setField(this.listener, "deferredLogs", this.deferredLogs);
+			ReflectionTestUtils.setField(this.listener, "postProcessorsFactory",
+					(Function<ClassLoader, EnvironmentPostProcessorsFactory>) (
+							classLoader) -> EnvironmentPostProcessorsFactory.of(TestEnvironmentPostProcessor.class));
 		}
 
-		@Override
-		public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
-			((MockEnvironment) environment).setProperty("processed", "true");
+		@Test
+		void createUsesSpringFactories() {
+			EnvironmentPostProcessorApplicationListener listener = new EnvironmentPostProcessorApplicationListener();
+			assertThat(listener.getEnvironmentPostProcessors(null, this.bootstrapContext)).hasSizeGreaterThan(1);
+		}
+
+		@Test
+		void createWhenHasFactoryUsesFactory() {
+			EnvironmentPostProcessorApplicationListener listener = EnvironmentPostProcessorApplicationListener
+				.with(EnvironmentPostProcessorsFactory.of(TestEnvironmentPostProcessor.class));
+			List<EnvironmentPostProcessor> postProcessors = listener.getEnvironmentPostProcessors(null,
+					this.bootstrapContext);
+			assertThat(postProcessors).hasSize(1);
+			assertThat(postProcessors.get(0)).isInstanceOf(TestEnvironmentPostProcessor.class);
+		}
+
+		@Test
+		void supportsEventTypeWhenApplicationEnvironmentPreparedEventReturnsTrue() {
+			assertThat(this.listener.supportsEventType(ApplicationEnvironmentPreparedEvent.class)).isTrue();
+		}
+
+		@Test
+		void supportsEventTypeWhenApplicationPreparedEventReturnsTrue() {
+			assertThat(this.listener.supportsEventType(ApplicationPreparedEvent.class)).isTrue();
+		}
+
+		@Test
+		void supportsEventTypeWhenApplicationFailedEventReturnsTrue() {
+			assertThat(this.listener.supportsEventType(ApplicationFailedEvent.class)).isTrue();
+		}
+
+		@Test
+		void supportsEventTypeWhenOtherEventReturnsFalse() {
+			assertThat(this.listener.supportsEventType(ApplicationStartingEvent.class)).isFalse();
+		}
+
+		@Test
+		void onApplicationEventWhenApplicationEnvironmentPreparedEventCallsPostProcessors() {
+			SpringApplication application = mock(SpringApplication.class);
+			MockEnvironment environment = new MockEnvironment();
+			ApplicationEnvironmentPreparedEvent event = new ApplicationEnvironmentPreparedEvent(this.bootstrapContext,
+					application, new String[0], environment);
+			this.listener.onApplicationEvent(event);
+			assertThat(environment.getProperty("processed")).isEqualTo("true");
+		}
+
+		@Test
+		void onApplicationEventWhenApplicationPreparedEventSwitchesLogs() {
+			SpringApplication application = mock(SpringApplication.class);
+			ConfigurableApplicationContext context = mock(ConfigurableApplicationContext.class);
+			ApplicationPreparedEvent event = new ApplicationPreparedEvent(application, new String[0], context);
+			this.listener.onApplicationEvent(event);
+			then(this.deferredLogs).should().switchOverAll();
+		}
+
+		@Test
+		void onApplicationEventWhenApplicationFailedEventSwitchesLogs() {
+			SpringApplication application = mock(SpringApplication.class);
+			ConfigurableApplicationContext context = mock(ConfigurableApplicationContext.class);
+			ApplicationFailedEvent event = new ApplicationFailedEvent(application, new String[0], context,
+					new RuntimeException());
+			this.listener.onApplicationEvent(event);
+			then(this.deferredLogs).should().switchOverAll();
+		}
+
+		static class TestEnvironmentPostProcessor implements EnvironmentPostProcessor {
+
+			TestEnvironmentPostProcessor(DeferredLogFactory logFactory, BootstrapRegistry bootstrapRegistry) {
+				assertThat(logFactory).isNotNull();
+				assertThat(bootstrapRegistry).isNotNull();
+			}
+
+			@Override
+			public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
+				((MockEnvironment) environment).setProperty("processed", "true");
+			}
+
+		}
+
+	}
+
+	@Nested
+	class AotTests {
+
+		private static final ClassName TEST_APP = ClassName.get("com.example", "TestApp");
+
+		@Test
+		void aotContributionRegistersActiveProfiles() {
+			ConfigurableEnvironment environment = new StandardEnvironment();
+			environment.setActiveProfiles("one", "two");
+			compile(createContext(environment), (compiled) -> {
+				EnvironmentPostProcessor environmentPostProcessor = compiled.getInstance(EnvironmentPostProcessor.class,
+						ClassName.get("com.example", "TestApp__EnvironmentPostProcessor").toString());
+				StandardEnvironment freshEnvironment = new StandardEnvironment();
+				environmentPostProcessor.postProcessEnvironment(freshEnvironment, new SpringApplication());
+				assertThat(freshEnvironment.getActiveProfiles()).containsExactly("one", "two");
+			});
+		}
+
+		@Test
+		void shouldUseAotEnvironmentPostProcessor() {
+			SpringApplication application = new SpringApplication(ExampleAotProcessedApp.class);
+			application.setWebApplicationType(WebApplicationType.NONE);
+			application.setMainApplicationClass(ExampleAotProcessedApp.class);
+			System.setProperty(AotDetector.AOT_ENABLED, "true");
+			try {
+				ApplicationContext context = application.run();
+				assertThat(context.getEnvironment().getActiveProfiles()).containsExactly("one", "three");
+			}
+			finally {
+				System.clearProperty(AotDetector.AOT_ENABLED);
+			}
+		}
+
+		private GenericApplicationContext createContext(ConfigurableEnvironment environment) {
+			GenericApplicationContext context = new GenericApplicationContext();
+			context.setEnvironment(environment);
+			return context;
+		}
+
+		private void compile(GenericApplicationContext context, Consumer<Compiled> compiled) {
+			TestGenerationContext generationContext = new TestGenerationContext(TEST_APP);
+			new ApplicationContextAotGenerator().processAheadOfTime(context, generationContext);
+			generationContext.writeGeneratedContent();
+			TestCompiler.forSystem().with(generationContext).compile(compiled);
+		}
+
+		static class ExampleAotProcessedApp {
+
+		}
+
+		static class ExampleAotProcessedApp__ApplicationContextInitializer
+				implements ApplicationContextInitializer<ConfigurableApplicationContext> {
+
+			@Override
+			public void initialize(ConfigurableApplicationContext applicationContext) {
+				applicationContext.getBeanFactory().registerSingleton("test", "test");
+			}
+
+		}
+
+		static class ExampleAotProcessedApp__EnvironmentPostProcessor implements EnvironmentPostProcessor {
+
+			@Override
+			public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
+				environment.addActiveProfile("one");
+				environment.addActiveProfile("three");
+			}
+
 		}
 
 	}

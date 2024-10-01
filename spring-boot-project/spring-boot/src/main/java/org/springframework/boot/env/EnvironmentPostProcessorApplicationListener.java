@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 the original author or authors.
+ * Copyright 2012-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,20 @@
 
 package org.springframework.boot.env;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
 
+import javax.lang.model.element.Modifier;
+
+import org.springframework.aot.AotDetector;
+import org.springframework.aot.generate.GeneratedClass;
+import org.springframework.aot.generate.GenerationContext;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.aot.BeanFactoryInitializationAotContribution;
+import org.springframework.beans.factory.aot.BeanFactoryInitializationAotProcessor;
+import org.springframework.beans.factory.aot.BeanFactoryInitializationCode;
+import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.boot.ConfigurableBootstrapContext;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.context.event.ApplicationEnvironmentPreparedEvent;
@@ -26,19 +37,26 @@ import org.springframework.boot.context.event.ApplicationFailedEvent;
 import org.springframework.boot.context.event.ApplicationPreparedEvent;
 import org.springframework.boot.logging.DeferredLogs;
 import org.springframework.context.ApplicationEvent;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.event.SmartApplicationListener;
 import org.springframework.core.Ordered;
 import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.Environment;
 import org.springframework.core.io.ResourceLoader;
+import org.springframework.javapoet.CodeBlock;
+import org.springframework.util.ClassUtils;
 
 /**
  * {@link SmartApplicationListener} used to trigger {@link EnvironmentPostProcessor
  * EnvironmentPostProcessors} registered in the {@code spring.factories} file.
  *
  * @author Phillip Webb
+ * @author Stephane Nicoll
  * @since 2.4.0
  */
 public class EnvironmentPostProcessorApplicationListener implements SmartApplicationListener, Ordered {
+
+	private static final String AOT_FEATURE_NAME = "EnvironmentPostProcessor";
 
 	/**
 	 * The default order for the processor.
@@ -104,9 +122,27 @@ public class EnvironmentPostProcessorApplicationListener implements SmartApplica
 	private void onApplicationEnvironmentPreparedEvent(ApplicationEnvironmentPreparedEvent event) {
 		ConfigurableEnvironment environment = event.getEnvironment();
 		SpringApplication application = event.getSpringApplication();
-		for (EnvironmentPostProcessor postProcessor : getEnvironmentPostProcessors(application.getResourceLoader(),
-				event.getBootstrapContext())) {
+		List<EnvironmentPostProcessor> postProcessors = getEnvironmentPostProcessors(application.getResourceLoader(),
+				event.getBootstrapContext());
+		addAotGeneratedEnvironmentPostProcessorIfNecessary(postProcessors, application);
+		for (EnvironmentPostProcessor postProcessor : postProcessors) {
 			postProcessor.postProcessEnvironment(environment, application);
+		}
+	}
+
+	private void addAotGeneratedEnvironmentPostProcessorIfNecessary(List<EnvironmentPostProcessor> postProcessors,
+			SpringApplication springApplication) {
+		if (AotDetector.useGeneratedArtifacts()) {
+			ClassLoader classLoader = (springApplication.getResourceLoader() != null)
+					? springApplication.getResourceLoader().getClassLoader() : null;
+			String postProcessorClassName = springApplication.getMainApplicationClass().getName() + "__"
+					+ AOT_FEATURE_NAME;
+			if (ClassUtils.isPresent(postProcessorClassName, classLoader)) {
+				Class<?> postProcessorClass = ClassUtils.resolveClassName(postProcessorClassName, classLoader);
+				EnvironmentPostProcessor aotEnvironmentPostProcessor = (EnvironmentPostProcessor) BeanUtils
+					.instantiateClass(postProcessorClass);
+				postProcessors.add(0, aotEnvironmentPostProcessor);
+			}
 		}
 	}
 
@@ -136,6 +172,65 @@ public class EnvironmentPostProcessorApplicationListener implements SmartApplica
 
 	public void setOrder(int order) {
 		this.order = order;
+	}
+
+	/**
+	 * Contribute a {@code <Application>__EnvironmentPostProcessor} class that defines AOT
+	 * optimizations.
+	 */
+	static class EnvironmentBeanFactoryInitializationAotProcessor implements BeanFactoryInitializationAotProcessor {
+
+		@Override
+		public BeanFactoryInitializationAotContribution processAheadOfTime(
+				ConfigurableListableBeanFactory beanFactory) {
+			Environment environment = beanFactory.getBean(ConfigurableApplicationContext.ENVIRONMENT_BEAN_NAME,
+					Environment.class);
+			String[] activeProfiles = environment.getActiveProfiles();
+			String[] defaultProfiles = environment.getDefaultProfiles();
+			if (!Arrays.equals(activeProfiles, defaultProfiles)) {
+				return new EnvironmentAotContribution(activeProfiles);
+			}
+			return null;
+		}
+
+	}
+
+	private static final class EnvironmentAotContribution implements BeanFactoryInitializationAotContribution {
+
+		private static final String ENVIRONMENT_VARIABLE = "environment";
+
+		private final String[] activeProfiles;
+
+		private EnvironmentAotContribution(String[] activeProfiles) {
+			this.activeProfiles = activeProfiles;
+		}
+
+		@Override
+		public void applyTo(GenerationContext generationContext,
+				BeanFactoryInitializationCode beanFactoryInitializationCode) {
+			GeneratedClass generatedClass = generationContext.getGeneratedClasses()
+				.addForFeature(AOT_FEATURE_NAME, (type) -> {
+					type.addModifiers(Modifier.PUBLIC);
+					type.addJavadoc("Configure the environment with AOT optimizations.");
+					type.addSuperinterface(EnvironmentPostProcessor.class);
+				});
+			generatedClass.getMethods().add("postProcessEnvironment", (method) -> {
+				method.addModifiers(Modifier.PUBLIC);
+				method.addAnnotation(Override.class);
+				method.addParameter(ConfigurableEnvironment.class, ENVIRONMENT_VARIABLE);
+				method.addParameter(SpringApplication.class, "application");
+				method.addCode(generateActiveProfilesInitializeCode());
+			});
+		}
+
+		private CodeBlock generateActiveProfilesInitializeCode() {
+			CodeBlock.Builder code = CodeBlock.builder();
+			for (String activeProfile : this.activeProfiles) {
+				code.addStatement("$L.addActiveProfile($S)", ENVIRONMENT_VARIABLE, activeProfile);
+			}
+			return code.build();
+		}
+
 	}
 
 }
