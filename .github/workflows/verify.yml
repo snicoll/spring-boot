@@ -2,24 +2,24 @@ name: Verify
 on:
   workflow_call:
     inputs:
-      version:
-        required: true
-        type: string
       staging:
         required: false
         default: false
         type: boolean
+      version:
+        required: true
+        type: string
     secrets:
-      opensource-repository-username:
-        required: false
-      opensource-repository-password:
+      commercial-repository-password:
         required: false
       commercial-repository-username:
         required: false
-      commercial-repository-password:
-        required: false
       google-chat-webhook-url:
         required: true
+      opensource-repository-password:
+        required: false
+      opensource-repository-username:
+        required: false
       token:
         required: true
 jobs:
@@ -57,13 +57,13 @@ jobs:
           echo 'org.gradle.daemon=false' >> $HOME/.gradle/gradle.properties
       - name: Run Release Verification Tests
         env:
-          RVT_VERSION: ${{ inputs.version }}
+          RVT_COMMERCIAL_REPOSITORY_PASSWORD: ${{ secrets.commercial-repository-password }}
+          RVT_COMMERCIAL_REPOSITORY_USERNAME: ${{ secrets.commercial-repository-username }}
+          RVT_OSS_REPOSITORY_PASSWORD: ${{ secrets.opensource-repository-password }}
+          RVT_OSS_REPOSITORY_USERNAME: ${{ secrets.opensource-repository-username }}
           RVT_RELEASE_TYPE: ${{ vars.COMMERCIAL && 'commercial' || 'oss' }}
           RVT_STAGING: ${{ inputs.staging }}
-          RVT_OSS_REPOSITORY_USERNAME: ${{ secrets.opensource-repository-username }}
-          RVT_OSS_REPOSITORY_PASSWORD: ${{ secrets.opensource-repository-password }}
-          RVT_COMMERCIAL_REPOSITORY_USERNAME: ${{ secrets.commercial-repository-username }}
-          RVT_COMMERCIAL_REPOSITORY_PASSWORD: ${{ secrets.commercial-repository-password }}
+          RVT_VERSION: ${{ inputs.version }}
         run: ./gradlew spring-boot-release-verification-tests:test
       - name: Upload Build Reports on Failure
         uses: actions/upload-artifact@v4
@@ -75,6 +75,6 @@ jobs:
         uses: ./send-notification/.github/actions/send-notification
         if: always()
         with:
-          webhook-url: ${{ secrets.google-chat-webhook-url }}
-          status: ${{ job.status }}
           run-name: ${{ format('{0} | Verification | {1}', github.ref_name, inputs.version) }}
+          status: ${{ job.status }}
+          webhook-url: ${{ secrets.google-chat-webhook-url }}

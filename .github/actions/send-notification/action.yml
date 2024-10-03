@@ -1,17 +1,17 @@
 name: Send Notification
-description: Sends a Google Chat message as a notification of the job's outcome
+description: 'Sends a Google Chat message as a notification of the job''s outcome'
 inputs:
-  webhook-url:
-    description: 'Google Chat Webhook URL'
-    required: true
-  status:
-    description: 'Status of the job'
-    required: true
   build-scan-url:
     description: 'URL of the build scan to include in the notification'
   run-name:
     description: 'Name of the run to include in the notification'
     default: ${{ format('{0} {1}', github.ref_name, github.job) }}
+  status:
+    description: 'Status of the job'
+    required: true
+  webhook-url:
+    description: 'Google Chat Webhook URL'
+    required: true
 runs:
   using: composite
   steps:

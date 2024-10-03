@@ -1,19 +1,19 @@
 name: Publish to SDKMAN!
-description: Publishes the release as a new candidate version on SDKMAN!
+description: 'Publishes the release as a new candidate version on SDKMAN!'
 inputs:
-  sdkman-consumer-key:
-    description: 'Key for publishing to SDKMAN!'
-    required: true
-  sdkman-consumer-token:
-    description: 'Token for publishing to SDKMAN!'
-    required: true
-  spring-boot-version:
-    description: 'The version to publish'
-    required: true
   make-default:
-    description: 'Whether the release should be made the default version'
     required: false
-    default: false
+    default: 'false'
+    description: 'Whether the release should be made the default version'
+  sdkman-consumer-key:
+    required: true
+    description: 'Key for publishing to SDKMAN!'
+  sdkman-consumer-token:
+    required: true
+    description: 'Token for publishing to SDKMAN!'
+  spring-boot-version:
+    required: true
+    description: 'Version to publish'
 runs:
   using: composite
   steps:
