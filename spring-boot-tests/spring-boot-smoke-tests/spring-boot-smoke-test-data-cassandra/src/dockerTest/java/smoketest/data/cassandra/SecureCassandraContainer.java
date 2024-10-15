@@ -16,16 +16,17 @@
 
 package smoketest.data.cassandra;
 
-import org.testcontainers.cassandra.CassandraContainer;
 import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.utility.MountableFile;
 
 /**
- * A {@link CassandraContainer} for Cassandra with SSL configuration.
+ * A {@link org.testcontainers.containers.CassandraContainer} for Cassandra with SSL
+ * configuration.
  *
  * @author Scott Frederick
  */
-class SecureCassandraContainer extends CassandraContainer {
+@SuppressWarnings("deprecation")
+class SecureCassandraContainer extends org.testcontainers.containers.CassandraContainer<SecureCassandraContainer> {
 
 	SecureCassandraContainer(DockerImageName dockerImageName) {
 		super(dockerImageName);

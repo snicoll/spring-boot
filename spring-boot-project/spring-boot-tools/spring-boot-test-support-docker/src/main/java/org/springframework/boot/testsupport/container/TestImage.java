@@ -84,6 +84,15 @@ public enum TestImage {
 			(container) -> ((CassandraContainer) container).withStartupTimeout(Duration.ofMinutes(10))),
 
 	/**
+	 * A container image suitable for testing Cassandra using the deprecated
+	 * {@link org.testcontainers.containers.CassandraContainer}.
+	 */
+	@Deprecated(since = "3.4.0", forRemoval = true)
+	CASSANDRA_DEPRECATED("cassandra", "3.11.10", () -> org.testcontainers.containers.CassandraContainer.class,
+			(container) -> ((org.testcontainers.containers.CassandraContainer<?>) container)
+				.withStartupTimeout(Duration.ofMinutes(10))),
+
+	/**
 	 * A container image suitable for testing Couchbase.
 	 */
 	COUCHBASE("couchbase/server", "7.1.4", () -> CouchbaseContainer.class,
