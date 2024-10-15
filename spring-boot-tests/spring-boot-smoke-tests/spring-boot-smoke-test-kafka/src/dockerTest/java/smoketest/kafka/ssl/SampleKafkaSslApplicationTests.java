@@ -56,7 +56,7 @@ class SampleKafkaSslApplicationTests {
 
 	@Container
 	public static ConfluentKafkaContainer kafka = TestImage.container(ConfluentKafkaContainer.class)
-		.withEnv("KAFKA_LISTENER_SECURITY_PROTOCOL_MAP", "PLAINTEXT:SSL,BROKER:PLAINTEXT")
+		.withEnv("KAFKA_LISTENER_SECURITY_PROTOCOL_MAP", "PLAINTEXT:SSL,BROKER:PLAINTEXT,CONTROLLER:PLAINTEXT")
 		.withEnv("KAFKA_AUTO_CREATE_TOPICS_ENABLE", "true")
 		.withEnv("KAFKA_SSL_CLIENT_AUTH", "required")
 		.withEnv("KAFKA_SSL_KEYSTORE_LOCATION", "/etc/kafka/secrets/certs/test-server.p12")
@@ -75,7 +75,7 @@ class SampleKafkaSslApplicationTests {
 	@DynamicPropertySource
 	static void kafkaProperties(DynamicPropertyRegistry registry) {
 		registry.add("spring.kafka.bootstrap-servers",
-				() -> String.format("%s:%s", kafka.getHost(), kafka.getMappedPort(9093)));
+				() -> String.format("%s:%s", kafka.getHost(), kafka.getMappedPort(9092)));
 	}
 
 	@Autowired
