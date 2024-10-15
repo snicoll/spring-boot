@@ -22,7 +22,7 @@ import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.kafka.KafkaContainer;
+import org.testcontainers.kafka.ConfluentKafkaContainer;
 import org.testcontainers.utility.MountableFile;
 import smoketest.kafka.Consumer;
 import smoketest.kafka.Producer;
@@ -55,7 +55,7 @@ import static org.hamcrest.Matchers.not;
 class SampleKafkaSslApplicationTests {
 
 	@Container
-	public static KafkaContainer kafka = TestImage.container(KafkaContainer.class)
+	public static ConfluentKafkaContainer kafka = TestImage.container(ConfluentKafkaContainer.class)
 		.withEnv("KAFKA_LISTENER_SECURITY_PROTOCOL_MAP", "PLAINTEXT:SSL,BROKER:PLAINTEXT")
 		.withEnv("KAFKA_AUTO_CREATE_TOPICS_ENABLE", "true")
 		.withEnv("KAFKA_SSL_CLIENT_AUTH", "required")
