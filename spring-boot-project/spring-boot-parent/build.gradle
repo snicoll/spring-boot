@@ -33,11 +33,15 @@ bom {
 			]
 		}
 	}
-	library("ClickHouse", "0.6.5") {
+	library("ClickHouse", "0.7.0") {
 		group("com.clickhouse") {
 			modules = [
-				"clickhouse-jdbc",
-				"clickhouse-r2dbc"
+				"clickhouse-jdbc" {
+					classifier = 'http'
+				},
+				"clickhouse-r2dbc" {
+					classifier = 'http'
+				}
 			]
 		}
 	}
