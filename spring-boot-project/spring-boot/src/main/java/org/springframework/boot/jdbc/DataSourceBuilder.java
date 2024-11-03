@@ -36,6 +36,7 @@ import oracle.ucp.jdbc.PoolDataSourceImpl;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.h2.jdbcx.JdbcDataSource;
 import org.postgresql.ds.PGSimpleDataSource;
+import org.vibur.dbcp.ViburDBCPDataSource;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.core.ResolvableType;
@@ -411,6 +412,8 @@ public final class DataSourceBuilder<T extends DataSource> {
 					OraclePoolDataSourceProperties::new, "oracle.jdbc.OracleConnection");
 			result = lookup(classLoader, type, result, "com.mchange.v2.c3p0.ComboPooledDataSource",
 					ComboPooledDataSourceProperties::new);
+			result = lookup(classLoader, type, result, "org.vibur.dbcp.ViburDBCPDataSource",
+					ViburDataSourceProperties::new);
 			return result;
 		}
 
@@ -689,6 +692,18 @@ public final class DataSourceBuilder<T extends DataSource> {
 			catch (PropertyVetoException ex) {
 				throw new IllegalArgumentException(ex);
 			}
+		}
+
+	}
+
+	private static class ViburDataSourceProperties extends MappedDataSourceProperties<ViburDBCPDataSource> {
+
+		ViburDataSourceProperties() {
+			add(DataSourceProperty.URL, ViburDBCPDataSource::getJdbcUrl, ViburDBCPDataSource::setJdbcUrl);
+			add(DataSourceProperty.DRIVER_CLASS_NAME, ViburDBCPDataSource::getDriverClassName,
+					ViburDBCPDataSource::setDriverClassName);
+			add(DataSourceProperty.USERNAME, ViburDBCPDataSource::getUsername, ViburDBCPDataSource::setUsername);
+			add(DataSourceProperty.PASSWORD, ViburDBCPDataSource::getPassword, ViburDBCPDataSource::setPassword);
 		}
 
 	}

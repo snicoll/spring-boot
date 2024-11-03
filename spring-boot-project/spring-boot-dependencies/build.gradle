@@ -2276,6 +2276,14 @@ bom {
 			]
 		}
 	}
+	library("Vibur", "25.0") {
+		group("org.vibur") {
+			modules = [
+					"vibur-dbcp",
+					"vibur-object-pool"
+			]
+		}
+	}
 	library("WebJars Locator Lite", "1.0.0") {
 		group("org.webjars") {
 			modules = [
