@@ -142,6 +142,9 @@ The resulting response is similar to the following:
 include::partial$rest/actuator/quartz/job-details/http-response.adoc[]
 
 If a key in the data map is identified as sensitive, its value is sanitized.
+This job is not currently running. When a job is running, the related trigger has an additional `current` detail, as shown in the following example:
+
+include::partial$rest/actuator/quartz/job-details-running/http-response.adoc[]
 
 
 

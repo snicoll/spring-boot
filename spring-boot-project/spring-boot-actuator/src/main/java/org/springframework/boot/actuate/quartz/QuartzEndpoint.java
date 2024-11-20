@@ -23,6 +23,7 @@ import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -37,6 +38,7 @@ import org.quartz.DateBuilder.IntervalUnit;
 import org.quartz.Job;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
+import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
@@ -203,16 +205,26 @@ public class QuartzEndpoint {
 		JobKey jobKey = JobKey.jobKey(jobName, groupName);
 		JobDetail jobDetail = this.scheduler.getJobDetail(jobKey);
 		if (jobDetail != null) {
+			List<JobExecutionContext> currentJobExecutions = getCurrentJobExecution(jobDetail);
 			List<? extends Trigger> triggers = this.scheduler.getTriggersOfJob(jobKey);
 			return new QuartzJobDetailsDescriptor(jobDetail.getKey().getGroup(), jobDetail.getKey().getName(),
-					jobDetail.getDescription(), jobDetail.getJobClass().getName(), jobDetail.isDurable(),
-					jobDetail.requestsRecovery(), sanitizeJobDataMap(jobDetail.getJobDataMap(), showUnsanitized),
-					extractTriggersSummary(triggers));
+					jobDetail.getDescription(), jobDetail.getJobClass().getName(), !currentJobExecutions.isEmpty(),
+					jobDetail.isDurable(), jobDetail.requestsRecovery(),
+					sanitizeJobDataMap(jobDetail.getJobDataMap(), showUnsanitized),
+					extractTriggersSummary(triggers, currentJobExecutions));
 		}
 		return null;
 	}
 
-	private static List<Map<String, Object>> extractTriggersSummary(List<? extends Trigger> triggers) {
+	private List<JobExecutionContext> getCurrentJobExecution(JobDetail jobDetail) throws SchedulerException {
+		return this.scheduler.getCurrentlyExecutingJobs()
+			.stream()
+			.filter((candidate) -> candidate.getJobDetail().getKey().equals(jobDetail.getKey()))
+			.toList();
+	}
+
+	private static List<Map<String, Object>> extractTriggersSummary(List<? extends Trigger> triggers,
+			List<JobExecutionContext> currentJobExecutions) {
 		List<Trigger> triggersToSort = new ArrayList<>(triggers);
 		triggersToSort.sort(TRIGGER_COMPARATOR);
 		List<Map<String, Object>> result = new ArrayList<>();
@@ -220,10 +232,40 @@ public class QuartzEndpoint {
 			Map<String, Object> triggerSummary = new LinkedHashMap<>();
 			triggerSummary.put("group", trigger.getKey().getGroup());
 			triggerSummary.put("name", trigger.getKey().getName());
-			triggerSummary.putAll(TriggerDescriptor.of(trigger).buildSummary(false));
+			triggerSummary.put("priority", trigger.getPriority());
+			// deprecated as previousFireTime and nextFireTime have moved to executions
+			if (trigger.getPreviousFireTime() != null) {
+				triggerSummary.put("previousFireTime", trigger.getPreviousFireTime());
+			}
+			if (trigger.getNextFireTime() != null) {
+				triggerSummary.put("nextFireTime", trigger.getNextFireTime());
+			}
+
+			Map<String, Object> executions = new LinkedHashMap<>();
+			executions.put("previous", createExecutionSummary(trigger.getPreviousFireTime()));
+			JobExecutionContext jobExecutionContext = currentJobExecutions.stream()
+				.filter((candidate) -> candidate.getTrigger().getKey().equals(trigger.getKey()))
+				.findAny()
+				.orElse(null);
+			if (jobExecutionContext != null) {
+				Map<String, Object> executionSummary = createExecutionSummary(jobExecutionContext.getFireTime());
+				executionSummary.put("recovering", jobExecutionContext.isRecovering());
+				executionSummary.put("refireCount", jobExecutionContext.getRefireCount());
+				executions.put("current", executionSummary);
+			}
+			executions.put("next", createExecutionSummary(trigger.getNextFireTime()));
+			triggerSummary.put("executions", executions);
 			result.add(triggerSummary);
 		});
 		return result;
+	}
+
+	private static Map<String, Object> createExecutionSummary(Date fireTime) {
+		Map<String, Object> summary = new LinkedHashMap<>();
+		if (fireTime != null) {
+			summary.put("fireTime", fireTime);
+		}
+		return summary;
 	}
 
 	/**
@@ -400,6 +442,8 @@ public class QuartzEndpoint {
 
 		private final String className;
 
+		private final boolean running;
+
 		private final boolean durable;
 
 		private final boolean requestRecovery;
@@ -408,12 +452,14 @@ public class QuartzEndpoint {
 
 		private final List<Map<String, Object>> triggers;
 
-		QuartzJobDetailsDescriptor(String group, String name, String description, String className, boolean durable,
-				boolean requestRecovery, Map<String, Object> data, List<Map<String, Object>> triggers) {
+		QuartzJobDetailsDescriptor(String group, String name, String description, String className, boolean running,
+				boolean durable, boolean requestRecovery, Map<String, Object> data,
+				List<Map<String, Object>> triggers) {
 			this.group = group;
 			this.name = name;
 			this.description = description;
 			this.className = className;
+			this.running = running;
 			this.durable = durable;
 			this.requestRecovery = requestRecovery;
 			this.data = data;
@@ -434,6 +480,10 @@ public class QuartzEndpoint {
 
 		public String getClassName() {
 			return this.className;
+		}
+
+		public boolean isRunning() {
+			return this.running;
 		}
 
 		public boolean isDurable() {

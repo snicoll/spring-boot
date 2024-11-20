@@ -38,6 +38,7 @@ import org.quartz.DateBuilder.IntervalUnit;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
+import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
@@ -59,6 +60,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.restdocs.payload.FieldDescriptor;
 import org.springframework.restdocs.payload.JsonFieldType;
+import org.springframework.restdocs.payload.ResponseFieldsSnippet;
 import org.springframework.scheduling.quartz.DelegatingJob;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.util.LinkedMultiValueMap;
@@ -276,19 +278,66 @@ class QuartzEndpointDocumentationTests extends MockMvcEndpointDocumentationTests
 		given(this.scheduler.getTriggersOfJob(jobOne.getKey()))
 			.willAnswer((invocation) -> List.of(firstTrigger, secondTrigger));
 		assertThat(this.mvc.get().uri("/actuator/quartz/jobs/samples/jobOne")).hasStatusOk()
-			.apply(document("quartz/job-details", responseFields(
-					fieldWithPath("group").description("Name of the group."),
-					fieldWithPath("name").description("Name of the job."),
-					fieldWithPath("description").description("Description of the job, if any."),
-					fieldWithPath("className").description("Fully qualified name of the job implementation."),
-					fieldWithPath("durable").description("Whether the job should remain stored after it is orphaned."),
-					fieldWithPath("requestRecovery").description(
-							"Whether the job should be re-executed if a 'recovery' or 'fail-over' situation is encountered."),
-					fieldWithPath("data.*").description("Job data map as key/value pairs, if any."),
-					fieldWithPath("triggers").description("An array of triggers associated to the job, if any."),
-					fieldWithPath("triggers.[].group").description("Name of the trigger group."),
-					fieldWithPath("triggers.[].name").description("Name of the trigger."),
-					previousFireTime("triggers.[]."), nextFireTime("triggers.[]."), priority("triggers.[]."))));
+			.apply(document("quartz/job-details", quartzJobDetail()));
+	}
+
+	@Test
+	void quartzJobRunning() throws Exception {
+		mockJobs(jobOne);
+		CronTrigger firstTrigger = cronTrigger.getTriggerBuilder().build();
+		setPreviousNextFireTime(firstTrigger, null, "2020-12-07T03:00:00Z");
+		SimpleTrigger secondTrigger = simpleTrigger.getTriggerBuilder().build();
+		setPreviousNextFireTime(secondTrigger, "2020-12-04T03:00:00Z", "2020-12-04T12:00:00Z");
+		mockTriggers(firstTrigger, secondTrigger);
+		JobExecutionContext jobExecutionContext = createJobExecutionContext(jobOne, simpleTrigger,
+				fromUtc("2020-12-04T12:00:12Z"));
+		given(this.scheduler.getCurrentlyExecutingJobs()).willReturn(List.of(jobExecutionContext));
+		given(this.scheduler.getTriggersOfJob(jobOne.getKey()))
+			.willAnswer((invocation) -> List.of(firstTrigger, secondTrigger));
+		assertThat(this.mvc.get().uri("/actuator/quartz/jobs/samples/jobOne")).hasStatusOk()
+			.apply(document("quartz/job-details-running", quartzJobDetail()));
+	}
+
+	private ResponseFieldsSnippet quartzJobDetail() {
+		return responseFields(fieldWithPath("group").description("Name of the group."),
+				fieldWithPath("name").description("Name of the job."),
+				fieldWithPath("description").description("Description of the job, if any."),
+				fieldWithPath("className").description("Fully qualified name of the job implementation."),
+				fieldWithPath("running").description("Whether the job is currently running."),
+				fieldWithPath("durable").description("Whether the job should remain stored after it is orphaned."),
+				fieldWithPath("requestRecovery").description(
+						"Whether the job should be re-executed if a 'recovery' or 'fail-over' situation is encountered."),
+				fieldWithPath("data.*").description("Job data map as key/value pairs, if any."),
+				fieldWithPath("triggers").description("An array of triggers associated to the job, if any."),
+				priority("triggers.[]."),
+				fieldWithPath("triggers.[].executions").description("Details about the executions of the job."),
+				fieldWithPath("triggers.[].executions.previous")
+					.description("Details about the previous execution of the trigger."),
+				fieldWithPath("triggers.[].executions.previous.fireTime")
+					.description("Last time the trigger fired, if any.")
+					.optional(),
+				fieldWithPath("triggers.[].executions.current")
+					.description("Details about the current executions of the trigger, if any.")
+					.optional()
+					.type(JsonFieldType.OBJECT),
+				fieldWithPath("triggers.[].executions.current.fireTime")
+					.description("Time the trigger fired for the current execution.")
+					.type(JsonFieldType.STRING),
+				fieldWithPath("triggers.[].executions.current.recovering")
+					.description("Whether this execution is recovering.")
+					.type(JsonFieldType.BOOLEAN),
+				fieldWithPath("triggers.[].executions.current.refireCount")
+					.description("Number of times this execution was re-fired.")
+					.type(JsonFieldType.NUMBER),
+				fieldWithPath("triggers.[].executions.next")
+					.description("Details about the next execution of the trigger."),
+				fieldWithPath("triggers.[].executions.next.fireTime")
+					.description("Next time at which the Trigger is scheduled to fire, if any.")
+					.optional()
+					.type(JsonFieldType.STRING),
+				fieldWithPath("triggers.[].group").description("Name of the trigger group."),
+				fieldWithPath("triggers.[].name").description("Name of the trigger."),
+				previousFireTime("triggers.[].").ignored(), nextFireTime("triggers.[].").ignored());
 	}
 
 	@Test
@@ -416,6 +465,7 @@ class QuartzEndpointDocumentationTests extends MockMvcEndpointDocumentationTests
 	private static FieldDescriptor nextFireTime(String prefix) {
 		return fieldWithPath(prefix + "nextFireTime").optional()
 			.type(JsonFieldType.STRING)
+			.ignored()
 			.description("Next time at which the Trigger is scheduled to fire, if any.");
 	}
 
@@ -475,6 +525,16 @@ class QuartzEndpointDocumentationTests extends MockMvcEndpointDocumentationTests
 		if (nextFireTime != null) {
 			operableTrigger.setNextFireTime(fromUtc(nextFireTime));
 		}
+	}
+
+	private JobExecutionContext createJobExecutionContext(JobDetail jobDetail, Trigger trigger, Date fireTime) {
+		JobExecutionContext jobExecutionContext = mock(JobExecutionContext.class);
+		given(jobExecutionContext.getJobDetail()).willReturn(jobDetail);
+		given(jobExecutionContext.getTrigger()).willReturn(trigger);
+		given(jobExecutionContext.getFireTime()).willReturn(fireTime);
+		given(jobExecutionContext.isRecovering()).willReturn(false);
+		given(jobExecutionContext.getRefireCount()).willReturn(0);
+		return jobExecutionContext;
 	}
 
 	private static Date fromUtc(String utcTime) {

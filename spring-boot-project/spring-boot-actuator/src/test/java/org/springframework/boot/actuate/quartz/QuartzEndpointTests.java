@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 the original author or authors.
+ * Copyright 2012-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,6 +49,7 @@ import org.quartz.DateBuilder.IntervalUnit;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
+import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
@@ -651,6 +652,32 @@ class QuartzEndpointTests {
 	}
 
 	@Test
+	@Deprecated(since = "3.5.0", forRemoval = true)
+	void quartzJobWithTriggerHasLegacyFireTimes() throws SchedulerException {
+		Date previousFireTime = Date.from(Instant.parse("2020-11-30T03:00:00Z"));
+		Date nextFireTime = Date.from(Instant.parse("2020-12-01T03:00:00Z"));
+		JobDetail job = JobBuilder.newJob(Job.class).withIdentity("hello", "samples").build();
+		TimeZone timeZone = TimeZone.getTimeZone("Europe/Paris");
+		Trigger trigger = TriggerBuilder.newTrigger()
+			.withIdentity("3am-every-day", "samples")
+			.withPriority(4)
+			.withSchedule(CronScheduleBuilder.dailyAtHourAndMinute(3, 0).inTimeZone(timeZone))
+			.build();
+		((OperableTrigger) trigger).setPreviousFireTime(previousFireTime);
+		((OperableTrigger) trigger).setNextFireTime(nextFireTime);
+		mockJobs(job);
+		mockTriggers(trigger);
+		given(this.scheduler.getTriggersOfJob(JobKey.jobKey("hello", "samples")))
+			.willAnswer((invocation) -> Collections.singletonList(trigger));
+		QuartzJobDetailsDescriptor jobDetails = this.endpoint.quartzJob("samples", "hello", true);
+		assertThat(jobDetails.isRunning()).isFalse();
+		assertThat(jobDetails.getTriggers()).hasSize(1);
+		Map<String, Object> triggerDetails = jobDetails.getTriggers().get(0);
+		assertThat(triggerDetails).contains(entry("previousFireTime", previousFireTime),
+				entry("nextFireTime", nextFireTime));
+	}
+
+	@Test
 	void quartzJobWithTrigger() throws SchedulerException {
 		Date previousFireTime = Date.from(Instant.parse("2020-11-30T03:00:00Z"));
 		Date nextFireTime = Date.from(Instant.parse("2020-12-01T03:00:00Z"));
@@ -668,10 +695,53 @@ class QuartzEndpointTests {
 		given(this.scheduler.getTriggersOfJob(JobKey.jobKey("hello", "samples")))
 			.willAnswer((invocation) -> Collections.singletonList(trigger));
 		QuartzJobDetailsDescriptor jobDetails = this.endpoint.quartzJob("samples", "hello", true);
+		assertThat(jobDetails.isRunning()).isFalse();
 		assertThat(jobDetails.getTriggers()).hasSize(1);
 		Map<String, Object> triggerDetails = jobDetails.getTriggers().get(0);
-		assertThat(triggerDetails).containsOnly(entry("group", "samples"), entry("name", "3am-every-day"),
-				entry("previousFireTime", previousFireTime), entry("nextFireTime", nextFireTime), entry("priority", 4));
+		assertThat(triggerDetails).contains(entry("group", "samples"), entry("name", "3am-every-day"),
+				entry("priority", 4));
+		assertThat(triggerDetails).extractingByKey("executions", nestedMap()).satisfies((executions) -> {
+			assertThat(executions).containsOnlyKeys("previous", "next");
+			assertThat(executions).extractingByKey("previous", nestedMap())
+				.containsOnly(entry("fireTime", previousFireTime));
+			assertThat(executions).extractingByKey("next", nestedMap()).containsOnly(entry("fireTime", nextFireTime));
+		});
+	}
+
+	@Test
+	void quartzJobWithExecutingTrigger() throws SchedulerException {
+		Date previousFireTime = Date.from(Instant.parse("2020-11-30T03:00:00Z"));
+		Date nextFireTime = Date.from(Instant.parse("2020-12-01T03:00:00Z"));
+		JobDetail job = JobBuilder.newJob(Job.class).withIdentity("hello", "samples").build();
+		TimeZone timeZone = TimeZone.getTimeZone("Europe/Paris");
+		Trigger trigger = TriggerBuilder.newTrigger()
+			.withIdentity("3am-every-day", "samples")
+			.withPriority(4)
+			.withSchedule(CronScheduleBuilder.dailyAtHourAndMinute(3, 0).inTimeZone(timeZone))
+			.build();
+		((OperableTrigger) trigger).setPreviousFireTime(previousFireTime);
+		((OperableTrigger) trigger).setNextFireTime(nextFireTime);
+		mockJobs(job);
+		mockTriggers(trigger);
+		Date fireTime = Date.from(Instant.parse("2020-12-01T03:00:00Z"));
+		JobExecutionContext jobExecutionContext = createJobExecutionContext(job, trigger, fireTime);
+		given(this.scheduler.getCurrentlyExecutingJobs()).willReturn(List.of(jobExecutionContext));
+		given(this.scheduler.getTriggersOfJob(JobKey.jobKey("hello", "samples")))
+			.willAnswer((invocation) -> Collections.singletonList(trigger));
+		QuartzJobDetailsDescriptor jobDetails = this.endpoint.quartzJob("samples", "hello", true);
+		assertThat(jobDetails.isRunning()).isTrue();
+		assertThat(jobDetails.getTriggers()).hasSize(1);
+		Map<String, Object> triggerDetails = jobDetails.getTriggers().get(0);
+		assertThat(triggerDetails).contains(entry("group", "samples"), entry("name", "3am-every-day"),
+				entry("priority", 4));
+		assertThat(triggerDetails).extractingByKey("executions", nestedMap()).satisfies((executions) -> {
+			assertThat(executions).containsOnlyKeys("previous", "current", "next");
+			assertThat(executions).extractingByKey("previous", nestedMap())
+				.containsOnly(entry("fireTime", previousFireTime));
+			assertThat(executions).extractingByKey("current", nestedMap())
+				.containsOnly(entry("fireTime", fireTime), entry("recovering", false), entry("refireCount", 0));
+			assertThat(executions).extractingByKey("next", nestedMap()).containsOnly(entry("fireTime", nextFireTime));
+		});
 	}
 
 	@Test
@@ -781,6 +851,16 @@ class QuartzEndpointTests {
 			given(this.scheduler.getTriggerKeys(GroupMatcher.triggerGroupEquals(entry.getKey())))
 				.willReturn(new LinkedHashSet<>(entry.getValue()));
 		}
+	}
+
+	private JobExecutionContext createJobExecutionContext(JobDetail jobDetail, Trigger trigger, Date fireTime) {
+		JobExecutionContext jobExecutionContext = mock(JobExecutionContext.class);
+		given(jobExecutionContext.getJobDetail()).willReturn(jobDetail);
+		given(jobExecutionContext.getTrigger()).willReturn(trigger);
+		given(jobExecutionContext.getFireTime()).willReturn(fireTime);
+		given(jobExecutionContext.isRecovering()).willReturn(false);
+		given(jobExecutionContext.getRefireCount()).willReturn(0);
+		return jobExecutionContext;
 	}
 
 	@SuppressWarnings("rawtypes")
