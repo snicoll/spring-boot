@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
+
 plugins {
 	id "dev.adamko.dokkatoo-html"
 	id "java"
@@ -41,6 +43,11 @@ javadocJar {
 
 sourcesJar {
 	enabled = false
+}
+
+// To avoid a redeclaration error with Kotlin compiler
+tasks.named('compileKotlin', KotlinCompilationTask.class) {
+    javaSources.from = []
 }
 
 plugins.withType(EclipsePlugin) {

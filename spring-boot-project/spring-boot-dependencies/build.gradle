@@ -1160,11 +1160,7 @@ bom {
 			releaseNotes("https://github.com/JetBrains/kotlin/releases/tag/v{version}")
 		}
 	}
-	library("Kotlin Coroutines", "1.8.1") {
-		prohibit {
-			versionRange "[1.9.0,)"
-			because "it requires Kotlin 2"
-		}
+	library("Kotlin Coroutines", "1.9.0") {
 		group("org.jetbrains.kotlinx") {
 			imports = [
 				"kotlinx-coroutines-bom"
@@ -1175,11 +1171,7 @@ bom {
 			releaseNotes("https://github.com/Kotlin/kotlinx.coroutines/releases/tag/{version}")
 		}
 	}
-	library("Kotlin Serialization", "1.6.3") {
-		prohibit {
-			versionRange "[1.7.0-RC,)"
-			because "it requires Kotlin 2"
-		}
+	library("Kotlin Serialization", "1.7.3") {
 		group("org.jetbrains.kotlinx") {
 			imports = [
 				"kotlinx-serialization-bom"
