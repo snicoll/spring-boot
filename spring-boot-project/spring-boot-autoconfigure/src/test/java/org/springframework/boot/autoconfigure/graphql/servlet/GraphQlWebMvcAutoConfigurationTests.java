@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 the original author or authors.
+ * Copyright 2012-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@
 package org.springframework.boot.autoconfigure.graphql.servlet;
 
 import java.time.Duration;
-import java.util.List;
 import java.util.Map;
 
 import graphql.schema.idl.TypeRuntimeWiring;
@@ -195,8 +194,8 @@ class GraphQlWebMvcAutoConfigurationTests {
 				.content("{\"query\": \"" + query + "\"}"))
 				.satisfies((result) -> assertThat(result).hasStatusOk()
 					.headers()
-					.containsEntry(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, List.of("https://example.com"))
-					.containsEntry(HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS, List.of("true")));
+					.hasValue(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "https://example.com")
+					.hasValue(HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS, "true"));
 		});
 	}
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 the original author or authors.
+ * Copyright 2012-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -147,15 +147,6 @@ class DispatcherServletAutoConfigurationTests {
 			assertThat(dispatcherServlet).extracting("publishEvents").isEqualTo(true);
 			assertThat(context.getBean("dispatcherServletRegistration")).hasFieldOrPropertyWithValue("loadOnStartup",
 					-1);
-		});
-	}
-
-	@Test
-	@Deprecated(since = "3.2.0", forRemoval = true)
-	void dispatcherServletThrowExceptionIfNoHandlerFoundDefaultConfig() {
-		this.contextRunner.run((context) -> {
-			DispatcherServlet dispatcherServlet = context.getBean(DispatcherServlet.class);
-			assertThat(dispatcherServlet).extracting("throwExceptionIfNoHandlerFound").isEqualTo(true);
 		});
 	}
 

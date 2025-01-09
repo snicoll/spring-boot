@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 the original author or authors.
+ * Copyright 2012-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -445,10 +445,10 @@ class TestRestTemplateTests {
 		ClientHttpRequest request = ReflectionTestUtils.invokeMethod(testRestTemplate.getRestTemplate(),
 				"createRequest", URI.create("http://localhost"), HttpMethod.POST);
 		if (username == null) {
-			assertThat(request.getHeaders()).doesNotContainKey(HttpHeaders.AUTHORIZATION);
+			assertThat(request.getHeaders().headerNames()).doesNotContain(HttpHeaders.AUTHORIZATION);
 		}
 		else {
-			assertThat(request.getHeaders()).containsKeys(HttpHeaders.AUTHORIZATION);
+			assertThat(request.getHeaders().headerNames()).contains(HttpHeaders.AUTHORIZATION);
 			assertThat(request.getHeaders().get(HttpHeaders.AUTHORIZATION)).containsExactly("Basic "
 					+ Base64.getEncoder().encodeToString(String.format("%s:%s", username, password).getBytes()));
 		}

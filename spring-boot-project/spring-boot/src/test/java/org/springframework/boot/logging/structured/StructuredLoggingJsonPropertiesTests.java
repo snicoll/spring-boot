@@ -63,9 +63,9 @@ class StructuredLoggingJsonPropertiesTests {
 		new StructuredLoggingJsonPropertiesRuntimeHints().registerHints(hints, getClass().getClassLoader());
 		assertThat(RuntimeHintsPredicates.reflection().onType(StructuredLoggingJsonProperties.class)).accepts(hints);
 		assertThat(RuntimeHintsPredicates.reflection()
-			.onConstructor(StructuredLoggingJsonProperties.class.getDeclaredConstructor(Set.class, Set.class, Map.class,
-					Map.class, Set.class))
-			.invoke()).accepts(hints);
+			.onConstructorInvocation(StructuredLoggingJsonProperties.class.getDeclaredConstructor(Set.class, Set.class,
+					Map.class, Map.class, Set.class)))
+			.accepts(hints);
 	}
 
 	@Test

@@ -29,6 +29,7 @@ import org.springframework.lang.Nullable;
 public class IncrementalEndpoint {
 
 	@ReadOperation
+	@SuppressWarnings("deprecation")
 	public String invoke(@Nullable String param) {
 		return "test";
 	}

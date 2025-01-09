@@ -16,12 +16,8 @@ bom {
 	library("ActiveMQ", "6.1.5") {
 		group("org.apache.activemq") {
 			modules = [
-					"activemq-console" {
-						exclude group: "commons-logging", module: "commons-logging"
-					},
-					"activemq-spring" {
-						exclude group: "commons-logging", module: "commons-logging"
-					}
+					"activemq-console",
+					"activemq-spring"
 			]
 			imports = [
 					"activemq-bom"
@@ -216,9 +212,7 @@ bom {
 	library("Commons DBCP2", "2.13.0") {
 		group("org.apache.commons") {
 			modules = [
-				"commons-dbcp2" {
-					exclude group: "commons-logging", module: "commons-logging"
-				}
+				"commons-dbcp2"
 			]
 		}
 		links {
@@ -235,6 +229,17 @@ bom {
 		links {
 			site("https://commons.apache.org/proper/commons-lang")
 			releaseNotes("https://commons.apache.org/proper/commons-lang/changes-report.html#a{version}")
+		}
+	}
+	library("Commons Logging", "1.3.4") {
+		group("commons-logging") {
+			modules = [
+					"commons-logging"
+			]
+		}
+		links {
+			site("https://commons.apache.org/proper/commons-logging")
+			releaseNotes("https://commons.apache.org/proper/commons-logging/changes-report.html#a{version}")
 		}
 	}
 	library("Commons Pool", "1.6") {
@@ -340,12 +345,8 @@ bom {
 	library("Elasticsearch Client", "8.15.5") {
 		group("org.elasticsearch.client") {
 			modules = [
-				"elasticsearch-rest-client" {
-					exclude group: "commons-logging", module: "commons-logging"
-				},
-				"elasticsearch-rest-client-sniffer" {
-					exclude group: "commons-logging", module: "commons-logging"
-				},
+				"elasticsearch-rest-client",
+				"elasticsearch-rest-client-sniffer"
 			]
 		}
 		group("co.elastic.clients") {
@@ -579,9 +580,7 @@ bom {
 	library("HtmlUnit", "4.9.0") {
 		group("org.htmlunit") {
 			modules = [
-				"htmlunit" {
-					exclude group: "commons-logging", module: "commons-logging"
-				}
+				"htmlunit"
 			]
 		}
 		links {
@@ -592,9 +591,7 @@ bom {
 	library("HttpAsyncClient", "4.1.5") {
 		group("org.apache.httpcomponents") {
 			modules = [
-				"httpasyncclient" {
-					exclude group: "commons-logging", module: "commons-logging"
-				}
+				"httpasyncclient"
 			]
 		}
 	}
@@ -769,11 +766,7 @@ bom {
 				.formatted(version.major(), version.minor(), version))
 		}
 	}
-	library("Jakarta Servlet", "6.0.0") {
-		prohibit {
-			versionRange "[6.1.0-M1,6.1.0]"
-			because "it's part of Jakarta EE 11"
-		}
+	library("Jakarta Servlet", "6.1.0") {
 		group("jakarta.servlet") {
 			modules = [
 				"jakarta.servlet-api"
@@ -823,11 +816,7 @@ bom {
 			releaseNotes("https://github.com/jakartaee/validation/releases/tag/{version}")
 		}
 	}
-	library("Jakarta WebSocket", "2.1.1") {
-		prohibit {
-			versionRange "[2.2.0-M1,2.2.0]"
-			because "it's part of Jakarta EE 11"
-		}
+	library("Jakarta WebSocket", "2.2.0") {
 		group("jakarta.websocket") {
 			modules = [
 				"jakarta.websocket-api",
@@ -2123,7 +2112,7 @@ bom {
 			releaseNotes("https://github.com/spring-projects/spring-batch/releases/tag/v{version}")
 		}
 	}
-	library("Spring Data Bom", "2024.1.2") {
+	library("Spring Data Bom", "2025.1.0-M1") {
 		considerSnapshots()
 		calendarName = "Spring Data Release"
 		group("org.springframework.data") {
@@ -2157,7 +2146,7 @@ bom {
 			releaseNotes("https://github.com/spring-projects/spring-framework/releases/tag/v{version}")
 		}
 	}
-	library("Spring GraphQL", "1.3.3") {
+	library("Spring GraphQL", "1.4.0-SNAPSHOT") {
 		considerSnapshots()
 		group("org.springframework.graphql") {
 			modules = [
@@ -2264,7 +2253,7 @@ bom {
 			releaseNotes("https://github.com/spring-projects/spring-pulsar/releases/tag/v{version}")
 		}
 	}
-	library("Spring RESTDocs", "3.0.3") {
+	library("Spring RESTDocs", "4.0.0-SNAPSHOT") {
 		considerSnapshots()
 		group("org.springframework.restdocs") {
 			imports = [
