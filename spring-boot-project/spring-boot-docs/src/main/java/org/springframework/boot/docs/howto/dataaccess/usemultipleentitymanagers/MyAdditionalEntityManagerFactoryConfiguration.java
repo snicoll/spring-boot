@@ -16,6 +16,10 @@
 
 package org.springframework.boot.docs.howto.dataaccess.usemultipleentitymanagers;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.function.Function;
+
 import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -48,12 +52,20 @@ public class MyAdditionalEntityManagerFactoryConfiguration {
 
 	private EntityManagerFactoryBuilder createEntityManagerFactoryBuilder(JpaProperties jpaProperties) {
 		JpaVendorAdapter jpaVendorAdapter = createJpaVendorAdapter(jpaProperties);
-		return new EntityManagerFactoryBuilder(jpaVendorAdapter, jpaProperties.getProperties(), null);
+		Function<DataSource, Map<String, ?>> jpaPropertiesFactory = (dataSource) -> createJpaProperties(dataSource,
+				jpaProperties.getProperties());
+		return new EntityManagerFactoryBuilder(jpaVendorAdapter, jpaPropertiesFactory, null);
 	}
 
 	private JpaVendorAdapter createJpaVendorAdapter(JpaProperties jpaProperties) {
 		// ... map JPA properties as needed
 		return new HibernateJpaVendorAdapter();
+	}
+
+	private Map<String, ?> createJpaProperties(DataSource dataSource, Map<String, ?> existingProperties) {
+		Map<String, ?> jpaProperties = new LinkedHashMap<>(existingProperties);
+		// ... map JPA properties that require the DataSource (e.g. DDL flags)
+		return jpaProperties;
 	}
 
 }

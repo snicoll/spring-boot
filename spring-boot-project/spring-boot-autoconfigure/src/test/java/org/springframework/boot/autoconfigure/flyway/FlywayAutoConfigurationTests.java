@@ -962,6 +962,13 @@ class FlywayAutoConfigurationTests {
 		};
 	}
 
+	private static Map<String, ?> configureJpaProperties() {
+		Map<String, Object> properties = new HashMap<>();
+		properties.put("configured", "manually");
+		properties.put("hibernate.transaction.jta.platform", NoJtaPlatform.INSTANCE);
+		return properties;
+	}
+
 	@Configuration(proxyBeanMethods = false)
 	static class FlywayDataSourceConfiguration {
 
@@ -1057,10 +1064,8 @@ class FlywayAutoConfigurationTests {
 
 		@Bean
 		LocalContainerEntityManagerFactoryBean entityManagerFactoryBean(DataSource dataSource) {
-			Map<String, Object> properties = new HashMap<>();
-			properties.put("configured", "manually");
-			properties.put("hibernate.transaction.jta.platform", NoJtaPlatform.INSTANCE);
-			return new EntityManagerFactoryBuilder(new HibernateJpaVendorAdapter(), properties, null)
+			return new EntityManagerFactoryBuilder(new HibernateJpaVendorAdapter(), (ds) -> configureJpaProperties(),
+					null)
 				.dataSource(dataSource)
 				.build();
 		}
@@ -1083,10 +1088,8 @@ class FlywayAutoConfigurationTests {
 
 		@Bean
 		LocalContainerEntityManagerFactoryBean entityManagerFactoryBean() {
-			Map<String, Object> properties = new HashMap<>();
-			properties.put("configured", "manually");
-			properties.put("hibernate.transaction.jta.platform", NoJtaPlatform.INSTANCE);
-			return new EntityManagerFactoryBuilder(new HibernateJpaVendorAdapter(), properties, null)
+			return new EntityManagerFactoryBuilder(new HibernateJpaVendorAdapter(),
+					(datasource) -> configureJpaProperties(), null)
 				.dataSource(this.dataSource)
 				.build();
 		}
