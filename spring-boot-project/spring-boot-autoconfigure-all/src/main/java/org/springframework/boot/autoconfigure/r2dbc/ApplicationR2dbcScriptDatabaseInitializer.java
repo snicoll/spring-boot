@@ -19,9 +19,9 @@ package org.springframework.boot.autoconfigure.r2dbc;
 import io.r2dbc.spi.ConnectionFactory;
 
 import org.springframework.boot.autoconfigure.batch.BatchDataSourceScriptDatabaseInitializer;
-import org.springframework.boot.autoconfigure.jdbc.ApplicationDataSourceScriptDatabaseInitializer;
 import org.springframework.boot.autoconfigure.sql.init.ApplicationScriptDatabaseInitializer;
 import org.springframework.boot.autoconfigure.sql.init.SqlInitializationProperties;
+import org.springframework.boot.jdbc.autoconfigure.ApplicationDataSourceScriptDatabaseInitializer;
 import org.springframework.boot.r2dbc.init.R2dbcScriptDatabaseInitializer;
 import org.springframework.boot.sql.init.DatabaseInitializationSettings;
 
