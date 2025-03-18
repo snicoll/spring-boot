@@ -63,8 +63,6 @@ import org.springframework.boot.autoconfigure.jdbc.EmbeddedDataSourceConfigurati
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
 import org.springframework.boot.autoconfigure.orm.jpa.test.City;
-import org.springframework.boot.autoconfigure.transaction.TransactionAutoConfiguration;
-import org.springframework.boot.autoconfigure.transaction.TransactionManagerCustomizationAutoConfiguration;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.boot.jdbc.init.DataSourceScriptDatabaseInitializer;
 import org.springframework.boot.sql.init.DatabaseInitializationMode;
@@ -74,6 +72,8 @@ import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.boot.testsupport.classpath.resources.WithPackageResources;
 import org.springframework.boot.testsupport.classpath.resources.WithResource;
+import org.springframework.boot.transaction.autoconfigure.TransactionAutoConfiguration;
+import org.springframework.boot.transaction.autoconfigure.TransactionManagerCustomizationAutoConfiguration;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
