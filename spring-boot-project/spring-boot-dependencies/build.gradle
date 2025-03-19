@@ -2040,6 +2040,7 @@ bom {
 				"spring-boot-jdbc",
 				"spring-boot-jetty",
 				"spring-boot-jms",
+				"spring-boot-jpa",
 				"spring-boot-jsonb",
 				"spring-boot-loader",
 				"spring-boot-loader-classic",

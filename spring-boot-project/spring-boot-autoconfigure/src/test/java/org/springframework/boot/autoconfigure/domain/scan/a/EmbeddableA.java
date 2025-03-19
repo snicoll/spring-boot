@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the original author or authors.
+ * Copyright 2012-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,24 +14,11 @@
  * limitations under the License.
  */
 
-package org.springframework.boot.autoconfigure.orm.jpa;
+package org.springframework.boot.autoconfigure.domain.scan.a;
 
-import org.springframework.boot.orm.jpa.EntityManagerFactoryBuilder;
+import jakarta.persistence.Embeddable;
 
-/**
- * Callback interface that can be used to customize the auto-configured
- * {@link EntityManagerFactoryBuilder}.
- *
- * @author Andy Wilkinson
- * @since 2.1.0
- */
-@FunctionalInterface
-public interface EntityManagerFactoryBuilderCustomizer {
-
-	/**
-	 * Customize the given {@code builder}.
-	 * @param builder the builder to customize
-	 */
-	void customize(EntityManagerFactoryBuilder builder);
+@Embeddable
+public class EmbeddableA {
 
 }

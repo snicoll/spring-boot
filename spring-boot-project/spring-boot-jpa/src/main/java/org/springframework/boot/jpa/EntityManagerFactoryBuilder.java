@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.boot.orm.jpa;
+package org.springframework.boot.jpa;
 
 import java.net.URL;
 import java.util.HashMap;

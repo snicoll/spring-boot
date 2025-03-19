@@ -27,6 +27,7 @@ import org.hibernate.cfg.PersistenceSettings;
 import org.hibernate.cfg.SchemaToolingSettings;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.jpa.autoconfigure.JpaProperties;
 import org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;

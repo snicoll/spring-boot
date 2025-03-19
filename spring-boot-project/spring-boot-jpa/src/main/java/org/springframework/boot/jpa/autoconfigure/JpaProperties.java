@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.boot.autoconfigure.orm.jpa;
+package org.springframework.boot.jpa.autoconfigure;
 
 import java.util.ArrayList;
 import java.util.HashMap;

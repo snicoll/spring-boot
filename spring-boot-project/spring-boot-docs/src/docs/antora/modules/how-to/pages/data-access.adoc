@@ -301,7 +301,7 @@ To take full control of the configuration of the javadoc:jakarta.persistence.Ent
 Spring Boot auto-configuration switches off its entity manager in the presence of a bean of that type.
 
 NOTE: When you create a bean for javadoc:org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean[] yourself, any customization that was applied during the creation of the auto-configured javadoc:org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean[] is lost.
-Make sure to use the auto-configured javadoc:org.springframework.boot.orm.jpa.EntityManagerFactoryBuilder[] to retain JPA and vendor properties.
+Make sure to use the auto-configured javadoc:org.springframework.boot.jpa.EntityManagerFactoryBuilder[] to retain JPA and vendor properties.
 This is particularly important if you were relying on `spring.jpa.*` properties for configuring things like the naming strategy or the DDL mode.
 
 
