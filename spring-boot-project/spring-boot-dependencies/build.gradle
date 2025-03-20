@@ -1986,6 +1986,7 @@ bom {
 				"spring-boot-jetty",
 				"spring-boot-jms",
 				"spring-boot-jsonb",
+				"spring-boot-kafka",
 				"spring-boot-liquibase",
 				"spring-boot-loader",
 				"spring-boot-loader-classic",
