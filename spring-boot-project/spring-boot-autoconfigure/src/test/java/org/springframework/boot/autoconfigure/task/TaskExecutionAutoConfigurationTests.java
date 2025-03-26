@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 the original author or authors.
+ * Copyright 2012-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ import org.junit.jupiter.api.condition.JRE;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.beans.factory.support.BeanDefinitionOverrideException;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.task.SimpleAsyncTaskExecutorBuilder;
 import org.springframework.boot.task.ThreadPoolTaskExecutorBuilder;
@@ -44,6 +45,7 @@ import org.springframework.core.task.SyncTaskExecutor;
 import org.springframework.core.task.TaskDecorator;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.AsyncConfigurer;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -63,7 +65,7 @@ import static org.mockito.Mockito.mock;
 class TaskExecutionAutoConfigurationTests {
 
 	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
-		.withConfiguration(AutoConfigurations.of(TaskExecutionAutoConfiguration.class));
+			.withConfiguration(AutoConfigurations.of(TaskExecutionAutoConfiguration.class));
 
 	@Test
 	void shouldSupplyBeans() {
@@ -77,37 +79,37 @@ class TaskExecutionAutoConfigurationTests {
 	@Test
 	void simpleAsyncTaskExecutorBuilderShouldReadProperties() {
 		this.contextRunner
-			.withPropertyValues("spring.task.execution.thread-name-prefix=mytest-",
-					"spring.task.execution.simple.concurrency-limit=1",
-					"spring.task.execution.shutdown.await-termination=true",
-					"spring.task.execution.shutdown.await-termination-period=30s")
-			.run(assertSimpleAsyncTaskExecutor((taskExecutor) -> {
-				assertThat(taskExecutor.getConcurrencyLimit()).isEqualTo(1);
-				assertThat(taskExecutor.getThreadNamePrefix()).isEqualTo("mytest-");
-				assertThat(taskExecutor).hasFieldOrPropertyWithValue("taskTerminationTimeout", 30000L);
-			}));
+				.withPropertyValues("spring.task.execution.thread-name-prefix=mytest-",
+						"spring.task.execution.simple.concurrency-limit=1",
+						"spring.task.execution.shutdown.await-termination=true",
+						"spring.task.execution.shutdown.await-termination-period=30s")
+				.run(assertSimpleAsyncTaskExecutor((taskExecutor) -> {
+					assertThat(taskExecutor.getConcurrencyLimit()).isEqualTo(1);
+					assertThat(taskExecutor.getThreadNamePrefix()).isEqualTo("mytest-");
+					assertThat(taskExecutor).hasFieldOrPropertyWithValue("taskTerminationTimeout", 30000L);
+				}));
 	}
 
 	@Test
 	void threadPoolTaskExecutorBuilderShouldApplyCustomSettings() {
 		this.contextRunner.withPropertyValues("spring.task.execution.pool.queue-capacity=10",
-				"spring.task.execution.pool.core-size=2", "spring.task.execution.pool.max-size=4",
-				"spring.task.execution.pool.allow-core-thread-timeout=true", "spring.task.execution.pool.keep-alive=5s",
-				"spring.task.execution.pool.shutdown.accept-tasks-after-context-close=true",
-				"spring.task.execution.shutdown.await-termination=true",
-				"spring.task.execution.shutdown.await-termination-period=30s",
-				"spring.task.execution.thread-name-prefix=mytest-")
-			.run(assertThreadPoolTaskExecutor((taskExecutor) -> {
-				assertThat(taskExecutor).hasFieldOrPropertyWithValue("queueCapacity", 10);
-				assertThat(taskExecutor.getCorePoolSize()).isEqualTo(2);
-				assertThat(taskExecutor.getMaxPoolSize()).isEqualTo(4);
-				assertThat(taskExecutor).hasFieldOrPropertyWithValue("allowCoreThreadTimeOut", true);
-				assertThat(taskExecutor.getKeepAliveSeconds()).isEqualTo(5);
-				assertThat(taskExecutor).hasFieldOrPropertyWithValue("acceptTasksAfterContextClose", true);
-				assertThat(taskExecutor).hasFieldOrPropertyWithValue("waitForTasksToCompleteOnShutdown", true);
-				assertThat(taskExecutor).hasFieldOrPropertyWithValue("awaitTerminationMillis", 30000L);
-				assertThat(taskExecutor.getThreadNamePrefix()).isEqualTo("mytest-");
-			}));
+						"spring.task.execution.pool.core-size=2", "spring.task.execution.pool.max-size=4",
+						"spring.task.execution.pool.allow-core-thread-timeout=true", "spring.task.execution.pool.keep-alive=5s",
+						"spring.task.execution.pool.shutdown.accept-tasks-after-context-close=true",
+						"spring.task.execution.shutdown.await-termination=true",
+						"spring.task.execution.shutdown.await-termination-period=30s",
+						"spring.task.execution.thread-name-prefix=mytest-")
+				.run(assertThreadPoolTaskExecutor((taskExecutor) -> {
+					assertThat(taskExecutor).hasFieldOrPropertyWithValue("queueCapacity", 10);
+					assertThat(taskExecutor.getCorePoolSize()).isEqualTo(2);
+					assertThat(taskExecutor.getMaxPoolSize()).isEqualTo(4);
+					assertThat(taskExecutor).hasFieldOrPropertyWithValue("allowCoreThreadTimeOut", true);
+					assertThat(taskExecutor.getKeepAliveSeconds()).isEqualTo(5);
+					assertThat(taskExecutor).hasFieldOrPropertyWithValue("acceptTasksAfterContextClose", true);
+					assertThat(taskExecutor).hasFieldOrPropertyWithValue("waitForTasksToCompleteOnShutdown", true);
+					assertThat(taskExecutor).hasFieldOrPropertyWithValue("awaitTerminationMillis", 30000L);
+					assertThat(taskExecutor.getThreadNamePrefix()).isEqualTo("mytest-");
+				}));
 	}
 
 	@Test
@@ -115,7 +117,7 @@ class TaskExecutionAutoConfigurationTests {
 		this.contextRunner.withUserConfiguration(CustomThreadPoolTaskExecutorBuilderConfig.class).run((context) -> {
 			assertThat(context).hasSingleBean(ThreadPoolTaskExecutorBuilder.class);
 			assertThat(context.getBean(ThreadPoolTaskExecutorBuilder.class))
-				.isSameAs(context.getBean(CustomThreadPoolTaskExecutorBuilderConfig.class).builder);
+					.isSameAs(context.getBean(CustomThreadPoolTaskExecutorBuilderConfig.class).builder);
 		});
 	}
 
@@ -133,8 +135,8 @@ class TaskExecutionAutoConfigurationTests {
 		this.contextRunner.run((context) -> {
 			assertThat(context).hasSingleBean(Executor.class).hasBean("applicationTaskExecutor");
 			BeanDefinition beanDefinition = context.getSourceApplicationContext()
-				.getBeanFactory()
-				.getBeanDefinition("applicationTaskExecutor");
+					.getBeanFactory()
+					.getBeanDefinition("applicationTaskExecutor");
 			assertThat(beanDefinition.isLazyInit()).isTrue();
 			assertThat(context).getBean("applicationTaskExecutor").isInstanceOf(ThreadPoolTaskExecutor.class);
 		});
@@ -156,13 +158,13 @@ class TaskExecutionAutoConfigurationTests {
 	@EnabledForJreRange(min = JRE.JAVA_21)
 	void whenTaskNamePrefixIsConfiguredThenSimpleAsyncTaskExecutorWithVirtualThreadsUsesIt() {
 		this.contextRunner
-			.withPropertyValues("spring.threads.virtual.enabled=true",
-					"spring.task.execution.thread-name-prefix=custom-")
-			.run((context) -> {
-				SimpleAsyncTaskExecutor taskExecutor = context.getBean("applicationTaskExecutor",
-						SimpleAsyncTaskExecutor.class);
-				assertThat(virtualThreadName(taskExecutor)).startsWith("custom-");
-			});
+				.withPropertyValues("spring.threads.virtual.enabled=true",
+						"spring.task.execution.thread-name-prefix=custom-")
+				.run((context) -> {
+					SimpleAsyncTaskExecutor taskExecutor = context.getBean("applicationTaskExecutor",
+							SimpleAsyncTaskExecutor.class);
+					assertThat(virtualThreadName(taskExecutor)).startsWith("custom-");
+				});
 	}
 
 	@Test
@@ -178,11 +180,11 @@ class TaskExecutionAutoConfigurationTests {
 	@EnabledForJreRange(min = JRE.JAVA_21)
 	void whenTaskDecoratorIsDefinedThenSimpleAsyncTaskExecutorWithVirtualThreadsUsesIt() {
 		this.contextRunner.withPropertyValues("spring.threads.virtual.enabled=true")
-			.withUserConfiguration(TaskDecoratorConfig.class)
-			.run((context) -> {
-				SimpleAsyncTaskExecutor executor = context.getBean(SimpleAsyncTaskExecutor.class);
-				assertThat(executor).extracting("taskDecorator").isSameAs(context.getBean(TaskDecorator.class));
-			});
+				.withUserConfiguration(TaskDecoratorConfig.class)
+				.run((context) -> {
+					SimpleAsyncTaskExecutor executor = context.getBean(SimpleAsyncTaskExecutor.class);
+					assertThat(executor).extracting("taskDecorator").isSameAs(context.getBean(TaskDecorator.class));
+				});
 	}
 
 	@Test
@@ -204,45 +206,147 @@ class TaskExecutionAutoConfigurationTests {
 
 	@Test
 	void taskExecutorWhenHasCustomTaskExecutorShouldBackOff() {
-		this.contextRunner.withUserConfiguration(CustomTaskExecutorConfig.class).run((context) -> {
+		this.contextRunner.withBean("customTaskExecutor", Executor.class, SyncTaskExecutor::new).run((context) -> {
 			assertThat(context).hasSingleBean(Executor.class);
 			assertThat(context.getBean(Executor.class)).isSameAs(context.getBean("customTaskExecutor"));
 		});
 	}
 
 	@Test
+	void taskExecutorWhenModeIsAutoAndHasCustomTaskExecutorShouldBackOff() {
+		this.contextRunner.withBean("customTaskExecutor", Executor.class, SyncTaskExecutor::new)
+				.withPropertyValues("spring.task.execution.mode=auto")
+				.run((context) -> {
+					assertThat(context).hasSingleBean(Executor.class);
+					assertThat(context.getBean(Executor.class)).isSameAs(context.getBean("customTaskExecutor"));
+				});
+	}
+
+	@Test
+	void taskExecutorWhenModeIsForceAndHasCustomTaskExecutorShouldCreateApplicationTaskExecutor() {
+		this.contextRunner.withBean("customTaskExecutor", Executor.class, SyncTaskExecutor::new)
+				.withPropertyValues("spring.task.execution.mode=force")
+				.run((context) -> assertThat(context.getBeansOfType(Executor.class)).hasSize(2)
+						.containsKeys("customTaskExecutor", "applicationTaskExecutor"));
+	}
+
+	@Test
+	void taskExecutorWhenModeIsForceAndHasCustomTaskExecutorWithReservedNameShouldThrowException() {
+		this.contextRunner.withBean("applicationTaskExecutor", Executor.class, SyncTaskExecutor::new)
+				.withPropertyValues("spring.task.execution.mode=force")
+				.run((context) -> assertThat(context).hasFailed()
+						.getFailure()
+						.isInstanceOf(BeanDefinitionOverrideException.class));
+	}
+
+	@Test
 	@EnabledForJreRange(min = JRE.JAVA_21)
 	void whenVirtualThreadsAreEnabledAndCustomTaskExecutorIsDefinedThenSimpleAsyncTaskExecutorThatUsesVirtualThreadsBacksOff() {
-		this.contextRunner.withUserConfiguration(CustomTaskExecutorConfig.class)
-			.withPropertyValues("spring.threads.virtual.enabled=true")
-			.run((context) -> {
-				assertThat(context).hasSingleBean(Executor.class);
-				assertThat(context.getBean(Executor.class)).isSameAs(context.getBean("customTaskExecutor"));
-			});
+		this.contextRunner.withBean("customTaskExecutor", Executor.class, SyncTaskExecutor::new)
+				.withPropertyValues("spring.threads.virtual.enabled=true")
+				.run((context) -> {
+					assertThat(context).hasSingleBean(Executor.class);
+					assertThat(context.getBean(Executor.class)).isSameAs(context.getBean("customTaskExecutor"));
+				});
 	}
 
 	@Test
 	void enableAsyncUsesAutoConfiguredOneByDefault() {
-		this.contextRunner.withPropertyValues("spring.task.execution.thread-name-prefix=task-test-")
-			.withUserConfiguration(AsyncConfiguration.class, TestBean.class)
-			.run((context) -> {
-				assertThat(context).hasSingleBean(TaskExecutor.class);
-				TestBean bean = context.getBean(TestBean.class);
-				String text = bean.echo("something").get();
-				assertThat(text).contains("task-test-").contains("something");
-			});
+		this.contextRunner.withPropertyValues("spring.task.execution.thread-name-prefix=auto-task-")
+				.withUserConfiguration(AsyncConfiguration.class, TestBean.class)
+				.run((context) -> {
+					assertThat(context).hasSingleBean(AsyncConfigurer.class);
+					assertThat(context).hasSingleBean(TaskExecutor.class);
+					TestBean bean = context.getBean(TestBean.class);
+					String text = bean.echo("something").get();
+					assertThat(text).contains("auto-task-").contains("something");
+				});
+	}
+
+	@Test
+	void enableAsyncUsesCustomExecutorIfPresent() {
+		this.contextRunner.withPropertyValues("spring.task.execution.thread-name-prefix=auto-task-")
+				.withBean("customTaskExecutor", Executor.class, () -> createCustomAsyncExecutor("custom-task-"))
+				.withUserConfiguration(AsyncConfiguration.class, TestBean.class)
+				.run((context) -> {
+					assertThat(context).doesNotHaveBean(AsyncConfigurer.class);
+					assertThat(context).hasSingleBean(Executor.class);
+					TestBean bean = context.getBean(TestBean.class);
+					String text = bean.echo("something").get();
+					assertThat(text).contains("custom-task-").contains("something");
+				});
+	}
+
+	@Test
+	void enableAsyncUsesAutoConfiguredExecutorWhenModeIsForceAndHasCustomTaskExecutor() {
+		this.contextRunner
+				.withPropertyValues("spring.task.execution.thread-name-prefix=auto-task-",
+						"spring.task.execution.mode=force")
+				.withBean("customTaskExecutor", Executor.class, () -> createCustomAsyncExecutor("custom-task-"))
+				.withUserConfiguration(AsyncConfiguration.class, TestBean.class)
+				.run((context) -> {
+					assertThat(context).hasSingleBean(AsyncConfigurer.class);
+					assertThat(context.getBeansOfType(Executor.class)).hasSize(2);
+					TestBean bean = context.getBean(TestBean.class);
+					String text = bean.echo("something").get();
+					assertThat(text).contains("auto-task-").contains("something");
+				});
+	}
+
+	@Test
+	void enableAsyncUsesCustomExecutorWhenModeIsForceAndHasCustomTaskExecutorWithReservedName() {
+		this.contextRunner
+				.withPropertyValues("spring.task.execution.thread-name-prefix=auto-task-",
+						"spring.task.execution.mode=force")
+				.withBean("taskExecutor", Executor.class, () -> createCustomAsyncExecutor("custom-task-"))
+				.withUserConfiguration(AsyncConfiguration.class, TestBean.class)
+				.run((context) -> {
+					assertThat(context).doesNotHaveBean(AsyncConfigurer.class);
+					assertThat(context.getBeansOfType(Executor.class)).hasSize(2);
+					TestBean bean = context.getBean(TestBean.class);
+					String text = bean.echo("something").get();
+					assertThat(text).contains("custom-task-").contains("something");
+				});
+	}
+
+	@Test
+	void enableAsyncUsesAsyncConfigurerWhenModeIsForce() {
+		this.contextRunner
+				.withPropertyValues("spring.task.execution.thread-name-prefix=auto-task-",
+						"spring.task.execution.mode=force")
+				.withBean("taskExecutor", Executor.class, () -> createCustomAsyncExecutor("custom-task-"))
+				.withBean("customAsyncConfigurer", AsyncConfigurer.class, () -> new AsyncConfigurer() {
+					@Override
+					public Executor getAsyncExecutor() {
+						return createCustomAsyncExecutor("async-task-");
+					}
+				})
+				.withUserConfiguration(AsyncConfiguration.class, TestBean.class)
+				.run((context) -> {
+					assertThat(context).hasSingleBean(AsyncConfigurer.class);
+					assertThat(context.getBeansOfType(Executor.class)).hasSize(2).containsOnlyKeys("taskExecutor", "applicationTaskExecutor");
+					TestBean bean = context.getBean(TestBean.class);
+					String text = bean.echo("something").get();
+					assertThat(text).contains("async-task-").contains("something");
+				});
+	}
+
+	private Executor createCustomAsyncExecutor(String threadNamePrefix) {
+		SimpleAsyncTaskExecutor executor = new SimpleAsyncTaskExecutor();
+		executor.setThreadNamePrefix(threadNamePrefix);
+		return executor;
 	}
 
 	@Test
 	void enableAsyncUsesAutoConfiguredOneByDefaultEvenThoughSchedulingIsConfigured() {
-		this.contextRunner.withPropertyValues("spring.task.execution.thread-name-prefix=task-test-")
-			.withConfiguration(AutoConfigurations.of(TaskSchedulingAutoConfiguration.class))
-			.withUserConfiguration(AsyncConfiguration.class, SchedulingConfiguration.class, TestBean.class)
-			.run((context) -> {
-				TestBean bean = context.getBean(TestBean.class);
-				String text = bean.echo("something").get();
-				assertThat(text).contains("task-test-").contains("something");
-			});
+		this.contextRunner.withPropertyValues("spring.task.execution.thread-name-prefix=auto-task-")
+				.withConfiguration(AutoConfigurations.of(TaskSchedulingAutoConfiguration.class))
+				.withUserConfiguration(AsyncConfiguration.class, SchedulingConfiguration.class, TestBean.class)
+				.run((context) -> {
+					TestBean bean = context.getBean(TestBean.class);
+					String text = bean.echo("something").get();
+					assertThat(text).contains("auto-task-").contains("something");
+				});
 	}
 
 	private ContextConsumer<AssertableApplicationContext> assertThreadPoolTaskExecutor(
@@ -295,16 +399,6 @@ class TaskExecutionAutoConfigurationTests {
 		@Bean
 		TaskDecorator mockTaskDecorator() {
 			return mock(TaskDecorator.class);
-		}
-
-	}
-
-	@Configuration(proxyBeanMethods = false)
-	static class CustomTaskExecutorConfig {
-
-		@Bean
-		Executor customTaskExecutor() {
-			return new SyncTaskExecutor();
 		}
 
 	}
