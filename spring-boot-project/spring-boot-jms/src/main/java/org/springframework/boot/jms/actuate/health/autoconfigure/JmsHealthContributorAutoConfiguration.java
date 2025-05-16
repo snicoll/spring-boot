@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.boot.actuate.autoconfigure.jms;
+package org.springframework.boot.jms.actuate.health.autoconfigure;
 
 import jakarta.jms.ConnectionFactory;
 
