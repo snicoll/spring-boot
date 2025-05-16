@@ -21,7 +21,7 @@ dependencies {
 	dockerTestImplementation("org.testcontainers:elasticsearch")
 	dockerTestImplementation("org.testcontainers:junit-jupiter")
 
-	optional(project(":spring-boot-project:spring-boot-actuator"))
+	optional(project(":spring-boot-project:spring-boot-actuator-autoconfigure"))
 	optional(project(":spring-boot-project:spring-boot-autoconfigure"))
 	optional(project(":spring-boot-project:spring-boot-reactor"))
 
