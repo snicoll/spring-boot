@@ -14,33 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.boot.docker.compose.service.connection.activemq;
-
-import java.util.Map;
-
 /**
- * ActiveMQ environment details.
- *
- * @author Stephane Nicoll
- * @author Eddú Meléndez
+ * Support for Docker Compose ActiveMQ service connections.
  */
-class ActiveMQClassicEnvironment {
-
-	private final String user;
-
-	private final String password;
-
-	ActiveMQClassicEnvironment(Map<String, String> env) {
-		this.user = env.get("ACTIVEMQ_CONNECTION_USER");
-		this.password = env.get("ACTIVEMQ_CONNECTION_PASSWORD");
-	}
-
-	String getUser() {
-		return this.user;
-	}
-
-	String getPassword() {
-		return this.password;
-	}
-
-}
+package org.springframework.boot.activemq.docker.compose;
