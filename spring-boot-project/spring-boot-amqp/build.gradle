@@ -1,5 +1,6 @@
 plugins {
 	id "java-library"
+	id "org.springframework.boot.docker-test"
 	id "org.springframework.boot.auto-configuration"
 	id "org.springframework.boot.configuration-properties"
 	id "org.springframework.boot.deployed"
@@ -15,12 +16,23 @@ dependencies {
 	
 	compileOnly("com.fasterxml.jackson.core:jackson-annotations")
 
+	dockerTestImplementation(project(":spring-boot-project:spring-boot-tools:spring-boot-test-support-docker"))
+	dockerTestImplementation("ch.qos.logback:logback-classic")
+	dockerTestImplementation("org.assertj:assertj-core")
+	dockerTestImplementation("org.awaitility:awaitility")
+	dockerTestImplementation("org.junit.jupiter:junit-jupiter")
+	dockerTestImplementation("org.junit.platform:junit-platform-launcher")
+	dockerTestImplementation("org.springframework:spring-test")
+	dockerTestImplementation("org.testcontainers:junit-jupiter")
+
 	implementation(project(":spring-boot-project:spring-boot-tx"))
 
 	optional(project(":spring-boot-project:spring-boot-actuator-autoconfigure"))
 	optional(project(":spring-boot-project:spring-boot-autoconfigure"))
+	optional(project(":spring-boot-project:spring-boot-testcontainers"))
 	optional("io.micrometer:micrometer-core")
 	optional("org.springframework.amqp:spring-rabbit-stream")
+	optional("org.testcontainers:rabbitmq")
 	
 	testCompileOnly("com.fasterxml.jackson.core:jackson-annotations")
 
