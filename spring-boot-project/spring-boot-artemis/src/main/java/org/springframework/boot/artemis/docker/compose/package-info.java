@@ -14,33 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.boot.docker.compose.service.connection.activemq;
-
-import java.util.Map;
-
 /**
- * Artemis environment details.
- *
- * @author Eddú Meléndez
- * @author Moritz Halbritter
+ * Support for Docker Compose Artemis service connections.
  */
-class ArtemisEnvironment {
-
-	private final String user;
-
-	private final String password;
-
-	ArtemisEnvironment(Map<String, String> env) {
-		this.user = env.get("ARTEMIS_USER");
-		this.password = env.get("ARTEMIS_PASSWORD");
-	}
-
-	String getUser() {
-		return this.user;
-	}
-
-	String getPassword() {
-		return this.password;
-	}
-
-}
+package org.springframework.boot.artemis.docker.compose;
