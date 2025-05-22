@@ -21,6 +21,8 @@ dependencies {
 	implementation("org.springframework:spring-web")
 
 	optional(project(":spring-boot-project:spring-boot-autoconfigure"))
+	optional(project(":spring-boot-project:spring-boot-actuator-autoconfigure"))
+	optional("io.projectreactor:reactor-core")
 
 	testImplementation(project(":spring-boot-project:spring-boot-restclient"))
 	testImplementation(project(":spring-boot-project:spring-boot-test"))
