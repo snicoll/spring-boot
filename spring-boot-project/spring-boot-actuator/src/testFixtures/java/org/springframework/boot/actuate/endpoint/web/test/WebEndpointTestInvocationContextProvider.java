@@ -18,16 +18,12 @@ package org.springframework.boot.actuate.endpoint.web.test;
 
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.model.Resource;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.Extension;
@@ -38,29 +34,10 @@ import org.junit.jupiter.api.extension.TestTemplateInvocationContext;
 import org.junit.jupiter.api.extension.TestTemplateInvocationContextProvider;
 import org.junit.platform.commons.util.AnnotationUtils;
 
-import org.springframework.boot.actuate.endpoint.invoke.convert.ConversionServiceParameterValueMapper;
-import org.springframework.boot.actuate.endpoint.web.EndpointLinksResolver;
-import org.springframework.boot.actuate.endpoint.web.EndpointMapping;
-import org.springframework.boot.actuate.endpoint.web.EndpointMediaTypes;
-import org.springframework.boot.actuate.endpoint.web.annotation.WebEndpointDiscoverer;
-import org.springframework.boot.actuate.endpoint.web.reactive.WebFluxEndpointHandlerMapping;
-import org.springframework.boot.actuate.endpoint.web.servlet.WebMvcEndpointHandlerMapping;
 import org.springframework.boot.actuate.endpoint.web.test.WebEndpointTest.Infrastructure;
-import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
-import org.springframework.boot.http.converter.autoconfigure.HttpMessageConvertersAutoConfiguration;
-import org.springframework.boot.jackson.autoconfigure.JacksonAutoConfiguration;
-import org.springframework.boot.jersey.actuate.endpoint.web.JerseyEndpointResourceFactory;
-import org.springframework.boot.jersey.autoconfigure.JerseyAutoConfiguration;
-import org.springframework.boot.jersey.autoconfigure.ResourceConfigCustomizer;
-import org.springframework.boot.reactor.netty.NettyReactiveWebServerFactory;
-import org.springframework.boot.tomcat.servlet.TomcatServletWebServerFactory;
 import org.springframework.boot.web.server.context.WebServerInitializedEvent;
 import org.springframework.boot.web.server.reactive.context.AnnotationConfigReactiveWebServerApplicationContext;
 import org.springframework.boot.web.server.servlet.context.AnnotationConfigServletWebServerApplicationContext;
-import org.springframework.boot.webflux.autoconfigure.WebFluxAutoConfiguration;
-import org.springframework.boot.webmvc.autoconfigure.DispatcherServletAutoConfiguration;
-import org.springframework.boot.webmvc.autoconfigure.WebMvcAutoConfiguration;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigRegistry;
@@ -69,11 +46,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.MergedAnnotations;
 import org.springframework.core.annotation.MergedAnnotations.SearchStrategy;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.server.reactive.HttpHandler;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.util.ClassUtils;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.server.adapter.WebHttpHandlerBuilder;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 import org.springframework.web.util.DefaultUriBuilderFactory.EncodingMode;
 
@@ -102,7 +76,8 @@ class WebEndpointTestInvocationContextProvider implements TestTemplateInvocation
 
 	static ConfigurableApplicationContext createJerseyContext(List<Class<?>> classes) {
 		AnnotationConfigServletWebServerApplicationContext context = new AnnotationConfigServletWebServerApplicationContext();
-		classes.add(JerseyEndpointConfiguration.class);
+		classes.addAll(configureEndpointInfrastructure("Jersey",
+				"org.springframework.boot.jersey.actuate.endpoint.web.test.JerseyEndpointConfiguration"));
 		context.register(ClassUtils.toClassArray(classes));
 		context.refresh();
 		return context;
@@ -110,7 +85,8 @@ class WebEndpointTestInvocationContextProvider implements TestTemplateInvocation
 
 	static ConfigurableApplicationContext createWebMvcContext(List<Class<?>> classes) {
 		AnnotationConfigServletWebServerApplicationContext context = new AnnotationConfigServletWebServerApplicationContext();
-		classes.add(WebMvcEndpointConfiguration.class);
+		classes.addAll(configureEndpointInfrastructure("WebMvc",
+				"org.springframework.boot.webmvc.actuate.endpoint.web.test.WebMvcEndpointConfiguration"));
 		context.register(ClassUtils.toClassArray(classes));
 		context.refresh();
 		return context;
@@ -118,10 +94,21 @@ class WebEndpointTestInvocationContextProvider implements TestTemplateInvocation
 
 	static ConfigurableApplicationContext createWebFluxContext(List<Class<?>> classes) {
 		AnnotationConfigReactiveWebServerApplicationContext context = new AnnotationConfigReactiveWebServerApplicationContext();
-		classes.add(WebFluxEndpointConfiguration.class);
+		classes.addAll(configureEndpointInfrastructure("WebFlux",
+				"org.springframework.boot.webflux.actuate.endpoint.web.test.WebFluxEndpointConfiguration"));
 		context.register(ClassUtils.toClassArray(classes));
 		context.refresh();
 		return context;
+	}
+
+	private static List<Class<?>> configureEndpointInfrastructure(String name, String className) {
+		try {
+			Class<?> infrastructureConfiguration = ClassUtils.forName(className, null);
+			return List.of(EndpointBaseConfiguration.class, infrastructureConfiguration);
+		}
+		catch (ClassNotFoundException ex) {
+			throw new IllegalStateException("Failed to load endpoint infrastructure configuration for " + name, ex);
+		}
 	}
 
 	static class WebEndpointsInvocationContext
@@ -206,68 +193,15 @@ class WebEndpointTestInvocationContextProvider implements TestTemplateInvocation
 		}
 
 		private int determinePort() {
-			if (this.context instanceof AnnotationConfigServletWebServerApplicationContext webServerContext) {
-				return webServerContext.getWebServer().getPort();
-			}
 			return this.context.getBean(PortHolder.class).getPort();
 		}
 
 	}
 
 	@Configuration(proxyBeanMethods = false)
-	@ImportAutoConfiguration({ JacksonAutoConfiguration.class, JerseyAutoConfiguration.class })
-	static class JerseyEndpointConfiguration {
-
-		private final ApplicationContext applicationContext;
-
-		JerseyEndpointConfiguration(ApplicationContext applicationContext) {
-			this.applicationContext = applicationContext;
-		}
-
-		@Bean
-		TomcatServletWebServerFactory tomcat() {
-			return new TomcatServletWebServerFactory(0);
-		}
-
-		@Bean
-		ResourceConfig resourceConfig() {
-			return new ResourceConfig();
-		}
-
-		@Bean
-		ResourceConfigCustomizer webEndpointRegistrar() {
-			return this::customize;
-		}
-
-		private void customize(ResourceConfig config) {
-			EndpointMediaTypes endpointMediaTypes = EndpointMediaTypes.DEFAULT;
-			WebEndpointDiscoverer discoverer = new WebEndpointDiscoverer(this.applicationContext,
-					new ConversionServiceParameterValueMapper(), endpointMediaTypes, null, Collections.emptyList(),
-					Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
-			Collection<Resource> resources = new JerseyEndpointResourceFactory().createEndpointResources(
-					new EndpointMapping("/actuator"), discoverer.getEndpoints(), endpointMediaTypes,
-					new EndpointLinksResolver(discoverer.getEndpoints()), true);
-			config.registerResources(new HashSet<>(resources));
-		}
-
-	}
-
-	@Configuration(proxyBeanMethods = false)
-	@ImportAutoConfiguration({ JacksonAutoConfiguration.class, WebFluxAutoConfiguration.class })
-	static class WebFluxEndpointConfiguration implements ApplicationListener<WebServerInitializedEvent> {
-
-		private final ApplicationContext applicationContext;
+	static class EndpointBaseConfiguration implements ApplicationListener<WebServerInitializedEvent> {
 
 		private final PortHolder portHolder = new PortHolder();
-
-		WebFluxEndpointConfiguration(ApplicationContext applicationContext) {
-			this.applicationContext = applicationContext;
-		}
-
-		@Bean
-		NettyReactiveWebServerFactory netty() {
-			return new NettyReactiveWebServerFactory(0);
-		}
 
 		@Bean
 		PortHolder portHolder() {
@@ -277,51 +211,6 @@ class WebEndpointTestInvocationContextProvider implements TestTemplateInvocation
 		@Override
 		public void onApplicationEvent(WebServerInitializedEvent event) {
 			this.portHolder.setPort(event.getWebServer().getPort());
-		}
-
-		@Bean
-		HttpHandler httpHandler(ApplicationContext applicationContext) {
-			return WebHttpHandlerBuilder.applicationContext(applicationContext).build();
-		}
-
-		@Bean
-		WebFluxEndpointHandlerMapping webEndpointReactiveHandlerMapping() {
-			EndpointMediaTypes endpointMediaTypes = EndpointMediaTypes.DEFAULT;
-			WebEndpointDiscoverer discoverer = new WebEndpointDiscoverer(this.applicationContext,
-					new ConversionServiceParameterValueMapper(), endpointMediaTypes, Collections.emptyList(),
-					Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
-			return new WebFluxEndpointHandlerMapping(new EndpointMapping("/actuator"), discoverer.getEndpoints(),
-					endpointMediaTypes, new CorsConfiguration(), new EndpointLinksResolver(discoverer.getEndpoints()),
-					true);
-		}
-
-	}
-
-	@Configuration(proxyBeanMethods = false)
-	@ImportAutoConfiguration({ JacksonAutoConfiguration.class, HttpMessageConvertersAutoConfiguration.class,
-			WebMvcAutoConfiguration.class, DispatcherServletAutoConfiguration.class })
-	static class WebMvcEndpointConfiguration {
-
-		private final ApplicationContext applicationContext;
-
-		WebMvcEndpointConfiguration(ApplicationContext applicationContext) {
-			this.applicationContext = applicationContext;
-		}
-
-		@Bean
-		TomcatServletWebServerFactory tomcat() {
-			return new TomcatServletWebServerFactory(0);
-		}
-
-		@Bean
-		WebMvcEndpointHandlerMapping webEndpointServletHandlerMapping() {
-			EndpointMediaTypes endpointMediaTypes = EndpointMediaTypes.DEFAULT;
-			WebEndpointDiscoverer discoverer = new WebEndpointDiscoverer(this.applicationContext,
-					new ConversionServiceParameterValueMapper(), endpointMediaTypes, Collections.emptyList(),
-					Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
-			return new WebMvcEndpointHandlerMapping(new EndpointMapping("/actuator"), discoverer.getEndpoints(),
-					endpointMediaTypes, new CorsConfiguration(), new EndpointLinksResolver(discoverer.getEndpoints()),
-					true);
 		}
 
 	}
