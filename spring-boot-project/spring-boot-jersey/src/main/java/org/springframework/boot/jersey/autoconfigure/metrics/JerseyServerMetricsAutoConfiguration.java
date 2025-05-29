@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.boot.actuate.autoconfigure.metrics.jersey;
+package org.springframework.boot.jersey.autoconfigure.metrics;
 
 import io.micrometer.core.instrument.config.MeterFilter;
 import io.micrometer.observation.ObservationRegistry;
@@ -44,7 +44,7 @@ import org.springframework.core.annotation.Order;
  * @author Michael Simons
  * @author Andy Wilkinson
  * @author Moritz Halbritter
- * @since 2.1.0
+ * @since 4.0.0
  */
 @AutoConfiguration(after = { ObservationAutoConfiguration.class })
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
