@@ -20,14 +20,16 @@ import java.util.Collections;
 
 import org.junit.jupiter.api.Test;
 
-import org.springframework.boot.actuate.autoconfigure.endpoint.web.WebEndpointProperties;
+import org.springframework.boot.actuate.autoconfigure.endpoint.EndpointAutoConfiguration;
+import org.springframework.boot.actuate.autoconfigure.endpoint.web.WebEndpointAutoConfiguration;
 import org.springframework.boot.actuate.endpoint.Access;
 import org.springframework.boot.actuate.endpoint.EndpointAccessResolver;
 import org.springframework.boot.actuate.endpoint.web.ServletEndpointRegistrar;
 import org.springframework.boot.actuate.endpoint.web.annotation.ServletEndpointsSupplier;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.boot.test.context.runner.WebApplicationContextRunner;
+import org.springframework.boot.webmvc.autoconfigure.DispatcherServletAutoConfiguration;
 import org.springframework.boot.webmvc.autoconfigure.DispatcherServletPath;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -45,27 +47,29 @@ import static org.assertj.core.api.Assertions.assertThat;
 class WebMvcEndpointManagementContextConfigurationTests {
 
 	private final WebApplicationContextRunner contextRunner = new WebApplicationContextRunner()
-		.withUserConfiguration(TestConfig.class);
+		.withUserConfiguration(InfrastructureConfiguration.class)
+		.withConfiguration(AutoConfigurations.of(DispatcherServletAutoConfiguration.class,
+				EndpointAutoConfiguration.class, WebEndpointAutoConfiguration.class));
 
 	@Test
 	void contextShouldContainServletEndpointRegistrar() {
-		this.contextRunner.run((context) -> {
-			assertThat(context).hasSingleBean(ServletEndpointRegistrar.class);
-			ServletEndpointRegistrar bean = context.getBean(ServletEndpointRegistrar.class);
-			assertThat(bean).hasFieldOrPropertyWithValue("basePath", "/test/actuator");
-		});
+		this.contextRunner.withConfiguration(AutoConfigurations.of(WebMvcEndpointManagementContextConfiguration.class))
+			.run((context) -> {
+				assertThat(context).hasSingleBean(ServletEndpointRegistrar.class);
+				ServletEndpointRegistrar bean = context.getBean(ServletEndpointRegistrar.class);
+				assertThat(bean).hasFieldOrPropertyWithValue("basePath", "/test/actuator");
+			});
 	}
 
 	@Test
 	void contextWhenNotServletBasedShouldNotContainServletEndpointRegistrar() {
-		new ApplicationContextRunner().withUserConfiguration(TestConfig.class)
+		new ApplicationContextRunner().withUserConfiguration(InfrastructureConfiguration.class)
 			.run((context) -> assertThat(context).doesNotHaveBean(ServletEndpointRegistrar.class));
 	}
 
 	@Configuration(proxyBeanMethods = false)
 	@Import(WebMvcEndpointManagementContextConfiguration.class)
-	@EnableConfigurationProperties(WebEndpointProperties.class)
-	static class TestConfig {
+	static class InfrastructureConfiguration {
 
 		@Bean
 		ServletEndpointsSupplier servletEndpointsSupplier() {
