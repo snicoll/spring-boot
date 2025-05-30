@@ -20,6 +20,8 @@ dependencies {
 
 	optional(project(":spring-boot-project:spring-boot-actuator-autoconfigure"))
 	optional(project(":spring-boot-project:spring-boot-autoconfigure"))
+	optional(project(":spring-boot-project:spring-boot-metrics"))
+	optional(project(":spring-boot-project:spring-boot-micrometer-observation"))
 	optional(project(":spring-boot-project:spring-boot-tomcat"))
 	optional(project(":spring-boot-project:spring-boot-undertow"))
 	optional(project(":spring-boot-project:spring-boot-validation"))
@@ -40,6 +42,7 @@ dependencies {
 	testImplementation(project(":spring-boot-project:spring-boot-web-server-test"))
 	testImplementation(testFixtures(project(":spring-boot-project:spring-boot-web-server")))
 	testImplementation("jakarta.servlet:jakarta.servlet-api")
+	testImplementation("io.micrometer:micrometer-observation-test")
 	testImplementation("org.aspectj:aspectjweaver")
 
 	testRuntimeOnly("ch.qos.logback:logback-classic")

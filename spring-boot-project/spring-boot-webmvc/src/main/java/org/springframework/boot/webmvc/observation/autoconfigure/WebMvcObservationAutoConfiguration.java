@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.boot.actuate.autoconfigure.observation.web.servlet;
+package org.springframework.boot.webmvc.observation.autoconfigure;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.config.MeterFilter;
@@ -54,7 +54,7 @@ import org.springframework.web.servlet.DispatcherServlet;
  * @author Brian Clozel
  * @author Jon Schneider
  * @author Dmytro Nosan
- * @since 3.0.0
+ * @since 4.0.0
  */
 @AutoConfiguration(after = { MetricsAutoConfiguration.class, CompositeMeterRegistryAutoConfiguration.class,
 		SimpleMetricsExportAutoConfiguration.class, ObservationAutoConfiguration.class })
