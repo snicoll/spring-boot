@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.boot.actuate.autoconfigure.observation.web.reactive;
+package org.springframework.boot.webflux.observation.autoconfigure;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.config.MeterFilter;
@@ -46,7 +46,7 @@ import org.springframework.http.server.reactive.observation.ServerRequestObserva
  * @author Jon Schneider
  * @author Dmytro Nosan
  * @author Moritz Halbritter
- * @since 3.0.0
+ * @since 4.0.0
  */
 @AutoConfiguration(after = { SimpleMetricsExportAutoConfiguration.class, ObservationAutoConfiguration.class })
 @ConditionalOnClass({ Observation.class, MeterRegistry.class })
