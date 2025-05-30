@@ -14,21 +14,21 @@
  * limitations under the License.
  */
 
-package org.springframework.boot.actuate.autoconfigure.metrics.data;
+package org.springframework.boot.data.metrics.autoconfigure;
 
 import io.micrometer.core.instrument.MeterRegistry;
 
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.actuate.autoconfigure.metrics.data.DataMetricsProperties.Repository;
-import org.springframework.boot.actuate.metrics.data.DefaultRepositoryTagsProvider;
-import org.springframework.boot.actuate.metrics.data.MetricsRepositoryMethodInvocationListener;
-import org.springframework.boot.actuate.metrics.data.RepositoryTagsProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.data.metrics.DefaultRepositoryTagsProvider;
+import org.springframework.boot.data.metrics.MetricsRepositoryMethodInvocationListener;
+import org.springframework.boot.data.metrics.RepositoryTagsProvider;
+import org.springframework.boot.data.metrics.autoconfigure.DataMetricsProperties.Repository;
 import org.springframework.boot.metrics.autoconfigure.CompositeMeterRegistryAutoConfiguration;
 import org.springframework.boot.metrics.autoconfigure.MetricsAutoConfiguration;
 import org.springframework.boot.metrics.autoconfigure.export.simple.SimpleMetricsExportAutoConfiguration;
@@ -39,7 +39,7 @@ import org.springframework.util.function.SingletonSupplier;
  * {@link EnableAutoConfiguration Auto-configuration} for Spring Data Repository metrics.
  *
  * @author Phillip Webb
- * @since 2.5.0
+ * @since 4.0.0
  */
 @AutoConfiguration(after = { MetricsAutoConfiguration.class, CompositeMeterRegistryAutoConfiguration.class,
 		SimpleMetricsExportAutoConfiguration.class })
