@@ -31,8 +31,8 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.metrics.OnlyOnceLoggingDenyMeterFilter;
 import org.springframework.boot.metrics.autoconfigure.MetricsProperties;
 import org.springframework.boot.metrics.autoconfigure.export.simple.SimpleMetricsExportAutoConfiguration;
-import org.springframework.boot.micrometer.observation.autoconfigure.ObservationAutoConfiguration;
-import org.springframework.boot.micrometer.observation.autoconfigure.ObservationProperties;
+import org.springframework.boot.observation.autoconfigure.ObservationAutoConfiguration;
+import org.springframework.boot.observation.autoconfigure.ObservationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.server.reactive.observation.DefaultServerRequestObservationConvention;

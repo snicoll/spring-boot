@@ -22,7 +22,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.boot.micrometer.observation.autoconfigure.ObservationProperties;
+import org.springframework.boot.observation.autoconfigure.ObservationProperties;
 import org.springframework.boot.restclient.RestClientCustomizer;
 import org.springframework.boot.restclient.observation.ObservationRestClientCustomizer;
 import org.springframework.context.annotation.Bean;
