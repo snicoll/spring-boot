@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package org.springframework.boot.actuate.web.mappings.servlet;
+package org.springframework.boot.servlet.actuate.mappings;
 
 import org.junit.jupiter.api.Test;
 
 import org.springframework.aot.hint.MemberCategory;
 import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.predicate.RuntimeHintsPredicates;
-import org.springframework.boot.actuate.web.mappings.servlet.ServletsMappingDescriptionProvider.ServletsMappingDescriptionProviderRuntimeHints;
+import org.springframework.boot.servlet.actuate.mappings.ServletsMappingDescriptionProvider.ServletsMappingDescriptionProviderRuntimeHints;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2021 the original author or authors.
+ * Copyright 2012-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.boot.actuate.web.mappings.servlet;
+package org.springframework.boot.servlet.actuate.mappings;
 
 import jakarta.servlet.Registration;
 
@@ -23,7 +23,7 @@ import jakarta.servlet.Registration;
  *
  * @param <T> type of the registration
  * @author Andy Wilkinson
- * @since 2.0.0
+ * @since 4.0.0
  */
 public class RegistrationMappingDescription<T extends Registration> {
 

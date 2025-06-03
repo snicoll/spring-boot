@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2023 the original author or authors.
+ * Copyright 2012-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,41 +14,41 @@
  * limitations under the License.
  */
 
-package org.springframework.boot.actuate.web.mappings.servlet;
+package org.springframework.boot.servlet.actuate.mappings;
 
 import java.util.Collections;
 import java.util.List;
 
-import jakarta.servlet.Servlet;
+import jakarta.servlet.Filter;
 import jakarta.servlet.ServletContext;
 
 import org.springframework.aot.hint.BindingReflectionHintsRegistrar;
 import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
 import org.springframework.boot.actuate.web.mappings.MappingDescriptionProvider;
-import org.springframework.boot.actuate.web.mappings.servlet.ServletsMappingDescriptionProvider.ServletsMappingDescriptionProviderRuntimeHints;
+import org.springframework.boot.servlet.actuate.mappings.FiltersMappingDescriptionProvider.FiltersMappingDescriptionProviderRuntimeHints;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.ImportRuntimeHints;
 import org.springframework.web.context.WebApplicationContext;
 
 /**
- * A {@link MappingDescriptionProvider} that describes that mappings of any {@link Servlet
- * Servlets} registered with a {@link ServletContext}.
+ * A {@link MappingDescriptionProvider} that describes that mappings of any {@link Filter
+ * Filters} registered with a {@link ServletContext}.
  *
  * @author Andy Wilkinson
- * @since 2.0.0
+ * @since 4.0.0
  */
-@ImportRuntimeHints(ServletsMappingDescriptionProviderRuntimeHints.class)
-public class ServletsMappingDescriptionProvider implements MappingDescriptionProvider {
+@ImportRuntimeHints(FiltersMappingDescriptionProviderRuntimeHints.class)
+public class FiltersMappingDescriptionProvider implements MappingDescriptionProvider {
 
 	@Override
-	public List<ServletRegistrationMappingDescription> describeMappings(ApplicationContext context) {
+	public List<FilterRegistrationMappingDescription> describeMappings(ApplicationContext context) {
 		if (context instanceof WebApplicationContext webApplicationContext) {
 			return webApplicationContext.getServletContext()
-				.getServletRegistrations()
+				.getFilterRegistrations()
 				.values()
 				.stream()
-				.map(ServletRegistrationMappingDescription::new)
+				.map(FilterRegistrationMappingDescription::new)
 				.toList();
 		}
 		return Collections.emptyList();
@@ -56,17 +56,17 @@ public class ServletsMappingDescriptionProvider implements MappingDescriptionPro
 
 	@Override
 	public String getMappingName() {
-		return "servlets";
+		return "servletFilters";
 	}
 
-	static class ServletsMappingDescriptionProviderRuntimeHints implements RuntimeHintsRegistrar {
+	static class FiltersMappingDescriptionProviderRuntimeHints implements RuntimeHintsRegistrar {
 
 		private final BindingReflectionHintsRegistrar bindingRegistrar = new BindingReflectionHintsRegistrar();
 
 		@Override
 		public void registerHints(RuntimeHints hints, ClassLoader classLoader) {
 			this.bindingRegistrar.registerReflectionHints(hints.reflection(),
-					ServletRegistrationMappingDescription.class);
+					FilterRegistrationMappingDescription.class);
 		}
 
 	}
