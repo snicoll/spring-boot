@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-package org.springframework.boot.actuate.autoconfigure.endpoint.web;
+package org.springframework.boot.servlet.actuate.autoconfigure.endpoint;
 
 import org.springframework.boot.actuate.autoconfigure.endpoint.expose.IncludeExcludeEndpointFilter;
+import org.springframework.boot.actuate.autoconfigure.endpoint.web.WebEndpointProperties;
 import org.springframework.boot.actuate.autoconfigure.web.ManagementContextConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication.Type;
@@ -29,7 +30,7 @@ import org.springframework.context.annotation.Bean;
  * @author Phillip Webb
  * @author Andy Wilkinson
  * @author Madhura Bhave
- * @since 2.0.0
+ * @since 4.0.0
  */
 @ManagementContextConfiguration(proxyBeanMethods = false)
 @ConditionalOnWebApplication(type = Type.SERVLET)
