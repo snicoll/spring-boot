@@ -20,6 +20,7 @@ dependencies {
 	testImplementation(project(":spring-boot-project:spring-boot-http-converter"))
 	testImplementation(project(":spring-boot-project:spring-boot-jetty"))
 	testImplementation(project(":spring-boot-project:spring-boot-security"))
+	testImplementation(project(":spring-boot-project:spring-boot-servlet"))
 	testImplementation(project(":spring-boot-project:spring-boot-session-data-redis"))
 	testImplementation(project(":spring-boot-project:spring-boot-test"))
 	testImplementation(project(":spring-boot-project:spring-boot-tomcat"))

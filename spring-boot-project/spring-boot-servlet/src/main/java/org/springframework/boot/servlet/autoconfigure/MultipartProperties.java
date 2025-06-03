@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package org.springframework.boot.autoconfigure.web.servlet;
+package org.springframework.boot.servlet.autoconfigure;
 
 import jakarta.servlet.MultipartConfigElement;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.PropertyMapper;
-import org.springframework.boot.web.servlet.MultipartConfigFactory;
+import org.springframework.boot.servlet.MultipartConfigFactory;
 import org.springframework.util.unit.DataSize;
 
 /**
@@ -44,7 +44,7 @@ import org.springframework.util.unit.DataSize;
  * @author Toshiaki Maki
  * @author Stephane Nicoll
  * @author Yanming Zhou
- * @since 2.0.0
+ * @since 4.0.0
  */
 @ConfigurationProperties(prefix = "spring.servlet.multipart", ignoreUnknownFields = false)
 public class MultipartProperties {

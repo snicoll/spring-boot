@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.boot.autoconfigure.web.servlet;
+package org.springframework.boot.servlet.autoconfigure;
 
 import jakarta.servlet.MultipartConfigElement;
 import jakarta.servlet.Servlet;
@@ -27,18 +27,15 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication.Type;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.boot.web.server.servlet.context.ServletWebServerApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.web.multipart.MultipartResolver;
 import org.springframework.web.multipart.support.StandardServletMultipartResolver;
-import org.springframework.web.servlet.DispatcherServlet;
 
 /**
  * {@link EnableAutoConfiguration Auto-configuration} for multipart uploads. Adds a
  * {@link StandardServletMultipartResolver} if none is present, and adds a
  * {@link jakarta.servlet.MultipartConfigElement multipartConfigElement} if none is
- * otherwise defined. The {@link ServletWebServerApplicationContext} will associate the
- * {@link MultipartConfigElement} bean to any {@link Servlet} beans.
+ * otherwise defined.
  * <p>
  * The {@link jakarta.servlet.MultipartConfigElement} is a Servlet API that's used to
  * configure how the server handles file uploads.
@@ -47,7 +44,7 @@ import org.springframework.web.servlet.DispatcherServlet;
  * @author Josh Long
  * @author Toshiaki Maki
  * @author Yanming Zhou
- * @since 2.0.0
+ * @since 4.0.0
  */
 @AutoConfiguration
 @ConditionalOnClass({ Servlet.class, StandardServletMultipartResolver.class, MultipartConfigElement.class })
@@ -55,6 +52,12 @@ import org.springframework.web.servlet.DispatcherServlet;
 @ConditionalOnWebApplication(type = Type.SERVLET)
 @EnableConfigurationProperties(MultipartProperties.class)
 public class MultipartAutoConfiguration {
+
+	/**
+	 * Well-known name for the MultipartResolver object in the bean factory for this
+	 * namespace.
+	 */
+	private static final String MULTIPART_RESOLVER_BEAN_NAME = "multipartResolver";
 
 	private final MultipartProperties multipartProperties;
 
@@ -68,7 +71,7 @@ public class MultipartAutoConfiguration {
 		return this.multipartProperties.createMultipartConfig();
 	}
 
-	@Bean(name = DispatcherServlet.MULTIPART_RESOLVER_BEAN_NAME)
+	@Bean(name = MULTIPART_RESOLVER_BEAN_NAME)
 	@ConditionalOnMissingBean(MultipartResolver.class)
 	public StandardServletMultipartResolver multipartResolver() {
 		StandardServletMultipartResolver multipartResolver = new StandardServletMultipartResolver();
