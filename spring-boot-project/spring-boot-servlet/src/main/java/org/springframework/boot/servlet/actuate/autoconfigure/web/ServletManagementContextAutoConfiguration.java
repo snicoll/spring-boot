@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.boot.actuate.autoconfigure.web.servlet;
+package org.springframework.boot.servlet.actuate.autoconfigure.web;
 
 import jakarta.servlet.Servlet;
 
@@ -36,10 +36,10 @@ import org.springframework.context.annotation.Configuration;
  * context concerns.
  *
  * @author Phillip Webb
- * @since 2.0.0
+ * @since 4.0.0
  */
 @AutoConfiguration
-@ConditionalOnClass(Servlet.class)
+@ConditionalOnClass({ Servlet.class, WebEndpointProperties.class })
 @ConditionalOnWebApplication(type = Type.SERVLET)
 @EnableConfigurationProperties(WebEndpointProperties.class)
 public class ServletManagementContextAutoConfiguration {

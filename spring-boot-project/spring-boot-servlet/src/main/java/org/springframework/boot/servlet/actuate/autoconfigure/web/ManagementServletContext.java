@@ -14,7 +14,22 @@
  * limitations under the License.
  */
 
+package org.springframework.boot.servlet.actuate.autoconfigure.web;
+
 /**
- * Actuator Servlet support.
+ * Provides information about the management servlet context for MVC controllers to use.
+ *
+ * @author Phillip Webb
+ * @author Madhura Bhave
+ * @since 4.0.0
  */
-package org.springframework.boot.actuate.autoconfigure.web.servlet;
+@FunctionalInterface
+public interface ManagementServletContext {
+
+	/**
+	 * Return the servlet path of the management server.
+	 * @return the servlet path
+	 */
+	String getServletPath();
+
+}

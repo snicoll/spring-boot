@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.boot.actuate.autoconfigure.web.servlet;
+package org.springframework.boot.servlet.actuate.autoconfigure.web;
 
 import jakarta.servlet.Filter;
 
