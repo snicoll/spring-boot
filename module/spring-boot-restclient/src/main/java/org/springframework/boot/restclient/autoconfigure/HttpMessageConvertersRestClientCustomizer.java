@@ -17,11 +17,11 @@
 package org.springframework.boot.restclient.autoconfigure;
 
 import java.util.Arrays;
-import java.util.List;
 
 import org.springframework.boot.http.converter.autoconfigure.HttpMessageConverters;
 import org.springframework.boot.restclient.RestClientCustomizer;
 import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.http.converter.HttpMessageConverters.ClientBuilder;
 import org.springframework.util.Assert;
 import org.springframework.web.client.RestClient;
 
@@ -45,16 +45,14 @@ public class HttpMessageConvertersRestClientCustomizer implements RestClientCust
 		this.messageConverters = messageConverters;
 	}
 
-	@SuppressWarnings("removal")
 	@Override
 	public void customize(RestClient.Builder restClientBuilder) {
-		restClientBuilder.messageConverters(this::configureMessageConverters);
+		restClientBuilder.configureMessageConverters(this::configureMessageConverters);
 	}
 
-	private void configureMessageConverters(List<HttpMessageConverter<?>> messageConverters) {
+	private void configureMessageConverters(ClientBuilder builder) {
 		if (this.messageConverters != null) {
-			messageConverters.clear();
-			this.messageConverters.forEach(messageConverters::add);
+			this.messageConverters.forEach(builder::customMessageConverter);
 		}
 	}
 

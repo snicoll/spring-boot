@@ -16,21 +16,20 @@
 
 package org.springframework.boot.restclient.autoconfigure;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.function.Consumer;
 
+import org.assertj.core.api.InstanceOfAssertFactories;
+import org.assertj.core.api.ListAssert;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 
 import org.springframework.boot.http.converter.autoconfigure.HttpMessageConverters;
 import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClient.Builder;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
-import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
 /**
@@ -49,29 +48,35 @@ class HttpMessageConvertersRestClientCustomizerTests {
 
 	@Test
 	void createWhenNullMessageConvertersDoesNotCustomize() {
-		HttpMessageConverter<?> c0 = mock();
-		assertThat(apply(new HttpMessageConvertersRestClientCustomizer((HttpMessageConverters) null), c0))
-			.containsExactly(c0);
+		assertThatCustomizedConverters(new HttpMessageConvertersRestClientCustomizer((HttpMessageConverters) null))
+			.containsExactlyElementsOf(defaultConverters());
 	}
 
 	@Test
 	void customizeConfiguresMessageConverters() {
-		HttpMessageConverter<?> c0 = mock();
 		HttpMessageConverter<?> c1 = mock();
 		HttpMessageConverter<?> c2 = mock();
-		assertThat(apply(new HttpMessageConvertersRestClientCustomizer(c1, c2), c0)).containsExactly(c1, c2);
+		assertThatCustomizedConverters(new HttpMessageConvertersRestClientCustomizer(c1, c2)).containsExactly(c1, c2);
 	}
 
-	@SuppressWarnings({ "unchecked", "removal" })
-	private List<HttpMessageConverter<?>> apply(HttpMessageConvertersRestClientCustomizer customizer,
-			HttpMessageConverter<?>... converters) {
-		List<HttpMessageConverter<?>> messageConverters = new ArrayList<>(Arrays.asList(converters));
-		RestClient.Builder restClientBuilder = mock();
-		ArgumentCaptor<Consumer<List<HttpMessageConverter<?>>>> captor = ArgumentCaptor.forClass(Consumer.class);
-		given(restClientBuilder.messageConverters(captor.capture())).willReturn(restClientBuilder);
+	@SuppressWarnings("rawtypes")
+	private ListAssert<HttpMessageConverter> assertThatCustomizedConverters(
+			HttpMessageConvertersRestClientCustomizer customizer) {
+		Builder restClientBuilder = createRestClientBuilder(customizer);
+		return assertThat(restClientBuilder).extracting("messageConverters")
+			.asInstanceOf(InstanceOfAssertFactories.list(HttpMessageConverter.class));
+	}
+
+	@SuppressWarnings("unchecked")
+	private List<HttpMessageConverter<?>> defaultConverters() {
+		return (List<HttpMessageConverter<?>>) ReflectionTestUtils.getField(RestClient.builder().build(),
+				"messageConverters");
+	}
+
+	private RestClient.Builder createRestClientBuilder(HttpMessageConvertersRestClientCustomizer customizer) {
+		RestClient.Builder restClientBuilder = RestClient.builder();
 		customizer.customize(restClientBuilder);
-		captor.getValue().accept(messageConverters);
-		return messageConverters;
+		return restClientBuilder;
 	}
 
 }
