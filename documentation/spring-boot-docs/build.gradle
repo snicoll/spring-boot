@@ -180,6 +180,7 @@ dependencies {
 	configurationProperties(project(path: ":module:spring-boot-data-jdbc", configuration: "configurationPropertiesMetadata"))
 	configurationProperties(project(path: ":module:spring-boot-data-jpa", configuration: "configurationPropertiesMetadata"))
 	configurationProperties(project(path: ":module:spring-boot-data-ldap", configuration: "configurationPropertiesMetadata"))
+	configurationProperties(project(path: ":module:spring-boot-data-mongodb", configuration: "configurationPropertiesMetadata"))
 	configurationProperties(project(path: ":module:spring-boot-data-neo4j", configuration: "configurationPropertiesMetadata"))
 	configurationProperties(project(path: ":module:spring-boot-data-r2dbc", configuration: "configurationPropertiesMetadata"))
 	configurationProperties(project(path: ":module:spring-boot-data-redis", configuration: "configurationPropertiesMetadata"))

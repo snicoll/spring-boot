@@ -20,6 +20,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.boot.context.properties.ConfigurationPropertiesSource;
 import org.springframework.boot.http.client.autoconfigure.reactive.AbstractClientHttpConnectorProperties;
 
 /**
@@ -30,6 +31,7 @@ import org.springframework.boot.http.client.autoconfigure.reactive.AbstractClien
  * @author Phillip Webb
  * @since 4.0.0
  */
+@ConfigurationPropertiesSource
 public abstract class AbstractHttpReactiveClientServiceProperties extends AbstractClientHttpConnectorProperties {
 
 	/**
