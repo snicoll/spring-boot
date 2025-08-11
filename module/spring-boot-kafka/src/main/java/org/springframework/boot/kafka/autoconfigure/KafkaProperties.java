@@ -1613,7 +1613,7 @@ public class KafkaProperties {
 				/**
 				 * Whether to have the backoff delays.
 				 */
-				private boolean random = false;
+				private Duration jitter = Duration.ZERO;
 
 				public Duration getDelay() {
 					return this.delay;
@@ -1639,12 +1639,12 @@ public class KafkaProperties {
 					this.maxDelay = maxDelay;
 				}
 
-				public boolean isRandom() {
-					return this.random;
+				public Duration getJitter() {
+					return this.jitter;
 				}
 
-				public void setRandom(boolean random) {
-					this.random = random;
+				public void setJitter(Duration jitter) {
+					this.jitter = jitter;
 				}
 
 			}
