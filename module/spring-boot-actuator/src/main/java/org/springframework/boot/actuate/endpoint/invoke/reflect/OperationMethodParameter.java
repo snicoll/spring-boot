@@ -18,7 +18,6 @@ package org.springframework.boot.actuate.endpoint.invoke.reflect;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Parameter;
-import java.util.function.Predicate;
 
 import javax.annotation.Nonnull;
 import javax.annotation.meta.When;
@@ -36,24 +35,22 @@ import org.springframework.util.ClassUtils;
  */
 class OperationMethodParameter implements OperationParameter {
 
+	private static final String OPTIONAL_PARAMETER_CLASS_NAME = "org.springframework.boot.actuate.endpoint.annotation.OptionalParameter";
+
 	private static final boolean jsr305Present = ClassUtils.isPresent("javax.annotation.Nonnull", null);
 
 	private final String name;
 
 	private final Parameter parameter;
 
-	private final Predicate<Parameter> optional;
-
 	/**
 	 * Create a new {@link OperationMethodParameter} instance.
 	 * @param name the parameter name
 	 * @param parameter the parameter
-	 * @param optionalParameters predicate to test if a parameter is optional
 	 */
-	OperationMethodParameter(String name, Parameter parameter, Predicate<Parameter> optionalParameters) {
+	OperationMethodParameter(String name, Parameter parameter) {
 		this.name = name;
 		this.parameter = parameter;
-		this.optional = optionalParameters;
 	}
 
 	@Override
@@ -79,8 +76,8 @@ class OperationMethodParameter implements OperationParameter {
 
 	@SuppressWarnings("deprecation")
 	private boolean isOptional() {
-		return this.parameter.getAnnotationsByType(org.springframework.lang.Nullable.class).length > 0
-				|| this.optional.test(this.parameter);
+		return MergedAnnotations.from(this.parameter).isPresent(OPTIONAL_PARAMETER_CLASS_NAME)
+				|| this.parameter.getAnnotationsByType(org.springframework.lang.Nullable.class).length > 0;
 	}
 
 	@Override

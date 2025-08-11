@@ -16,11 +16,6 @@
 
 package org.springframework.boot.actuate.endpoint.invoker.cache;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
 import java.lang.reflect.Method;
 import java.util.function.Function;
 
@@ -34,11 +29,11 @@ import org.springframework.boot.actuate.endpoint.ApiVersion;
 import org.springframework.boot.actuate.endpoint.EndpointId;
 import org.springframework.boot.actuate.endpoint.OperationType;
 import org.springframework.boot.actuate.endpoint.SecurityContext;
+import org.springframework.boot.actuate.endpoint.annotation.OptionalParameter;
 import org.springframework.boot.actuate.endpoint.invoke.OperationInvoker;
 import org.springframework.boot.actuate.endpoint.invoke.OperationParameters;
 import org.springframework.boot.actuate.endpoint.invoke.reflect.OperationMethod;
 import org.springframework.boot.actuate.endpoint.web.WebServerNamespace;
-import org.springframework.core.annotation.MergedAnnotations;
 import org.springframework.util.ReflectionUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -163,47 +158,38 @@ class CachingOperationInvokerAdvisorTests {
 
 	private OperationMethod getOperationMethod(String methodName, Class<?>... parameterTypes) {
 		Method method = ReflectionUtils.findMethod(TestOperations.class, methodName, parameterTypes);
-		return new OperationMethod(method, OperationType.READ,
-				(parameter) -> MergedAnnotations.from(parameter).isPresent(TestOptional.class));
+		return new OperationMethod(method, OperationType.READ);
 	}
 
-	@SuppressWarnings("deprecation")
 	static class TestOperations {
 
 		String get() {
 			return "";
 		}
 
-		String getWithParameters(@TestOptional String foo, String bar) {
+		String getWithParameters(@OptionalParameter String foo, String bar) {
 			return "";
 		}
 
-		String getWithAllOptionalParameters(@TestOptional String foo, @TestOptional String bar) {
+		String getWithAllOptionalParameters(@OptionalParameter String foo, @OptionalParameter String bar) {
 			return "";
 		}
 
-		String getWithSecurityContext(SecurityContext securityContext, @TestOptional String bar) {
+		String getWithSecurityContext(SecurityContext securityContext, @OptionalParameter String bar) {
 			return "";
 		}
 
-		String getWithApiVersion(ApiVersion apiVersion, @TestOptional String bar) {
+		String getWithApiVersion(ApiVersion apiVersion, @OptionalParameter String bar) {
 			return "";
 		}
 
-		String getWithServerNamespace(WebServerNamespace serverNamespace, @TestOptional String bar) {
+		String getWithServerNamespace(WebServerNamespace serverNamespace, @OptionalParameter String bar) {
 			return "";
 		}
 
 		String getWithServerNamespaceAndOtherMandatory(WebServerNamespace serverNamespace, String bar) {
 			return "";
 		}
-
-	}
-
-	@Target({ ElementType.METHOD, ElementType.PARAMETER, ElementType.FIELD })
-	@Retention(RetentionPolicy.RUNTIME)
-	@Documented
-	public @interface TestOptional {
 
 	}
 

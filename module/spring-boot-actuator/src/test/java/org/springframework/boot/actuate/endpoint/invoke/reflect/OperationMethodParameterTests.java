@@ -16,13 +16,9 @@
 
 package org.springframework.boot.actuate.endpoint.invoke.reflect;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
 import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
 
 import javax.annotation.Nonnull;
 import javax.annotation.meta.TypeQualifier;
@@ -30,9 +26,9 @@ import javax.annotation.meta.When;
 
 import org.junit.jupiter.api.Test;
 
+import org.springframework.boot.actuate.endpoint.annotation.OptionalParameter;
 import org.springframework.boot.actuate.endpoint.annotation.Selector;
 import org.springframework.boot.actuate.endpoint.annotation.Selector.Match;
-import org.springframework.core.annotation.MergedAnnotations;
 import org.springframework.util.ReflectionUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -63,86 +59,85 @@ class OperationMethodParameterTests {
 
 	@Test
 	void getNameShouldReturnName() {
-		OperationMethodParameter parameter = new OperationMethodParameter("name", this.example.getParameters()[0],
-				this::isOptionalParameter);
+		OperationMethodParameter parameter = new OperationMethodParameter("name", this.example.getParameters()[0]);
 		assertThat(parameter.getName()).isEqualTo("name");
 	}
 
 	@Test
 	void getTypeShouldReturnType() {
-		OperationMethodParameter parameter = new OperationMethodParameter("name", this.example.getParameters()[0],
-				this::isOptionalParameter);
+		OperationMethodParameter parameter = new OperationMethodParameter("name", this.example.getParameters()[0]);
 		assertThat(parameter.getType()).isEqualTo(String.class);
 	}
 
 	@Test
 	void isMandatoryWhenNoAnnotationShouldReturnTrue() {
-		OperationMethodParameter parameter = new OperationMethodParameter("name", this.example.getParameters()[0],
-				this::isOptionalParameter);
+		OperationMethodParameter parameter = new OperationMethodParameter("name", this.example.getParameters()[0]);
 		assertThat(parameter.isMandatory()).isTrue();
 	}
 
 	@Test
-	void isMandatoryWhenOptionalAnnotationShouldReturnFalse() {
-		OperationMethodParameter parameter = new OperationMethodParameter("name", this.example.getParameters()[1],
-				this::isOptionalParameter);
+	void isMandatoryWhenNullableAnnotationShouldReturnFalse() {
+		OperationMethodParameter parameter = new OperationMethodParameter("name", this.example.getParameters()[1]);
 		assertThat(parameter.isMandatory()).isFalse();
 	}
 
 	@Test
+	@Deprecated(since = "4.0.0")
 	void isMandatoryWhenSpringNullableAnnotationShouldReturnFalse() {
 		OperationMethodParameter parameter = new OperationMethodParameter("name",
-				this.exampleSpringNullable.getParameters()[1], this::isOptionalParameter);
+				this.exampleSpringNullable.getParameters()[1]);
 		assertThat(parameter.isMandatory()).isFalse();
 	}
 
 	@Test
+	@Deprecated(since = "4.0.0")
 	void isMandatoryWhenJsrNullableAnnotationShouldReturnFalse() {
-		OperationMethodParameter parameter = new OperationMethodParameter("name", this.exampleJsr305.getParameters()[1],
-				this::isOptionalParameter);
+		OperationMethodParameter parameter = new OperationMethodParameter("name",
+				this.exampleJsr305.getParameters()[1]);
 		assertThat(parameter.isMandatory()).isFalse();
 	}
 
 	@Test
+	@Deprecated(since = "4.0.0")
 	void isMandatoryWhenJsrMetaNullableAnnotationShouldReturnFalse() {
 		OperationMethodParameter parameter = new OperationMethodParameter("name",
-				this.exampleMetaJsr305.getParameters()[1], this::isOptionalParameter);
+				this.exampleMetaJsr305.getParameters()[1]);
 		assertThat(parameter.isMandatory()).isFalse();
 	}
 
 	@Test
+	@Deprecated(since = "4.0.0")
 	void isMandatoryWhenJsrNonnullAnnotationShouldReturnTrue() {
 		OperationMethodParameter parameter = new OperationMethodParameter("name",
-				this.exampleJsr305NonNull.getParameters()[1], this::isOptionalParameter);
+				this.exampleJsr305NonNull.getParameters()[1]);
 		assertThat(parameter.isMandatory()).isTrue();
 	}
 
 	@Test
 	void getAnnotationShouldReturnAnnotation() {
 		OperationMethodParameter parameter = new OperationMethodParameter("name",
-				this.exampleAnnotation.getParameters()[0], this::isOptionalParameter);
+				this.exampleAnnotation.getParameters()[0]);
 		Selector annotation = parameter.getAnnotation(Selector.class);
 		assertThat(annotation).isNotNull();
 		assertThat(annotation.match()).isEqualTo(Match.ALL_REMAINING);
 	}
 
-	private boolean isOptionalParameter(Parameter parameter) {
-		return MergedAnnotations.from(parameter).isPresent(TestOptional.class);
+	void example(String one, @OptionalParameter String two) {
 	}
 
-	void example(String one, @TestOptional String two) {
-	}
-
-	@SuppressWarnings("deprecation")
+	@Deprecated(since = "4.0.0")
 	void exampleSpringNullable(String one, @org.springframework.lang.Nullable String two) {
 	}
 
+	@Deprecated(since = "4.0.0")
 	void exampleJsr305(String one, @javax.annotation.Nullable String two) {
 	}
 
+	@Deprecated(since = "4.0.0")
 	void exampleMetaJsr305(String one, @MetaNullable String two) {
 	}
 
+	@Deprecated(since = "4.0.0")
 	void exampleJsr305NonNull(String one, @javax.annotation.Nonnull String two) {
 	}
 
@@ -153,13 +148,6 @@ class OperationMethodParameterTests {
 	@Retention(RetentionPolicy.RUNTIME)
 	@Nonnull(when = When.MAYBE)
 	@interface MetaNullable {
-
-	}
-
-	@Target({ ElementType.METHOD, ElementType.PARAMETER, ElementType.FIELD })
-	@Retention(RetentionPolicy.RUNTIME)
-	@Documented
-	public @interface TestOptional {
 
 	}
 
