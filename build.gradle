@@ -30,6 +30,12 @@ subprojects {
 	apply plugin: "org.springframework.boot.conventions"
 
 	repositories {
+		mavenLocal() {
+			content {
+				includeGroup "org.springframework.amqp"
+				includeGroup "org.springframework.kafka"
+			}
+		}
 		mavenCentral()
 		maven {
 			name "Shibboleth Releases"

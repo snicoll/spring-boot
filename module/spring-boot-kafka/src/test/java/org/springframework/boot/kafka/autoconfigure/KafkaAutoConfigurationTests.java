@@ -580,7 +580,7 @@ class KafkaAutoConfigurationTests {
 	void retryTopicConfigurationWithExponentialBackOff() {
 		this.contextRunner.withPropertyValues("spring.application.name=my-test-app",
 				"spring.kafka.bootstrap-servers=localhost:9092,localhost:9093", "spring.kafka.retry.topic.enabled=true",
-				"spring.kafka.retry.topic.attempts=5", "spring.kafka.retry.topic.backoff.delay=100ms",
+				"spring.kafka.retry.topic.attempts=4", "spring.kafka.retry.topic.backoff.delay=100ms",
 				"spring.kafka.retry.topic.backoff.multiplier=2", "spring.kafka.retry.topic.backoff.max-delay=300ms")
 			.run((context) -> {
 				RetryTopicConfiguration configuration = context.getBean(RetryTopicConfiguration.class);

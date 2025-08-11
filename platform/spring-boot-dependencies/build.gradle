@@ -2264,7 +2264,7 @@ bom {
 			]
 		}
 	}
-	library("Spring AMQP", "4.0.0-M4") {
+	library("Spring AMQP", "4.0.0-SNAPSHOT") {
 		considerSnapshots()
 		group("org.springframework.amqp") {
 			bom("spring-amqp-bom")
@@ -2391,7 +2391,7 @@ bom {
 			releaseNotes("https://github.com/spring-projects/spring-integration/releases/tag/v{version}")
 		}
 	}
-	library("Spring Kafka", "4.0.0-M4") {
+	library("Spring Kafka", "4.0.0-SNAPSHOT") {
 		considerSnapshots()
 		group("org.springframework.kafka") {
 			modules = [
@@ -2457,19 +2457,6 @@ bom {
 			docs(version -> "https://docs.spring.io/spring-restdocs/docs/%s/reference/htmlsingle"
 					.formatted(version.forMajorMinorGeneration()))
 			releaseNotes("https://github.com/spring-projects/spring-restdocs/releases/tag/v{version}")
-		}
-	}
-	library("Spring Retry", "2.0.12") {
-		considerSnapshots()
-		group("org.springframework.retry") {
-			modules = [
-				"spring-retry"
-			]
-		}
-		links {
-			site("https://github.com/spring-projects/spring-retry")
-			javadoc("https://docs.spring.io/spring-retry/docs/{version}/apidocs", "org.springframework.retry")
-			releaseNotes("https://github.com/spring-projects/spring-retry/releases/tag/v{version}")
 		}
 	}
 	library("Spring Security", "7.0.0-M2") {

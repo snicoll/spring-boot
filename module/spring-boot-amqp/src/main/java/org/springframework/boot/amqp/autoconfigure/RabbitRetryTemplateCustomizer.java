@@ -18,7 +18,7 @@ package org.springframework.boot.amqp.autoconfigure;
 
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.rabbit.listener.AbstractMessageListenerContainer;
-import org.springframework.retry.support.RetryTemplate;
+import org.springframework.core.retry.RetryTemplate;
 
 /**
  * Callback interface that can be used to customize a {@link RetryTemplate} used as part

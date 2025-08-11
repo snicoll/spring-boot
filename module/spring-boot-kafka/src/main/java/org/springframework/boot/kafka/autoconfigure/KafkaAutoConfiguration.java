@@ -19,6 +19,7 @@ package org.springframework.boot.kafka.autoconfigure;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Map;
+import java.util.function.Predicate;
 
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -47,6 +48,7 @@ import org.springframework.boot.ssl.SslBundles;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.ImportRuntimeHints;
+import org.springframework.core.retry.RetryPolicy;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
@@ -60,8 +62,6 @@ import org.springframework.kafka.support.LoggingProducerListener;
 import org.springframework.kafka.support.ProducerListener;
 import org.springframework.kafka.support.converter.RecordMessageConverter;
 import org.springframework.kafka.transaction.KafkaTransactionManager;
-import org.springframework.retry.backoff.BackOffPolicyBuilder;
-import org.springframework.retry.backoff.SleepingBackOffPolicy;
 import org.springframework.util.StringUtils;
 
 /**
@@ -197,7 +197,7 @@ public final class KafkaAutoConfiguration {
 			.useSingleTopicForSameIntervals()
 			.suffixTopicsWithIndexValues()
 			.doNotAutoCreateRetryTopics();
-		setBackOffPolicy(builder, retryTopic.getBackoff());
+		setBackOff(builder, retryTopic.getBackoff());
 		return builder.create(kafkaTemplate);
 	}
 
@@ -225,16 +225,22 @@ public final class KafkaAutoConfiguration {
 		applySslBundle(properties, admin.getSslBundle());
 	}
 
-	private static void setBackOffPolicy(RetryTopicConfigurationBuilder builder, Backoff retryTopicBackoff) {
-		long delay = (retryTopicBackoff.getDelay() != null) ? retryTopicBackoff.getDelay().toMillis() : 0;
-		if (delay > 0) {
+	private static void setBackOff(RetryTopicConfigurationBuilder builder, Backoff retryTopicBackoff) {
+		Duration delay = retryTopicBackoff.getDelay();
+		if (delay != Duration.ZERO) {
 			PropertyMapper map = PropertyMapper.get().alwaysApplyingWhenNonNull();
-			BackOffPolicyBuilder backOffPolicy = BackOffPolicyBuilder.newBuilder();
-			map.from(delay).to(backOffPolicy::delay);
-			map.from(retryTopicBackoff.getMaxDelay()).as(Duration::toMillis).to(backOffPolicy::maxDelay);
-			map.from(retryTopicBackoff.getMultiplier()).to(backOffPolicy::multiplier);
-			map.from(retryTopicBackoff.isRandom()).to(backOffPolicy::random);
-			builder.customBackoff((SleepingBackOffPolicy<?>) backOffPolicy.build());
+			RetryPolicy.Builder retryPolicyBuilder = RetryPolicy.builder();
+			map.from(delay).to(retryPolicyBuilder::delay);
+			map.from(retryTopicBackoff.getMaxDelay())
+				.when(Predicate.not(Duration::isZero))
+				.to(retryPolicyBuilder::maxDelay);
+			map.from(retryTopicBackoff.getMultiplier())
+				.when((multiplier) -> multiplier >= 1)
+				.to(retryPolicyBuilder::multiplier);
+			map.from(retryTopicBackoff.getJitter())
+				.when((Predicate.not(Duration::isZero)))
+				.to(retryPolicyBuilder::jitter);
+			builder.customBackoff(retryPolicyBuilder.build().getBackOff());
 		}
 		else {
 			builder.noBackoff();
