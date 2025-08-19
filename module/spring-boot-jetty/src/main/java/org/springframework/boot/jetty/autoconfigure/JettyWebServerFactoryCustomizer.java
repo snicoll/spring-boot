@@ -93,7 +93,7 @@ public class JettyWebServerFactoryCustomizer
 		map.from(this.jettyProperties::getMaxHttpResponseHeaderSize)
 			.asInt(DataSize::toBytes)
 			.when(this::isPositive)
-			.to(customizeHttpConfigurations(factory, HttpConfiguration::setMaxResponseHeaderSize));
+			.to(customizeHttpConfigurations(factory, HttpConfiguration::setResponseHeaderSize));
 		map.from(this.jettyProperties::getMaxHttpFormPostSize)
 			.asInt(DataSize::toBytes)
 			.when(this::isPositive)
