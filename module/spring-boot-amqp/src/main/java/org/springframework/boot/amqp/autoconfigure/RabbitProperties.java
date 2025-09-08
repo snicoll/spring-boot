@@ -1102,7 +1102,7 @@ public class RabbitProperties {
 		/**
 		 * Maximum number of attempts to deliver a message.
 		 */
-		private int maxAttempts = 3;
+		private long maxAttempts = 3;
 
 		/**
 		 * Duration between the first and second attempt to deliver a message.
@@ -1127,11 +1127,11 @@ public class RabbitProperties {
 			this.enabled = enabled;
 		}
 
-		public int getMaxAttempts() {
+		public long getMaxAttempts() {
 			return this.maxAttempts;
 		}
 
-		public void setMaxAttempts(int maxAttempts) {
+		public void setMaxAttempts(long maxAttempts) {
 			this.maxAttempts = maxAttempts;
 		}
 
