@@ -16,15 +16,11 @@
 
 package org.springframework.boot.batch.autoconfigure;
 
-import java.util.Arrays;
 import java.util.List;
-
-import javax.sql.DataSource;
 
 import org.junit.jupiter.api.Test;
 
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
-import org.springframework.batch.core.configuration.annotation.EnableJdbcJobRepository;
 import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.job.JobExecutionException;
 import org.springframework.batch.core.job.JobInstance;
@@ -39,15 +35,9 @@ import org.springframework.batch.core.repository.JobRestartException;
 import org.springframework.batch.core.step.Step;
 import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.core.step.tasklet.Tasklet;
-import org.springframework.boot.autoconfigure.AutoConfigurations;
-import org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration;
-import org.springframework.boot.jdbc.autoconfigure.DataSourceTransactionManagerAutoConfiguration;
-import org.springframework.boot.jdbc.init.DataSourceScriptDatabaseInitializer;
-import org.springframework.boot.sql.init.DatabaseInitializationSettings;
+import org.springframework.batch.support.transaction.ResourcelessTransactionManager;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
-import org.springframework.boot.transaction.autoconfigure.TransactionAutoConfiguration;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
 
@@ -66,8 +56,7 @@ import static org.assertj.core.api.Assertions.fail;
 class JobLauncherApplicationRunnerTests {
 
 	private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
-		.withConfiguration(AutoConfigurations.of(DataSourceAutoConfiguration.class, TransactionAutoConfiguration.class,
-				DataSourceTransactionManagerAutoConfiguration.class))
+		.withBean(PlatformTransactionManager.class, ResourcelessTransactionManager::new)
 		.withUserConfiguration(BatchConfiguration.class);
 
 	@Test
@@ -237,23 +226,9 @@ class JobLauncherApplicationRunnerTests {
 
 	}
 
-	@EnableBatchProcessing
-	@EnableJdbcJobRepository
 	@Configuration(proxyBeanMethods = false)
+	@EnableBatchProcessing
 	static class BatchConfiguration {
-
-		private final DataSource dataSource;
-
-		protected BatchConfiguration(DataSource dataSource) {
-			this.dataSource = dataSource;
-		}
-
-		@Bean
-		DataSourceScriptDatabaseInitializer batchDataSourceInitializer() {
-			DatabaseInitializationSettings settings = new DatabaseInitializationSettings();
-			settings.setSchemaLocations(Arrays.asList("classpath:org/springframework/batch/core/schema-h2.sql"));
-			return new DataSourceScriptDatabaseInitializer(this.dataSource, settings);
-		}
 
 	}
 
