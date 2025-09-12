@@ -39,6 +39,13 @@ subprojects {
 				includeGroup "net.shibboleth"
 			}
 		}
+		maven {
+			name "Apache 2.25.2 Staging"
+			url "https://repository.apache.org/content/repositories/orgapachelogging-1321"
+			content {
+				includeGroup "org.apache.logging.log4j"
+			}
+		}
 		spring.mavenRepositories()
 	}
 
