@@ -14,17 +14,10 @@
  * limitations under the License.
  */
 
-package org.springframework.boot.docs.howto.dataaccess.separateentitydefinitionsfromspringconfiguration;
+/**
+ * Persistence support classes.
+ */
+@NullMarked
+package org.springframework.boot.persistence;
 
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.persistence.EntityScan;
-import org.springframework.context.annotation.Configuration;
-
-@Configuration(proxyBeanMethods = false)
-@EnableAutoConfiguration
-@EntityScan(basePackageClasses = City.class)
-public class MyApplication {
-
-	// ...
-
-}
+import org.jspecify.annotations.NullMarked;

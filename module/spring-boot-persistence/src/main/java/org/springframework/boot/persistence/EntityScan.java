@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.boot.persistence.autoconfigure;
+package org.springframework.boot.persistence;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -26,9 +26,8 @@ import org.springframework.context.annotation.Import;
 import org.springframework.core.annotation.AliasFor;
 
 /**
- * Configures the base packages used by auto-configuration when scanning for entity
- * classes. Refer to the documentation of the data technology you are using for more
- * details.
+ * Configures the base packages to use when scanning for entity classes. Refer to the
+ * documentation of the data technology you are using for more details.
  * <p>
  * One of {@link #basePackageClasses()}, {@link #basePackages()} or its alias
  * {@link #value()} may be specified to define specific packages to scan. If specific

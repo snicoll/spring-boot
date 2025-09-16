@@ -82,6 +82,16 @@ public abstract class AutoConfigurationPackages {
 	}
 
 	/**
+	 * Return the auto-configuration base packages for the given bean factory or an empty
+	 * list if none is found.
+	 * @param beanFactory the source bean factory
+	 * @return a list of auto-configuration packages, or an empty list if none is found
+	 */
+	public static List<String> getIfAvailable(BeanFactory beanFactory) {
+		return has(beanFactory) ? get(beanFactory) : Collections.emptyList();
+	}
+
+	/**
 	 * Programmatically registers the auto-configuration package names. Subsequent
 	 * invocations will add the given package names to those that have already been
 	 * registered. You can use this method to manually define the base packages that will

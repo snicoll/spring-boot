@@ -23,6 +23,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.support.RootBeanDefinition;
+import org.springframework.boot.persistence.EntityScan;
+import org.springframework.boot.persistence.EntityScanPackages;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.AnnotationConfigurationException;

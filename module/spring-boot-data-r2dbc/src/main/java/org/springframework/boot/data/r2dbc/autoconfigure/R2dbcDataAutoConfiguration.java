@@ -22,11 +22,12 @@ import java.util.List;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.AutoConfigurationPackages;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnSingleCandidate;
-import org.springframework.boot.persistence.autoconfigure.EntityScanner;
+import org.springframework.boot.persistence.EntityScanner;
 import org.springframework.boot.r2dbc.autoconfigure.R2dbcAutoConfiguration;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -75,7 +76,8 @@ public final class R2dbcDataAutoConfiguration {
 	@ConditionalOnMissingBean
 	static RelationalManagedTypes r2dbcManagedTypes(ApplicationContext applicationContext)
 			throws ClassNotFoundException {
-		return RelationalManagedTypes.fromIterable(new EntityScanner(applicationContext).scan(Table.class));
+		return RelationalManagedTypes.fromIterable(
+				new EntityScanner(applicationContext, AutoConfigurationPackages::getIfAvailable).scan(Table.class));
 	}
 
 	@Bean

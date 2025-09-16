@@ -19,8 +19,9 @@ package org.springframework.boot.data.couchbase.autoconfigure;
 import java.util.Collections;
 
 import org.springframework.beans.BeanUtils;
+import org.springframework.boot.autoconfigure.AutoConfigurationPackages;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.persistence.autoconfigure.EntityScanner;
+import org.springframework.boot.persistence.EntityScanner;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -63,7 +64,8 @@ class CouchbaseDataConfiguration {
 			ApplicationContext applicationContext, CouchbaseCustomConversions couchbaseCustomConversions)
 			throws ClassNotFoundException {
 		CouchbaseMappingContext mappingContext = new CouchbaseMappingContext();
-		mappingContext.setInitialEntitySet(new EntityScanner(applicationContext).scan(Document.class));
+		mappingContext.setInitialEntitySet(
+				new EntityScanner(applicationContext, AutoConfigurationPackages::getIfAvailable).scan(Document.class));
 		mappingContext.setSimpleTypeHolder(couchbaseCustomConversions.getSimpleTypeHolder());
 		Class<?> fieldNamingStrategy = properties.getFieldNamingStrategy();
 		if (fieldNamingStrategy != null) {

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.boot.persistence.autoconfigure;
+package org.springframework.boot.persistence;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -39,8 +39,9 @@ import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 
 /**
- * Class for storing {@link EntityScan @EntityScan} specified packages for reference later
- * (e.g. by JPA auto-configuration).
+ * Class for storing {@link EntityScan @EntityScan} specified packages for reference
+ * later, typically by {@link EntityScanner} but also other components that wish to
+ * further process them.
  *
  * @author Phillip Webb
  * @since 4.0.0

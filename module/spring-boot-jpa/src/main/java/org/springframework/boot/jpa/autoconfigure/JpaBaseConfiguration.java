@@ -39,7 +39,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplicat
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication.Type;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.jpa.EntityManagerFactoryBuilder;
-import org.springframework.boot.persistence.autoconfigure.EntityScanPackages;
+import org.springframework.boot.persistence.EntityScanPackages;
 import org.springframework.boot.transaction.autoconfigure.TransactionManagerCustomizers;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

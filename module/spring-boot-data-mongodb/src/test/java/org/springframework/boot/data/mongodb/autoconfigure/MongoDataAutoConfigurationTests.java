@@ -37,7 +37,7 @@ import org.springframework.boot.data.mongodb.autoconfigure.domain.country.Countr
 import org.springframework.boot.mongodb.autoconfigure.MongoAutoConfiguration;
 import org.springframework.boot.mongodb.autoconfigure.MongoConnectionDetails;
 import org.springframework.boot.mongodb.autoconfigure.PropertiesMongoConnectionDetails;
-import org.springframework.boot.persistence.autoconfigure.EntityScan;
+import org.springframework.boot.persistence.EntityScan;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;

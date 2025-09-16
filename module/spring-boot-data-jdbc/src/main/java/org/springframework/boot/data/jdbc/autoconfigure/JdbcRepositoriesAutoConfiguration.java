@@ -20,6 +20,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.AutoConfigurationPackages;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
@@ -28,7 +29,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.jdbc.autoconfigure.DataSourceTransactionManagerAutoConfiguration;
 import org.springframework.boot.jdbc.autoconfigure.JdbcTemplateAutoConfiguration;
-import org.springframework.boot.persistence.autoconfigure.EntityScanner;
+import org.springframework.boot.persistence.EntityScanner;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -93,7 +94,8 @@ public final class JdbcRepositoriesAutoConfiguration {
 
 		@Override
 		protected Set<Class<?>> getInitialEntitySet() throws ClassNotFoundException {
-			return new EntityScanner(this.applicationContext).scan(Table.class);
+			return new EntityScanner(this.applicationContext, AutoConfigurationPackages::getIfAvailable)
+				.scan(Table.class);
 		}
 
 		@Override

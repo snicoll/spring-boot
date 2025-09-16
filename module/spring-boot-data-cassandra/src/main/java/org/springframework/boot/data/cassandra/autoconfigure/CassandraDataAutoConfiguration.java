@@ -30,7 +30,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.cassandra.autoconfigure.CassandraAutoConfiguration;
 import org.springframework.boot.context.properties.bind.Binder;
-import org.springframework.boot.persistence.autoconfigure.EntityScanPackages;
+import org.springframework.boot.persistence.EntityScanPackages;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.env.Environment;

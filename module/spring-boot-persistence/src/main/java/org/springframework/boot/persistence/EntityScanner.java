@@ -14,16 +14,19 @@
  * limitations under the License.
  */
 
-package org.springframework.boot.persistence.autoconfigure;
+package org.springframework.boot.persistence;
 
 import java.lang.annotation.Annotation;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 
+import org.jspecify.annotations.Nullable;
+
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.boot.autoconfigure.AutoConfigurationPackages;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
@@ -33,7 +36,7 @@ import org.springframework.util.StringUtils;
 
 /**
  * An entity scanner that searches the classpath from an {@link EntityScan @EntityScan}
- * specified packages.
+ * specified packages. If none is found, can fall back to a default list.
  *
  * @author Phillip Webb
  * @since 4.0.0
@@ -42,13 +45,21 @@ public class EntityScanner {
 
 	private final ApplicationContext context;
 
+	private final Function<BeanFactory, List<String>> basePackagesLocator;
+
 	/**
-	 * Create a new {@link EntityScanner} instance.
+	 * Create a new {@link EntityScanner} instance with the supplier of base packages if
+	 * none is detected from the given {@link ApplicationContext}.
 	 * @param context the source application context
+	 * @param basePackagesLocator the locator to use if no base packages is detected from
+	 * the given {@code context}
 	 */
-	public EntityScanner(ApplicationContext context) {
+	public EntityScanner(ApplicationContext context,
+			@Nullable Function<BeanFactory, List<String>> basePackagesLocator) {
 		Assert.notNull(context, "'context' must not be null");
 		this.context = context;
+		this.basePackagesLocator = (basePackagesLocator != null) ? basePackagesLocator
+				: (beanFactory) -> Collections.emptyList();
 	}
 
 	/**
@@ -99,10 +110,7 @@ public class EntityScanner {
 
 	private List<String> getPackages() {
 		List<String> packages = EntityScanPackages.get(this.context).getPackageNames();
-		if (packages.isEmpty() && AutoConfigurationPackages.has(this.context)) {
-			packages = AutoConfigurationPackages.get(this.context);
-		}
-		return packages;
+		return (!packages.isEmpty()) ? packages : this.basePackagesLocator.apply(this.context);
 	}
 
 }

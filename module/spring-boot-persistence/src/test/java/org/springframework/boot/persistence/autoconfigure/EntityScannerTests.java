@@ -17,12 +17,17 @@
 package org.springframework.boot.persistence.autoconfigure;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;
 import org.junit.jupiter.api.Test;
 
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.boot.persistence.EntityScan;
+import org.springframework.boot.persistence.EntityScanner;
 import org.springframework.boot.persistence.autoconfigure.scan.a.EmbeddableA;
 import org.springframework.boot.persistence.autoconfigure.scan.a.EntityA;
 import org.springframework.boot.persistence.autoconfigure.scan.b.EmbeddableB;
@@ -50,18 +55,21 @@ import static org.mockito.Mockito.mock;
  */
 class EntityScannerTests {
 
+	private final Function<BeanFactory, List<String>> defaultPackagesLocator = mock();
+
 	@Test
 	void createWhenContextIsNullShouldThrowException() {
-		assertThatIllegalArgumentException().isThrownBy(() -> new EntityScanner(null))
+		assertThatIllegalArgumentException().isThrownBy(() -> new EntityScanner(null, this.defaultPackagesLocator))
 			.withMessageContaining("'context' must not be null");
 	}
 
 	@Test
 	void scanShouldScanFromSinglePackage() throws Exception {
 		AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(ScanConfig.class);
-		EntityScanner scanner = new EntityScanner(context);
+		EntityScanner scanner = new EntityScanner(context, this.defaultPackagesLocator);
 		Set<Class<?>> scanned = scanner.scan(Entity.class);
 		assertThat(scanned).containsOnly(EntityA.class, EntityB.class, EntityC.class);
+		then(this.defaultPackagesLocator).shouldHaveNoInteractions();
 		context.close();
 	}
 
@@ -72,7 +80,7 @@ class EntityScannerTests {
 			.applyTo(context);
 		context.register(ScanPlaceholderConfig.class);
 		context.refresh();
-		EntityScanner scanner = new EntityScanner(context);
+		EntityScanner scanner = new EntityScanner(context, this.defaultPackagesLocator);
 		Set<Class<?>> scanned = scanner.scan(Entity.class);
 		assertThat(scanned).containsOnly(EntityA.class, EntityB.class, EntityC.class);
 		context.close();
@@ -82,7 +90,7 @@ class EntityScannerTests {
 	void scanShouldScanFromMultiplePackages() throws Exception {
 		AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(ScanAConfig.class,
 				ScanBConfig.class);
-		EntityScanner scanner = new EntityScanner(context);
+		EntityScanner scanner = new EntityScanner(context, this.defaultPackagesLocator);
 		Set<Class<?>> scanned = scanner.scan(Entity.class);
 		assertThat(scanned).containsOnly(EntityA.class, EntityB.class);
 		context.close();
@@ -91,12 +99,33 @@ class EntityScannerTests {
 	@Test
 	void scanShouldFilterOnAnnotation() throws Exception {
 		AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(ScanConfig.class);
-		EntityScanner scanner = new EntityScanner(context);
+		EntityScanner scanner = new EntityScanner(context, this.defaultPackagesLocator);
 		assertThat(scanner.scan(Entity.class)).containsOnly(EntityA.class, EntityB.class, EntityC.class);
 		assertThat(scanner.scan(Embeddable.class)).containsOnly(EmbeddableA.class, EmbeddableB.class,
 				EmbeddableC.class);
 		assertThat(scanner.scan(Entity.class, Embeddable.class)).containsOnly(EntityA.class, EntityB.class,
 				EntityC.class, EmbeddableA.class, EmbeddableB.class, EmbeddableC.class);
+		context.close();
+	}
+
+	@Test
+	void scanShouldDefaultToLocatorIfNoPackagesAreFound() throws Exception {
+		AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(EmptyConfig.class);
+		given(this.defaultPackagesLocator.apply(context))
+			.willReturn(List.of("org.springframework.boot.persistence.autoconfigure.scan.c"));
+		EntityScanner scanner = new EntityScanner(context, this.defaultPackagesLocator);
+		Set<Class<?>> scanned = scanner.scan(Entity.class);
+		assertThat(scanned).containsOnly(EntityC.class);
+		then(this.defaultPackagesLocator).should().apply(context);
+		context.close();
+	}
+
+	@Test
+	void scanShouldDefaultToEmptyPackagesIfNoLocatorIsSpecified() throws Exception {
+		AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(EmptyConfig.class);
+		EntityScanner scanner = new EntityScanner(context, null);
+		Set<Class<?>> scanned = scanner.scan(Entity.class);
+		assertThat(scanned).isEmpty();
 		context.close();
 	}
 
@@ -127,7 +156,7 @@ class EntityScannerTests {
 			.applyTo(context);
 		context.register(ScanPlaceholderConfig.class);
 		context.refresh();
-		EntityScanner scanner = new EntityScanner(context);
+		EntityScanner scanner = new EntityScanner(context, this.defaultPackagesLocator);
 		Set<Class<?>> scanned = scanner.scan(Entity.class);
 		assertThat(scanned).containsOnly(EntityA.class, EntityB.class);
 		context.close();
@@ -139,7 +168,7 @@ class EntityScannerTests {
 
 		TestEntityScanner(ApplicationContext context,
 				ClassPathScanningCandidateComponentProvider candidateComponentProvider) {
-			super(context);
+			super(context, null);
 			this.candidateComponentProvider = candidateComponentProvider;
 		}
 
@@ -148,6 +177,11 @@ class EntityScannerTests {
 				ApplicationContext context) {
 			return this.candidateComponentProvider;
 		}
+
+	}
+
+	@Configuration(proxyBeanMethods = false)
+	static class EmptyConfig {
 
 	}
 

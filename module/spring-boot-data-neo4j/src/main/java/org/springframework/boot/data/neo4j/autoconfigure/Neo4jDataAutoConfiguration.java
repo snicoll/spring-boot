@@ -22,13 +22,14 @@ import org.neo4j.driver.Driver;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.AutoConfigurationPackages;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.neo4j.autoconfigure.Neo4jAutoConfiguration;
-import org.springframework.boot.persistence.autoconfigure.EntityScanner;
+import org.springframework.boot.persistence.EntityScanner;
 import org.springframework.boot.transaction.autoconfigure.TransactionAutoConfiguration;
 import org.springframework.boot.transaction.autoconfigure.TransactionManagerCustomizationAutoConfiguration;
 import org.springframework.boot.transaction.autoconfigure.TransactionManagerCustomizers;
@@ -75,8 +76,9 @@ public final class Neo4jDataAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	Neo4jManagedTypes neo4jManagedTypes(ApplicationContext applicationContext) throws ClassNotFoundException {
-		Set<Class<?>> initialEntityClasses = new EntityScanner(applicationContext).scan(Node.class,
-				RelationshipProperties.class);
+		Set<Class<?>> initialEntityClasses = new EntityScanner(applicationContext,
+				AutoConfigurationPackages::getIfAvailable)
+			.scan(Node.class, RelationshipProperties.class);
 		return Neo4jManagedTypes.fromIterable(initialEntityClasses);
 	}
 

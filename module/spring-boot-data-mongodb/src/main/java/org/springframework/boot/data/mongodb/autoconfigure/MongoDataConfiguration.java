@@ -18,9 +18,10 @@ package org.springframework.boot.data.mongodb.autoconfigure;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.autoconfigure.AutoConfigurationPackages;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.PropertyMapper;
-import org.springframework.boot.persistence.autoconfigure.EntityScanner;
+import org.springframework.boot.persistence.EntityScanner;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -56,7 +57,8 @@ class MongoDataConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	static MongoManagedTypes mongoManagedTypes(ApplicationContext applicationContext) throws ClassNotFoundException {
-		return MongoManagedTypes.fromIterable(new EntityScanner(applicationContext).scan(Document.class));
+		return MongoManagedTypes.fromIterable(
+				new EntityScanner(applicationContext, AutoConfigurationPackages::getIfAvailable).scan(Document.class));
 	}
 
 	@Bean
