@@ -46,6 +46,11 @@ import org.springframework.util.StringUtils;
 class OnClassCondition extends FilteringSpringBootCondition {
 
 	@Override
+	public boolean matchesForAotProcessing(ConditionContext context, AnnotatedTypeMetadata metadata) {
+		return matches(context, metadata);
+	}
+
+	@Override
 	protected final @Nullable ConditionOutcome[] getOutcomes(@Nullable String[] autoConfigurationClasses,
 			AutoConfigurationMetadata autoConfigurationMetadata) {
 		// Split the work and perform half in a background thread if more than one

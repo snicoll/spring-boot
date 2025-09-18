@@ -41,6 +41,11 @@ import org.springframework.util.MultiValueMap;
 class OnResourceCondition extends SpringBootCondition {
 
 	@Override
+	public boolean matchesForAotProcessing(ConditionContext context, AnnotatedTypeMetadata metadata) {
+		return matches(context, metadata);
+	}
+
+	@Override
 	public ConditionOutcome getMatchOutcome(ConditionContext context, AnnotatedTypeMetadata metadata) {
 		MultiValueMap<String, @Nullable Object> attributes = metadata
 			.getAllAnnotationAttributes(ConditionalOnResource.class.getName(), true);
