@@ -64,7 +64,8 @@ class TaskExecutorConfigurations {
 		return (!taskDecorators.isEmpty()) ? new CompositeTaskDecorator(taskDecorators) : null;
 	}
 
-	@Configuration(proxyBeanMethods = false)
+	@SuppressWarnings("deprecation")
+	@Configuration(proxyBeanMethods = false, enforceUniqueMethods = false)
 	@Conditional(OnExecutorCondition.class)
 	@Import(AsyncConfigurerConfiguration.class)
 	static class TaskExecutorConfiguration {
@@ -111,7 +112,8 @@ class TaskExecutorConfigurations {
 
 	}
 
-	@Configuration(proxyBeanMethods = false)
+	@SuppressWarnings("deprecation")
+	@Configuration(proxyBeanMethods = false, enforceUniqueMethods = false)
 	static class SimpleAsyncTaskExecutorBuilderConfiguration {
 
 		private final TaskExecutionProperties properties;

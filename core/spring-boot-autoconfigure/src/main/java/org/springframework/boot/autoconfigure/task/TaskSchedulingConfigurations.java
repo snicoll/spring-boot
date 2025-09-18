@@ -55,7 +55,8 @@ class TaskSchedulingConfigurations {
 		return (!taskDecorators.isEmpty()) ? new CompositeTaskDecorator(taskDecorators) : null;
 	}
 
-	@Configuration(proxyBeanMethods = false)
+	@SuppressWarnings("deprecation")
+	@Configuration(proxyBeanMethods = false, enforceUniqueMethods = false)
 	@ConditionalOnBean(name = TaskManagementConfigUtils.SCHEDULED_ANNOTATION_PROCESSOR_BEAN_NAME)
 	@ConditionalOnMissingBean({ TaskScheduler.class, ScheduledExecutorService.class })
 	static class TaskSchedulerConfiguration {
@@ -95,7 +96,8 @@ class TaskSchedulingConfigurations {
 
 	}
 
-	@Configuration(proxyBeanMethods = false)
+	@SuppressWarnings("deprecation")
+	@Configuration(proxyBeanMethods = false, enforceUniqueMethods = false)
 	static class SimpleAsyncTaskSchedulerBuilderConfiguration {
 
 		private final TaskSchedulingProperties properties;
