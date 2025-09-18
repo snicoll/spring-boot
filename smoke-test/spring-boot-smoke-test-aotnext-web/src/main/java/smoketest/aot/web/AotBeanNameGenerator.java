@@ -18,22 +18,33 @@ package smoketest.aot.web;
 
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
-import org.springframework.context.annotation.FullyQualifiedAnnotationBeanNameGenerator;
+import org.springframework.context.annotation.FullyQualifiedConfigurationBeanNameGenerator;
+import org.springframework.core.type.MethodMetadata;
 
-public class AotBeanNameGenerator extends FullyQualifiedAnnotationBeanNameGenerator {
+public class AotBeanNameGenerator extends FullyQualifiedConfigurationBeanNameGenerator {
+
+	private final BeanDefinitionRegistry registry;
+
+	public AotBeanNameGenerator(BeanDefinitionRegistry registry) {
+		this.registry = registry;
+	}
 
 	@Override
 	public String generateBeanName(BeanDefinition definition, BeanDefinitionRegistry registry) {
-		// Skip name from annotations as we want to enforce unique names.
 		String name = buildDefaultBeanName(definition, registry);
-		return generateUniqueBeanName(registry, name);
+		return generateUniqueBeanName(name);
 	}
 
-	private String generateUniqueBeanName(BeanDefinitionRegistry registry, String candidate) {
-		if (!registry.containsBeanDefinition(candidate)) {
+	@Override
+	public String deriveBeanName(MethodMetadata beanMethod) {
+		return generateUniqueBeanName(super.deriveBeanName(beanMethod));
+	}
+
+	private String generateUniqueBeanName(String candidate) {
+		if (!this.registry.containsBeanDefinition(candidate)) {
 			return candidate;
 		}
-		return generateUniqueBeanName(registry, candidate + "_");
+		return generateUniqueBeanName(candidate + "_");
 	}
 
 }

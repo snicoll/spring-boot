@@ -29,7 +29,7 @@ class SampleAotNextWebApplicationTests {
 	@Test
 	void refreshForAotProcessing() {
 		AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
-		context.setBeanNameGenerator(new AotBeanNameGenerator());
+		context.setBeanNameGenerator(new AotBeanNameGenerator(context));
 		context.setAllowBeanDefinitionOverriding(true);
 		context.register(SampleAotNextWebApplication.class);
 		context.getEnvironment()
