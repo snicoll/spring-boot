@@ -16,6 +16,8 @@
 
 package smoketest.aot.web;
 
+import org.jspecify.annotations.Nullable;
+
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.context.annotation.FullyQualifiedConfigurationBeanNameGenerator;
@@ -36,8 +38,8 @@ public class AotBeanNameGenerator extends FullyQualifiedConfigurationBeanNameGen
 	}
 
 	@Override
-	public String deriveBeanName(MethodMetadata beanMethod) {
-		return generateUniqueBeanName(super.deriveBeanName(beanMethod));
+	public String deriveBeanName(MethodMetadata beanMethod, @Nullable String beanName) {
+		return generateUniqueBeanName(super.deriveBeanName(beanMethod, beanName));
 	}
 
 	private String generateUniqueBeanName(String candidate) {
