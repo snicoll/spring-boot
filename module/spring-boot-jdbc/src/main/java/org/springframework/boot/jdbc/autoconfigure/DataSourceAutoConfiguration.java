@@ -142,7 +142,7 @@ public final class DataSourceAutoConfiguration {
 			if (hasDataSourceUrlProperty(context)) {
 				return ConditionOutcome.noMatch(message.because(DATASOURCE_URL_PROPERTY + " is set"));
 			}
-			if (anyMatches(context, metadata, this.pooledCondition)) {
+			if (anyMatches(context, metadata, false, this.pooledCondition)) {
 				return ConditionOutcome.noMatch(message.foundExactly("supported pooled data source"));
 			}
 			if (!ClassUtils.isPresent(EMBEDDED_DATABASE_TYPE, context.getClassLoader())) {

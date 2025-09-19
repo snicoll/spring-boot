@@ -16,6 +16,7 @@
 
 package smoketest.aot.web;
 
+import java.util.Arrays;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
@@ -24,20 +25,35 @@ import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.core.env.MapPropertySource;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 class SampleAotNextWebApplicationTests {
 
 	@Test
-	void refreshForAotProcessing() {
+	void refreshForAotProcessingAsAtLeastTheSameBeanAsRegularRuntime() {
 		AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
-		context.setBeanNameGenerator(new AotBeanNameGenerator(context));
 		context.register(SampleAotNextWebApplication.class);
+		refreshForAotProcessing(context);
+
+		AnnotationConfigApplicationContext strictContext = new AnnotationConfigApplicationContext();
+		context.register(SampleAotNextWebApplication.class);
+		refreshForAotProcessingStrict(strictContext);
+
+		assertThat(context.getBeanDefinitionNames()).containsAll(Arrays.asList(strictContext.getBeanDefinitionNames()));
+	}
+
+	private void refreshForAotProcessing(AnnotationConfigApplicationContext context) {
+		context.setBeanNameGenerator(new AotBeanNameGenerator(context));
+		context.refreshForAotProcessing(new RuntimeHints());
+
+	}
+
+	private void refreshForAotProcessingStrict(AnnotationConfigApplicationContext context) {
+		context.setBeanNameGenerator(new AotBeanNameGenerator(context));
 		context.getEnvironment()
 			.getPropertySources()
 			.addFirst(new MapPropertySource("AOT", Map.of("spring.aot.condition-evaluation", "true")));
 		context.refreshForAotProcessing(new RuntimeHints());
-		for (String beanDefinitionName : context.getBeanDefinitionNames()) {
-			System.out.println(">> name " + beanDefinitionName);
-		}
 	}
 
 }

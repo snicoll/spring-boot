@@ -154,6 +154,35 @@ class OnBeanCondition extends FilteringSpringBootCondition implements Configurat
 		return matchOutcome;
 	}
 
+	@Override
+	public ConditionOutcome getMatchOutcomeForAotProcessing(ConditionContext context, AnnotatedTypeMetadata metadata) {
+		MergedAnnotations annotations = metadata.getAnnotations();
+		if (annotations.isPresent(ConditionalOnBean.class)) {
+			Spec<ConditionalOnBean> spec = new Spec<>(context, metadata, annotations, ConditionalOnBean.class);
+			MultiValueMap<String, @Nullable Object> attributes = annotations.stream(ConditionalOnBean.class)
+				.filter(MergedAnnotationPredicates.unique(MergedAnnotation::getMetaTypes))
+				.collect(MergedAnnotationCollectors.toMultiValueMap(Adapt.CLASS_TO_STRING));
+			Set<String> requiredTypes = spec.extractTypes(attributes);
+			ConditionOutcome matchOutcome = getOutcome(requiredTypes, ConditionalOnBean.class);
+			if (matchOutcome != null) {
+				return matchOutcome;
+			}
+		}
+		if (metadata.isAnnotated(ConditionalOnSingleCandidate.class.getName())) {
+			Spec<ConditionalOnSingleCandidate> spec = new Spec<>(context, metadata, annotations,
+					ConditionalOnSingleCandidate.class);
+			MultiValueMap<String, @Nullable Object> attributes = annotations.stream(ConditionalOnSingleCandidate.class)
+				.filter(MergedAnnotationPredicates.unique(MergedAnnotation::getMetaTypes))
+				.collect(MergedAnnotationCollectors.toMultiValueMap(Adapt.CLASS_TO_STRING));
+			Set<String> requiredTypes = spec.extractTypes(attributes);
+			ConditionOutcome matchOutcome = getOutcome(requiredTypes, ConditionalOnSingleCandidate.class);
+			if (matchOutcome != null) {
+				return matchOutcome;
+			}
+		}
+		return ConditionOutcome.match();
+	}
+
 	private ConditionOutcome evaluateConditionalOnBean(Spec<ConditionalOnBean> spec, ConditionMessage matchMessage) {
 		MatchResult matchResult = getMatchingBeans(spec);
 		if (!matchResult.isAllMatched()) {

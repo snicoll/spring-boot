@@ -42,9 +42,18 @@ public abstract class SpringBootCondition implements Condition {
 
 	@Override
 	public final boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
+		return matches(context, metadata, false);
+	}
+
+	@Override
+	public boolean matchesForAotProcessing(ConditionContext context, AnnotatedTypeMetadata metadata) {
+		return matches(context, metadata, true);
+	}
+
+	private boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata, boolean aotEnabled) {
 		String classOrMethodName = getClassOrMethodName(metadata);
 		try {
-			ConditionOutcome outcome = getMatchOutcome(context, metadata);
+			ConditionOutcome outcome = getMatchOutcome(context, metadata, aotEnabled);
 			logOutcome(classOrMethodName, outcome);
 			recordEvaluation(context, classOrMethodName, outcome);
 			return outcome.isMatch();
@@ -59,6 +68,11 @@ public abstract class SpringBootCondition implements Condition {
 		catch (RuntimeException ex) {
 			throw new IllegalStateException("Error processing condition on " + getName(metadata), ex);
 		}
+	}
+
+	private ConditionOutcome getMatchOutcome(ConditionContext context, AnnotatedTypeMetadata metadata,
+			boolean aotEnabled) {
+		return (aotEnabled) ? getMatchOutcomeForAotProcessing(context, metadata) : getMatchOutcome(context, metadata);
 	}
 
 	private String getName(AnnotatedTypeMetadata metadata) {
@@ -115,16 +129,43 @@ public abstract class SpringBootCondition implements Condition {
 	public abstract ConditionOutcome getMatchOutcome(ConditionContext context, AnnotatedTypeMetadata metadata);
 
 	/**
+	 * Determine the outcome of the match along with suitable log output for AOT
+	 * processing..
+	 * @param context the condition context
+	 * @param metadata the annotation metadata
+	 * @return the condition outcome
+	 * @since 4.0.0
+	 */
+	public ConditionOutcome getMatchOutcomeForAotProcessing(ConditionContext context, AnnotatedTypeMetadata metadata) {
+		return getMatchOutcome(context, metadata);
+	}
+
+	/**
+	 * Return true if any of the specified conditions match.
+	 * @param context the context
+	 * @param metadata the annotation meta-data
+	 * @param conditions conditions to test
+	 * @return {@code true} if any condition matches.
+	 * @deprecated in favor of
+	 * {@link #anyMatches(ConditionContext, AnnotatedTypeMetadata, boolean, Condition...)}
+	 */
+	@Deprecated(since = "4.0.0", forRemoval = true)
+	protected final boolean anyMatches(ConditionContext context, AnnotatedTypeMetadata metadata,
+			Condition... conditions) {
+		return anyMatches(context, metadata, true, conditions);
+	}
+
+	/**
 	 * Return true if any of the specified conditions match.
 	 * @param context the context
 	 * @param metadata the annotation meta-data
 	 * @param conditions conditions to test
 	 * @return {@code true} if any condition matches.
 	 */
-	protected final boolean anyMatches(ConditionContext context, AnnotatedTypeMetadata metadata,
+	protected final boolean anyMatches(ConditionContext context, AnnotatedTypeMetadata metadata, boolean aotEnabled,
 			Condition... conditions) {
 		for (Condition condition : conditions) {
-			if (matches(context, metadata, condition)) {
+			if (matches(context, metadata, aotEnabled, condition)) {
 				return true;
 			}
 		}
@@ -137,12 +178,28 @@ public abstract class SpringBootCondition implements Condition {
 	 * @param metadata the annotation meta-data
 	 * @param condition condition to test
 	 * @return {@code true} if the condition matches.
+	 * @deprecated in favor of
+	 * {@link #matches(ConditionContext, AnnotatedTypeMetadata, boolean, Condition)}
 	 */
+	@Deprecated(since = "4.0.0", forRemoval = true)
 	protected final boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata, Condition condition) {
+		return matches(context, metadata, true, condition);
+	}
+
+	/**
+	 * Return true if any of the specified condition matches.
+	 * @param context the context
+	 * @param metadata the annotation meta-data
+	 * @param condition condition to test
+	 * @return {@code true} if the condition matches.
+	 */
+	protected final boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata, boolean aotEnabled,
+			Condition condition) {
 		if (condition instanceof SpringBootCondition springBootCondition) {
-			return springBootCondition.getMatchOutcome(context, metadata).isMatch();
+			return springBootCondition.getMatchOutcome(context, metadata, aotEnabled).isMatch();
 		}
-		return condition.matches(context, metadata);
+		return (aotEnabled) ? condition.matchesForAotProcessing(context, metadata)
+				: condition.matches(context, metadata);
 	}
 
 }
