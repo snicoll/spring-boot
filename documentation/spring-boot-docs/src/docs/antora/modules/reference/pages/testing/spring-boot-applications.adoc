@@ -145,6 +145,7 @@ Three integrations are available:
 
 * The regular {url-spring-framework-docs}/testing/mockmvc/hamcrest.html[`MockMvc`] that uses Hamcrest.
 * {url-spring-framework-docs}/testing/mockmvc/assertj.html[`MockMvcTester`] that wraps javadoc:org.springframework.test.web.servlet.MockMvc[] and uses AssertJ.
+* {url-spring-framework-docs}/testing/resttestclient.html[`RestTestClient`] where javadoc:org.springframework.test.web.servlet.MockMvc[] is plugged in as the server to handle requests with.
 * {url-spring-framework-docs}/testing/webtestclient.html[`WebTestClient`] where javadoc:org.springframework.test.web.servlet.MockMvc[] is plugged in as the server to handle requests with.
 
 The following example showcases the available integrations:
