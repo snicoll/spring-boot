@@ -484,8 +484,8 @@ public class RedisProperties {
 		private final Cluster cluster = new Cluster();
 
 		/**
-		 * List of static master-replica "host:port" pairs regardless of role
-		 * as the actual roles are determined by querying each node's ROLE command.
+		 * List of static master-replica "host:port" pairs regardless of role as the
+		 * actual roles are determined by querying each node's ROLE command.
 		 */
 		private @Nullable List<String> nodes;
 

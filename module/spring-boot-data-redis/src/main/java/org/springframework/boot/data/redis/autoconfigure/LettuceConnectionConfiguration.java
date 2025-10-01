@@ -40,7 +40,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnThreading;
 import org.springframework.boot.data.redis.autoconfigure.RedisConnectionDetails.Node;
-import org.springframework.boot.data.redis.autoconfigure.RedisProperties.Lettuce;
 import org.springframework.boot.data.redis.autoconfigure.RedisProperties.Lettuce.Cluster.Refresh;
 import org.springframework.boot.data.redis.autoconfigure.RedisProperties.Pool;
 import org.springframework.boot.ssl.SslBundle;
@@ -145,17 +144,11 @@ class LettuceConnectionConfiguration extends RedisConnectionConfiguration {
 				Assert.state(sentinelConfig != null, "'sentinelConfig' must not be null");
 				yield new LettuceConnectionFactory(sentinelConfig, clientConfiguration);
 			}
-			case STATIC_MASTER_REPLICA -> {
-				RedisStaticMasterReplicaConfiguration configuration = getStaticMasterReplicaConfiguration();
-				Assert.state(configuration != null, "'staticMasterReplicaConfiguration' must not be null");
-				yield new LettuceConnectionFactory(configuration, clientConfiguration);
-			}
 		};
 	}
 
 	private @Nullable RedisStaticMasterReplicaConfiguration getStaticMasterReplicaConfiguration() {
 		RedisProperties.Lettuce lettuce = getProperties().getLettuce();
-
 		if (!CollectionUtils.isEmpty(lettuce.getNodes())) {
 			List<Node> nodes = asNodes(lettuce.getNodes());
 			RedisStaticMasterReplicaConfiguration configuration = new RedisStaticMasterReplicaConfiguration(
@@ -169,7 +162,6 @@ class LettuceConnectionConfiguration extends RedisConnectionConfiguration {
 
 			return configuration;
 		}
-
 		return null;
 	}
 

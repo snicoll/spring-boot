@@ -506,10 +506,9 @@ class RedisAutoConfigurationTests {
 	void testRedisConfigurationWithStaticMasterReplica() {
 		List<String> staticMasterReplicaNodes = Arrays.asList("127.0.0.1:28319", "127.0.0.1:28320", "[::1]:28321");
 		this.contextRunner
-			.withPropertyValues(
-					"spring.data.redis.lettuce.static-master-replica.nodes[0]:" + staticMasterReplicaNodes.get(0),
-					"spring.data.redis.lettuce.static-master-replica.nodes[1]:" + staticMasterReplicaNodes.get(1),
-					"spring.data.redis.lettuce.static-master-replica.nodes[2]:" + staticMasterReplicaNodes.get(2))
+			.withPropertyValues("spring.data.redis.lettuce.nodes[0]:" + staticMasterReplicaNodes.get(0),
+					"spring.data.redis.lettuce.nodes[1]:" + staticMasterReplicaNodes.get(1),
+					"spring.data.redis.lettuce.nodes[2]:" + staticMasterReplicaNodes.get(2))
 			.run((context) -> {
 				LettuceConnectionFactory connectionFactory = context.getBean(LettuceConnectionFactory.class);
 				assertThat(connectionFactory.getSentinelConfiguration()).isNull();
