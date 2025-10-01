@@ -155,14 +155,7 @@ abstract class RedisConnectionConfiguration {
 	}
 
 	protected @Nullable SslBundle getSslBundle() {
-		return switch (this.mode) {
-			case STANDALONE -> (this.connectionDetails.getStandalone() != null)
-					? this.connectionDetails.getStandalone().getSslBundle() : null;
-			case CLUSTER -> (this.connectionDetails.getCluster() != null)
-					? this.connectionDetails.getCluster().getSslBundle() : null;
-			case SENTINEL -> (this.connectionDetails.getSentinel() != null)
-					? this.connectionDetails.getSentinel().getSslBundle() : null;
-		};
+		return this.connectionDetails.getSslBundle();
 	}
 
 	protected final boolean isSslEnabled() {

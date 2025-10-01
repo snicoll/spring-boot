@@ -60,15 +60,7 @@ class PropertiesRedisConnectionDetails implements RedisConnectionDetails {
 	}
 
 	@Override
-	public Standalone getStandalone() {
-		RedisUrl redisUrl = getRedisUrl();
-		return (redisUrl != null)
-				? Standalone.of(redisUrl.uri().getHost(), redisUrl.uri().getPort(), redisUrl.database(), getSslBundle())
-				: Standalone.of(this.properties.getHost(), this.properties.getPort(), this.properties.getDatabase(),
-						getSslBundle());
-	}
-
-	private @Nullable SslBundle getSslBundle() {
+	public @Nullable SslBundle getSslBundle() {
 		if (!this.properties.getSsl().isEnabled()) {
 			return null;
 		}
@@ -78,6 +70,14 @@ class PropertiesRedisConnectionDetails implements RedisConnectionDetails {
 			return this.sslBundles.getBundle(bundleName);
 		}
 		return SslBundle.systemDefault();
+	}
+
+	@Override
+	public Standalone getStandalone() {
+		RedisUrl redisUrl = getRedisUrl();
+		return (redisUrl != null)
+				? Standalone.of(redisUrl.uri().getHost(), redisUrl.uri().getPort(), redisUrl.database())
+				: Standalone.of(this.properties.getHost(), this.properties.getPort(), this.properties.getDatabase());
 	}
 
 	@Override
@@ -126,11 +126,6 @@ class PropertiesRedisConnectionDetails implements RedisConnectionDetails {
 			return this.nodes;
 		}
 
-		@Override
-		public @Nullable SslBundle getSslBundle() {
-			return PropertiesRedisConnectionDetails.this.getSslBundle();
-		}
-
 	}
 
 	/**
@@ -172,11 +167,6 @@ class PropertiesRedisConnectionDetails implements RedisConnectionDetails {
 		@Override
 		public @Nullable String getPassword() {
 			return this.properties.getPassword();
-		}
-
-		@Override
-		public @Nullable SslBundle getSslBundle() {
-			return PropertiesRedisConnectionDetails.this.getSslBundle();
 		}
 
 	}

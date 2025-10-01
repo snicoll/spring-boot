@@ -50,6 +50,14 @@ public interface RedisConnectionDetails extends ConnectionDetails {
 	}
 
 	/**
+	 * SSL bundle to use.
+	 * @return the SSL bundle to use
+	 */
+	default @Nullable SslBundle getSslBundle() {
+		return null;
+	}
+
+	/**
 	 * Redis standalone configuration. Mutually exclusive with {@link #getSentinel()} and
 	 * {@link #getCluster()}.
 	 * @return the Redis standalone configuration
@@ -102,43 +110,13 @@ public interface RedisConnectionDetails extends ConnectionDetails {
 		}
 
 		/**
-		 * SSL bundle to use.
-		 * @return the SSL bundle to use
-		 */
-		default @Nullable SslBundle getSslBundle() {
-			return null;
-		}
-
-		/**
-		 * Creates a new instance with the given host and port.
+		 * Creates a new instance with the given host, port and SSL bundle.
 		 * @param host the host
 		 * @param port the port
 		 * @return the new instance
 		 */
 		static Standalone of(String host, int port) {
-			return of(host, port, 0, null);
-		}
-
-		/**
-		 * Creates a new instance with the given host, port and SSL bundle.
-		 * @param host the host
-		 * @param port the port
-		 * @param sslBundle the SSL bundle
-		 * @return the new instance
-		 */
-		static Standalone of(String host, int port, @Nullable SslBundle sslBundle) {
-			return of(host, port, 0, sslBundle);
-		}
-
-		/**
-		 * Creates a new instance with the given host, port and database.
-		 * @param host the host
-		 * @param port the port
-		 * @param database the database
-		 * @return the new instance
-		 */
-		static Standalone of(String host, int port, int database) {
-			return of(host, port, database, null);
+			return of(host, port, 0);
 		}
 
 		/**
@@ -146,10 +124,9 @@ public interface RedisConnectionDetails extends ConnectionDetails {
 		 * @param host the host
 		 * @param port the port
 		 * @param database the database
-		 * @param sslBundle the SSL bundle
 		 * @return the new instance
 		 */
-		static Standalone of(String host, int port, int database, @Nullable SslBundle sslBundle) {
+		static Standalone of(String host, int port, int database) {
 			Assert.hasLength(host, "'host' must not be empty");
 			return new Standalone() {
 
@@ -168,10 +145,6 @@ public interface RedisConnectionDetails extends ConnectionDetails {
 					return database;
 				}
 
-				@Override
-				public @Nullable SslBundle getSslBundle() {
-					return sslBundle;
-				}
 			};
 		}
 
@@ -212,14 +185,6 @@ public interface RedisConnectionDetails extends ConnectionDetails {
 		 */
 		@Nullable String getPassword();
 
-		/**
-		 * SSL bundle to use.
-		 * @return the SSL bundle to use
-		 */
-		default @Nullable SslBundle getSslBundle() {
-			return null;
-		}
-
 	}
 
 	/**
@@ -233,14 +198,6 @@ public interface RedisConnectionDetails extends ConnectionDetails {
 		 * @return nodes to bootstrap from
 		 */
 		List<Node> getNodes();
-
-		/**
-		 * SSL bundle to use.
-		 * @return the SSL bundle to use
-		 */
-		default @Nullable SslBundle getSslBundle() {
-			return null;
-		}
 
 	}
 
