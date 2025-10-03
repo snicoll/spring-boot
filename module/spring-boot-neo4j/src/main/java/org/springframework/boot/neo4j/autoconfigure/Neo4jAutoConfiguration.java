@@ -24,7 +24,6 @@ import java.util.Locale;
 import java.util.ServiceLoader;
 import java.util.concurrent.TimeUnit;
 
-import io.micrometer.observation.ObservationRegistry;
 import org.jspecify.annotations.Nullable;
 import org.neo4j.bolt.connection.BoltConnectionProviderFactory;
 import org.neo4j.driver.AuthToken;
@@ -35,7 +34,6 @@ import org.neo4j.driver.Config.TrustStrategy;
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.GraphDatabase;
 import org.neo4j.driver.internal.Scheme;
-import org.neo4j.driver.observation.micrometer.MicrometerObservationProvider;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -48,7 +46,7 @@ import org.springframework.boot.neo4j.autoconfigure.Neo4jProperties.Authenticati
 import org.springframework.boot.neo4j.autoconfigure.Neo4jProperties.Pool;
 import org.springframework.boot.neo4j.autoconfigure.Neo4jProperties.Security;
 import org.springframework.context.annotation.Bean;
-import org.springframework.core.env.Environment;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -67,20 +65,6 @@ import org.springframework.util.StringUtils;
 @EnableConfigurationProperties(Neo4jProperties.class)
 public final class Neo4jAutoConfiguration {
 
-	private static final boolean HAS_DRIVER_METRICS;
-
-	static {
-		boolean metricsObservationProviderFound = true;
-		try {
-			Class.forName("org.neo4j.driver.observation.micrometer.MicrometerObservationProvider", false,
-					Neo4jAutoConfiguration.class.getClassLoader());
-		}
-		catch (ClassNotFoundException ex) {
-			metricsObservationProviderFound = false;
-		}
-		HAS_DRIVER_METRICS = metricsObservationProviderFound;
-	}
-
 	@Bean
 	@ConditionalOnMissingBean(Neo4jConnectionDetails.class)
 	PropertiesNeo4jConnectionDetails neo4jConnectionDetails(Neo4jProperties properties,
@@ -90,12 +74,11 @@ public final class Neo4jAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	Driver neo4jDriver(Neo4jProperties properties, Environment environment, Neo4jConnectionDetails connectionDetails,
-			ObjectProvider<ConfigBuilderCustomizer> configBuilderCustomizers,
-			ObjectProvider<ObservationRegistry> observationRegistryProvider) {
-
+	Driver neo4jDriver(ResourceLoader resourceLoader, Neo4jProperties properties,
+			Neo4jConnectionDetails connectionDetails,
+			ObjectProvider<ConfigBuilderCustomizer> configBuilderCustomizers) {
 		Config config = mapDriverConfig(properties, connectionDetails,
-				configBuilderCustomizers.orderedStream().toList(), observationRegistryProvider);
+				configBuilderCustomizers.orderedStream().toList(), resourceLoader.getClassLoader());
 		AuthTokenManager authTokenManager = connectionDetails.getAuthTokenManager();
 		if (authTokenManager != null) {
 			return GraphDatabase.driver(connectionDetails.getUri(), authTokenManager, config);
@@ -105,29 +88,28 @@ public final class Neo4jAutoConfiguration {
 	}
 
 	Config mapDriverConfig(Neo4jProperties properties, Neo4jConnectionDetails connectionDetails,
-			List<ConfigBuilderCustomizer> customizers,
-			ObjectProvider<ObservationRegistry> observationRegistryProvider) {
+			List<ConfigBuilderCustomizer> customizers, @Nullable ClassLoader classLoader) {
 		Config.ConfigBuilder builder = Config.builder();
-		configurePoolSettings(builder, properties.getPool(), observationRegistryProvider);
+		configurePoolSettings(builder, properties.getPool());
 		URI uri = connectionDetails.getUri();
 		String scheme = (uri != null) ? uri.getScheme() : "bolt";
-		configureDriverSettings(builder, properties, isSimpleScheme(scheme));
+		configureDriverSettings(builder, properties, isSimpleScheme(scheme, classLoader));
 		customizers.forEach((customizer) -> customizer.customize(builder));
 		return builder.build();
 	}
 
-	private boolean isSimpleScheme(String scheme) {
+	private boolean isSimpleScheme(String scheme, @Nullable ClassLoader classLoader) {
 		String lowerCaseScheme = scheme.toLowerCase(Locale.ENGLISH);
-		if (!ServiceLoader.load(BoltConnectionProviderFactory.class)
+		boolean match = ServiceLoader.load(BoltConnectionProviderFactory.class, classLoader)
 			.stream()
-			.anyMatch((p) -> p.get().supports(lowerCaseScheme))) {
+			.anyMatch((factory) -> factory.get().supports(scheme));
+		if (!match) {
 			throw new IllegalArgumentException(String.format("'%s' is not a supported scheme.", scheme));
 		}
 		return !Scheme.isSecurityScheme(lowerCaseScheme);
 	}
 
-	private void configurePoolSettings(Config.ConfigBuilder builder, Pool pool,
-			ObjectProvider<ObservationRegistry> observationRegistryProvider) {
+	private void configurePoolSettings(Config.ConfigBuilder builder, Pool pool) {
 		if (pool.isLogLeakedSessions()) {
 			builder.withLeakedSessionsLogging();
 		}
@@ -139,11 +121,6 @@ public final class Neo4jAutoConfiguration {
 		builder.withMaxConnectionLifetime(pool.getMaxConnectionLifetime().toMillis(), TimeUnit.MILLISECONDS);
 		builder.withConnectionAcquisitionTimeout(pool.getConnectionAcquisitionTimeout().toMillis(),
 				TimeUnit.MILLISECONDS);
-		observationRegistryProvider.ifAvailable((orp) -> {
-			if (pool.isMetricsEnabled() && HAS_DRIVER_METRICS) {
-				builder.withObservationProvider(MicrometerObservationProvider.builder(orp).build());
-			}
-		});
 	}
 
 	private void configureDriverSettings(Config.ConfigBuilder builder, Neo4jProperties properties,
