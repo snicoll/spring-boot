@@ -27,8 +27,7 @@ description = "Spring Boot RestClient and RestTemplate"
 dependencies {
 	api(project(":core:spring-boot"))
 	api(project(":module:spring-boot-http-client"))
-
-	implementation(project(":module:spring-boot-http-converter"))
+	api(project(":module:spring-boot-http-converter"))
 
 	optional(project(":core:spring-boot-autoconfigure"))
 	optional(project(":module:spring-boot-micrometer-observation"))
