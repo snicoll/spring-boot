@@ -36,7 +36,7 @@ class WebFluxTestJacksonComponentIntegrationTests {
 	private WebTestClient webClient;
 
 	@Test
-	void shouldFindConverter() {
+	void shouldFindJacksonComponent() {
 		this.webClient.post()
 			.uri("/two/" + "1234abcd")
 			.exchange()
