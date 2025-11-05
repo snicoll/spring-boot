@@ -7,6 +7,10 @@ org.springframework.boot.test.context.filter.annotation.TypeExcludeFiltersContex
 org.springframework.boot.test.http.client.DisableReactorResourceFactoryGlobalResourcesContextCustomizerFactory,\
 org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory
 
+# Parameter resolution
+org.springframework.test.context.junit.jupiter.SpringParameterResolver=\
+org.springframework.boot.test.context.assertj.AssertableApplicationContextParameterResolver
+
 # Application Context Initializers
 org.springframework.context.ApplicationContextInitializer=\
 org.springframework.boot.test.context.filter.ExcludeFilterApplicationContextInitializer
