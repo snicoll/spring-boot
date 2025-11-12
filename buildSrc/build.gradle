@@ -140,6 +140,10 @@ gradlePlugin {
 			id = "org.springframework.boot.maven-plugin"
 			implementationClass = "org.springframework.boot.build.mavenplugin.MavenPluginPlugin"
 		}
+		manualConfigurationPropertiesPlugin {
+			id = "org.springframework.boot.manual-configuration-properties"
+			implementationClass = "org.springframework.boot.build.context.properties.ManualConfigurationPropertiesPlugin"
+		}
 		mavenRepositoryPlugin {
 			id = "org.springframework.boot.maven-repository"
 			implementationClass = "org.springframework.boot.build.MavenRepositoryPlugin"
