@@ -113,7 +113,6 @@ import org.springframework.orm.jpa.persistenceunit.DefaultPersistenceUnitManager
 import org.springframework.orm.jpa.persistenceunit.ManagedClassNameFilter;
 import org.springframework.orm.jpa.persistenceunit.PersistenceManagedTypes;
 import org.springframework.orm.jpa.persistenceunit.PersistenceUnitManager;
-import org.springframework.orm.jpa.persistenceunit.PersistenceUnitPostProcessor;
 import org.springframework.orm.jpa.support.OpenEntityManagerInViewFilter;
 import org.springframework.orm.jpa.support.OpenEntityManagerInViewInterceptor;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
@@ -352,7 +351,7 @@ class HibernateJpaAutoConfigurationTests {
 	}
 
 	@Test
-	void shouldProcessAllPersistenceUnitPostProcessorsDeclaredAsBeans() {
+	void customPersistenceUnitProcessorsAddedByServeralContributors() {
 		this.contextRunner.withUserConfiguration(TestConfigurationWithMultipleCustomPersistenceUnitPostProcessors.class)
 			.run((context) -> {
 				LocalContainerEntityManagerFactoryBean entityManagerFactoryBean = context
@@ -360,7 +359,7 @@ class HibernateJpaAutoConfigurationTests {
 				PersistenceUnitInfo persistenceUnitInfo = entityManagerFactoryBean.getPersistenceUnitInfo();
 				assertThat(persistenceUnitInfo).isNotNull();
 				assertThat(persistenceUnitInfo.getManagedClassNames()).contains(
-						"customized.attribute.converter.class.name", "customized.attribute.converter.class.othername");
+						"customized.attribute.converter.class.name", "customized.attribute.converter.class.anotherName");
 			});
 	}
 
@@ -1174,9 +1173,9 @@ class HibernateJpaAutoConfigurationTests {
 		}
 
 		@Bean
-		EntityManagerFactoryBuilderCustomizer otherEntityManagerFactoryBuilderCustomizer() {
+		EntityManagerFactoryBuilderCustomizer anotherEntityManagerFactoryBuilderCustomizer() {
 			return (builder) -> builder.addPersistenceUnitPostProcessors(
-					(pui) -> pui.addManagedClassName("customized.attribute.converter.class.othername"));
+					(pui) -> pui.addManagedClassName("customized.attribute.converter.class.anotherName"));
 		}
 
 	}
