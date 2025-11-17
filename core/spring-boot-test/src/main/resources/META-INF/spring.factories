@@ -9,7 +9,8 @@ org.springframework.boot.test.json.DuplicateJsonObjectContextCustomizerFactory
 
 # Parameter resolution
 org.springframework.test.context.junit.jupiter.SpringParameterResolver=\
-org.springframework.boot.test.context.assertj.AssertableApplicationContextParameterResolver
+org.springframework.boot.test.context.assertj.AssertableApplicationContextParameterResolver,\
+org.springframework.boot.test.http.server.LocalTestWebServerParameterResolver
 
 # Application Context Initializers
 org.springframework.context.ApplicationContextInitializer=\
