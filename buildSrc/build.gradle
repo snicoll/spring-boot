@@ -23,6 +23,11 @@ plugins {
 }
 
 repositories {
+	mavenLocal {
+		content {
+			includeGroup 'org.springframework'
+		}
+	}
 	mavenCentral()
 	gradlePluginPortal()
 }

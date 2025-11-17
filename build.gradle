@@ -30,6 +30,11 @@ subprojects {
 	apply plugin: "org.springframework.boot.conventions"
 
 	repositories {
+		mavenLocal {
+			content {
+				includeGroup 'org.springframework'
+			}
+		}
 		mavenCentral()
 		maven {
 			name = "Shibboleth Releases"
