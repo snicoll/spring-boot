@@ -16,26 +16,29 @@
 
 package smoketest.log4j2;
 
-import jakarta.annotation.PostConstruct;
+import java.util.stream.IntStream;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
 
 @SpringBootApplication
+@EnableScheduling
 public class SampleLog4j2Application {
 
 	private static final Logger logger = LoggerFactory.getLogger(SampleLog4j2Application.class);
 
-	@PostConstruct
+	@Scheduled(fixedRate = 1000)
 	public void logSomething() {
-		logger.debug("Sample Debug Message");
-		logger.trace("Sample Trace Message");
+		IntStream.range(0, 100).forEach(i -> logger.debug("Sample Debug Message %s".formatted(i)));
 	}
 
 	public static void main(String[] args) {
-		SpringApplication.run(SampleLog4j2Application.class, args).close();
+		SpringApplication.run(SampleLog4j2Application.class, args);
 	}
 
 }

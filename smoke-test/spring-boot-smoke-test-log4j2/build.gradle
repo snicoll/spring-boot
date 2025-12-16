@@ -27,7 +27,7 @@ dependencies {
 		}
 	}
 
-	implementation(project(":starter:spring-boot-starter"))
+	implementation(project(":starter:spring-boot-starter-webmvc"))
 	implementation(project(":starter:spring-boot-starter-log4j2"))
 
 	testImplementation(project(":starter:spring-boot-starter-test"))
