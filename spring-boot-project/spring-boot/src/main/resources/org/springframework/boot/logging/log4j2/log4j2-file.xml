@@ -21,7 +21,7 @@
 				<ThresholdFilter level="${sys:CONSOLE_LOG_THRESHOLD:-TRACE}"/>
 			</Filters>
 		</Console>
-		<RollingFile name="File" fileName="${sys:LOG_FILE}" filePattern="${sys:LOG_PATH}/$${date:yyyy-MM}/app-%d{yyyy-MM-dd-HH}-%i.log.gz">
+		<RollingFile name="File" fileName="${sys:LOG_FILE}" filePattern="${sys:LOG_FILE}.%d{yyyy-MM-dd}.%i.gz">
 			<Select>
 				<SystemPropertyArbiter propertyName="FILE_LOG_STRUCTURED_FORMAT">
 					<StructuredLogLayout format="${sys:FILE_LOG_STRUCTURED_FORMAT}" charset="${sys:FILE_LOG_CHARSET}"/>
@@ -34,7 +34,7 @@
 				<ThresholdFilter level="${sys:FILE_LOG_THRESHOLD:-TRACE}"/>
 			</Filters>
 			<Policies>
-				<SizeBasedTriggeringPolicy size="10 MB"/>
+				<SizeBasedTriggeringPolicy size="100 KB"/>
 			</Policies>
 		</RollingFile>
 	</Appenders>
