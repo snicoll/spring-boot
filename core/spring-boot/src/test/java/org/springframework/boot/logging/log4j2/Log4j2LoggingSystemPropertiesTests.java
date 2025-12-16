@@ -89,28 +89,6 @@ class Log4j2LoggingSystemPropertiesTests {
 	}
 
 	@Test
-	void appliesDeprecatedProperties() {
-		this.environment.setProperty("logging.file.max-size", "20MB");
-		this.environment.setProperty("logging.file.max-history", "15");
-		new Log4j2LoggingSystemProperties(this.environment).apply(null);
-		assertThat(System.getProperties())
-			.containsEntry("LOG4J2_ROLLINGPOLICY_MAX_FILE_SIZE", String.valueOf(DataSize.ofMegabytes(20).toBytes()))
-			.containsEntry("LOG4J2_ROLLINGPOLICY_MAX_HISTORY", "15");
-	}
-
-	@Test
-	void newPropertiesOverrideDeprecatedProperties() {
-		this.environment.setProperty("logging.log4j2.rollingpolicy.max-file-size", "100MB");
-		this.environment.setProperty("logging.file.max-size", "20MB");
-		this.environment.setProperty("logging.log4j2.rollingpolicy.max-history", "50");
-		this.environment.setProperty("logging.file.max-history", "15");
-		new Log4j2LoggingSystemProperties(this.environment).apply(null);
-		assertThat(System.getProperties())
-			.containsEntry("LOG4J2_ROLLINGPOLICY_MAX_FILE_SIZE", String.valueOf(DataSize.ofMegabytes(100).toBytes()))
-			.containsEntry("LOG4J2_ROLLINGPOLICY_MAX_HISTORY", "50");
-	}
-
-	@Test
 	void appliesWithLogFile() {
 		this.environment.setProperty("logging.log4j2.rollingpolicy.max-file-size", "25MB");
 		LogFile logFile = LogFile.get(this.environment);

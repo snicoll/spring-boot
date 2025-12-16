@@ -76,6 +76,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.mock.env.MockEnvironment;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
+import org.springframework.util.unit.DataSize;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
@@ -110,6 +111,9 @@ class Log4J2LoggingSystemTests extends AbstractLoggingSystemTests {
 
 	@BeforeEach
 	void setup(TestInfo testInfo) {
+		for (RollingPolicySystemProperty property : RollingPolicySystemProperty.values()) {
+			System.getProperties().remove(property.getEnvironmentVariableName());
+		}
 		PluginRegistry.getInstance().clear();
 		this.loggingSystem = new TestLog4J2LoggingSystem(testInfo.getDisplayName());
 		this.environment = new MockEnvironment();
@@ -138,7 +142,7 @@ class Log4J2LoggingSystemTests extends AbstractLoggingSystemTests {
 	}
 
 	private void clearRollingPolicySystemProperties() {
-		for (Log4j2RollingPolicySystemProperty property : Log4j2RollingPolicySystemProperty.values()) {
+		for (RollingPolicySystemProperty property : RollingPolicySystemProperty.values()) {
 			System.clearProperty(property.getEnvironmentVariableName());
 		}
 	}
@@ -785,6 +789,7 @@ class Log4J2LoggingSystemTests extends AbstractLoggingSystemTests {
 				"${LOG_FILE}.%d{yyyy-MM-dd}.%i.log");
 		File file = new File(tmpDir(), "log4j2-test.log");
 		LogFile logFile = getLogFile(file.getPath(), null);
+		this.loggingSystem.getSystemProperties(this.environment).apply(logFile);
 		this.loggingSystem.beforeInitialize();
 		this.loggingSystem.initialize(this.initializationContext, null, logFile);
 		String maxFileSize = System.getProperty("LOG4J2_ROLLINGPOLICY_MAX_FILE_SIZE");
@@ -796,17 +801,13 @@ class Log4J2LoggingSystemTests extends AbstractLoggingSystemTests {
 	}
 
 	@Test
-	void rollingPolicyDeprecatedPropertiesAreApplied() {
-		this.environment.setProperty("logging.file.max-size", "20MB");
-		this.environment.setProperty("logging.file.max-history", "15");
-		File file = new File(tmpDir(), "log4j2-test.log");
-		LogFile logFile = getLogFile(file.getPath(), null);
-		this.loggingSystem.beforeInitialize();
-		this.loggingSystem.initialize(this.initializationContext, null, logFile);
-		String maxFileSize = System.getProperty("LOG4J2_ROLLINGPOLICY_MAX_FILE_SIZE");
-		String maxHistory = System.getProperty("LOG4J2_ROLLINGPOLICY_MAX_HISTORY");
-		assertThat(maxFileSize).isEqualTo(String.valueOf(20 * 1024 * 1024));
-		assertThat(maxHistory).isEqualTo("15");
+	void rollingPolicySizeStrategyIsApplied() {
+		this.environment.setProperty("logging.log4j2.rollingpolicy.strategy", "size");
+		this.environment.setProperty("logging.log4j2.rollingpolicy.max-file-size", "50MB");
+		TriggeringPolicy policy = getTriggeringPolicy();
+		SizeBasedTriggeringPolicy sizePolicy = findPolicy(policy, SizeBasedTriggeringPolicy.class);
+		assertThat(sizePolicy).isNotNull();
+		assertThat(sizePolicy.getMaxFileSize()).isEqualTo(DataSize.ofMegabytes(50).toBytes());
 	}
 
 	@Test
@@ -842,6 +843,7 @@ class Log4J2LoggingSystemTests extends AbstractLoggingSystemTests {
 	private TriggeringPolicy getTriggeringPolicy() {
 		File file = new File(tmpDir(), "target-file.log");
 		LogFile logFile = getLogFile(file.getPath(), null);
+		this.loggingSystem.getSystemProperties(this.environment).apply(logFile);
 		this.loggingSystem.beforeInitialize();
 		this.loggingSystem.initialize(this.initializationContext,
 				"classpath:org/springframework/boot/logging/log4j2/log4j2-file.xml", logFile);

@@ -168,8 +168,8 @@
     },
     {
       "name": "logging.log4j2.rollingpolicy.strategy",
-      "type": "java.lang.String",
-      "description": "Rolling policy strategy. Supported values are 'size', 'time', 'size-and-time', and 'cron'.",
+      "type": "org.springframework.boot.logging.log4j2.RollingPolicyStrategy",
+      "description": "Rolling policy strategy.",
       "sourceType": "org.springframework.boot.context.logging.LoggingApplicationListener",
       "defaultValue": "size"
     },
