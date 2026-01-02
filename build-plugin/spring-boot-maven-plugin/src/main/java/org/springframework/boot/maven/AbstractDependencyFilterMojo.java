@@ -47,21 +47,11 @@ import org.jspecify.annotations.Nullable;
  */
 public abstract class AbstractDependencyFilterMojo extends AbstractMojo {
 
-	static final ExcludeFilter DEVTOOLS_EXCLUDE_FILTER;
-	static {
-		Exclude exclude = new Exclude();
-		exclude.setGroupId("org.springframework.boot");
-		exclude.setArtifactId("spring-boot-devtools");
-		DEVTOOLS_EXCLUDE_FILTER = new ExcludeFilter(exclude);
-	}
+	static final ExcludeFilter DEVTOOLS_EXCLUDE_FILTER = ExcludeFilter
+		.of(Exclude.of("org.springframework.boot", "spring-boot-devtools"));
 
-	static final ExcludeFilter DOCKER_COMPOSE_EXCLUDE_FILTER;
-	static {
-		Exclude exclude = new Exclude();
-		exclude.setGroupId("org.springframework.boot");
-		exclude.setArtifactId("spring-boot-docker-compose");
-		DOCKER_COMPOSE_EXCLUDE_FILTER = new ExcludeFilter(exclude);
-	}
+	static final ExcludeFilter DOCKER_COMPOSE_EXCLUDE_FILTER = ExcludeFilter
+		.of(Exclude.of("org.springframework.boot", "spring-boot-docker-compose"));
 
 	/**
 	 * The Maven project.
@@ -70,6 +60,13 @@ public abstract class AbstractDependencyFilterMojo extends AbstractMojo {
 	@Parameter(defaultValue = "${project}", readonly = true, required = true)
 	@SuppressWarnings("NullAway.Init")
 	protected MavenProject project;
+
+	/**
+	 * Additional {@link ArtifactsFilter} to apply for more flexibility.
+	 * @since 4.1.0
+	 */
+	@Parameter
+	private @Nullable List<ArtifactsFilter> artifactsFilters;
 
 	/**
 	 * Collection of artifact definitions to include. The {@link Include} element defines
@@ -99,6 +96,10 @@ public abstract class AbstractDependencyFilterMojo extends AbstractMojo {
 	 */
 	@Parameter(property = "spring-boot.excludeGroupIds", defaultValue = "")
 	private @Nullable String excludeGroupIds;
+
+	protected void setArtifactsFilters(@Nullable List<ArtifactsFilter> artifactsFilters) {
+		this.artifactsFilters = artifactsFilters;
+	}
 
 	protected void setExcludes(@Nullable List<Exclude> excludes) {
 		this.excludes = excludes;
@@ -154,12 +155,19 @@ public abstract class AbstractDependencyFilterMojo extends AbstractMojo {
 		for (ArtifactsFilter additionalFilter : additionalFilters) {
 			filters.addFilter(additionalFilter);
 		}
+		if (this.artifactsFilters != null) {
+			this.artifactsFilters.forEach(filters::addFilter);
+		}
 		filters.addFilter(new MatchingGroupIdFilter(cleanFilterConfig(this.excludeGroupIds)));
 		if (this.includes != null && !this.includes.isEmpty()) {
-			filters.addFilter(new IncludeFilter(this.includes));
+			IncludeFilter filter = new IncludeFilter();
+			filter.setIncludes(this.includes);
+			filters.addFilter(filter);
 		}
 		if (this.excludes != null && !this.excludes.isEmpty()) {
-			filters.addFilter(new ExcludeFilter(this.excludes));
+			ExcludeFilter filter = new ExcludeFilter();
+			filter.setExcludes(this.excludes);
+			filters.addFilter(filter);
 		}
 		filters.addFilter(new JarTypeFilter());
 		return filters;

@@ -14,27 +14,11 @@
  * limitations under the License.
  */
 
-package org.springframework.boot.maven;
+package org.test;
 
-/**
- * A model for a dependency to exclude.
- *
- * @author Stephane Nicoll
- * @since 1.1.0
- */
-public class Exclude extends FilterableDependency {
+public class SampleApplication {
 
-	/**
-	 * Create an instance based on the given {@code groupId} and {@code artifactId}.
-	 * @param groupId the groupId of the artifact to exclude
-	 * @param artifactId the artifactId of hte artifact to exclude
-	 * @return a new instance
-	 */
-	public static Exclude of(String groupId, String artifactId) {
-		Exclude exclude = new Exclude();
-		exclude.setGroupId(groupId);
-		exclude.setArtifactId(artifactId);
-		return exclude;
+	public static void main(String[] args) {
 	}
 
 }

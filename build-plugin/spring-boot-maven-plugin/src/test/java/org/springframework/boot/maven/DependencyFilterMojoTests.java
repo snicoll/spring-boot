@@ -31,14 +31,18 @@ import java.util.jar.Manifest;
 
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.shared.artifact.filter.collection.ArtifactFilterException;
 import org.apache.maven.shared.artifact.filter.collection.ArtifactsFilter;
 import org.apache.maven.shared.artifact.filter.collection.ScopeFilter;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.mockito.InOrder;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 
 /**
@@ -51,6 +55,23 @@ class DependencyFilterMojoTests {
 	@TempDir
 	@SuppressWarnings("NullAway.Init")
 	static Path temp;
+
+	@Test
+	void filterDependenciesInvokesArtifactsFilterInOrder() throws MojoExecutionException, ArtifactFilterException {
+		ArtifactsFilter filterOne = mock(ArtifactsFilter.class);
+		given(filterOne.filter(any())).willAnswer((invocation) -> invocation.getArguments()[0]);
+		ArtifactsFilter filterTwo = mock(ArtifactsFilter.class);
+		given(filterTwo.filter(any())).willAnswer((invocation) -> invocation.getArguments()[0]);
+		TestableDependencyFilterMojo mojo = new TestableDependencyFilterMojo(Collections.emptyList(), "", filterOne,
+				filterTwo);
+		Artifact one = createArtifact("com.bar", "one");
+		Artifact two = createArtifact("com.foo", "two");
+		Set<Artifact> artifacts = mojo.filterDependencies(one, two);
+		assertThat(artifacts).containsOnly(one, two);
+		InOrder ordered = inOrder(filterOne, filterTwo);
+		ordered.verify(filterOne).filter(any());
+		ordered.verify(filterTwo).filter(any());
+	}
 
 	@Test
 	void filterDependencies() throws MojoExecutionException {
@@ -157,18 +178,16 @@ class DependencyFilterMojoTests {
 
 	private static final class TestableDependencyFilterMojo extends AbstractDependencyFilterMojo {
 
-		private final ArtifactsFilter[] additionalFilters;
-
 		private TestableDependencyFilterMojo(List<Exclude> excludes, String excludeGroupIds,
 				ArtifactsFilter... additionalFilters) {
+			setArtifactsFilters(Arrays.asList(additionalFilters));
 			setExcludes(excludes);
 			setExcludeGroupIds(excludeGroupIds);
-			this.additionalFilters = additionalFilters;
 		}
 
 		Set<Artifact> filterDependencies(Artifact... artifacts) throws MojoExecutionException {
 			Set<Artifact> input = new LinkedHashSet<>(Arrays.asList(artifacts));
-			return filterDependencies(input, this.additionalFilters);
+			return filterDependencies(input);
 		}
 
 		@Override

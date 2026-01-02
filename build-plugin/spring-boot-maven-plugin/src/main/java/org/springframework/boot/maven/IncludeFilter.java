@@ -16,6 +16,7 @@
 
 package org.springframework.boot.maven;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.maven.artifact.Artifact;
@@ -30,13 +31,25 @@ import org.apache.maven.shared.artifact.filter.collection.ArtifactsFilter;
  */
 public class IncludeFilter extends DependencyFilter {
 
-	public IncludeFilter(List<Include> includes) {
-		super(includes);
+	private List<Include> includes = new ArrayList<>();
+
+	public static IncludeFilter of(Include... includes) {
+		IncludeFilter filter = new IncludeFilter();
+		filter.setIncludes(List.of(includes));
+		return filter;
+	}
+
+	public List<Include> getIncludes() {
+		return this.includes;
+	}
+
+	public void setIncludes(List<Include> includes) {
+		this.includes = includes;
 	}
 
 	@Override
 	protected boolean filter(Artifact artifact) {
-		for (FilterableDependency dependency : getFilters()) {
+		for (FilterableDependency dependency : this.includes) {
 			if (equals(artifact, dependency)) {
 				return false;
 			}

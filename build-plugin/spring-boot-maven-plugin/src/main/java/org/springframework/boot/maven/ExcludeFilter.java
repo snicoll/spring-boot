@@ -16,13 +16,14 @@
 
 package org.springframework.boot.maven;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.maven.artifact.Artifact;
 
 /**
- * An {DependencyFilter} that filters out any artifact matching an {@link Exclude}.
+ * A {DependencyFilter} implementation that filters out any artifact matching an
+ * {@link Exclude}.
  *
  * @author Stephane Nicoll
  * @author David Turanski
@@ -30,17 +31,25 @@ import org.apache.maven.artifact.Artifact;
  */
 public class ExcludeFilter extends DependencyFilter {
 
-	public ExcludeFilter(Exclude... excludes) {
-		this(Arrays.asList(excludes));
+	private List<Exclude> excludes = new ArrayList<>();
+
+	public static ExcludeFilter of(Exclude... excludes) {
+		ExcludeFilter filter = new ExcludeFilter();
+		filter.setExcludes(List.of(excludes));
+		return filter;
 	}
 
-	public ExcludeFilter(List<Exclude> excludes) {
-		super(excludes);
+	public List<Exclude> getExcludes() {
+		return this.excludes;
+	}
+
+	public void setExcludes(List<Exclude> excludes) {
+		this.excludes = excludes;
 	}
 
 	@Override
 	protected boolean filter(Artifact artifact) {
-		for (FilterableDependency dependency : getFilters()) {
+		for (FilterableDependency dependency : this.excludes) {
 			if (equals(artifact, dependency)) {
 				return true;
 			}

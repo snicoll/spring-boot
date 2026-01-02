@@ -160,6 +160,18 @@ class JarIntegrationTests extends AbstractArchiveIntegrationTests {
 	}
 
 	@TestTemplate
+	void whenAnEntryIsExcludedByAFilterItDoesNotAppearInTheRepackagedJar(MavenBuild mavenBuild) {
+		mavenBuild.project("jar-exclude-artifacts-filter").goals("install").execute((project) -> {
+			File repackaged = new File(project, "target/jar-exclude-artifacts-filter-0.0.1.BUILD-SNAPSHOT.jar");
+			assertThat(jar(repackaged)).hasEntryWithNameStartingWith("BOOT-INF/classes/")
+				.hasEntryWithNameStartingWith("BOOT-INF/lib/spring-context")
+				.hasEntryWithNameStartingWith("BOOT-INF/lib/spring-core")
+				.hasEntryWithNameStartingWith("BOOT-INF/lib/commons-logging")
+				.doesNotHaveEntryWithNameStartingWith("BOOT-INF/lib/servlet-api-");
+		});
+	}
+
+	@TestTemplate
 	void whenAnEntryIsExcludedItDoesNotAppearInTheRepackagedJar(MavenBuild mavenBuild) {
 		mavenBuild.project("jar-exclude-entry").goals("install").execute((project) -> {
 			File repackaged = new File(project, "target/jar-exclude-entry-0.0.1.BUILD-SNAPSHOT.jar");

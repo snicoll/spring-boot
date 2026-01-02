@@ -37,10 +37,6 @@ class JarTypeFilter extends DependencyFilter {
 	private static final Set<String> EXCLUDED_JAR_TYPES = Collections.unmodifiableSet(
 			new HashSet<>(Arrays.asList("annotation-processor", "dependencies-starter", "development-tool")));
 
-	JarTypeFilter() {
-		super(Collections.emptyList());
-	}
-
 	@Override
 	protected boolean filter(Artifact artifact) {
 		try (JarFile jarFile = new JarFile(artifact.getFile())) {

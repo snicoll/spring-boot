@@ -16,7 +16,6 @@
 
 package org.springframework.boot.maven;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -35,69 +34,68 @@ import static org.mockito.Mockito.mock;
  *
  * @author David Turanski
  */
-@SuppressWarnings({ "rawtypes", "unchecked" })
 class IncludeFilterTests {
 
 	@Test
 	void includeSimple() throws ArtifactFilterException {
-		IncludeFilter filter = new IncludeFilter(Arrays.asList(createInclude("com.foo", "bar")));
+		IncludeFilter filter = IncludeFilter.of(createInclude("com.foo", "bar"));
 		Artifact artifact = createArtifact("com.foo", "bar");
-		Set result = filter.filter(Collections.singleton(artifact));
+		Set<Artifact> result = filter.filter(Collections.singleton(artifact));
 		assertThat(result).hasSize(1);
 		assertThat(result.iterator().next()).isSameAs(artifact);
 	}
 
 	@Test
 	void includeGroupIdNoMatch() throws ArtifactFilterException {
-		IncludeFilter filter = new IncludeFilter(Arrays.asList(createInclude("com.foo", "bar")));
+		IncludeFilter filter = IncludeFilter.of(createInclude("com.foo", "bar"));
 		Artifact artifact = createArtifact("com.baz", "bar");
-		Set result = filter.filter(Collections.singleton(artifact));
+		Set<Artifact> result = filter.filter(Collections.singleton(artifact));
 		assertThat(result).isEmpty();
 	}
 
 	@Test
 	void includeArtifactIdNoMatch() throws ArtifactFilterException {
-		IncludeFilter filter = new IncludeFilter(Arrays.asList(createInclude("com.foo", "bar")));
+		IncludeFilter filter = IncludeFilter.of(createInclude("com.foo", "bar"));
 		Artifact artifact = createArtifact("com.foo", "biz");
-		Set result = filter.filter(Collections.singleton(artifact));
+		Set<Artifact> result = filter.filter(Collections.singleton(artifact));
 		assertThat(result).isEmpty();
 	}
 
 	@Test
 	void includeClassifier() throws ArtifactFilterException {
-		IncludeFilter filter = new IncludeFilter(Arrays.asList(createInclude("com.foo", "bar", "jdk5")));
+		IncludeFilter filter = IncludeFilter.of(createInclude("com.foo", "bar", "jdk5"));
 		Artifact artifact = createArtifact("com.foo", "bar", "jdk5");
-		Set result = filter.filter(Collections.singleton(artifact));
+		Set<Artifact> result = filter.filter(Collections.singleton(artifact));
 		assertThat(result).hasSize(1);
 		assertThat(result.iterator().next()).isSameAs(artifact);
 	}
 
 	@Test
 	void includeClassifierNoTargetClassifier() throws ArtifactFilterException {
-		IncludeFilter filter = new IncludeFilter(Arrays.asList(createInclude("com.foo", "bar", "jdk5")));
+		IncludeFilter filter = IncludeFilter.of(createInclude("com.foo", "bar", "jdk5"));
 		Artifact artifact = createArtifact("com.foo", "bar");
-		Set result = filter.filter(Collections.singleton(artifact));
+		Set<Artifact> result = filter.filter(Collections.singleton(artifact));
 		assertThat(result).isEmpty();
 	}
 
 	@Test
 	void includeClassifierNoMatch() throws ArtifactFilterException {
-		IncludeFilter filter = new IncludeFilter(Arrays.asList(createInclude("com.foo", "bar", "jdk5")));
+		IncludeFilter filter = IncludeFilter.of(createInclude("com.foo", "bar", "jdk5"));
 		Artifact artifact = createArtifact("com.foo", "bar", "jdk6");
-		Set result = filter.filter(Collections.singleton(artifact));
+		Set<Artifact> result = filter.filter(Collections.singleton(artifact));
 		assertThat(result).isEmpty();
 	}
 
 	@Test
 	void includeMulti() throws ArtifactFilterException {
-		IncludeFilter filter = new IncludeFilter(Arrays.asList(createInclude("com.foo", "bar"),
-				createInclude("com.foo", "bar2"), createInclude("org.acme", "app")));
+		IncludeFilter filter = IncludeFilter.of(createInclude("com.foo", "bar"), createInclude("com.foo", "bar2"),
+				createInclude("org.acme", "app"));
 		Set<Artifact> artifacts = new HashSet<>();
 		artifacts.add(createArtifact("com.foo", "bar"));
 		artifacts.add(createArtifact("com.foo", "bar"));
 		Artifact anotherAcme = createArtifact("org.acme", "another-app");
 		artifacts.add(anotherAcme);
-		Set result = filter.filter(artifacts);
+		Set<Artifact> result = filter.filter(artifacts);
 		assertThat(result).hasSize(2);
 	}
 

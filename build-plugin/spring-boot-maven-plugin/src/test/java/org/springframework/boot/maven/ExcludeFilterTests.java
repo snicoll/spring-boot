@@ -16,7 +16,6 @@
 
 package org.springframework.boot.maven;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -36,69 +35,68 @@ import static org.mockito.Mockito.mock;
  * @author Stephane Nicoll
  * @author David Turanski
  */
-@SuppressWarnings({ "rawtypes", "unchecked" })
 class ExcludeFilterTests {
 
 	@Test
 	void excludeSimple() throws ArtifactFilterException {
-		ExcludeFilter filter = new ExcludeFilter(Arrays.asList(createExclude("com.foo", "bar")));
-		Set result = filter.filter(Collections.singleton(createArtifact("com.foo", "bar")));
+		ExcludeFilter filter = ExcludeFilter.of(createExclude("com.foo", "bar"));
+		Set<Artifact> result = filter.filter(Collections.singleton(createArtifact("com.foo", "bar")));
 		assertThat(result).isEmpty();
 	}
 
 	@Test
 	void excludeGroupIdNoMatch() throws ArtifactFilterException {
-		ExcludeFilter filter = new ExcludeFilter(Arrays.asList(createExclude("com.foo", "bar")));
+		ExcludeFilter filter = ExcludeFilter.of(createExclude("com.foo", "bar"));
 		Artifact artifact = createArtifact("com.baz", "bar");
-		Set result = filter.filter(Collections.singleton(artifact));
+		Set<Artifact> result = filter.filter(Collections.singleton(artifact));
 		assertThat(result).hasSize(1);
 		assertThat(result.iterator().next()).isSameAs(artifact);
 	}
 
 	@Test
 	void excludeArtifactIdNoMatch() throws ArtifactFilterException {
-		ExcludeFilter filter = new ExcludeFilter(Arrays.asList(createExclude("com.foo", "bar")));
+		ExcludeFilter filter = ExcludeFilter.of(createExclude("com.foo", "bar"));
 		Artifact artifact = createArtifact("com.foo", "biz");
-		Set result = filter.filter(Collections.singleton(artifact));
+		Set<Artifact> result = filter.filter(Collections.singleton(artifact));
 		assertThat(result).hasSize(1);
 		assertThat(result.iterator().next()).isSameAs(artifact);
 	}
 
 	@Test
 	void excludeClassifier() throws ArtifactFilterException {
-		ExcludeFilter filter = new ExcludeFilter(Arrays.asList(createExclude("com.foo", "bar", "jdk5")));
-		Set result = filter.filter(Collections.singleton(createArtifact("com.foo", "bar", "jdk5")));
+		ExcludeFilter filter = ExcludeFilter.of(createExclude("com.foo", "bar", "jdk5"));
+		Set<Artifact> result = filter.filter(Collections.singleton(createArtifact("com.foo", "bar", "jdk5")));
 		assertThat(result).isEmpty();
 	}
 
 	@Test
 	void excludeClassifierNoTargetClassifier() throws ArtifactFilterException {
-		ExcludeFilter filter = new ExcludeFilter(Arrays.asList(createExclude("com.foo", "bar", "jdk5")));
+		ExcludeFilter filter = ExcludeFilter.of(createExclude("com.foo", "bar", "jdk5"));
 		Artifact artifact = createArtifact("com.foo", "bar");
-		Set result = filter.filter(Collections.singleton(artifact));
+		Set<Artifact> result = filter.filter(Collections.singleton(artifact));
 		assertThat(result).hasSize(1);
 		assertThat(result.iterator().next()).isSameAs(artifact);
 	}
 
 	@Test
 	void excludeClassifierNoMatch() throws ArtifactFilterException {
-		ExcludeFilter filter = new ExcludeFilter(Arrays.asList(createExclude("com.foo", "bar", "jdk5")));
+		ExcludeFilter filter = ExcludeFilter.of(createExclude("com.foo", "bar", "jdk5"));
 		Artifact artifact = createArtifact("com.foo", "bar", "jdk6");
-		Set result = filter.filter(Collections.singleton(artifact));
+		Set<Artifact> result = filter.filter(Collections.singleton(artifact));
 		assertThat(result).hasSize(1);
 		assertThat(result.iterator().next()).isSameAs(artifact);
 	}
 
 	@Test
 	void excludeMulti() throws ArtifactFilterException {
-		ExcludeFilter filter = new ExcludeFilter(Arrays.asList(createExclude("com.foo", "bar"),
-				createExclude("com.foo", "bar2"), createExclude("org.acme", "app")));
+		ExcludeFilter filter = ExcludeFilter.of(createExclude("com.foo", "bar"), createExclude("com.foo", "bar2"),
+				createExclude("org.acme", "app"));
 		Set<Artifact> artifacts = new HashSet<>();
 		artifacts.add(createArtifact("com.foo", "bar"));
 		artifacts.add(createArtifact("com.foo", "bar"));
 		Artifact anotherAcme = createArtifact("org.acme", "another-app");
 		artifacts.add(anotherAcme);
-		Set result = filter.filter(artifacts);
+		Set<Artifact> result = filter.filter(artifacts);
 		assertThat(result).hasSize(1);
 		assertThat(result.iterator().next()).isSameAs(anotherAcme);
 	}
