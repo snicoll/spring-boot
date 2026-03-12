@@ -22,7 +22,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.transaction.annotation.Isolation;
 
 /**
- * Configuration properties for Spring Batch using MongoDB.
+ * Configuration properties for Spring Batch using Data MongoDB.
  *
  * @author Stephane Nicoll
  * @since 4.1.0
@@ -36,7 +36,7 @@ public class BatchDataMongoProperties {
 	private boolean validateTransactionState = true;
 
 	/**
-	 * Transaction isolation level to use when creating job meta-data for new jobs.
+	 * Transaction isolation level to use when creating job metadata for new jobs.
 	 */
 	private @Nullable Isolation isolationLevelForCreate;
 

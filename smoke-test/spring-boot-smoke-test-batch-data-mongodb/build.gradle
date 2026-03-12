@@ -18,7 +18,7 @@ plugins {
 	id "java"
 }
 
-description = "Spring Boot Batch with MongoDB smoke test"
+description = "Spring Boot Batch with Data MongoDB smoke test"
 
 dependencies {
 	implementation(project(":starter:spring-boot-starter-batch-data-mongodb"))

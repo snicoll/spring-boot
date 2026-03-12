@@ -52,7 +52,7 @@ import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.transaction.annotation.Isolation;
 
 /**
- * {@link EnableAutoConfiguration Auto-configuration} for Spring Batch using MongoDB.
+ * {@link EnableAutoConfiguration Auto-configuration} for Spring Batch using Data MongoDB.
  *
  * @author Stephane Nicoll
  * @since 4.1.0

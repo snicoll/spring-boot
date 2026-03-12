@@ -15,7 +15,7 @@
  */
 
 /**
- * Auto-configuration for Spring Batch with MongoDB.
+ * Auto-configuration for Spring Batch with Data MongoDB.
  */
 @NullMarked
 package org.springframework.boot.batch.mongodb.autoconfigure;

@@ -23,7 +23,7 @@ plugins {
 	id "org.springframework.boot.optional-dependencies"
 }
 
-description = "Spring Boot Batch MongoDB"
+description = "Spring Boot Batch Data MongoDB"
 
 dependencies {
 	api(project(":module:spring-boot-batch"))
