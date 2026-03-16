@@ -88,10 +88,10 @@ class BatchDataMongoAutoConfigurationIntegrationTests {
 		}
 
 		@Bean
-		Job job(JobRepository jobRepository) {
+		Job job(JobRepository jobRepository, MongoTransactionManager transactionManager) {
 			return new JobBuilder("job", jobRepository)
 				.start(new StepBuilder("step1", jobRepository)
-					.tasklet((contribution, chunkContext) -> RepeatStatus.FINISHED)
+					.tasklet((contribution, chunkContext) -> RepeatStatus.FINISHED, transactionManager)
 					.build())
 				.build();
 		}
