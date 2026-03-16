@@ -35,7 +35,6 @@ public class SampleBatchApplication {
 				.tasklet((contribution, chunkContext) -> RepeatStatus.FINISHED)
 				.build())
 			.build();
-
 	}
 
 	public static void main(String[] args) {
