@@ -40,7 +40,9 @@ dependencies {
 	optional(project(":module:spring-boot-health"))
 	optional(project(":module:spring-boot-micrometer-metrics"))
 	optional("io.micrometer:micrometer-core")
-	optional("org.springframework.amqp:spring-rabbit-stream")
+	optional("org.springframework.amqp:spring-rabbit-stream") {
+		exclude group: "org.lz4", module: "lz4-java"
+	}
 	optional("org.testcontainers:testcontainers-rabbitmq")
 
 	dockerTestImplementation(project(":test-support:spring-boot-docker-test-support"))
