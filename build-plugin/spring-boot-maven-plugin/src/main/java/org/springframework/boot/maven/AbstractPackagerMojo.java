@@ -18,6 +18,8 @@ package org.springframework.boot.maven;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -31,6 +33,7 @@ import org.apache.maven.artifact.Artifact;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.descriptor.PluginDescriptor;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
@@ -77,6 +80,14 @@ public abstract class AbstractPackagerMojo extends AbstractDependencyFilterMojo 
 	@Parameter(defaultValue = "${session}", readonly = true, required = true)
 	@SuppressWarnings("NullAway.Init")
 	protected MavenSession session;
+
+	/**
+	 * The plugin descriptor.
+	 * @since 4.1.0
+	 */
+	@Parameter(defaultValue = "${plugin}", readonly = true, required = true)
+	@SuppressWarnings("NullAway.Init")
+	private PluginDescriptor pluginDescriptor;
 
 	/**
 	 * Maven project helper utils.
@@ -174,8 +185,7 @@ public abstract class AbstractPackagerMojo extends AbstractDependencyFilterMojo 
 			packager.setLayout(layout.layout());
 		}
 		if (this.layers.isEnabled()) {
-			packager.setLayers((this.layers.getConfiguration() != null)
-					? getCustomLayers(this.layers.getConfiguration()) : IMPLICIT_LAYERS);
+			packager.setLayers(loadLayersConfiguration());
 		}
 		packager.setIncludeRelevantJarModeJars(getIncludeRelevantJarModeJars());
 		return packager;
@@ -185,23 +195,46 @@ public abstract class AbstractPackagerMojo extends AbstractDependencyFilterMojo 
 		return this.includeTools;
 	}
 
-	private CustomLayers getCustomLayers(File configuration) {
+	private org.springframework.boot.loader.tools.Layers loadLayersConfiguration() {
+		File configuration = this.layers.getConfiguration();
+		if (configuration != null) {
+			return getCustomLayers(() -> new FileInputStream(configuration));
+		}
+		String configurationName = this.layers.getConfigurationName();
+		if (configurationName != null) {
+			return getCustomLayers(() -> loadLayersConfigurationFromClasspath(configurationName));
+		}
+		return IMPLICIT_LAYERS;
+	}
+
+	private InputStream loadLayersConfigurationFromClasspath(String name) {
+		String location = "META-INF/spring/layers/%s.xml".formatted(name);
+		InputStream in = this.pluginDescriptor.getClassRealm().getResourceAsStream(location);
+		if (in == null) {
+			throw new IllegalStateException(
+					"Failed to load layers configuration with name '%s': '%s' not found".formatted(name, location));
+		}
+		return in;
+	}
+
+	private CustomLayers getCustomLayers(InputStreamSource source) {
 		try {
-			Document document = getDocumentIfAvailable(configuration);
+			Document document = getDocumentIfAvailable(source);
 			return new CustomLayersProvider().getLayers(document);
 		}
 		catch (Exception ex) {
-			throw new IllegalStateException(
-					"Failed to process custom layers configuration " + configuration.getAbsolutePath(), ex);
+			throw new IllegalStateException("Failed to process custom layers configuration", ex);
 		}
 	}
 
-	private Document getDocumentIfAvailable(File xmlFile) throws Exception {
-		InputSource inputSource = new InputSource(new FileInputStream(xmlFile));
-		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-		factory.setNamespaceAware(true);
-		DocumentBuilder builder = factory.newDocumentBuilder();
-		return builder.parse(inputSource);
+	private Document getDocumentIfAvailable(InputStreamSource source) throws Exception {
+		try (InputStream in = source.getInputStream()) {
+			InputSource inputSource = new InputSource(in);
+			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+			factory.setNamespaceAware(true);
+			DocumentBuilder builder = factory.newDocumentBuilder();
+			return builder.parse(inputSource);
+		}
 	}
 
 	/**
@@ -308,6 +341,13 @@ public abstract class AbstractPackagerMojo extends AbstractDependencyFilterMojo 
 		public Layout layout() {
 			return this.layout;
 		}
+
+	}
+
+	@FunctionalInterface
+	private interface InputStreamSource {
+
+		InputStream getInputStream() throws IOException;
 
 	}
 
