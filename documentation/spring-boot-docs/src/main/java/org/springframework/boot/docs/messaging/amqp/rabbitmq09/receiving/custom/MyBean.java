@@ -14,17 +14,15 @@
  * limitations under the License.
  */
 
-package org.springframework.boot.docs.messaging.amqp.rabbitmq.receiving;
+package org.springframework.boot.docs.messaging.amqp.rabbitmq09.receiving.custom;
 
-import org.springframework.amqp.rabbit.annotation.RabbitHandler;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 
 @Component
-@RabbitListener(queues = "someQueue")
 public class MyBean {
 
-	@RabbitHandler
+	@RabbitListener(queues = "someQueue", containerFactory = "myFactory")
 	public void processMessage(String content) {
 		// ...
 	}

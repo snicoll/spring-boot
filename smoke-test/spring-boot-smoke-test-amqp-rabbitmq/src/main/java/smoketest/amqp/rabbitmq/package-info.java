@@ -14,19 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.boot.docs.messaging.amqp.rabbitmq.receiving;
+@NullMarked
+package smoketest.amqp.rabbitmq;
 
-import org.springframework.amqp.rabbit.annotation.RabbitHandler;
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
-import org.springframework.stereotype.Component;
-
-@Component
-@RabbitListener(queues = "someQueue")
-public class MyBean {
-
-	@RabbitHandler
-	public void processMessage(String content) {
-		// ...
-	}
-
-}
+import org.jspecify.annotations.NullMarked;

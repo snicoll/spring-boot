@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-package org.springframework.boot.docs.messaging.amqp.rabbitmq.receiving;
+package org.springframework.boot.docs.messaging.amqp.rabbitmq09.receiving.custom
 
-import org.springframework.amqp.rabbit.annotation.RabbitHandler;
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
-import org.springframework.stereotype.Component;
+import org.springframework.amqp.rabbit.annotation.RabbitListener
+import org.springframework.stereotype.Component
 
+@Suppress("UNUSED_PARAMETER")
 @Component
-@RabbitListener(queues = "someQueue")
-public class MyBean {
+class MyBean {
 
-	@RabbitHandler
-	public void processMessage(String content) {
+	@RabbitListener(queues = ["someQueue"], containerFactory = "myFactory")
+	fun processMessage(content: String?) {
 		// ...
 	}
 
 }
+

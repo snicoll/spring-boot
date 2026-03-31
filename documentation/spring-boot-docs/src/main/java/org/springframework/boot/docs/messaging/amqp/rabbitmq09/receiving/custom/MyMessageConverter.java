@@ -14,18 +14,23 @@
  * limitations under the License.
  */
 
-package org.springframework.boot.docs.messaging.amqp.rabbitmq.receiving.custom
+package org.springframework.boot.docs.messaging.amqp.rabbitmq09.receiving.custom;
 
-import org.springframework.amqp.rabbit.annotation.RabbitListener
-import org.springframework.stereotype.Component
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.core.MessageProperties;
+import org.springframework.amqp.support.converter.MessageConversionException;
+import org.springframework.amqp.support.converter.MessageConverter;
 
-@Suppress("UNUSED_PARAMETER")
-@Component
-class MyBean {
+class MyMessageConverter implements MessageConverter {
 
-	@RabbitListener(queues = ["someQueue"], containerFactory = "myFactory")
-	fun processMessage(content: String?) {
-		// ...
+	@Override
+	public Message toMessage(Object object, MessageProperties messageProperties) throws MessageConversionException {
+		return null;
+	}
+
+	@Override
+	public Object fromMessage(Message message) throws MessageConversionException {
+		return null;
 	}
 
 }

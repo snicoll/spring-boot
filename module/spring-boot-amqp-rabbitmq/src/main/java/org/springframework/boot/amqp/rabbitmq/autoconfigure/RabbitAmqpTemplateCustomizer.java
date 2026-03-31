@@ -14,19 +14,23 @@
  * limitations under the License.
  */
 
-package org.springframework.boot.docs.messaging.amqp.rabbitmq.receiving;
+package org.springframework.boot.amqp.rabbitmq.autoconfigure;
 
-import org.springframework.amqp.rabbit.annotation.RabbitHandler;
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
-import org.springframework.stereotype.Component;
+import org.springframework.amqp.rabbitmq.client.RabbitAmqpTemplate;
 
-@Component
-@RabbitListener(queues = "someQueue")
-public class MyBean {
+/**
+ * Callback interface that can be used to customize a {@link RabbitAmqpTemplate}.
+ *
+ * @author Eddú Meléndez
+ * @since 4.2.0
+ */
+@FunctionalInterface
+public interface RabbitAmqpTemplateCustomizer {
 
-	@RabbitHandler
-	public void processMessage(String content) {
-		// ...
-	}
+	/**
+	 * Callback to customize a {@link RabbitAmqpTemplate} instance.
+	 * @param rabbitAmqpTemplate the rabbitAmqpTemplate to customize
+	 */
+	void customize(RabbitAmqpTemplate rabbitAmqpTemplate);
 
 }

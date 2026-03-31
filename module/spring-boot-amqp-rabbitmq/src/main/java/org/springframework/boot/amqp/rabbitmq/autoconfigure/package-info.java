@@ -14,19 +14,10 @@
  * limitations under the License.
  */
 
-package org.springframework.boot.docs.messaging.amqp.rabbitmq.receiving;
+/**
+ * Auto-configuration for AMQP 1.0 support with RabbitMQ.
+ */
+@NullMarked
+package org.springframework.boot.amqp.rabbitmq.autoconfigure;
 
-import org.springframework.amqp.rabbit.annotation.RabbitHandler;
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
-import org.springframework.stereotype.Component;
-
-@Component
-@RabbitListener(queues = "someQueue")
-public class MyBean {
-
-	@RabbitHandler
-	public void processMessage(String content) {
-		// ...
-	}
-
-}
+import org.jspecify.annotations.NullMarked;

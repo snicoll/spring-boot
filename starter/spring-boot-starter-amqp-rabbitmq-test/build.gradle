@@ -1,7 +1,7 @@
 /*
  * Copyright 2012-present the original author or authors.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * Licensed under the Apache License, Version 2.0 (the License);
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -14,19 +14,13 @@
  * limitations under the License.
  */
 
-package org.springframework.boot.docs.messaging.amqp.rabbitmq.receiving;
+plugins {
+	id "org.springframework.boot.starter"
+}
 
-import org.springframework.amqp.rabbit.annotation.RabbitHandler;
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
-import org.springframework.stereotype.Component;
+description = "Starter for testing Spring AMQP with Rabbit MQ over AMQP 1.0 protocol"
 
-@Component
-@RabbitListener(queues = "someQueue")
-public class MyBean {
-
-	@RabbitHandler
-	public void processMessage(String content) {
-		// ...
-	}
-
+dependencies {
+	api(project(":starter:spring-boot-starter-amqp-rabbitmq"))
+	api(project(":starter:spring-boot-starter-test"))
 }

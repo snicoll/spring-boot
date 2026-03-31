@@ -14,19 +14,32 @@
  * limitations under the License.
  */
 
-package org.springframework.boot.docs.messaging.amqp.rabbitmq.receiving;
+package org.springframework.boot.docs.messaging.amqp.rabbitmq09.sending;
 
-import org.springframework.amqp.rabbit.annotation.RabbitHandler;
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.amqp.core.AmqpAdmin;
+import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.stereotype.Component;
 
 @Component
-@RabbitListener(queues = "someQueue")
 public class MyBean {
 
-	@RabbitHandler
-	public void processMessage(String content) {
-		// ...
+	private final AmqpAdmin amqpAdmin;
+
+	private final AmqpTemplate amqpTemplate;
+
+	public MyBean(AmqpAdmin amqpAdmin, AmqpTemplate amqpTemplate) {
+		this.amqpAdmin = amqpAdmin;
+		this.amqpTemplate = amqpTemplate;
 	}
+
+	// @fold:on // ...
+	public void someMethod() {
+		this.amqpAdmin.getQueueInfo("someQueue");
+	}
+
+	public void someOtherMethod() {
+		this.amqpTemplate.convertAndSend("hello");
+	}
+	// @fold:off
 
 }

@@ -14,19 +14,21 @@
  * limitations under the License.
  */
 
-package org.springframework.boot.docs.messaging.amqp.rabbitmq.receiving;
+package smoketest.amqp.rabbitmq;
 
-import org.springframework.amqp.rabbit.annotation.RabbitHandler;
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
-import org.springframework.stereotype.Component;
+import org.springframework.amqp.rabbitmq.client.RabbitAmqpTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
 
-@Component
-@RabbitListener(queues = "someQueue")
-public class MyBean {
+public class Sender {
 
-	@RabbitHandler
-	public void processMessage(String content) {
-		// ...
+	@Autowired
+	private RabbitAmqpTemplate rabbitAmqpTemplate;
+
+	public void send(String payload) {
+		this.rabbitAmqpTemplate.convertAndSend("foo", payload, (message) -> {
+			message.getMessageProperties().setHeader("source-app", "smoke-test");
+			return message;
+		});
 	}
 
 }

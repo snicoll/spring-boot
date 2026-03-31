@@ -14,19 +14,10 @@
  * limitations under the License.
  */
 
-package org.springframework.boot.docs.messaging.amqp.rabbitmq.receiving;
+/**
+ * Support for testcontainers RabbitMQ service connections.
+ */
+@NullMarked
+package org.springframework.boot.amqp.rabbitmq.testcontainers;
 
-import org.springframework.amqp.rabbit.annotation.RabbitHandler;
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
-import org.springframework.stereotype.Component;
-
-@Component
-@RabbitListener(queues = "someQueue")
-public class MyBean {
-
-	@RabbitHandler
-	public void processMessage(String content) {
-		// ...
-	}
-
-}
+import org.jspecify.annotations.NullMarked;

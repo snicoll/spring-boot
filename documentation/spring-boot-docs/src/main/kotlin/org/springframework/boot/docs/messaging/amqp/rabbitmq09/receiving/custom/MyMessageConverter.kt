@@ -14,19 +14,21 @@
  * limitations under the License.
  */
 
-package org.springframework.boot.docs.messaging.amqp.rabbitmq.receiving;
+package org.springframework.boot.docs.messaging.amqp.rabbitmq09.receiving.custom
 
-import org.springframework.amqp.rabbit.annotation.RabbitHandler;
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
-import org.springframework.stereotype.Component;
+import org.springframework.amqp.core.Message
+import org.springframework.amqp.core.MessageProperties
+import org.springframework.amqp.support.converter.MessageConverter
 
-@Component
-@RabbitListener(queues = "someQueue")
-public class MyBean {
+internal class MyMessageConverter : MessageConverter {
 
-	@RabbitHandler
-	public void processMessage(String content) {
-		// ...
+	override fun toMessage(`object`: Any, messageProperties: MessageProperties): Message {
+		return Message(byteArrayOf())
+	}
+
+	override fun fromMessage(message: Message): Any {
+		return Any()
 	}
 
 }
+
