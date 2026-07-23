@@ -25,6 +25,8 @@ import java.util.function.Supplier;
 
 import com.redis.testcontainers.RedisContainer;
 import com.redis.testcontainers.RedisStackContainer;
+import org.testcontainers.activemq.ActiveMQContainer;
+import org.testcontainers.activemq.ArtemisContainer;
 import org.testcontainers.cassandra.CassandraContainer;
 import org.testcontainers.containers.Container;
 import org.testcontainers.containers.GenericContainer;
@@ -62,7 +64,8 @@ public enum TestImage {
 	/**
 	 * A container image suitable for testing ActiveMQ made by Symptoma.
 	 */
-	ACTIVE_MQ_SYMPTOMA("symptoma/activemq", "5.18.3", () -> SymptomaActiveMQContainer.class),
+	ACTIVE_MQ_SYMPTOMA("symptoma/activemq", "5.18.3", () -> GenericContainer.class,
+			(container) -> ((GenericContainer<?>) container).addExposedPorts(61616)),
 
 	/**
 	 * A container image suitable for testing ActiveMQ.
@@ -72,7 +75,7 @@ public enum TestImage {
 	/**
 	 * A container image suitable for testing ActiveMQ classic.
 	 */
-	ACTIVE_MQ_CLASSIC("apache/activemq-classic", "5.18.3", () -> ActiveMQClassicContainer.class),
+	ACTIVE_MQ_CLASSIC("apache/activemq-classic", "5.18.3", () -> ActiveMQContainer.class),
 
 	/**
 	 * A container image suitable for testing Apache Kafka.
@@ -88,7 +91,7 @@ public enum TestImage {
 	 * A container image suitable for testing Artemis using the legacy
 	 * {@code apache/activemq-artemis} image.
 	 */
-	ARTEMIS_LEGACY("apache/activemq-artemis", "2.34.0", () -> ArtemisLegacyContainer.class),
+	ARTEMIS_LEGACY("apache/activemq-artemis", "2.34.0", () -> ArtemisContainer.class),
 
 	/**
 	 * A container image suitable for testing Cassandra.
@@ -124,7 +127,11 @@ public enum TestImage {
 	/**
 	 * A container image suitable for testing Elasticsearch 9.
 	 */
-	ELASTICSEARCH_9("elasticsearch", "9.0.2"),
+	ELASTICSEARCH_9("elasticsearch", "9.0.2", () -> ElasticsearchContainer.class, (container) -> {
+		ElasticsearchContainer elasticsearchContainer = (ElasticsearchContainer) container;
+		elasticsearchContainer.addEnv("ES_JAVA_OPTS", "-Xms32m -Xmx512m");
+		elasticsearchContainer.addEnv("xpack.security.enabled", "false");
+	}),
 
 	/**
 	 * A container image suitable for testing Grafana OTel LGTM.
@@ -354,20 +361,30 @@ public enum TestImage {
 		}
 	}
 
+	public <C extends Container<?>> C container() {
+		return container((Consumer<C>) null);
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public <C extends Container<?>> C container(Consumer<C> containerSetup) {
+		if (this.containerClass != null) {
+			return doCreateContainer((Class<C>) this.containerClass, containerSetup);
+		}
+		else {
+			return (C) doCreateContainer(GenericContainer.class, (Consumer) containerSetup);
+		}
+	}
+
+	public GenericContainer<?> genericContainer() {
+		return doCreateContainer(GenericContainer.class, null);
+	}
+
 	private boolean matchesContainerClass(Class<?> containerClass) {
 		return this.containerClass != null && this.containerClass.isAssignableFrom(containerClass);
 	}
 
-	/**
-	 * Create a {@link GenericContainer} for the given {@link TestImage}.
-	 * @return a generic container for the test image
-	 */
-	public GenericContainer<?> genericContainer() {
-		return createContainer(GenericContainer.class);
-	}
-
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private <C extends Container<?>> C createContainer(Class<C> containerClass) {
+	private <C extends Container<?>> C doCreateContainer(Class<C> containerClass, Consumer<C> userSetup) {
 		DockerImageName dockerImageName = DockerImageName.parse(toString());
 		try {
 			Constructor<C> constructor = containerClass.getDeclaredConstructor(DockerImageName.class);
@@ -375,6 +392,9 @@ public enum TestImage {
 			C container = constructor.newInstance(dockerImageName);
 			if (this.containerSetup != null) {
 				((Consumer) this.containerSetup).accept(container);
+			}
+			if (userSetup != null) {
+				userSetup.accept(container);
 			}
 			return container;
 		}
@@ -400,7 +420,7 @@ public enum TestImage {
 	 * @return a container instance
 	 */
 	public static <C extends Container<?>> C container(Class<C> containerClass) {
-		return forContainerClass(containerClass).createContainer(containerClass);
+		return forContainerClass(containerClass).doCreateContainer(containerClass, null);
 	}
 
 	private static TestImage forContainerClass(Class<?> containerClass) {
