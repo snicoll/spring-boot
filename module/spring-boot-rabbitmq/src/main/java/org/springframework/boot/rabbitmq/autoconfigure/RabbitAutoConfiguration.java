@@ -16,6 +16,8 @@
 
 package org.springframework.boot.rabbitmq.autoconfigure;
 
+import java.util.Objects;
+
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.impl.CredentialsProvider;
 import com.rabbitmq.client.impl.CredentialsRefreshService;
@@ -126,7 +128,8 @@ public final class RabbitAutoConfiguration {
 			RabbitConnectionFactoryBean connectionFactoryBean = new SslBundleRabbitConnectionFactoryBean();
 			rabbitConnectionFactoryBeanConfigurer.configure(connectionFactoryBean);
 			connectionFactoryBean.afterPropertiesSet();
-			com.rabbitmq.client.ConnectionFactory connectionFactory = connectionFactoryBean.getObject();
+			com.rabbitmq.client.ConnectionFactory connectionFactory = Objects
+				.requireNonNull(connectionFactoryBean.getObject());
 			connectionFactoryCustomizers.orderedStream()
 				.forEach((customizer) -> customizer.customize(connectionFactory));
 			CachingConnectionFactory factory = new CachingConnectionFactory(connectionFactory);
