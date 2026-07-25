@@ -40,6 +40,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT,
 		properties = { "spring.main.web-application-type=reactive", "value=123" })
 @Deprecated(since = "4.2.0", forRemoval = true)
+@SuppressWarnings("removal") // gh-46632
 class SpringBootTestReactiveWebEnvironmentUserDefinedTestRestTemplateTests
 		extends AbstractSpringBootTestEmbeddedReactiveWebEnvironmentTests {
 
