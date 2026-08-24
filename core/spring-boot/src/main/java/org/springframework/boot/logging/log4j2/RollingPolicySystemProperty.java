@@ -33,9 +33,21 @@ public enum RollingPolicySystemProperty {
 	FILE_NAME_PATTERN("file-name-pattern"),
 
 	/**
+	 * Logging system property for the clean history on start flag.
+	 * @since 4.2.0
+	 */
+	CLEAN_HISTORY_ON_START("clean-history-on-start"),
+
+	/**
 	 * Logging system property for the file log max size.
 	 */
 	MAX_FILE_SIZE("max-file-size"),
+
+	/**
+	 * Logging system property for the file total size cap.
+	 * @since 4.2.0
+	 */
+	TOTAL_SIZE_CAP("total-size-cap"),
 
 	/**
 	 * Logging system property for the file log max history.

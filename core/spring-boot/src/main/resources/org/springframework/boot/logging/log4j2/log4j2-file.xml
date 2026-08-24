@@ -35,6 +35,9 @@
 				<ThresholdFilter level="${sys:FILE_LOG_THRESHOLD:-TRACE}"/>
 			</Filters>
 			<Policies>
+				<SystemPropertyArbiter propertyName="LOG4J2_ROLLINGPOLICY_CLEAN_HISTORY_ON_START" propertyValue="true">
+					<OnStartupTriggeringPolicy />
+				</SystemPropertyArbiter>
 				<SpringBootTriggeringPolicy
 					strategy="${sys:LOG4J2_ROLLINGPOLICY_STRATEGY:-size}"
 					maxFileSize="${sys:LOG4J2_ROLLINGPOLICY_MAX_FILE_SIZE:-10MB}"
@@ -42,7 +45,14 @@
 					timeModulate="${sys:LOG4J2_ROLLINGPOLICY_TIME_MODULATE:-false}"
 					cronExpression="${sys:LOG4J2_ROLLINGPOLICY_CRON}"/>
 			</Policies>
-			<DefaultRolloverStrategy max="${sys:LOG4J2_ROLLINGPOLICY_MAX_HISTORY:-7}"/>
+			<DefaultRolloverStrategy max="${sys:LOG4J2_ROLLINGPOLICY_MAX_HISTORY:-7}">
+				<SystemPropertyArbiter propertyName="LOG4J2_ROLLINGPOLICY_TOTAL_SIZE_CAP">
+					<Delete basePath="${sys:LOG_PATH:-.}" maxDepth="2">
+						<IfFileName glob="*.gz" />
+						<IfAccumulatedFileSize exceeds="${sys:LOG4J2_ROLLINGPOLICY_TOTAL_SIZE_CAP}" />
+					</Delete>
+				</SystemPropertyArbiter>
+			</DefaultRolloverStrategy>
 		</RollingFile>
 	</Appenders>
 	<Loggers>
