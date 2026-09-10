@@ -198,7 +198,9 @@ public class KafkaProperties {
 	 * default {@code kafkaProducerFactory} bean.
 	 * @return the producer properties initialized with the customizations defined on this
 	 * instance
+	 * @deprecated since 3.2.0 for removal in 3.4.0 in favor of {@link KafkaConfigBuilder}
 	 */
+	@Deprecated(since = "3.2.0", forRemoval = true)
 	public Map<String, Object> buildProducerProperties() {
 		Map<String, Object> properties = buildCommonProperties();
 		properties.putAll(this.producer.buildProperties());
@@ -212,7 +214,9 @@ public class KafkaProperties {
 	 * default {@code kafkaAdmin} bean.
 	 * @return the admin properties initialized with the customizations defined on this
 	 * instance
+	 * @deprecated since 3.2.0 for removal in 3.4.0 in favor of {@link KafkaConfigBuilder}
 	 */
+	@Deprecated(since = "3.2.0", forRemoval = true)
 	public Map<String, Object> buildAdminProperties() {
 		Map<String, Object> properties = buildCommonProperties();
 		properties.putAll(this.admin.buildProperties());
@@ -225,7 +229,9 @@ public class KafkaProperties {
 	 * This allows you to add additional properties, if necessary.
 	 * @return the streams properties initialized with the customizations defined on this
 	 * instance
+	 * @deprecated since 3.2.0 for removal in 3.4.0 in favor of {@link KafkaConfigBuilder}
 	 */
+	@Deprecated(since = "3.2.0", forRemoval = true)
 	public Map<String, Object> buildStreamsProperties() {
 		Map<String, Object> properties = buildCommonProperties();
 		properties.putAll(this.streams.buildProperties());
@@ -902,6 +908,7 @@ public class KafkaProperties {
 			return this.properties;
 		}
 
+		@Deprecated(since = "3.2.0", forRemoval = true)
 		public Map<String, Object> buildProperties() {
 			Properties properties = new Properties();
 			PropertyMapper map = PropertyMapper.get();
