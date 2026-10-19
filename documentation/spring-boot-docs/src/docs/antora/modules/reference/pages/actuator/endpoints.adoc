@@ -270,6 +270,11 @@ include-code::exposeall/MySecurityConfiguration[]
 NOTE: In both of the preceding examples, the configuration applies only to the actuator endpoints.
 Since Spring Boot's security configuration backs off completely in the presence of any javadoc:org.springframework.security.web.SecurityFilterChain[] bean, you need to configure an additional javadoc:org.springframework.security.web.SecurityFilterChain[] bean with rules that apply to the rest of the application.
 
+WARNING: This also applies when the management server runs on a different port, although the application's own resources are not served there.
+Any request to the management port that does not target an endpoint is evaluated against that additional chain, which may have been written with the main port in mind (for example, expecting a pre-authentication header or redirecting to an application page).
+We recommend that the management port exposes endpoints only.
+If it must serve anything else, order the actuator chain first (using `@Order`) and use a javadoc:org.springframework.boot.security.web.servlet.ApplicationContextRequestMatcher[] so that it matches every request handled by the management application context.
+
 
 
 [[actuator.endpoints.security.csrf]]
