@@ -24,6 +24,7 @@ import org.apache.kafka.common.serialization.IntegerDeserializer;
 import org.apache.kafka.common.serialization.IntegerSerializer;
 import org.apache.kafka.common.serialization.LongDeserializer;
 import org.apache.kafka.common.serialization.LongSerializer;
+import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
 import org.assertj.core.api.InstanceOfAssertFactories;
@@ -38,6 +39,7 @@ import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.predicate.RuntimeHintsPredicates;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.autoconfigure.ssl.SslAutoConfiguration;
+import org.springframework.boot.context.properties.source.InvalidConfigurationPropertyValueException;
 import org.springframework.boot.kafka.autoconfigure.KafkaProperties.Retry;
 import org.springframework.boot.kafka.autoconfigure.KafkaProperties.Template;
 import org.springframework.boot.ssl.SslBundle;
@@ -1060,6 +1062,102 @@ class KafkaAutoConfigurationTests {
 		});
 	}
 
+	@Test
+	void testConcurrentKafkaListenerContainerFactoryWithCustomConsumerFactoryUsesConsumerFactoryConfigurer() {
+		this.contextRunner.withUserConfiguration(ConsumerFactoryConfiguration.class)
+			.withBean(KafkaConnectionDetails.class, () -> () -> List.of("service-connection:9092"))
+			.withBean(DefaultKafkaConsumerFactoryCustomizer.class,
+					() -> (factory) -> factory.updateConfigs(Map.of("customized", true)))
+			.run((context) -> {
+				ConcurrentKafkaListenerContainerFactory<?, ?> kafkaListenerContainerFactory = context
+					.getBean(ConcurrentKafkaListenerContainerFactory.class);
+				assertThat(consumerConfig(kafkaListenerContainerFactory))
+					.containsEntry(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, List.of("service-connection:9092"))
+					.containsEntry("customized", true);
+			});
+	}
+
+	@Test
+	void customConcurrentKafkaListenerContainerFactoryCanBeCreatedUsingConfigurers() {
+		this.contextRunner.withUserConfiguration(ObservationEnabledContainerCustomizerConfiguration.class)
+			.withBean(DefaultKafkaConsumerFactoryCustomizer.class,
+					() -> (factory) -> factory.updateConfigs(Map.of("customized", true)))
+			.withPropertyValues("spring.kafka.bootstrap-servers=base:9092", "spring.kafka.consumer.group-id=default",
+					"spring.kafka.consumer.auto-offset-reset=earliest", "spring.kafka.listener.concurrency=2",
+					"spring.kafka.listener.ack-mode=batch", "spring.kafka.containers.custom.consumer.group-id=custom",
+					"spring.kafka.containers.custom.consumer.value-deserializer=org.apache.kafka.common.serialization.LongDeserializer",
+					"spring.kafka.containers.custom.listener.concurrency=5")
+			.withUserConfiguration(CustomListenerContainerFactoryConfiguration.class)
+			.run((context) -> {
+				ConcurrentKafkaListenerContainerFactory<?, ?> defaultFactory = context
+					.getBean("kafkaListenerContainerFactory", ConcurrentKafkaListenerContainerFactory.class);
+				ConcurrentKafkaListenerContainerFactory<?, ?> customFactory = context
+					.getBean("customKafkaListenerContainerFactory", ConcurrentKafkaListenerContainerFactory.class);
+				assertThat(consumerConfig(defaultFactory))
+					.containsEntry(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, List.of("base:9092"))
+					.containsEntry(ConsumerConfig.GROUP_ID_CONFIG, "default")
+					.containsEntry(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class)
+					.containsEntry("customized", true);
+				assertThat(consumerConfig(customFactory))
+					.containsEntry(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, List.of("base:9092"))
+					.containsEntry(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
+					.containsEntry(ConsumerConfig.GROUP_ID_CONFIG, "custom")
+					.containsEntry(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, LongDeserializer.class)
+					.containsEntry("customized", true);
+				ConcurrentMessageListenerContainer<?, ?> defaultContainer = defaultFactory.createContainer("test");
+				assertThat(defaultContainer.getConcurrency()).isEqualTo(2);
+				assertThat(defaultContainer.getContainerProperties().getAckMode()).isEqualTo(AckMode.BATCH);
+				assertThat(defaultContainer.getContainerProperties().isObservationEnabled()).isTrue();
+				ConcurrentMessageListenerContainer<?, ?> customContainer = customFactory.createContainer("test");
+				assertThat(customContainer.getConcurrency()).isEqualTo(5);
+				assertThat(customContainer.getContainerProperties().getAckMode()).isEqualTo(AckMode.BATCH);
+				// Container customizer only applies to the auto-configured factory
+				assertThat(customContainer.getContainerProperties().isObservationEnabled()).isFalse();
+			});
+	}
+
+	@Test
+	void customConcurrentKafkaListenerContainerFactoryWithInheritedClientIdFails() {
+		this.contextRunner.withUserConfiguration(CustomListenerContainerFactoryConfiguration.class)
+			.withPropertyValues("spring.kafka.client-id=app", "spring.kafka.containers.custom.consumer.group-id=custom")
+			.run((context) -> assertThat(context).hasFailed()
+				.getFailure()
+				.rootCause()
+				.isInstanceOf(InvalidConfigurationPropertyValueException.class)
+				.hasMessageContaining("spring.kafka.containers.custom.consumer.client-id"));
+	}
+
+	@Test
+	void customConcurrentKafkaListenerContainerFactoryWithInheritedClientIdAndContainerClientId() {
+		this.contextRunner.withUserConfiguration(CustomListenerContainerFactoryConfiguration.class)
+			.withPropertyValues("spring.kafka.client-id=app",
+					"spring.kafka.containers.custom.consumer.client-id=custom")
+			.run((context) -> {
+				ConcurrentKafkaListenerContainerFactory<?, ?> defaultFactory = context
+					.getBean("kafkaListenerContainerFactory", ConcurrentKafkaListenerContainerFactory.class);
+				ConcurrentKafkaListenerContainerFactory<?, ?> customFactory = context
+					.getBean("customKafkaListenerContainerFactory", ConcurrentKafkaListenerContainerFactory.class);
+				assertThat(consumerConfig(defaultFactory)).containsEntry(ConsumerConfig.CLIENT_ID_CONFIG, "app");
+				assertThat(consumerConfig(customFactory)).containsEntry(ConsumerConfig.CLIENT_ID_CONFIG, "custom");
+			});
+	}
+
+	@Test
+	void customConcurrentKafkaListenerContainerFactoryWithUnknownContainerFails() {
+		this.contextRunner.withUserConfiguration(CustomListenerContainerFactoryConfiguration.class)
+			.withPropertyValues("spring.kafka.containers.cutsom.consumer.group-id=custom")
+			.run((context) -> assertThat(context).hasFailed()
+				.getFailure()
+				.rootCause()
+				.hasMessage("No Kafka container named 'custom' has been configured using 'spring.kafka.containers'"));
+	}
+
+	private Map<String, Object> consumerConfig(ConcurrentKafkaListenerContainerFactory<?, ?> factory) {
+		ConsumerFactory<?, ?> consumerFactory = factory.getConsumerFactory();
+		assertThat(consumerFactory).isNotNull();
+		return consumerFactory.getConfigurationProperties();
+	}
+
 	@ParameterizedTest(name = "{0}")
 	@ValueSource(booleans = { true, false })
 	void testConcurrentKafkaListenerContainerFactoryAutoStartup(boolean autoStartup) {
@@ -1205,6 +1303,23 @@ class KafkaAutoConfigurationTests {
 		@Bean
 		ConsumerFactory<String, Object> myConsumerFactory() {
 			return this.consumerFactory;
+		}
+
+	}
+
+	@Configuration(proxyBeanMethods = false)
+	static class CustomListenerContainerFactoryConfiguration {
+
+		@Bean
+		ConcurrentKafkaListenerContainerFactory<Object, Object> customKafkaListenerContainerFactory(
+				ConcurrentKafkaListenerContainerFactoryConfigurer configurer,
+				DefaultKafkaConsumerFactoryConfigurer consumerFactoryConfigurer) {
+			DefaultKafkaConsumerFactory<Object, Object> consumerFactory = new DefaultKafkaConsumerFactory<>(
+					Collections.emptyMap());
+			consumerFactoryConfigurer.configure(consumerFactory, "custom");
+			ConcurrentKafkaListenerContainerFactory<Object, Object> factory = new ConcurrentKafkaListenerContainerFactory<>();
+			configurer.configure(factory, consumerFactory, "custom");
+			return factory;
 		}
 
 	}

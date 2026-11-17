@@ -56,6 +56,38 @@ TIP: A custom javadoc:org.springframework.kafka.transaction.ChainedKafkaTransact
 
 If there's a bean of type `KafkaListenerObservationConvention` in the context, it is automatically registered on the container factory.
 
+If you need to create more javadoc:org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory[] instances, for instance because some listeners require a different deserializer or consumer group, Spring Boot provides a javadoc:org.springframework.boot.kafka.autoconfigure.ConcurrentKafkaListenerContainerFactoryConfigurer[] that you can use to initialize a factory with the same settings as the one that is auto-configured.
+Similarly, javadoc:org.springframework.boot.kafka.autoconfigure.DefaultKafkaConsumerFactoryConfigurer[] can be used to initialize a javadoc:org.springframework.kafka.core.DefaultKafkaConsumerFactory[] the same way the auto-configured consumer factory is, including connection details and any javadoc:org.springframework.boot.kafka.autoconfigure.DefaultKafkaConsumerFactoryCustomizer[] such as the one that registers metrics.
+
+Both configurers can also use the settings of a named container, defined using `spring.kafka.containers.<name>`.
+The consumer and listener settings of a container are applied on top of the `spring.kafka.consumer.\*` and `spring.kafka.listener.*` settings, respectively.
+For instance, the following example exposes another factory that uses the settings of the `orders` container:
+
+include-code::custom/MyKafkaConfiguration[]
+
+The `orders` container can then be configured as follows:
+
+[configprops%novalidate,yaml]
+----
+spring:
+  kafka:
+    containers:
+      orders:
+        consumer:
+          group-id: "orders"
+          value-deserializer: "org.springframework.kafka.support.serializer.JacksonJsonDeserializer"
+          properties:
+            "[spring.json.trusted.packages]": "com.example.orders"
+        listener:
+          concurrency: 3
+----
+
+Then you can use the factory in any javadoc:org.springframework.kafka.annotation.KafkaListener[format=annotation]-annotated method as follows:
+
+include-code::custom/MyBean[]
+
+TIP: If you need the configuration of a Kafka client for another purpose, use javadoc:org.springframework.boot.kafka.autoconfigure.KafkaConfigBuilder[] to build the configuration of a consumer, producer, admin client, or Kafka Streams from javadoc:org.springframework.boot.kafka.autoconfigure.KafkaProperties[].
+
 
 
 [[messaging.kafka.streams]]

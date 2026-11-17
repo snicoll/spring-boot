@@ -79,6 +79,13 @@ public class KafkaProperties {
 
 	private final Listener listener = new Listener();
 
+	/**
+	 * Additional named listener containers. The consumer and listener settings of each
+	 * container are applied on top of the 'spring.kafka.consumer' and
+	 * 'spring.kafka.listener' settings, respectively.
+	 */
+	private final Map<String, Container> containers = new LinkedHashMap<>();
+
 	private final Ssl ssl = new Ssl();
 
 	private final Jaas jaas = new Jaas();
@@ -119,6 +126,10 @@ public class KafkaProperties {
 
 	public Listener getListener() {
 		return this.listener;
+	}
+
+	public Map<String, Container> getContainers() {
+		return this.containers;
 	}
 
 	public Admin getAdmin() {
@@ -1013,6 +1024,22 @@ public class KafkaProperties {
 
 		public void setObservationEnabled(boolean observationEnabled) {
 			this.observationEnabled = observationEnabled;
+		}
+
+	}
+
+	public static class Container {
+
+		private final Consumer consumer = new Consumer();
+
+		private final Listener listener = new Listener();
+
+		public Consumer getConsumer() {
+			return this.consumer;
+		}
+
+		public Listener getListener() {
+			return this.listener;
 		}
 
 	}

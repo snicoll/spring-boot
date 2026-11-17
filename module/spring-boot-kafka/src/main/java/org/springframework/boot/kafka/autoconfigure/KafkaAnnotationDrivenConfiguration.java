@@ -4,6 +4,7 @@
 
 package org.springframework.boot.kafka.autoconfigure;
 
+import java.util.Collections;
 import java.util.function.Function;
 
 import org.jspecify.annotations.Nullable;
@@ -12,10 +13,12 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnThreading;
+import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.boot.kafka.autoconfigure.KafkaProperties.SimpleAdmin;
 import org.springframework.boot.thread.Threading;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
@@ -55,6 +58,8 @@ class KafkaAnnotationDrivenConfiguration {
 
 	private final KafkaProperties properties;
 
+	private final KafkaContainerProperties containerProperties;
+
 	private final @Nullable RecordMessageConverter recordMessageConverter;
 
 	private final @Nullable RecordFilterStrategy<Object, Object> recordFilterStrategy;
@@ -81,7 +86,7 @@ class KafkaAnnotationDrivenConfiguration {
 
 	private final @Nullable KafkaListenerObservationConvention observationConvention;
 
-	KafkaAnnotationDrivenConfiguration(KafkaProperties properties,
+	KafkaAnnotationDrivenConfiguration(KafkaProperties properties, Environment environment,
 			ObjectProvider<RecordMessageConverter> recordMessageConverter,
 			ObjectProvider<RecordFilterStrategy<Object, Object>> recordFilterStrategy,
 			KafkaConnectionDetails kafkaConnectionDetails, ObjectProvider<BatchMessageConverter> batchMessageConverter,
@@ -95,6 +100,7 @@ class KafkaAnnotationDrivenConfiguration {
 			ObjectProvider<Function<MessageListenerContainer, String>> threadNameSupplier,
 			ObjectProvider<KafkaListenerObservationConvention> observationConvention) {
 		this.properties = properties;
+		this.containerProperties = new KafkaContainerProperties(properties, Binder.get(environment));
 		this.recordMessageConverter = recordMessageConverter.getIfUnique();
 		this.recordFilterStrategy = recordFilterStrategy.getIfUnique();
 		this.batchMessageConverter = batchMessageConverter
@@ -132,6 +138,7 @@ class KafkaAnnotationDrivenConfiguration {
 	private ConcurrentKafkaListenerContainerFactoryConfigurer configurer() {
 		ConcurrentKafkaListenerContainerFactoryConfigurer configurer = new ConcurrentKafkaListenerContainerFactoryConfigurer();
 		configurer.setKafkaProperties(this.properties);
+		configurer.setContainerProperties(this.containerProperties);
 		configurer.setKafkaAdmin(createKafkaAdmin());
 		configurer.setBatchMessageConverter(this.batchMessageConverter);
 		configurer.setRecordMessageConverter(this.recordMessageConverter);
@@ -159,10 +166,15 @@ class KafkaAnnotationDrivenConfiguration {
 	ConcurrentKafkaListenerContainerFactory<?, ?> kafkaListenerContainerFactory(
 			ConcurrentKafkaListenerContainerFactoryConfigurer configurer,
 			ObjectProvider<ConsumerFactory<Object, Object>> kafkaConsumerFactory,
+			DefaultKafkaConsumerFactoryConfigurer kafkaConsumerFactoryConfigurer,
 			ObjectProvider<ContainerCustomizer<Object, Object, ConcurrentMessageListenerContainer<Object, Object>>> kafkaContainerCustomizer) {
 		ConcurrentKafkaListenerContainerFactory<Object, Object> factory = new ConcurrentKafkaListenerContainerFactory<>();
-		configurer.configure(factory, kafkaConsumerFactory.getIfAvailable(
-				() -> new DefaultKafkaConsumerFactory<>(KafkaConfigBuilder.of(this.properties).consumer().build())));
+		configurer.configure(factory, kafkaConsumerFactory.getIfAvailable(() -> {
+			DefaultKafkaConsumerFactory<Object, Object> consumerFactory = new DefaultKafkaConsumerFactory<>(
+					Collections.emptyMap());
+			kafkaConsumerFactoryConfigurer.configure(consumerFactory);
+			return consumerFactory;
+		}));
 		kafkaContainerCustomizer.ifAvailable(factory::setContainerCustomizer);
 		return factory;
 	}

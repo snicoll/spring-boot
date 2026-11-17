@@ -6,6 +6,7 @@ package org.springframework.boot.kafka.autoconfigure;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.Collections;
 import java.util.Map;
 import java.util.function.Predicate;
 
@@ -24,6 +25,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnSingleCandidate;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.context.properties.PropertyMapper;
+import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.boot.kafka.autoconfigure.KafkaProperties.Admin;
 import org.springframework.boot.kafka.autoconfigure.KafkaProperties.Jaas;
 import org.springframework.boot.kafka.autoconfigure.KafkaProperties.Retry.Topic.Backoff;
@@ -34,6 +36,7 @@ import org.springframework.boot.transaction.autoconfigure.TransactionManagerCust
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.ImportRuntimeHints;
+import org.springframework.core.env.Environment;
 import org.springframework.core.retry.RetryPolicy;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
@@ -119,15 +122,20 @@ public final class KafkaAutoConfiguration {
 	}
 
 	@Bean
-	@ConditionalOnMissingBean(ConsumerFactory.class)
-	DefaultKafkaConsumerFactory<?, ?> kafkaConsumerFactory(KafkaConnectionDetails connectionDetails,
+	@ConditionalOnMissingBean
+	DefaultKafkaConsumerFactoryConfigurer kafkaConsumerFactoryConfigurer(Environment environment,
+			KafkaConnectionDetails connectionDetails,
 			ObjectProvider<DefaultKafkaConsumerFactoryCustomizer> customizers) {
-		Map<String, Object> properties = KafkaConfigBuilder.of(this.properties)
-			.consumer()
-			.withConnectionDetails(connectionDetails)
-			.build();
-		DefaultKafkaConsumerFactory<Object, Object> factory = new DefaultKafkaConsumerFactory<>(properties);
-		customizers.orderedStream().forEach((customizer) -> customizer.customize(factory));
+		return new DefaultKafkaConsumerFactoryConfigurer(this.properties,
+				new KafkaContainerProperties(this.properties, Binder.get(environment)), connectionDetails,
+				customizers.orderedStream().toList());
+	}
+
+	@Bean
+	@ConditionalOnMissingBean(ConsumerFactory.class)
+	DefaultKafkaConsumerFactory<?, ?> kafkaConsumerFactory(DefaultKafkaConsumerFactoryConfigurer configurer) {
+		DefaultKafkaConsumerFactory<Object, Object> factory = new DefaultKafkaConsumerFactory<>(Collections.emptyMap());
+		configurer.configure(factory);
 		return factory;
 	}
 

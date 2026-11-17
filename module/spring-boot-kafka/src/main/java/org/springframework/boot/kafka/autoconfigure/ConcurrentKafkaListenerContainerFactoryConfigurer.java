@@ -76,6 +76,8 @@ public class ConcurrentKafkaListenerContainerFactoryConfigurer {
 
 	private @Nullable KafkaListenerObservationConvention observationConvention;
 
+	private @Nullable KafkaContainerProperties containerProperties;
+
 	/**
 	 * Set the {@link KafkaProperties} to use.
 	 * @param properties the properties
@@ -197,6 +199,14 @@ public class ConcurrentKafkaListenerContainerFactoryConfigurer {
 	}
 
 	/**
+	 * Set the {@link KafkaContainerProperties} to use.
+	 * @param containerProperties the container properties
+	 */
+	void setContainerProperties(@Nullable KafkaContainerProperties containerProperties) {
+		this.containerProperties = containerProperties;
+	}
+
+	/**
 	 * Configure the specified Kafka listener container factory. The factory can be
 	 * further tuned and default settings can be overridden.
 	 * @param listenerFactory the {@link ConcurrentKafkaListenerContainerFactory} instance
@@ -205,15 +215,39 @@ public class ConcurrentKafkaListenerContainerFactoryConfigurer {
 	 */
 	public void configure(ConcurrentKafkaListenerContainerFactory<Object, Object> listenerFactory,
 			ConsumerFactory<Object, Object> consumerFactory) {
-		listenerFactory.setConsumerFactory(consumerFactory);
-		configureListenerFactory(listenerFactory);
-		configureContainer(listenerFactory.getContainerProperties());
+		Assert.state(this.properties != null, "'properties' must not be null");
+		configure(listenerFactory, consumerFactory, this.properties.getListener());
 	}
 
-	private void configureListenerFactory(ConcurrentKafkaListenerContainerFactory<Object, Object> factory) {
+	/**
+	 * Configure the specified Kafka listener container factory using the listener
+	 * settings of the container with the specified name, as defined by
+	 * {@code spring.kafka.containers.<name>.listener.*}. Those settings are applied on
+	 * top of the {@code spring.kafka.listener.*} settings. The factory can be further
+	 * tuned and default settings can be overridden.
+	 * @param listenerFactory the {@link ConcurrentKafkaListenerContainerFactory} instance
+	 * to configure
+	 * @param consumerFactory the {@link ConsumerFactory} to use
+	 * @param containerName the name of the container
+	 * @throws IllegalArgumentException if no container with that name has been configured
+	 * @since 4.3.0
+	 */
+	public void configure(ConcurrentKafkaListenerContainerFactory<Object, Object> listenerFactory,
+			ConsumerFactory<Object, Object> consumerFactory, String containerName) {
+		Assert.state(this.containerProperties != null, "'containerProperties' must not be null");
+		configure(listenerFactory, consumerFactory, this.containerProperties.getListener(containerName));
+	}
+
+	private void configure(ConcurrentKafkaListenerContainerFactory<Object, Object> listenerFactory,
+			ConsumerFactory<Object, Object> consumerFactory, Listener properties) {
+		listenerFactory.setConsumerFactory(consumerFactory);
+		configureListenerFactory(listenerFactory, properties);
+		configureContainer(listenerFactory.getContainerProperties(), properties);
+	}
+
+	private void configureListenerFactory(ConcurrentKafkaListenerContainerFactory<Object, Object> factory,
+			Listener properties) {
 		PropertyMapper map = PropertyMapper.get();
-		Assert.state(this.properties != null, "'properties' must not be null");
-		Listener properties = this.properties.getListener();
 		map.from(properties::getConcurrency).to(factory::setConcurrency);
 		map.from(properties::isAutoStartup).to(factory::setAutoStartup);
 		map.from(this.kafkaAdmin).to(factory::setKafkaAdmin);
@@ -232,10 +266,8 @@ public class ConcurrentKafkaListenerContainerFactoryConfigurer {
 		map.from(properties::getChangeConsumerThreadName).to(factory::setChangeConsumerThreadName);
 	}
 
-	private void configureContainer(ContainerProperties container) {
+	private void configureContainer(ContainerProperties container, Listener properties) {
 		PropertyMapper map = PropertyMapper.get();
-		Assert.state(this.properties != null, "'properties' must not be null");
-		Listener properties = this.properties.getListener();
 		map.from(properties::getAckMode).to(container::setAckMode);
 		map.from(properties::getAsyncAcks).to(container::setAsyncAcks);
 		map.from(properties::getClientId).to(container::setClientId);

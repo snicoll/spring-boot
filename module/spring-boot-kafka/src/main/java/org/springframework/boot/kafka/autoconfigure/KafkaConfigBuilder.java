@@ -82,7 +82,17 @@ public class KafkaConfigBuilder {
 	 * @see ConsumerConfig
 	 */
 	public ConfigBuilder consumer() {
-		return new ConsumerConfigBuilder(initializeKafkaConfig(), this.kafkaProperties.getConsumer(), null);
+		return consumer(this.kafkaProperties.getConsumer());
+	}
+
+	/**
+	 * Return a builder for Consumer-related configuration using the specified consumer
+	 * properties.
+	 * @param consumerProperties the consumer properties to map
+	 * @return a consumer config builder
+	 */
+	ConfigBuilder consumer(KafkaProperties.Consumer consumerProperties) {
+		return new ConsumerConfigBuilder(initializeKafkaConfig(), consumerProperties, null);
 	}
 
 	/**
@@ -265,7 +275,8 @@ public class KafkaConfigBuilder {
 			new SecurityConfigBuilder(this.consumer.getSecurity()).apply(consumerConfig);
 			consumerConfig.putAll(this.consumer.getProperties());
 			if (this.connectionDetails != null) {
-				Configuration consumer = this.connectionDetails.getConsumer();
+				Configuration consumer = (this.connectionDetails instanceof PropertiesKafkaConnectionDetails details)
+						? details.getConsumer(this.consumer) : this.connectionDetails.getConsumer();
 				consumerConfig.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, consumer.getBootstrapServers());
 				applySecurityProtocol(consumerConfig, consumer.getSecurityProtocol());
 				applySslBundle(consumerConfig, consumer.getSslBundle());

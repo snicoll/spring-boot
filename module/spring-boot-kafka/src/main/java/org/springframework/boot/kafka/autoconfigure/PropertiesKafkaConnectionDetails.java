@@ -39,9 +39,19 @@ class PropertiesKafkaConnectionDetails implements KafkaConnectionDetails {
 
 	@Override
 	public Configuration getConsumer() {
-		List<String> servers = this.properties.getConsumer().getBootstrapServers();
-		SslBundle sslBundle = getBundle(this.properties.getConsumer().getSsl());
-		String protocol = this.properties.getConsumer().getSecurity().getProtocol();
+		return getConsumer(this.properties.getConsumer());
+	}
+
+	/**
+	 * Return the consumer configuration for the specified consumer properties, falling
+	 * back to the common properties.
+	 * @param consumer the consumer properties
+	 * @return the consumer configuration
+	 */
+	Configuration getConsumer(KafkaProperties.Consumer consumer) {
+		List<String> servers = consumer.getBootstrapServers();
+		SslBundle sslBundle = getBundle(consumer.getSsl());
+		String protocol = consumer.getSecurity().getProtocol();
 		return Configuration.of((servers != null) ? servers : getBootstrapServers(),
 				(sslBundle != null) ? sslBundle : getSslBundle(),
 				(StringUtils.hasLength(protocol)) ? protocol : getSecurityProtocol());
